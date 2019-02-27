@@ -1,0 +1,13 @@
+groups:
+- name: sre-ebs-iops-burstbalance
+  rules:
+  - alert: EbsVolumeBurstBalanceLT40Pct
+    expr: avg(ebs_iops_credits) < 40
+    for: 60m
+    labels:
+      severity: warn
+  - alert: EbsVolumeBurstBalanceLT20Pct
+    expr: avg(ebs_iops_credits) < 20
+    for: 60m
+    labels:
+      severity: critical
