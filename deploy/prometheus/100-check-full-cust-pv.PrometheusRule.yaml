@@ -10,7 +10,7 @@ spec:
   - name: sre-filesysfull
     rules:
       # This matches with the default KubePersistentVolumeUsageCritical; this rule inverts the regex match.
-    - alert: KubeCustomerPersistentVolumeUsageCritical
+    - alert: KubeCustomerPersistentVolumeUsageCriticalSREP
       expr: |
         100
         * kubelet_volume_stats_available_bytes{job="kubelet",namespace!~"(openshift-.*|kube-.*|default|logging)"}
@@ -22,7 +22,7 @@ spec:
         link: "https://github.com/openshift/ops-sop/blob/master/v3/alerts/check_filesys_full.asciidoc"
 
       # This matches with the default KubePersistentVolumeFullInFourDays; this rule inverts the regex match.
-    - alert: KubeCustomerPersistentVolumeFullInFourDays
+    - alert: KubeCustomerPersistentVolumeFullInFourDaysSREP
       expr: |
         100
         * (kubelet_volume_stats_available_bytes{job="kubelet",namespace!~"(openshift-.*|kube-.*|default|logging)"}
