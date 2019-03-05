@@ -1,0 +1,21 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: sre-ebs-iops-burstbalance
+    role: alert-rules
+  name: sre-ebs-iops-burstbalance
+spec:
+  groups:
+  - name: sre-ebs-iops-burstbalance
+    rules:
+    - alert: EbsVolumeBurstBalanceLT40PctSRE
+      expr: avg(ebs_iops_credits) < 40
+      for: 60m
+      labels:
+        severity: warn
+    - alert: EbsVolumeBurstBalanceLT20PctSRE
+      expr: avg(ebs_iops_credits) < 20
+      for: 60m
+      labels:
+        severity: critical
