@@ -44,11 +44,8 @@ do
             continue
         fi
 
-        echo "- apiGroups:"
-        echo "  - \"\""
-        echo "  resources:"
-        echo "  - $RESOURCE"
-        echo "  verbs:"
+        VERBS=""
+        VERB_COUNT=0
 
         for VERB in `oc get --raw /api/${VERSION} | jq -r ".resources[] | select(.name == \"$RESOURCE\") | .verbs[]" | sort`;
         do
@@ -57,11 +54,27 @@ do
 
             if [ "$COUNT" == "0" ];
             then
-                echo "  - $VERB"
+                VERBS="$VERBS   - $VERB\n"
+                ((VERB_COUNT++))
             else
-                echo "  # BLACKLIST: $VERB"
+                VERBS="$VERBS  # BLACKLIST: $VERB\n"
             fi
         done
+
+        # did we have at least one verb?
+        if [ "$VERB_COUNT" == 0 ];
+        then
+            # no verbs
+            echo "# BLACKLIST: all verbs for \"\"/$RESOURCE"
+        else
+            # yes, at least one verb
+            echo "- apiGroups:"
+            echo "  - \"\""
+            echo "  resources:"
+            echo "  - $RESOURCE"
+            echo "  verbs:"
+            echo -e"$VERBS"
+        fi
     done
 done
 
@@ -102,11 +115,8 @@ do
                 continue
             fi
 
-            echo "- apiGroups:"
-            echo "  - $GROUP"
-            echo "  resources:"
-            echo "  - $RESOURCE"
-            echo "  verbs:"
+            VERBS=""
+            VERB_COUNT=0
 
             for VERB in `oc get --raw /apis/${GROUP}/${VERSION} | jq -r ".resources[] | select(.name == \"$RESOURCE\") | .verbs[]" | sort`;
             do
@@ -115,11 +125,27 @@ do
 
                 if [ "$COUNT" == "0" ];
                 then
-                    echo "  - $VERB"
+                    VERBS="$VERBS   - $VERB\n"
+                    ((VERB_COUNT++))
                 else
-                    echo "  # BLACKLIST: $VERB"
+                    VERBS="$VERBS  # BLACKLIST: $VERB\n"
                 fi
             done
+
+            # did we have at least one verb?
+            if [ "$VERB_COUNT" == 0 ];
+            then
+                # no verbs
+                echo "# BLACKLIST: all verbs for $GROUP/$RESOURCE"
+            else
+                # yes, at least one verb
+                echo "- apiGroups:"
+                echo "  - $GROUP"
+                echo "  resources:"
+                echo "  - $RESOURCE"
+                echo "  verbs:"
+                echo -e "$VERBS"
+            fi
         done
     done
 done
