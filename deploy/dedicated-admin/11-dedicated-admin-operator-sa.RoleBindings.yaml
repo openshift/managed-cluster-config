@@ -1,0 +1,27 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: dedicated-admin-sa-0
+  namespace: openshift-dedicated-admin
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: admin
+subjects:
+- kind: ServiceAccount
+  name: dedicated-admin-operator
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: dedicated-admin-sa-1
+  namespace: openshift-dedicated-admin
+subjects:
+- kind: ServiceAccount
+  name: dedicated-admin-operator
+  namespace: openshift-dedicated-admin
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: dedicated-admin-operator

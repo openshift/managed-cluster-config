@@ -1,0 +1,88 @@
+apiVersion: apps.openshift.io/v1
+kind: DeploymentConfig
+metadata:
+  name: sre-ebs-iops-reporter
+  namespace: openshift-monitoring
+  labels:
+    name: sre-ebs-iops-reporter
+spec:
+  replicas: 1
+  selector:
+    name: sre-ebs-iops-reporter
+  template:
+    metadata:
+      name: sre-ebs-iops-reporter
+      labels:
+        name: sre-ebs-iops-reporter
+    spec:
+      initContainers:
+      - name: setupcreds
+        image: quay.io/lseelye/yq-kubectl:1903.0.0
+        command: [ "/usr/local/bin/init.py", "-r", "/secrets/aws/config.ini", "-a", "/rawsecrets/aws_access_key_id", "-A", "/rawsecrets/aws_secret_access_key", "-o", "/secrets/aws/credentials.ini", "-c", "/config/env/CLUSTERID" ]
+        volumeMounts:
+        - name: awsrawcreds
+          mountPath: /rawsecrets
+          readOnly: true
+        - name: secrets
+          mountPath: /secrets
+        - name: envfiles
+          mountPath: /config
+      containers:
+      - name: "main"
+        command: [ "/bin/sh", "/monitor/start.sh" ]
+        workingDir: /monitor
+        ports:
+        - containerPort: 8080
+          protocol: "TCP"
+        image: quay.io/jupierce/openshift-python-monitoring:stable
+        env:
+        - name: AWS_SHARED_CREDENTIALS_FILE
+          value: /secrets/aws/credentials.ini
+        - name: AWS_CONFIG_FILE
+          value: /secrets/aws/config.ini
+        - name: PYTHONPATH
+          value: /openshift-python/packages:/support/packages
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          failureThreshold: 2
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 420
+          periodSeconds: 360
+          timeoutSeconds: 240
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 3
+          timeoutSeconds: 240
+        volumeMounts:
+        - name: monitor-volume
+          mountPath: /monitor
+          readOnly: true
+        - name: envfiles
+          mountPath: /config
+          readOnly: true
+        - name: secrets
+          mountPath: /secrets
+          readOnly: true
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      serviceAccountName: sre-ebs-iops-reporter
+      volumes:
+      - name: awsrawcreds
+        secret:
+          secretName: sre-ebs-iops-reporter-aws-credentials
+      - name: secrets
+        emptyDir: {}
+      - name: envfiles
+        emptyDir: {}
+      - name: monitor-volume
+        configMap:
+          name: sre-ebs-iops-reporter-code
+  triggers:
+  - type: ConfigChange
+  strategy:
+    type: "Recreate"
+  paused: false

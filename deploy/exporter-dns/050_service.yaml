@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    name: sre-dns-latency-exporter
+  name: sre-dns-latency-exporter
+  namespace: openshift-monitoring
+spec:
+  ports:
+  - name: http-main
+    port: 80
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    name: sre-dns-latency-exporter
+  sessionAffinity: None
+  type: ClusterIP

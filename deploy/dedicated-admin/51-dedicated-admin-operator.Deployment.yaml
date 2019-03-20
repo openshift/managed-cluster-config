@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dedicated-admin-operator
+  namespace: openshift-dedicated-admin
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: dedicated-admin-operator
+  template:
+    metadata:
+      labels:
+        k8s-app: dedicated-admin-operator
+    spec:
+      serviceAccountName: dedicated-admin-operator
+      containers:
+        - name: dedicated-admin-operator
+          image: quay.io/redhat/dedicated-admin-operator:latest
+          ports:
+          - containerPort: 60000
+            name: metrics
+          command:
+          - dedicated-admin-operator
+          imagePullPolicy: Always
+          env:
+            - name: WATCH_NAMESPACE
+              value: ''
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: OPERATOR_NAME
+              value: "dedicated-admin-operator"

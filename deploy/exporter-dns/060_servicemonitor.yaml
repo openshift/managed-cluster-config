@@ -1,0 +1,21 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: sre-dns-latency-exporter
+  namespace: openshift-monitoring
+  labels:
+    k8s-app: sre-dns-latency-exporter
+    name: sre-dns-latency-exporter
+spec:
+  endpoints:
+  - honorLabels: true
+    interval: 2m
+    port: http-main
+    scheme: http
+    scrapeTimeout: 2m
+    targetPort: 0
+  jobLabel: sre-dns-latency-exporter
+  namespaceSelector: {}
+  selector:
+    matchLabels:
+      name: sre-dns-latency-exporter

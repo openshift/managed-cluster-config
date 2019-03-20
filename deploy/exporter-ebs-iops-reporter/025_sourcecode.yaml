@@ -1,0 +1,84 @@
+apiVersion: v1
+data:
+  main.py: "#!/usr/bin/env python\n\nfrom sets import Set\n\nimport argparse\nimport
+    boto3\nimport datetime\nimport logging\nimport os\nimport re\nimport time\n\nfrom
+    prometheus_client import start_http_server, Gauge\n\nEBS_IOPS = Gauge(\"ebs_iops_credits\",\"Percent
+    of burstable IOPS credit available\", labelnames=['vol_id'])\n\n# A list (implemented
+    as a Set) of all active volumes. \nACTIVE_VOLUMES = Set([])\n\n# Period in minutes
+    from cloudwatch to request\n# See https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_GetMetricData.html\nCLOUDWATCH_PERIOD
+    = 5\n\ndef chunks(l,n):\n    \"\"\"\n    Chunks up an array +l+ into chunks of
+    +n+ size\n    Based on https://stackoverflow.com/questions/312443/how-do-you-split-a-list-into-evenly-sized-chunks\n
+    \   \"\"\"\n    for i in xrange(0,len(l),n):\n        yield l[i:i+n]\n\ndef round_time(period):\n
+    \   \"\"\"\n    Round the current date (in utc) to the nearest +period+ minutes.
+    \n    For example, if the current time is 16:23 and +period+ is 10 (minutes),
+    the\n    return time will be 16:20.\n    Based on:\n    https://stackoverflow.com/questions/3463930/how-to-round-the-minute-of-a-datetime-object-python\n
+    \   \"\"\"\n    t = datetime.datetime.utcnow()\n    t += datetime.timedelta(minutes=period/2.0)\n
+    \   t -= datetime.timedelta(minutes=t.minute % period,\n                            seconds=t.second,\n
+    \                           microseconds=t.microsecond)\n    return t\n\ndef collect(aws):\n
+    \   \"\"\"\n    Collect the current data from the AWS API\n    \"\"\"\n    \n
+    \   # All the volumes CloudWatch tells us it knows about (whether or not it has
+    data)\n    volumes = Set([])\n    \n    # List of volumes that we've actually
+    had data back for the API\n    seen_volumes = Set([])\n\n    # get all the volume
+    IDs. Note, not all of these will necessarily have metrics\n    volumePager = cw.get_paginator('list_metrics')\n
+    \   for p in volumePager.paginate(MetricName='BurstBalance',Namespace='AWS/EBS'):\n
+    \       for v in p['Metrics']:\n            volumes.add(v['Dimensions'][0]['Value'])\n\n
+    \   dimensionCriteria = []\n    for volume in list(volumes):\n        dimensionCriteria.append({\n
+    \               'Id': re.sub(r'^vol-',\"vol_\",volume,0),\n                'MetricStat':
+    {\n                    'Metric': {\n                        'Namespace': 'AWS/EBS',\n
+    \                       'MetricName': 'BurstBalance',\n                        'Dimensions':
+    [\n                            {\n                                'Name': 'VolumeId',
+    'Value': volume\n                            }\n                        ]\n                    },\n
+    \                   'Period': CLOUDWATCH_PERIOD * 60,\n                    'Stat':
+    'Average',\n                    'Unit': 'Percent',\n                }\n            }\n
+    \       )\n\n    # get data for all the volume IDs\n    volumeDataPager = cw.get_paginator('get_metric_data')\n
+    \   time_start = round_time(CLOUDWATCH_PERIOD)\n    logging.debug(\"Requesting
+    from %s to %s with period of %d minutes\",\n        time_start-(datetime.timedelta(minutes=CLOUDWATCH_PERIOD)
+    * 2),\n        time_start-datetime.timedelta(minutes=CLOUDWATCH_PERIOD),\n        CLOUDWATCH_PERIOD*60)\n\n
+    \   # We have to go in chunks of 100 volumes (now, dimensionCriteria) otherwise
+    \n    # Error: The collection MetricDataQueries must not have a size greater than
+    100.\n    # This is a limitation of the AWS CloudWatch API\n    for dimensionChunk
+    in chunks(dimensionCriteria,100):\n        # If the period is 5 minutes and the
+    time is now 09:39 request from\n        # 09:30 - 09:35\n        # The intent
+    is to get a full section of data; since 09:35-09:39 isn't a full period,\n        #
+    the data might be unreliable.\n        for response in volumeDataPager.paginate(\n
+    \                       StartTime=time_start-(datetime.timedelta(minutes=CLOUDWATCH_PERIOD)
+    * 2),\n                        EndTime=time_start-datetime.timedelta(minutes=CLOUDWATCH_PERIOD),\n
+    \                       MetricDataQueries=dimensionChunk,\n                    ):\n
+    \           for mdr in response['MetricDataResults']:\n                if len(mdr['Values'])
+    > 0:\n                    seen_volumes.add(mdr['Label'])\n                    ACTIVE_VOLUMES.add(mdr['Label'])\n
+    \                   EBS_IOPS.labels(vol_id=mdr['Label']).set(mdr['Values'][0])\n
+    \                   logging.debug(\"%s has Values\",mdr['Label'])\n                else:\n
+    \                   logging.debug(\"%s has no Values\", mdr['Label'])\n\n    logging.debug(\"Have
+    %d ACTIVE_VOLUMES, seen %d volumes, total volumes from list_metrics %d\",len(ACTIVE_VOLUMES),len(seen_volumes),len(volumes))
+    \   \n    for inactive_volume in ACTIVE_VOLUMES - seen_volumes:\n        logging.info(\"Removing
+    vol_id='%s' from Prometheus \",inactive_volume)\n        EBS_IOPS.remove(inactive_volume)\n
+    \       ACTIVE_VOLUMES.remove(inactive_volume)\n\nif __name__ == \"__main__\":\n
+    \   logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s:%(name)s:%(message)s')\n
+    \   \n    parser = argparse.ArgumentParser(description='Options for EBS IOPS Exporter')\n
+    \   parser.add_argument('-p', '--aws-profile', help='Name of AWS credentials profile
+    to use', required=False, default=\"default\")\n    parser.add_argument('-r', '--aws-region',
+    help='AWS Regiom to use', required=False, default=\"us-east-1\")\n    args = vars(parser.parse_args())\n
+    \  \n    # Preference order for the AWS profile:\n    # 1. Environment variables
+    (AWS_PROFILE)\n    # 2. Argument to program (--aws-profile)\n    # 3. \"default\",
+    if neither are specified\n\n    if \"AWS_PROFILE\" in os.environ:\n        args['aws_profile']
+    = os.environ['AWS_PROFILE']\n\n    logging.info(\"Starting ebs-iops-reporter with
+    aws_profile=%s, aws_region=%s\",args['aws_profile'],args['aws_region'])\n\n    session
+    = boto3.session.Session(profile_name=args['aws_profile'],region_name=args['aws_region'])\n
+    \   cw = session.client('cloudwatch')\n\n    start_http_server(8080)\n    while
+    True:\n        collect(cw)\n        # Sleep for the interval\n        logging.info(\"Going
+    to sleep for %d seconds\",CLOUDWATCH_PERIOD*60)\n        time.sleep(CLOUDWATCH_PERIOD
+    * 60)\n"
+  start.sh: |-
+    #!/bin/sh
+
+    set -o allexport
+
+    if [[ -d /config && -d /config/env ]]; then
+      source /config/env/*
+    fi
+
+    exec /usr/bin/python /monitor/main.py "$@"
+kind: ConfigMap
+metadata:
+  creationTimestamp: null
+  name: sre-ebs-iops-reporter-code
