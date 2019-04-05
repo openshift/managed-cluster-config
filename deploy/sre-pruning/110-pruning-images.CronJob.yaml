@@ -1,0 +1,33 @@
+# Refer to SREP-1104 (and PROD-984)
+# This is on hold until image pruning can be done with a service account
+# (or implemented a different way)
+#---
+#apiVersion: batch/v1beta1
+#kind: CronJob
+#metadata:
+#  name: image-pruner
+#  namespace: openshift-sre-pruning
+#spec:
+#  failedJobsHistoryLimit: 5
+#  successfulJobsHistoryLimit: 3
+#  concurrencyPolicy: Forbid
+#  schedule: "* */1 * * *"
+#  jobTemplate:
+#    spec:
+#      template:
+#        spec:
+#          serviceAccountName: sre-pruner-sa
+#          restartPolicy: Never          
+#          containers:
+#          - name: image-pruner
+#            image: quay.io/openshift/origin-cli:v4.0.0
+#            command: 
+#            - oc
+#            - adm
+#            - prune
+#            - images
+#            - --token=/var/run/secrets/kubernetes.io/serviceaccount/token
+#            - --keep-younger-than=24h
+#            - --keep-tag-revisions=5
+#            - --confirm
+#

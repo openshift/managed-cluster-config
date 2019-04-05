@@ -1,0 +1,29 @@
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: builds-pruner
+  namespace: openshift-sre-pruning
+spec:
+  failedJobsHistoryLimit: 5
+  successfulJobsHistoryLimit: 3
+  concurrencyPolicy: Forbid
+  schedule: "* */1 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: sre-pruner-sa
+          restartPolicy: Never          
+          containers:
+          - name: builds-pruner
+            image: quay.io/openshift/origin-cli:v4.0.0
+            command: 
+            - oc
+            - adm
+            - prune
+            - builds
+            - --keep-younger-than=24h
+            - --keep-complete=1
+            - --keep-failed=1
+            - --confirm
