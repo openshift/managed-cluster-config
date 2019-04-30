@@ -7,11 +7,22 @@ parameters:
 metadata:
   name: selectorsyncset-template
 objects:
+# replace old SSS w/ nothing so we don't have manual cleanup to do
+- apiVersion: hive.openshift.io/v1alpha1
+  kind: SelectorSyncSet
+  metadata:
+    name: osd-managed-cluster-config
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: "true"
+    resourceApplyMode: sync
+    resources: []
 - apiVersion: hive.openshift.io/v1alpha1
   kind: SelectorSyncSet
   metadata:
     generation: 1
-    name: osd-managed-cluster-config
+    name: TEMPLATE
   spec:
     clusterDeploymentSelector:
       matchLabels:

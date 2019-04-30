@@ -1,8 +1,9 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 import os
 import sys
 import yaml 
 import argparse
+import copy
 
 def get_yaml_all(filename):
     with open(filename,'r') as input_file:
@@ -29,6 +30,26 @@ def get_all_yaml_obj(file_paths):
             yaml_objs.append(obj)
     return yaml_objs
 
+def process_yamls(name, directory, obj):
+    o = copy.deepcopy(obj)
+    # Get all yaml files as array of yaml objecys
+    yamls = get_all_yaml_obj(get_all_yaml_files(directory))
+
+    for y in yamls:
+        if 'patch' in y:
+            if not 'patches' in o['spec']:
+                o['spec']['patches'] = []
+            o['spec']['patches'].append(y)
+        else:
+            if not 'resources' in o['spec']:
+                o['spec']['resources'] = []
+            o['spec']['resources'].append(y)
+
+    o['metadata']['name'] = name
+
+    # append object to the template's objects
+    template_data['objects'].append(o)
+
 
 if __name__ == '__main__':
     #Argument parser
@@ -37,23 +58,35 @@ if __name__ == '__main__':
     parser.add_argument("--yaml-directory", "-y", required=True, help="Path to folder containing yaml files [required]")
     parser.add_argument("--destination", "-d", required=True, help="Destination for selectorsynceset file [required]")
     parser.add_argument("--git-hash", "-c", required=True, help="Commit hash of commit used [required]")
+    parser.add_argument("--repo-name", "-r", required=True, help="Name of the repository [required]")
     arguments = parser.parse_args()
 
-    # Get all yaml files as array of yaml objecys
-    yamls = get_all_yaml_obj(get_all_yaml_files(arguments.yaml_directory))
     # Get the template data
     template_data = get_yaml(arguments.template_path)
-    # Configure template
+    # Configure template.  Use the last object as a template for adding SSS for each child dir of yaml_directory.
+    last_obj = {}
     for obj in template_data['objects']:
-        if not 'labels' in obj['metadata']:
-            obj['metadata']['labels'] = {}
-        # create labels
-        obj['metadata']['labels']['managed.openshift.io/osd'] = "true"
-        obj['metadata']['labels']['managed.openshift.io/gitHash'] = arguments.git_hash
+        last_obj = obj
 
-        # create resources
-        obj['spec']['resources'] = yamls
-    
-    # write selectorsyncset file
+    # remove the last object, it will be used as a template and results appended
+    template_data['objects'] = template_data['objects'][:-1]
+
+    # make sure labels are good before we start using this object as a template
+    if not 'labels' in last_obj['metadata']:
+        last_obj['metadata']['labels'] = {}
+    # create labels
+    last_obj['metadata']['labels']['managed.openshift.io/osd'] = "true"
+    last_obj['metadata']['labels']['managed.openshift.io/gitRepoName'] = arguments.repo_name
+    last_obj['metadata']['labels']['managed.openshift.io/gitHash'] = arguments.git_hash
+
+    # for each subdir of yaml_directory append 'object' to template
+    for (dirpath, dirnames, filenames) in os.walk(arguments.yaml_directory):
+        if not dirnames:
+            process_yamls(arguments.repo_name, dirpath, last_obj)
+        else:
+            for dir in dirnames:
+                process_yamls(dir, os.path.join(arguments.yaml_directory, dir), last_obj)
+
+    # write template file
     with open(arguments.destination,'w') as outfile:
         yaml.dump(template_data,outfile)
