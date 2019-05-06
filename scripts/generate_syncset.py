@@ -44,8 +44,8 @@ if __name__ == '__main__':
     # Get the template data
     template_data = get_yaml(arguments.template_path)
     # Configure template
-    template_data['metadata']['labels']['url'] = arguments.git_url
-    template_data['metadata']['labels']['gitHash'] = arguments.git_hash
+    template_data['metadata']['labels']['managed.openshift.io/git-source'] = arguments.git_url
+    template_data['metadata']['labels']['managed.openshift.io/git-hash'] = arguments.git_hash
     template_data['resources'] = yamls
     # write selectorsyncset file
     with open(arguments.destination,'w') as outfile:
