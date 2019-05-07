@@ -4,7 +4,6 @@ SHELL := /usr/bin/env bash
 # - YAML_DIRECTORY
 # - SELECTOR_SYNC_SET_TEMPLATE
 # - SELECTOR_SYNC_SET_DESTINATION
-# - GIT_URL
 # - GIT_HASH
 include project.mk
 
@@ -18,9 +17,6 @@ endif
 ifndef SELECTOR_SYNC_SET_DESTINATION
 $(error SELECTOR_SYNC_SET_DESTINATION is not set; check project.mk file)
 endif
-ifndef GIT_URL
-$(error SELECTOR_SYNC_SET_DESTINATION is not set; check project.mk file)
-endif
 ifndef GIT_HASH
 $(error SELECTOR_SYNC_SET_DESTINATION is not set; check project.mk file)
 endif
@@ -30,7 +26,7 @@ default: clean generate-syncset
 
 .PHONY: generate-syncset
 generate-syncset: 
-	scripts/generate_syncset.py -t ${SELECTOR_SYNC_SET_TEMPLATE} -y ${YAML_DIRECTORY} -d ${SELECTOR_SYNC_SET_DESTINATION} -u ${GIT_URL} -c ${GIT_HASH}
+	scripts/generate_syncset.py -t ${SELECTOR_SYNC_SET_TEMPLATE} -y ${YAML_DIRECTORY} -d ${SELECTOR_SYNC_SET_DESTINATION} -c ${GIT_HASH}
 
 .PHONY: clean 
 clean: 

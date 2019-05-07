@@ -18,6 +18,7 @@ def get_all_yaml_files(path):
         for file in f:
             if file.endswith('.yml') or file.endswith('.yaml'):
                 file_paths.append(os.path.join(r,file))
+    file_paths = sorted(file_paths)
     return file_paths
 
 def get_all_yaml_obj(file_paths):
@@ -35,7 +36,6 @@ if __name__ == '__main__':
     parser.add_argument("--template-path", "-t", required=True, help="Path to template file [required]")
     parser.add_argument("--yaml-directory", "-y", required=True, help="Path to folder containing yaml files [required]")
     parser.add_argument("--destination", "-d", required=True, help="Destination for selectorsynceset file [required]")
-    parser.add_argument("--git-url" , "-u", required=True, help="URL for the git repo [required]")
     parser.add_argument("--git-hash", "-c", required=True, help="Commit hash of commit used [required]")
     arguments = parser.parse_args()
 
@@ -44,9 +44,15 @@ if __name__ == '__main__':
     # Get the template data
     template_data = get_yaml(arguments.template_path)
     # Configure template
-    template_data['metadata']['labels']['managed.openshift.io/git-source'] = arguments.git_url
-    template_data['metadata']['labels']['managed.openshift.io/git-hash'] = arguments.git_hash
-    template_data['resources'] = yamls
+    if not 'labels' in template_data['metadata']:
+        template_data['metadata']['labels'] = {}
+    # create labels
+    template_data['metadata']['labels']['managed.openshift.io/osd'] = True
+    template_data['metadata']['labels']['managed.openshift.io/gitHash'] = arguments.git_hash
+    
+    # create resources
+    template_data['spec']['resources'] = yamls
+    
     # write selectorsyncset file
     with open(arguments.destination,'w') as outfile:
         yaml.dump(template_data,outfile)
