@@ -3,4 +3,4 @@
 set -exv
 
 # Run make 
-cd .. && make
+make
