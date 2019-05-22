@@ -18,7 +18,7 @@ ifndef SELECTOR_SYNC_SET_DESTINATION
 $(error SELECTOR_SYNC_SET_DESTINATION is not set; check project.mk file)
 endif
 ifndef GIT_HASH
-$(error SELECTOR_SYNC_SET_DESTINATION is not set; check project.mk file)
+$(error GIT_HASH is not set; check project.mk file)
 endif
 
 .PHONY: default
