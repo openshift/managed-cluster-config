@@ -48,7 +48,7 @@ if __name__ == '__main__':
         if not 'labels' in obj['metadata']:
             obj['metadata']['labels'] = {}
         # create labels
-        obj['metadata']['labels']['managed.openshift.io/osd'] = True
+        obj['metadata']['labels']['managed.openshift.io/osd'] = "true"
         obj['metadata']['labels']['managed.openshift.io/gitHash'] = arguments.git_hash
 
         # create resources
