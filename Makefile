@@ -31,3 +31,8 @@ generate-syncset:
 .PHONY: clean 
 clean: 
 	rm -rf ${SELECTOR_SYNC_SET_DESTINATION}
+
+.PHONY: git-commit
+git-commit:
+	git add ${SELECTOR_SYNC_SET_DESTINATION}
+	git commit -m "Updated selectorsynceset template added"

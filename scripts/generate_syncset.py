@@ -44,14 +44,15 @@ if __name__ == '__main__':
     # Get the template data
     template_data = get_yaml(arguments.template_path)
     # Configure template
-    if not 'labels' in template_data['metadata']:
-        template_data['metadata']['labels'] = {}
-    # create labels
-    template_data['metadata']['labels']['managed.openshift.io/osd'] = True
-    template_data['metadata']['labels']['managed.openshift.io/gitHash'] = arguments.git_hash
-    
-    # create resources
-    template_data['spec']['resources'] = yamls
+    for obj in template_data['objects']:
+        if not 'labels' in obj['metadata']:
+            obj['metadata']['labels'] = {}
+        # create labels
+        obj['metadata']['labels']['managed.openshift.io/osd'] = "true"
+        obj['metadata']['labels']['managed.openshift.io/gitHash'] = arguments.git_hash
+
+        # create resources
+        obj['spec']['resources'] = yamls
     
     # write selectorsyncset file
     with open(arguments.destination,'w') as outfile:

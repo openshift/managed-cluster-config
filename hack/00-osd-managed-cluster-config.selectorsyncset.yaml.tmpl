@@ -1,0 +1,526 @@
+apiVersion: v1
+kind: Template
+metadata:
+  name: selectorsyncset-template
+objects:
+- apiVersion: hive.openshift.io/v1alpha1
+  kind: SelectorSyncSet
+  metadata:
+    generation: 1
+    labels:
+      managed.openshift.io/gitHash: cbecd76
+      managed.openshift.io/osd: 'true'
+    name: osd-managed-cluster-config
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+    resourceApplyMode: sync
+    resources:
+    - apiVersion: operator.openshift.io/v1
+      kind: Console
+      metadata:
+        name: cluster
+      spec:
+        authentication:
+          logoutRedirect: https://www.redhat.com/i/should/logout
+        customization:
+          brand: dedicated
+          documentationBaseURL: https://docs.openshift.com/dedicated/
+        managementState: Managed
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
+          prometheus: sre-filesysfull
+          role: alert-rules
+        name: sre-filesysfull
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-filesysfull
+          rules:
+          - alert: KubeCustomerPersistentVolumeUsageCriticalSRE
+            annotations:
+              link: https://github.com/openshift/ops-sop/blob/master/v3/alerts/check_filesys_full.asciidoc
+              message: The customer PersistentVolume claimed by {{ $labels.persistentvolumeclaim
+                }} in Namespace {{ $labels.namespace }} is only {{ printf "%0.2f"
+                $value }}% free.
+            expr: '100
+
+              * kubelet_volume_stats_available_bytes{job="kubelet",namespace!~"(openshift-.*|kube-.*|default|logging)"}
+
+              / kubelet_volume_stats_capacity_bytes{job="kubelet",namespace!~"(openshift-.*|kube-.*|default|logging)"}
+
+              < 3
+
+              '
+            severity: warning
+          - alert: KubeCustomerPersistentVolumeFullInFourDaysSRE
+            annotations:
+              link: https://github.com/openshift/ops-sop/blob/master/v3/alerts/check_filesys_full.asciidoc
+              message: Based on recent sampling, the customer PersistentVolume claimed
+                by {{ $labels.persistentvolumeclaim }} in Namespace {{ $labels.namespace
+                }} is expected to fill up within four days. Currently {{ printf "%0.2f"
+                $value }}% is available.
+            expr: '100
+
+              * (kubelet_volume_stats_available_bytes{job="kubelet",namespace!~"(openshift-.*|kube-.*|default|logging)"}
+
+              / kubelet_volume_stats_capacity_bytes{job="kubelet",namespace!~"(openshift-.*|kube-.*|default|logging)"})
+
+              < 15 and predict_linear(kubelet_volume_stats_available_bytes{job="kubelet",namespace!~"(openshift-.*|kube-.*|default|logging)"}[6h],
+
+              4 * 24 * 3600) < 0
+
+              '
+            severity: warning
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
+          prometheus: sre-dns-alerts
+          role: alert-rules
+        name: sre-dns-alerts
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-dns-alerts
+          rules:
+          - alert: DNSLatencyOver200ms5MinSRE
+            expr: max_over_time(dns_latency_milliseconds_sum[5m]) > 0.2
+            labels:
+              severity: critical
+          - alert: DNSErrors05MinSRE
+            expr: rate(dns_failure_failure_total[5m]) > 0
+            labels:
+              severity: critical
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
+          prometheus: sre-ebs-iops-burstbalance
+          role: alert-rules
+        name: sre-ebs-iops-burstbalance
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-ebs-iops-burstbalance
+          rules:
+          - alert: EbsVolumeBurstBalanceLT40PctSRE
+            expr: avg(ebs_iops_credits) < 40
+            for: 60m
+            labels:
+              severity: warning
+          - alert: EbsVolumeBurstBalanceLT20PctSRE
+            expr: avg(ebs_iops_credits) < 20
+            for: 60m
+            labels:
+              severity: critical
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
+          prometheus: sre-node-unschedulable
+          role: alert-rules
+        name: sre-node-unschedulable
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-node-unschedulable
+          rules:
+          - alert: KubeNodeUnschedulableSRE
+            annotations:
+              link: https://github.com/openshift/ops-sop/blob/master/v3/alerts/openshift_node_not_schedulable.asciidoc
+              message: The node {{ $labels.node }} has been unscedulable for more
+                than an hour.
+            expr: kube_node_spec_unschedulable > 0
+            for: 1h
+            severity: warning
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
+          prometheus: sre-router-health
+          role: alert-rules
+        name: sre-router-health
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-router-health
+          rules:
+          - alert: RouterAvailabilityLT50PctSRE
+            expr: "(sum(avg_over_time(kube_replicationcontroller_status_ready_replicas[1h]))\
+              \ by (replicationcontroller,namespace) \n/\non(replicationcontroller,namespace)\n\
+              max(kube_replicationcontroller_status_replicas{namespace=\"default\"\
+              ,replicationcontroller=~\"router.?-.*\"} >0) by (replicationcontroller,namespace))\
+              \ < 0.5\n"
+            labels:
+              severity: warning
+          - alert: RouterAvailabilityLT30PctSRE
+            expr: "(sum(avg_over_time(kube_replicationcontroller_status_ready_replicas[1h]))\
+              \ by (replicationcontroller,namespace) \n/\non(replicationcontroller,namespace)\n\
+              max(kube_replicationcontroller_status_replicas{namespace=\"default\"\
+              ,replicationcontroller=~\"router.?-.*\"} >0) by (replicationcontroller,namespace))\
+              \ < 0.3\n"
+            labels:
+              severity: critical
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
+          prometheus: sre-alerts-stuck-builds
+          role: alert-rules
+        name: sre-alerts-stuck-builds
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-alerts-stuck-builds
+          rules:
+          - alert: StuckNewBuilds3MinSRE
+            expr: count(openshift_build_active_time_seconds{phase="New"} < time()
+              - 180) > 0
+            labels:
+              severity: warning
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
+          prometheus: sre-alerts-stuck-volumes
+          role: alert-rules
+        name: sre-alerts-stuck-volumes
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-alerts-stuck-volumes
+          rules:
+          - alert: EbsVolumeStuckAttaching5MinSRE
+            expr: min_over_time(ebs_volume_state{ebs_volume_state="attaching"}[5m])
+              == 1
+            labels:
+              severity: warning
+          - alert: EbsVolumeStuckAttaching10MinSRE
+            expr: min_over_time(ebs_volume_state{ebs_volume_state="attaching"}[10m])
+              == 1
+            labels:
+              severity: critical
+          - alert: EbsVolumeStuckDetaching5MinSRE
+            expr: min_over_time(ebs_volume_state{ebs_volume_state="detaching"}[5m])
+              == 1
+            labels:
+              severity: warning
+          - alert: EbsVolumeStuckDetaching10MinSRE
+            expr: min_over_time(ebs_volume_state{ebs_volume_state="detaching"}[10m])
+              == 1
+            labels:
+              severity: critical
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: osd-sre-admin
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - '*'
+        verbs:
+        - '*'
+      - apiGroups:
+        - '*'
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - apiextensions.k8s.io
+        resources:
+        - '*'
+        verbs:
+        - '*'
+      - apiGroups:
+        - admissionregistration.k8s.io
+        resources:
+        - customresourcedefinitions
+        - customresourcedefinitions/status
+        verbs:
+        - '*'
+      - apiGroups:
+        - apps
+        resources:
+        - '*'
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - apps.openshift.io
+        resources:
+        - '*'
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - batch
+        resources:
+        - job
+        - cronjob
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - build.openshift.io
+        resources:
+        - buildconfigs
+        - builds
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - cloudcredential.openshift.io
+        resources:
+        - '*'
+        verbs:
+        - '*'
+      - apiGroups:
+        - config.openshift.io
+        resources:
+        - projects
+        verbs:
+        - '*'
+      - apiGroups:
+        - hive.openshift.io
+        resources:
+        - clusterdeployments
+        - selectorsyncidentityproviders
+        - selectorsyncsets
+        - syncidentityproviders
+        - syncsets
+        verbs:
+        - '*'
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - subscriptions
+        verbs:
+        - '*'
+      - apiGroups:
+        - policy
+        resources:
+        - '*'
+        verbs:
+        - '*'
+      - apiGroups:
+        - project.openshift.io
+        resources:
+        - '*'
+        verbs:
+        - '*'
+      - apiGroups:
+        - quota.openshift.io
+        resources:
+        - '*'
+        verbs:
+        - '*'
+      - apiGroups:
+        - rbac.authorization.k8s.io
+        resources:
+        - rolebindings
+        - roles
+        verbs:
+        - '*'
+      - apiGroups:
+        - security.openshift.io
+        resources:
+        - '*'
+        verbs:
+        - '*'
+      - apiGroups:
+        - storage.k8s.io
+        resources:
+        - '*'
+        verbs:
+        - '*'
+      - apiGroups:
+        - tuned.openshift.io
+        resources:
+        - '*'
+        verbs:
+        - '*'
+      - apiGroups:
+        - user.openshift.io
+        resources:
+        - groups
+        verbs:
+        - patch
+        - update
+      - nonResourceURLs:
+        - '*'
+        verbs:
+        - '*'
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: osd-sre-admin
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: osd-sre-admin
+      subjects:
+      - kind: Group
+        name: osd-sre-admins
+    - apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: openshift-sre-pruning
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: sre-pruner-sa
+        namespace: openshift-sre-pruning
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: sre-pruner-images
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: system:image-pruner
+      subjects:
+      - kind: ServiceAccount
+        name: sre-pruner-sa
+        namespace: openshift-sre-pruning
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: sre-pruner-buildsdeploys-cr
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        - replicationcontrollers
+        verbs:
+        - list
+        - get
+      - apiGroups:
+        - ''
+        resources:
+        - replicationcontrollers
+        verbs:
+        - delete
+      - apiGroups:
+        - apps.openshift.io
+        resources:
+        - deploymentconfigs
+        verbs:
+        - get
+        - list
+      - apiGroups:
+        - build.openshift.io
+        resources:
+        - buildconfigs
+        - builds
+        verbs:
+        - list
+        - get
+      - apiGroups:
+        - build.openshift.io
+        resources:
+        - builds
+        verbs:
+        - delete
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: sre-pruner-buildsdeploys-pruning
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: sre-pruner-buildsdeploys-cr
+      subjects:
+      - kind: ServiceAccount
+        name: sre-pruner-sa
+        namespace: openshift-sre-pruning
+    - apiVersion: batch/v1beta1
+      kind: CronJob
+      metadata:
+        name: builds-pruner
+        namespace: openshift-sre-pruning
+      spec:
+        concurrencyPolicy: Forbid
+        failedJobsHistoryLimit: 5
+        jobTemplate:
+          spec:
+            template:
+              spec:
+                containers:
+                - command:
+                  - oc
+                  - adm
+                  - prune
+                  - builds
+                  - --keep-younger-than=24h
+                  - --keep-complete=1
+                  - --keep-failed=1
+                  - --confirm
+                  image: quay.io/openshift/origin-cli:v4.0.0
+                  name: builds-pruner
+                restartPolicy: Never
+                serviceAccountName: sre-pruner-sa
+        schedule: 0 */1 * * *
+        successfulJobsHistoryLimit: 3
+    - apiVersion: batch/v1beta1
+      kind: CronJob
+      metadata:
+        name: deployments-pruner
+        namespace: openshift-sre-pruning
+      spec:
+        concurrencyPolicy: Forbid
+        failedJobsHistoryLimit: 5
+        jobTemplate:
+          spec:
+            template:
+              spec:
+                containers:
+                - command:
+                  - oc
+                  - adm
+                  - prune
+                  - deployments
+                  - --keep-complete=1
+                  - --keep-younger-than=24h
+                  - --keep-failed=1
+                  - --confirm
+                  image: quay.io/openshift/origin-cli:v4.0.0
+                  name: deployments-pruner
+                restartPolicy: Never
+                serviceAccountName: sre-pruner-sa
+        schedule: 0 */1 * * *
+        successfulJobsHistoryLimit: 3
+    - apiVersion: batch/v1beta1
+      kind: CronJob
+      metadata:
+        name: image-pruner
+        namespace: openshift-sre-pruning
+      spec:
+        concurrencyPolicy: Forbid
+        failedJobsHistoryLimit: 5
+        jobTemplate:
+          spec:
+            template:
+              spec:
+                containers:
+                - args:
+                  - /bin/bash
+                  - -c
+                  - oc adm prune images --token=$$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+                    --server=https://$(KUBERNETES_SERVICE_HOST):$(KUBERNETES_SERVICE_PORT)
+                    --keep-younger-than=24h --keep-tag-revisions=5 --insecure-skip-tls-verify=true
+                    --confirm
+                  image: quay.io/openshift/origin-cli:v4.0.0
+                  name: image-pruner
+                restartPolicy: Never
+                serviceAccountName: sre-pruner-sa
+        schedule: 0 */1 * * *
+        successfulJobsHistoryLimit: 3
