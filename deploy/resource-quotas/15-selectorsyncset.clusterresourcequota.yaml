@@ -1,0 +1,39 @@
+apiVersion: hive.openshift.io/v1alpha1
+kind: SelectorSyncSet
+metadata:
+  generation: 1
+  name: osd-operators-registry-catalogsource
+spec:
+  clusterDeploymentSelector:
+    matchLabels:
+      api.openshift.com/managed: "true"
+  resourceApplyMode: sync
+  resources:
+  - kind: ClusterResourceQuota
+    apiVersion: quota.openshift.io/v1
+    metadata:
+      name: persistent-volume-quota
+    spec:
+      selector:
+        annotations: null
+        labels:
+          matchExpressions:
+          - key: storage_pv_quota
+            operator: DoesNotExist
+      quota:
+        hard:
+          requests.storage: 100
+  - kind: ClusterResourceQuota
+    apiVersion: quota.openshift.io/v1
+    metadata:
+      name: loadbalancer-quota
+    spec:
+      selector:
+        annotations: null
+        labels:
+          matchExpressions:
+          - key: service_lb_quota
+            operator: DoesNotExist
+      quota:
+        hard:
+          services.loadbalancers: 2
