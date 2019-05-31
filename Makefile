@@ -4,7 +4,7 @@ SHELL := /usr/bin/env bash
 # - YAML_DIRECTORY
 # - SELECTOR_SYNC_SET_TEMPLATE
 # - SELECTOR_SYNC_SET_DESTINATION
-# - GIT_HASH
+# - REPO_NAME
 include project.mk
 
 #Validate variables in project.mk exist
@@ -16,9 +16,6 @@ $(error SELECTOR_SYNC_SET_TEMPLATE is not set; check project.mk file)
 endif
 ifndef SELECTOR_SYNC_SET_DESTINATION
 $(error SELECTOR_SYNC_SET_DESTINATION is not set; check project.mk file)
-endif
-ifndef GIT_HASH
-$(error GIT_HASH is not set; check project.mk file)
 endif
 ifndef REPO_NAME
 $(error REPO_NAME is not set; check project.mk file)
@@ -38,7 +35,7 @@ generate-oauth-templates:
 
 .PHONY: generate-syncset
 generate-syncset: generate-oauth-templates
-	scripts/generate_syncset.py -t ${SELECTOR_SYNC_SET_TEMPLATE} -y ${YAML_DIRECTORY} -d ${SELECTOR_SYNC_SET_DESTINATION} -c ${GIT_HASH} -r ${REPO_NAME}
+	scripts/generate_syncset.py -t ${SELECTOR_SYNC_SET_TEMPLATE} -y ${YAML_DIRECTORY} -d ${SELECTOR_SYNC_SET_DESTINATION} -r ${REPO_NAME}
 
 .PHONY: clean 
 clean: 

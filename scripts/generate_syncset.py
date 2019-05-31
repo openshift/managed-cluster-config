@@ -57,7 +57,6 @@ if __name__ == '__main__':
     parser.add_argument("--template-path", "-t", required=True, help="Path to template file [required]")
     parser.add_argument("--yaml-directory", "-y", required=True, help="Path to folder containing yaml files [required]")
     parser.add_argument("--destination", "-d", required=True, help="Destination for selectorsynceset file [required]")
-    parser.add_argument("--git-hash", "-c", required=True, help="Commit hash of commit used [required]")
     parser.add_argument("--repo-name", "-r", required=True, help="Name of the repository [required]")
     arguments = parser.parse_args()
 
@@ -77,7 +76,7 @@ if __name__ == '__main__':
     # create labels
     last_obj['metadata']['labels']['managed.openshift.io/osd'] = "true"
     last_obj['metadata']['labels']['managed.openshift.io/gitRepoName'] = arguments.repo_name
-    last_obj['metadata']['labels']['managed.openshift.io/gitHash'] = arguments.git_hash
+    last_obj['metadata']['labels']['managed.openshift.io/gitHash'] = "${IMAGE_TAG}"
 
     # for each subdir of yaml_directory append 'object' to template
     for (dirpath, dirnames, filenames) in os.walk(arguments.yaml_directory):
