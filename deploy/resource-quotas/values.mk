@@ -2,7 +2,7 @@
 PERSISTENT_VOLUME_EXCEPTIONS ?= openshift-etcd openshift-monitoring
 
 # Namespaces where load balancer quotas do not apply, space separated.
-LOAD_BALANCER_EXCEPTIONS ?= $(PERSISTENT_VOLUME_EXCEPTIONS) 
+LOAD_BALANCER_EXCEPTIONS ?= $(PERSISTENT_VOLUME_EXCEPTIONS)
 
 # Default PV quota per namespace in Gi
 DEFAULT_PV_QUOTA ?= 100
