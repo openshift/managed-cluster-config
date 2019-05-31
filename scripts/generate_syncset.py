@@ -34,7 +34,7 @@ def get_all_yaml_obj(file_paths):
 
 def process_yamls(name, directory, obj):
     o = copy.deepcopy(obj)
-    # Get all yaml files as array of yaml objecys
+    # Get all yaml files as array of yaml objects
     yamls = get_all_yaml_obj(get_all_yaml_files(directory))
 
     for y in yamls:
