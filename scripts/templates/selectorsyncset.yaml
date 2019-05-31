@@ -1,19 +1,13 @@
-apiVersion: v1
-kind: Template
-parameters:
-- name: IMAGE_TAG
-  value: latest
-  required: true
+apiVersion: hive.openshift.io/v1alpha1
+kind: SelectorSyncSet
 metadata:
-  name: selectorsyncset-template
-objects:
-- apiVersion: hive.openshift.io/v1alpha1
-  kind: SelectorSyncSet
-  metadata:
-    generation: 1
-    name: osd-managed-cluster-config
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: "true"
-    resourceApplyMode: sync
+  labels:
+    managed.openshift.io/gitHash: ${IMAGE_TAG}
+    managed.openshift.io/gitRepoName: ${REPO_NAME}
+    managed.openshift.io/osd: 'true'
+  name: REPLACED_BY_SCRIPT
+spec:
+  clusterDeploymentSelector:
+    matchLabels:
+      api.openshift.com/managed: "true"
+  resourceApplyMode: sync
