@@ -66,13 +66,11 @@ if __name__ == '__main__':
     template_data = get_yaml(os.path.join(arguments.template_dir, "template.yaml"))
     selectorsyncset_data = get_yaml(os.path.join(arguments.template_dir, "selectorsyncset.yaml"))
 
-    # Create required labels on SelectorSyncSet
-    if not 'labels' in selectorsyncset_data['metadata']:
-        selectorsyncset_data['metadata']['labels'] = {}
-
-    selectorsyncset_data['metadata']['labels']['managed.openshift.io/osd'] = "true"
-    selectorsyncset_data['metadata']['labels']['managed.openshift.io/gitRepoName'] = arguments.repo_name
-    selectorsyncset_data['metadata']['labels']['managed.openshift.io/gitHash'] = "${IMAGE_TAG}"
+    # The templates and script are shared across repos (copy & paste).
+    # Set the REPO_NAME parameter.
+    for p in template_data['parameters']:
+        if p['name'] == 'REPO_NAME':
+            p['value'] = arguments.repo_name
 
     # for each subdir of yaml_directory append 'object' to template
     for (dirpath, dirnames, filenames) in os.walk(arguments.yaml_directory):
