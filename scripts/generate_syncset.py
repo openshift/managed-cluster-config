@@ -54,37 +54,31 @@ def process_yamls(name, directory, obj):
 if __name__ == '__main__':
     #Argument parser
     parser = argparse.ArgumentParser(description="selectorsyncset generation tool", usage='%(prog)s [options]')
-    parser.add_argument("--template-path", "-t", required=True, help="Path to template file [required]")
+    parser.add_argument("--template-dir", "-t", required=True, help="Path to template directory [required]")
     parser.add_argument("--yaml-directory", "-y", required=True, help="Path to folder containing yaml files [required]")
     parser.add_argument("--destination", "-d", required=True, help="Destination for selectorsynceset file [required]")
     parser.add_argument("--repo-name", "-r", required=True, help="Name of the repository [required]")
     arguments = parser.parse_args()
 
     # Get the template data
-    template_data = get_yaml(arguments.template_path)
-    # Configure template.  Use the last object as a template for adding SSS for each child dir of yaml_directory.
-    last_obj = {}
-    for obj in template_data['objects']:
-        last_obj = obj
+    template_data = get_yaml(os.path.join(arguments.template_dir, "template.yaml"))
+    selectorsyncset_data = get_yaml(os.path.join(arguments.template_dir, "selectorsyncset.yaml"))
 
-    # remove the last object, it will be used as a template and results appended
-    template_data['objects'] = template_data['objects'][:-1]
+    # Create required labels on SelectorSyncSet
+    if not 'labels' in selectorsyncset_data['metadata']:
+        selectorsyncset_data['metadata']['labels'] = {}
 
-    # make sure labels are good before we start using this object as a template
-    if not 'labels' in last_obj['metadata']:
-        last_obj['metadata']['labels'] = {}
-    # create labels
-    last_obj['metadata']['labels']['managed.openshift.io/osd'] = "true"
-    last_obj['metadata']['labels']['managed.openshift.io/gitRepoName'] = arguments.repo_name
-    last_obj['metadata']['labels']['managed.openshift.io/gitHash'] = "${IMAGE_TAG}"
+    selectorsyncset_data['metadata']['labels']['managed.openshift.io/osd'] = "true"
+    selectorsyncset_data['metadata']['labels']['managed.openshift.io/gitRepoName'] = arguments.repo_name
+    selectorsyncset_data['metadata']['labels']['managed.openshift.io/gitHash'] = "${IMAGE_TAG}"
 
     # for each subdir of yaml_directory append 'object' to template
     for (dirpath, dirnames, filenames) in os.walk(arguments.yaml_directory):
         if not dirnames:
-            process_yamls(arguments.repo_name, dirpath, last_obj)
+            process_yamls(arguments.repo_name, dirpath, selectorsyncset_data)
         else:
             for dir in dirnames:
-                process_yamls(dir, os.path.join(arguments.yaml_directory, dir), last_obj)
+                process_yamls(dir, os.path.join(arguments.yaml_directory, dir), selectorsyncset_data)
             # break out of the loop because os.walk will walk through each sub-dir as well
             break
 
