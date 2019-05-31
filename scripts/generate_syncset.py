@@ -19,6 +19,8 @@ def get_all_yaml_files(path):
         for file in f:
             if file.endswith('.yml') or file.endswith('.yaml'):
                 file_paths.append(os.path.join(r,file))
+        # break, so we don't recurse
+        break
     file_paths = sorted(file_paths)
     return file_paths
 
@@ -74,13 +76,15 @@ if __name__ == '__main__':
 
     # for each subdir of yaml_directory append 'object' to template
     for (dirpath, dirnames, filenames) in os.walk(arguments.yaml_directory):
-        if not dirnames:
-            process_yamls(arguments.repo_name, dirpath, selectorsyncset_data)
-        else:
-            for dir in dirnames:
-                process_yamls(dir, os.path.join(arguments.yaml_directory, dir), selectorsyncset_data)
-            # break out of the loop because os.walk will walk through each sub-dir as well
-            break
+        if filenames:
+            sss_name = dirpath.replace('/','-')
+            if sss_name == arguments.yaml_directory:
+                # files in the root dir, use repo-name for SSS name
+                sss_name = arguments.repo_name
+            else:
+                # SSS name is based on dirpath which has the root path prefixed.. remove that prefix
+                sss_name = sss_name[(len(arguments.yaml_directory) + 1):]
+            process_yamls(sss_name, dirpath, selectorsyncset_data)
 
     # write template file
     with open(arguments.destination,'w') as outfile:
