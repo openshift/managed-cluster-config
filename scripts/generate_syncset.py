@@ -85,6 +85,8 @@ if __name__ == '__main__':
         else:
             for dir in dirnames:
                 process_yamls(dir, os.path.join(arguments.yaml_directory, dir), last_obj)
+            # break out of the loop because os.walk will walk through each sub-dir as well
+            break
 
     # write template file
     with open(arguments.destination,'w') as outfile:
