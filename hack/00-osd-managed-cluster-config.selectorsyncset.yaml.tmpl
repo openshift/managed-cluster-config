@@ -20,6 +20,63 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: resource-quotas
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+    patches:
+    - apiVersion: v1
+      applyMode: AlwaysApply
+      kind: Namespace
+      name: openshift-etcd
+      patch: '{ "metadata": {"labels": {"storage_pv_quota":"False"},{"service_lb_quota":"False"}
+        } }'
+      patchType: merge
+    - apiVersion: v1
+      applyMode: AlwaysApply
+      kind: Namespace
+      name: openshift-monitoring
+      patch: '{ "metadata": {"labels": {"storage_pv_quota":"False"},{"service_lb_quota":"False"}
+        } }'
+      patchType: merge
+    resourceApplyMode: sync
+    resources:
+    - apiVersion: quota.openshift.io/v1
+      kind: ClusterResourceQuota
+      metadata:
+        name: persistent-volume-quota
+      spec:
+        quota:
+          hard:
+            requests.storage: 100
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: storage_pv_quota
+              operator: DoesNotExist
+    - apiVersion: quota.openshift.io/v1
+      kind: ClusterResourceQuota
+      metadata:
+        name: loadbalancer-quota
+      spec:
+        quota:
+          hard:
+            services.loadbalancers: 2
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: service_lb_quota
+              operator: DoesNotExist
+- apiVersion: hive.openshift.io/v1alpha1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: osd-oauth-templates-errors
   spec:
     clusterDeploymentSelector:
