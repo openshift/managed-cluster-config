@@ -36,6 +36,8 @@ def process_yamls(name, directory, obj):
     o = copy.deepcopy(obj)
     # Get all yaml files as array of yaml objects
     yamls = get_all_yaml_obj(get_all_yaml_files(directory))
+    if len(yamls) == 0:
+        return
 
     for y in yamls:
         if 'patch' in y:
@@ -48,7 +50,6 @@ def process_yamls(name, directory, obj):
             o['spec']['resources'].append(y)
 
     o['metadata']['name'] = name
-
     # append object to the template's objects
     template_data['objects'].append(o)
 
