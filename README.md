@@ -10,4 +10,21 @@ A set of rules and alerts that SRE requires to ensure a cluster is functioning. 
 2. Temporary addition until made part of OCP
 
 ## SRE Authorization
+
 Instead of SRE having `cluster-admin` a new ClusterRole is created with some permissions removed.  The ClusterRole can be regenerated in the `generate/sre-authorization` directory.
+
+## Console Branding
+
+Docs TBA.
+
+## OAuth Templates
+
+Docs TBA.
+
+## Resource Quotas
+
+Refer to [deploy/resource/quotas/README.md](deploy/resource/quotas/README.md).
+
+## Image Pruning
+
+Docs TBA.
