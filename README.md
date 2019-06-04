@@ -2,6 +2,12 @@
 
 This repo contains static configuration specific to a "managed" OpenShift Dedicated (OSD) cluster.
 
+## How to use this repo
+
+To add a new SelectorSyncSet, add your yaml manifest to the `deploy` dir, then run the `make` command.
+
+# Selector Sync Sets included in this repo
+
 ## Prometheus
 
 A set of rules and alerts that SRE requires to ensure a cluster is functioning.  There are two categories of rules and alerts found here:
