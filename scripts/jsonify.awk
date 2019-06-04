@@ -41,13 +41,13 @@ END {
     if (pvexempt[p] == namespace) {
       if (out[namespacex])
         out[namespace] = (out[namespace] ",")
-      out[namespace] = (out[namespace] "{\\\"" label_pv "\\\":\\\"False\\\"}")
+      out[namespace] = (out[namespace] "\\\"" label_pv "\\\":\\\"False\\\"")
     }
   for (l in lbexempt)
     if (lbexempt[l] == namespace) {
       if (out[namespace])
         out[namespace] = (out[namespace] ",")
-      out[namespace] = (out[namespace] "{\\\"" label_lb "\\\":\\\"False\\\"}")
+      out[namespace] = (out[namespace] "\\\"" label_lb "\\\":\\\"False\\\"")
     }
   if (length(out[namespace]) > 0)
     print out[namespace]
