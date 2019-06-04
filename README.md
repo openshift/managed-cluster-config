@@ -9,6 +9,10 @@ A set of rules and alerts that SRE requires to ensure a cluster is functioning. 
 1. SRE specific, will never be part of OCP
 2. Temporary addition until made part of OCP
 
+## Prometheus and Alertmanager persistent storage
+
+Persistent storage is configured using the configmap `cluster-monitoring-config`, which is read by the cluster-monitoring-operator to generate PersistentVolumeClaims and attach them to the Prometheus and Alertmanager pods.
+
 ## SRE Authorization
 
 Instead of SRE having `cluster-admin` a new ClusterRole is created with some permissions removed.  The ClusterRole can be regenerated in the `generate/sre-authorization` directory.
