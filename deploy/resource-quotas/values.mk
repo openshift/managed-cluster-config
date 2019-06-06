@@ -12,5 +12,5 @@ DEFAULT_LB_QUOTA ?= 2
 
 # What label to be set when the LoadBalancer and/or Persistent Volume quotas do
 # not apply
-LB_EXCLUSION_LABEL_NAME ?= service_lb_quota
-PV_EXCLUSION_LABEL_NAME ?= storage_pv_quota
+LB_EXCLUSION_LABEL_NAME ?= managed.openshift.io/service-lb-quota-exempt
+PV_EXCLUSION_LABEL_NAME ?= managed.openshift.io/storage-pv-quota-exempt
