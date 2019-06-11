@@ -21,10 +21,6 @@ ifndef REPO_NAME
 $(error REPO_NAME is not set; check project.mk file)
 endif
 
-.PHONY: nmalik
-nmalik:
-	echo "${REPO_NAME}"
-
 .PHONY: default
 default: clean resource-quotas generate-syncset
 
