@@ -3,12 +3,7 @@ kind: ClusterRole
 metadata:
   name: osd-sre-admin
 rules:
-- apiGroups:
-  - ""
-  resources:
-  - '*'
-  verbs:
-  - '*'
+# SRE can get, list, and watch all resources
 - apiGroups:
   - '*'
   resources:
@@ -17,55 +12,36 @@ rules:
   - get
   - list
   - watch
+# SRE can manage nodes
 - apiGroups:
-  - apiextensions.k8s.io
+  - ""
   resources:
-  - '*'
+  - nodes
   verbs:
-  - '*'
+  - patch
+# SRE can evict pods
 - apiGroups:
-  - admissionregistration.k8s.io
+  - ""
   resources:
-  - customresourcedefinitions
-  - customresourcedefinitions/status
+  - pods/eviction
   verbs:
-  - '*'
-- apiGroups:
-  - apps
-  resources:
-  - '*'
-  verbs:
-  - delete
-  - deletecollection
-- apiGroups:
-  - apps.openshift.io
-  resources:
-  - '*'
-  verbs:
-  - delete
-  - deletecollection
+  - create
+# SRE can delete jobs and builds
 - apiGroups:
   - batch
   resources:
-  - job
-  - cronjob
+  - jobs
   verbs:
   - delete
   - deletecollection
 - apiGroups:
   - build.openshift.io
   resources:
-  - buildconfigs
   - builds
   verbs:
   - delete
   - deletecollection
-- apiGroups:
-  - cloudcredential.openshift.io
-  resources:
-  - '*'
-  verbs:
-  - '*'
+# SRE can manage projects
 - apiGroups:
   - config.openshift.io
   resources:
@@ -73,64 +49,36 @@ rules:
   verbs:
   - '*'
 - apiGroups:
-  - hive.openshift.io
-  resources:
-  - clusterdeployments
-  - selectorsyncidentityproviders
-  - selectorsyncsets
-  - syncidentityproviders
-  - syncsets
-  verbs:
-  - '*'
-- apiGroups:
-  - operators.coreos.com
-  resources:
-  - subscriptions
-  verbs:
-  - '*'
-- apiGroups:
-  - policy
-  resources:
-  - '*'
-  verbs:
-  - '*'
-- apiGroups:
   - project.openshift.io
   resources:
-  - '*'
+  - projects
   verbs:
   - '*'
+# SRE can manage namespaces
 - apiGroups:
-  - quota.openshift.io
+  - ""
   resources:
-  - '*'
+  - namespaces
+  - namespaces/finalize
   verbs:
   - '*'
+# SRE can delete pods
 - apiGroups:
-  - rbac.authorization.k8s.io
+  - ""
   resources:
-  - rolebindings
-  - roles
+  - pods
   verbs:
-  - '*'
+  - delete
+# SRE can review pod security policies
 - apiGroups:
   - security.openshift.io
   resources:
-  - '*'
+  - podsecuritypolicyreviews
+  - podsecuritypolicyselfsubjectreviews
+  - podsecuritypolicysubjectreviews
   verbs:
-  - '*'
-- apiGroups:
-  - storage.k8s.io
-  resources:
-  - '*'
-  verbs:
-  - '*'
-- apiGroups:
-  - tuned.openshift.io
-  resources:
-  - '*'
-  verbs:
-  - '*'
+  - create
+# SRE can update existing groups
 - apiGroups:
   - user.openshift.io
   resources:
@@ -138,19 +86,22 @@ rules:
   verbs:
   - patch
   - update
+# SRE can upgrade the cluster
 - apiGroups:
   - config.openshift.io
   resources:
-  - clusterversion
+  - clusterversions
   verbs:
   - patch
   - update
+# SRE can review RBAC policies (i.e. oc adm policy who-can ...)
 - apiGroups:
   - authorization.openshift.io
   resources:
   - localresourceaccessreviews
   verbs:
   - create
+# SRE can get and post to all endpoints
 - nonResourceURLs:
   - '*'
   verbs:

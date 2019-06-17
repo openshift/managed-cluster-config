@@ -633,12 +633,6 @@ objects:
         name: osd-sre-admin
       rules:
       - apiGroups:
-        - ''
-        resources:
-        - '*'
-        verbs:
-        - '*'
-      - apiGroups:
         - '*'
         resources:
         - '*'
@@ -647,54 +641,31 @@ objects:
         - list
         - watch
       - apiGroups:
-        - apiextensions.k8s.io
+        - ''
         resources:
-        - '*'
+        - nodes
         verbs:
-        - '*'
+        - patch
       - apiGroups:
-        - admissionregistration.k8s.io
+        - ''
         resources:
-        - customresourcedefinitions
-        - customresourcedefinitions/status
+        - pods/eviction
         verbs:
-        - '*'
-      - apiGroups:
-        - apps
-        resources:
-        - '*'
-        verbs:
-        - delete
-        - deletecollection
-      - apiGroups:
-        - apps.openshift.io
-        resources:
-        - '*'
-        verbs:
-        - delete
-        - deletecollection
+        - create
       - apiGroups:
         - batch
         resources:
-        - job
-        - cronjob
+        - jobs
         verbs:
         - delete
         - deletecollection
       - apiGroups:
         - build.openshift.io
         resources:
-        - buildconfigs
         - builds
         verbs:
         - delete
         - deletecollection
-      - apiGroups:
-        - cloudcredential.openshift.io
-        resources:
-        - '*'
-        verbs:
-        - '*'
       - apiGroups:
         - config.openshift.io
         resources:
@@ -702,64 +673,32 @@ objects:
         verbs:
         - '*'
       - apiGroups:
-        - hive.openshift.io
-        resources:
-        - clusterdeployments
-        - selectorsyncidentityproviders
-        - selectorsyncsets
-        - syncidentityproviders
-        - syncsets
-        verbs:
-        - '*'
-      - apiGroups:
-        - operators.coreos.com
-        resources:
-        - subscriptions
-        verbs:
-        - '*'
-      - apiGroups:
-        - policy
-        resources:
-        - '*'
-        verbs:
-        - '*'
-      - apiGroups:
         - project.openshift.io
         resources:
-        - '*'
+        - projects
         verbs:
         - '*'
       - apiGroups:
-        - quota.openshift.io
+        - ''
         resources:
-        - '*'
+        - namespaces
+        - namespaces/finalize
         verbs:
         - '*'
       - apiGroups:
-        - rbac.authorization.k8s.io
+        - ''
         resources:
-        - rolebindings
-        - roles
+        - pods
         verbs:
-        - '*'
+        - delete
       - apiGroups:
         - security.openshift.io
         resources:
-        - '*'
+        - podsecuritypolicyreviews
+        - podsecuritypolicyselfsubjectreviews
+        - podsecuritypolicysubjectreviews
         verbs:
-        - '*'
-      - apiGroups:
-        - storage.k8s.io
-        resources:
-        - '*'
-        verbs:
-        - '*'
-      - apiGroups:
-        - tuned.openshift.io
-        resources:
-        - '*'
-        verbs:
-        - '*'
+        - create
       - apiGroups:
         - user.openshift.io
         resources:
@@ -770,7 +709,7 @@ objects:
       - apiGroups:
         - config.openshift.io
         resources:
-        - clusterversion
+        - clusterversions
         verbs:
         - patch
         - update
