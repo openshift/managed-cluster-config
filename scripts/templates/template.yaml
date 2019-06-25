@@ -6,6 +6,22 @@ parameters:
 - name: REPO_NAME
   value: REPLACED_BY_SCRIPT
   required: true
+- name: IDENTITY_ATTR_EMAIL
+  required: true
+- name: IDENTITY_ATTR_ID
+  required: true
+- name: IDENTITY_ATTR_NAME
+  required: true
+- name: IDENTITY_ATTR_PREFERRED_USERNAME
+  required: true
+- name: IDENTITY_BIND_DN
+  required: true
+- name: IDENTITY_URL
+  required: true
+- name: IDENTITY_NAME
+  required: true
+- name: IDENTITY_MAPPING_METHOD
+  required: true
 metadata:
   name: selectorsyncset-template
 objects:
@@ -20,3 +36,35 @@ objects:
         api.openshift.com/managed: "true"
     resourceApplyMode: sync
     resources: []
+# the SelectorSyncIdentityProvider is not something you can oc apply in-cluster, so is not created in `deploy/`
+- apiVersion: hive.openshift.io/v1alpha1
+  kind: SelectorSyncIdentityProvider
+  metadata:
+    name: osd-sre-identityprovider
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: "true"
+    identityProviders:
+    - challenge: true
+      ldap:
+        attributes:
+          email:
+          - ${IDENTITY_ATTR_EMAIL}
+          id:
+          - ${IDENTITY_ATTR_ID}
+          name:
+          - ${IDENTITY_ATTR_NAME}
+          preferredUsername:
+          - ${IDENTITY_ATTR_PREFERRED_USERNAME}
+        bindDN: ${IDENTITY_BIND_DN}
+        bindPassword:
+          name: osd-ldap-secret
+        ca:
+          name: osd-ldap-ca-configmap
+        insecure: false
+        url: ${IDENTITY_URL}
+      login: true
+      mappingMethod: ${IDENTITY_MAPPING_METHOD}
+      name: ${IDENTITY_NAME}
+      type: LDAP
