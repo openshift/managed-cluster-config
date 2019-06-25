@@ -10,16 +10,16 @@ spec:
   groups:
   - name: sre-machine-api-node-mismatch
     rules:
-    - alert: NoNodeObjectForMachineWarning
+    - alert: NoNodeObjectForMachineWarningSRE
       expr: &promql machine_api_status == 0
-      for: 30m
+      for: 15m
       severity: warning
       annotations:
         message: "The Machine object {{ $labels.machine_name }} hasn't had an associated Node for the past 30 minutes."
         link: &kcslink "https://access.redhat.com"
-    - alert: NoNodeObjectForMachineCritical
+    - alert: NoNodeObjectForMachineCriticalSRE
       expr: *promql
-      for: 60m
+      for: 30m
       severity: critical
       annotations:
         message: "The Machine object {{ $labels.machine_name }} hasn't had an associated Node for the past 60 minutes."
