@@ -677,21 +677,21 @@ objects:
         groups:
         - name: sre-machine-api-node-mismatch
           rules:
-          - alert: NoNodeObjectForMachineWarning
+          - alert: NoNodeObjectForMachineWarningSRE
             annotations:
               link: https://access.redhat.com
               message: The Machine object {{ $labels.machine_name }} hasn't had an
                 associated Node for the past 30 minutes.
             expr: machine_api_status == 0
-            for: 30m
+            for: 15m
             severity: warning
-          - alert: NoNodeObjectForMachineCritical
+          - alert: NoNodeObjectForMachineCriticalSRE
             annotations:
               link: https://access.redhat.com
               message: The Machine object {{ $labels.machine_name }} hasn't had an
                 associated Node for the past 60 minutes.
             expr: machine_api_status == 0
-            for: 60m
+            for: 30m
             severity: critical
     - apiVersion: monitoring.coreos.com/v1
       kind: PrometheusRule
