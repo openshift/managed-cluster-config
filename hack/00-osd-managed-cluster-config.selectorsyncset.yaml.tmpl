@@ -274,6 +274,40 @@ objects:
       kind: PrometheusRule
       metadata:
         labels:
+          prometheus: sre-configure-alertmanager-operator-offline-alerts
+          role: alert-rules
+        name: sre-configure-alertmanager-operator-offline-alerts
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-configure-alertmanager-operator-offline-alerts
+          rules:
+          - alert: ConfigureAlertmanagerOperatorOfflineSRE
+            expr: absent(up{service="configure-alertmanager-operator"})
+            for: 15m
+            labels:
+              severity: critical
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
+          prometheus: sre-dedicated-admin-operator-offline-alerts
+          role: alert-rules
+        name: sre-dedicated-admin-operator-offline-alerts
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-dedicated-admin-operator-offline-alerts
+          rules:
+          - alert: DedicatedAdminOperatorOfflineSRE
+            expr: absent(up{service="dedicated-admin-operator"})
+            for: 15m
+            labels:
+              severity: critical
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
           prometheus: sre-dns-alerts
           role: alert-rules
         name: sre-dns-alerts
