@@ -35,10 +35,10 @@ generate-oauth-templates:
 
 .PHONY: generate-syncset
 generate-syncset: generate-oauth-templates
-	docker run --rm -v `pwd`:`pwd` python:2.7.15 /bin/sh -c "cd `pwd`; pip install pyyaml; scripts/generate_syncset.py -t ${SELECTOR_SYNC_SET_TEMPLATE_DIR} -y ${YAML_DIRECTORY} -d ${SELECTOR_SYNC_SET_DESTINATION} -r ${REPO_NAME}"
+	docker run --rm -v `pwd`:`pwd` python:3.7 /bin/sh -c "cd `pwd`; pip install pyyaml; scripts/generate_syncset.py -t ${SELECTOR_SYNC_SET_TEMPLATE_DIR} -y ${YAML_DIRECTORY} -d ${SELECTOR_SYNC_SET_DESTINATION} -r ${REPO_NAME}"
 
-.PHONY: clean 
-clean: 
+.PHONY: clean
+clean:
 	rm -rf ${SELECTOR_SYNC_SET_DESTINATION}
 	@$(MAKE) --directory=deploy/resource-quotas clean
 

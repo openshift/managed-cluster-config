@@ -32,7 +32,7 @@ def dict_constructor(loader, node):
 
 def get_yaml_all(filename):
     with open(filename,'r') as input_file:
-        return list(yaml.load_all(input_file))
+        return list(yaml.safe_load_all(input_file))
 
 def get_yaml(filename):
     with open(filename,'r') as input_file:
@@ -55,7 +55,6 @@ def get_all_yaml_obj(file_paths):
         objects = get_yaml_all(file)
         for obj in objects:
             yaml_objs.append(obj)
-    yaml_objs = sorted(yaml_objs)
     return yaml_objs
 
 def process_yamls(name, directory, obj):
@@ -65,7 +64,6 @@ def process_yamls(name, directory, obj):
     if len(yamls) == 0:
         return
 
-    yamls = sorted(yamls)
     for y in yamls:
         if 'patch' in y:
             if not 'patches' in o['spec']:
@@ -118,9 +116,6 @@ if __name__ == '__main__':
 
     Dumper.add_representer(str,
                         SafeRepresenter.represent_str)
-
-    Dumper.add_representer(unicode,
-                        SafeRepresenter.represent_unicode)
 
     with open(arguments.destination,'w') as outfile:
         yaml.dump(template_data, outfile, Dumper=Dumper, default_flow_style=False)
