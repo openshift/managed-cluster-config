@@ -15,6 +15,9 @@ A set of rules and alerts that SRE requires to ensure a cluster is functioning. 
 1. SRE specific, will never be part of OCP
 2. Temporary addition until made part of OCP
 
+### SLA/SLO Recording and Alerting Rules
+Files under `deploy/sre-prometheus/` that start with `100-slo-` contain recording and alerting rules for our [managed cluster SLAs](https://mojo.redhat.com/docs/DOC-1189726). To edit them, edit `source/slo.csv` then run `./scripts/generate_slo_rules.py ./source/slo.csv -o ./deploy/sre-prometheus/` to generate the rule files. See `./scripts/generate_slo_rules.py -h` for more details.
+
 ## Prometheus and Alertmanager persistent storage
 
 Persistent storage is configured using the configmap `cluster-monitoring-config`, which is read by the cluster-monitoring-operator to generate PersistentVolumeClaims and attach them to the Prometheus and Alertmanager pods.

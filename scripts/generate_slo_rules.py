@@ -40,7 +40,7 @@ Example of a valid CSV file:
 category,slo,tech_name,up_rule,uptime_rule,alert_name_prefix
 registry,0.99,sli:registry_api,,"valid_promql",SLORegistryApi
 
-This example would produce 2 rules:
+This example would produce 4 rules:
   - name: sre-slo-registry.rules
     rules:
     - expr: valid_promql
