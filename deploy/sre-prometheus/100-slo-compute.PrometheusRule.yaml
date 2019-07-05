@@ -1,0 +1,50 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: sre-slo-compute
+    role: alert-rules
+  name: sre-slo-compute
+  namespace: openshift-monitoring
+spec:
+  groups:
+  - name: sre-slo-compute.rules
+    rules:
+    - expr: clamp_max(sum without(alertstate, severity)(absent(ALERTS{ severity = "critical", alertstate
+        = "firing", namespace =~ "(default|kube.*|openshift.*)", alertname =~ "(KubeClientCertificateExpiration|KubePodCrashLooping|KubePodNotReady|KubePersistentVolumeUsageCritical)"
+        })), 1)
+      record: sli:compute_alerts:up
+    - expr: clamp_max(sum_over_time(sli:compute_alerts:up[7d]) / (7 * 24 * 60) > 0, 1)
+      record: sli:compute_alerts:uptime:28d
+    - expr: clamp_max(sum without(alertstate, severity)(absent(ALERTS{ severity = "critical", alertstate
+        = "firing", namespace =~ "(default|kube.*|openshift.*)", alertname =~ "(.*Mismatch|.*Stuck)"
+        })), 1)
+      record: sli:compute_mismatch:up
+    - expr: clamp_max(sum_over_time(sli:compute_mismatch:up[7d]) / (7 * 24 * 60) > 0, 1)
+      record: sli:compute_mismatch:uptime:28d
+  - name: sre-slo-compute.alerts
+    rules:
+    - alert: SLOComputeAlertsLT20PctSRE
+      expr: sli:compute_alerts:uptime:28d < 0.996
+      labels:
+        severity: warning
+    - alert: SLOComputeAlertsLT10PctSRE
+      expr: sli:compute_alerts:uptime:28d < 0.9955
+      labels:
+        severity: critical
+    - alert: SLOComputeAlertsViolatedSRE
+      expr: sli:compute_alerts:uptime:28d < 0.995
+      labels:
+        severity: critical
+    - alert: SLOComputeMismatchLT20PctSRE
+      expr: sli:compute_mismatch:uptime:28d < 0.992
+      labels:
+        severity: warning
+    - alert: SLOComputeMismatchLT10PctSRE
+      expr: sli:compute_mismatch:uptime:28d < 0.991
+      labels:
+        severity: critical
+    - alert: SLOComputeMismatchViolatedSRE
+      expr: sli:compute_mismatch:uptime:28d < 0.99
+      labels:
+        severity: critical
