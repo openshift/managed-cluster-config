@@ -1,0 +1,83 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: sre-slo-control-plane
+    role: alert-rules
+  name: sre-slo-control-plane
+  namespace: openshift-monitoring
+spec:
+  groups:
+  - name: sre-slo-control-plane.rules
+    rules:
+    - expr: clamp_max(sum without(alertstate, severity)(absent(ALERTS{ severity = "critical", alertstate
+        = "firing", namespace =~ "(default|kube.*|openshift.*)", alertname =~ "(KubeAPIDown|KubeControllerManagerDown|KubeSchedulerDown|KubeletDown|KubeAPILatencyHigh)"
+        })), 1)
+      record: sli:control_plane_alerts:up
+    - expr: clamp_max(sum_over_time(sli:control_plane_alerts:up[7d]) / (7 * 24 * 60) > 0, 1)
+      record: sli:control_plane_alerts:uptime:28d
+    - expr: ((sum(increase(apiserver_request_count{ job='apiserver' }[7d])) - sum(increase(apiserver_request_count{
+        job='apiserver', code=~'5.*' }[7d]))) / sum(increase(apiserver_request_count{ job='apiserver'
+        }[7d]))) OR (absent(apiserver_request_count{ job='apiserver', code=~'5.*' } == 0))
+      record: sli:control_plane_api:uptime:28d
+    - expr: sum(kube_pod_status_ready:etcd:sum) > bool 0 OR (absent(kube_pod_status_ready:etcd:sum)
+        != bool 1)
+      record: sli:control_plane_etcd:up
+    - expr: clamp_max(sum_over_time(sli:control_plane_etcd:up[7d]) / (7 * 24 * 60) > 0, 1)
+      record: sli:control_plane_etcd:uptime:28d
+    - expr: clamp_max(sum without(alertstate, severity)(absent(ALERTS{ severity = "critical", alertstate
+        = "firing", namespace =~ "(default|kube.*|openshift.*)", alertname =~ "(KubeAPILatencyHigh)"
+        })), 1)
+      record: sli:control_plane_latency:up
+    - expr: clamp_max(sum_over_time(sli:control_plane_latency:up[7d]) / (7 * 24 * 60) > 0, 1)
+      record: sli:control_plane_latency:uptime:28d
+  - name: sre-slo-control-plane.alerts
+    rules:
+    - alert: SLOControlPlaneAlertsLT20PctSRE
+      expr: sli:control_plane_alerts:uptime:28d < 0.996
+      labels:
+        severity: warning
+    - alert: SLOControlPlaneAlertsLT10PctSRE
+      expr: sli:control_plane_alerts:uptime:28d < 0.9955
+      labels:
+        severity: critical
+    - alert: SLOControlPlaneAlertsViolatedSRE
+      expr: sli:control_plane_alerts:uptime:28d < 0.995
+      labels:
+        severity: critical
+    - alert: SLOControlPlaneApiLT20PctSRE
+      expr: sli:control_plane_api:uptime:28d < 0.9992
+      labels:
+        severity: warning
+    - alert: SLOControlPlaneApiLT10PctSRE
+      expr: sli:control_plane_api:uptime:28d < 0.9991
+      labels:
+        severity: critical
+    - alert: SLOControlPlaneApiViolatedSRE
+      expr: sli:control_plane_api:uptime:28d < 0.999
+      labels:
+        severity: critical
+    - alert: SLOControlPlaneEtcdLT20PctSRE
+      expr: sli:control_plane_etcd:uptime:28d < 0.9992
+      labels:
+        severity: warning
+    - alert: SLOControlPlaneEtcdLT10PctSRE
+      expr: sli:control_plane_etcd:uptime:28d < 0.9991
+      labels:
+        severity: critical
+    - alert: SLOControlPlaneEtcdViolatedSRE
+      expr: sli:control_plane_etcd:uptime:28d < 0.999
+      labels:
+        severity: critical
+    - alert: SLOControlPlaneLatencyLT20PctSRE
+      expr: sli:control_plane_latency:uptime:28d < 0.996
+      labels:
+        severity: warning
+    - alert: SLOControlPlaneLatencyLT10PctSRE
+      expr: sli:control_plane_latency:uptime:28d < 0.9955
+      labels:
+        severity: critical
+    - alert: SLOControlPlaneLatencyViolatedSRE
+      expr: sli:control_plane_latency:uptime:28d < 0.995
+      labels:
+        severity: critical

@@ -1,0 +1,49 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: sre-slo-registry
+    role: alert-rules
+  name: sre-slo-registry
+  namespace: openshift-monitoring
+spec:
+  groups:
+  - name: sre-slo-registry.rules
+    rules:
+    - expr: ((sum(increase(apiserver_request_count{ job = 'apiserver', resource =~ 'image.*', verb
+        != 'WATCH' }[7d])) - sum(increase(apiserver_request_count{ job = 'apiserver', resource =~
+        'image.*', verb != 'WATCH', code =~ '5.*' }[7d])))/sum(increase(apiserver_request_count{
+        job = 'apiserver', resource =~ 'image.*', verb != 'WATCH' }[7d]))) OR (absent(apiserver_request_count{
+        job = 'apiserver', resource =~ 'image.*', verb != 'WATCH', code =~ '5.*' } == 0))
+      record: sli:registry_api:uptime:28d
+    - expr: sum(kube_pod_status_ready:image_registry:sum) > bool 0 OR (absent(kube_pod_status_ready:image_registry:sum)
+        != bool 1)
+      record: sli:registry_ready:up
+    - expr: clamp_max(sum_over_time(sli:registry_ready:up[7d]) / (7 * 24 * 60) > 0, 1)
+      record: sli:registry_ready:uptime:28d
+  - name: sre-slo-registry.alerts
+    rules:
+    - alert: SLORegistryApiLT20PctSRE
+      expr: sli:registry_api:uptime:28d < 0.992
+      labels:
+        severity: warning
+    - alert: SLORegistryApiLT10PctSRE
+      expr: sli:registry_api:uptime:28d < 0.991
+      labels:
+        severity: critical
+    - alert: SLORegistryApiViolatedSRE
+      expr: sli:registry_api:uptime:28d < 0.99
+      labels:
+        severity: critical
+    - alert: SLORegistryReadinessLT20PctSRE
+      expr: sli:registry_ready:uptime:28d < 0.992
+      labels:
+        severity: warning
+    - alert: SLORegistryReadinessLT10PctSRE
+      expr: sli:registry_ready:uptime:28d < 0.991
+      labels:
+        severity: critical
+    - alert: SLORegistryReadinessViolatedSRE
+      expr: sli:registry_ready:uptime:28d < 0.99
+      labels:
+        severity: critical

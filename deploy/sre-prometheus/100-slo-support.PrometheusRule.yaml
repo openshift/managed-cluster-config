@@ -1,0 +1,32 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: sre-slo-support
+    role: alert-rules
+  name: sre-slo-support
+  namespace: openshift-monitoring
+spec:
+  groups:
+  - name: sre-slo-support.rules
+    rules:
+    - expr: clamp_max(sum without(alertstate, severity)(absent(ALERTS{ severity = "critical", alertstate
+        = "firing", namespace =~ "(default|kube.*|openshift.*)", alertname =~ "(ClusterMonitoringOperator.*|KubeStateMetricsDown|Prometheus.*Down)"
+        })), 1)
+      record: sli:monitoring_alerts:up
+    - expr: clamp_max(sum_over_time(sli:monitoring_alerts:up[7d]) / (7 * 24 * 60) > 0, 1)
+      record: sli:monitoring_alerts:uptime:28d
+  - name: sre-slo-support.alerts
+    rules:
+    - alert: SLOMonitoringAlertsLT20PctSRE
+      expr: sli:monitoring_alerts:uptime:28d < 0.99992
+      labels:
+        severity: warning
+    - alert: SLOMonitoringAlertsLT10PctSRE
+      expr: sli:monitoring_alerts:uptime:28d < 0.99991
+      labels:
+        severity: critical
+    - alert: SLOMonitoringAlertsViolatedSRE
+      expr: sli:monitoring_alerts:uptime:28d < 0.9999
+      labels:
+        severity: critical
