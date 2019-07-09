@@ -38,3 +38,8 @@ Refer to [deploy/resource/quotas/README.md](deploy/resource/quotas/README.md).
 ## Image Pruning
 
 Docs TBA.
+
+## Dependencies
+
+pyyaml
+
