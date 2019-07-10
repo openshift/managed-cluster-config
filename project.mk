@@ -7,3 +7,6 @@ GIT_ROOT?=$(shell git rev-parse --show-toplevel 2>&1)
 REPO_NAME?=$(shell basename $$((git config --get-regex remote\.*\.url 2>/dev/null | cut -d ' ' -f2 || pwd) | head -n1 | sed 's|.git||g'))
 
 SELECTOR_SYNC_SET_DESTINATION?=${GIT_ROOT}/hack/00-osd-${REPO_NAME}.selectorsyncset.yaml.tmpl
+
+#Script variables
+GEN_SYNCSET?=scripts/generate_syncset.py -t ${SELECTOR_SYNC_SET_TEMPLATE_DIR} -y ${YAML_DIRECTORY} -d ${SELECTOR_SYNC_SET_DESTINATION} -r ${REPO_NAME}

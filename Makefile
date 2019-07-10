@@ -20,6 +20,9 @@ endif
 ifndef REPO_NAME
 $(error REPO_NAME is not set; check project.mk file)
 endif
+ifndef GEN_SYNCSET
+$(error GEN_SYNCSET is not set; check project.mk file)
+endif
 
 .PHONY: default
 default: clean resource-quotas generate-syncset
@@ -35,9 +38,13 @@ generate-oauth-templates:
 
 .PHONY: generate-syncset
 generate-syncset: generate-oauth-templates
-	docker run --rm -v `pwd`:`pwd` python:2.7.15 /bin/sh -c "cd `pwd`; pip install pyyaml; scripts/generate_syncset.py -t ${SELECTOR_SYNC_SET_TEMPLATE_DIR} -y ${YAML_DIRECTORY} -d ${SELECTOR_SYNC_SET_DESTINATION} -r ${REPO_NAME}"
+	if [ -z ${IN_DOCKER_CONTAINER} ]; then \
+		docker run --rm -v `pwd -P`:`pwd -P` python:2.7.15 /bin/sh -c "cd `pwd`; pip install pyyaml; ${GEN_SYNCSET}"; \
+	else \
+		${GEN_SYNCSET}; \
+	fi
 
-.PHONY: clean 
+.PHONY: clean
 clean: 
 	rm -rf ${SELECTOR_SYNC_SET_DESTINATION}
 	@$(MAKE) --directory=deploy/resource-quotas clean
