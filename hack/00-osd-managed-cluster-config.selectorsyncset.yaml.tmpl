@@ -729,6 +729,39 @@ objects:
           openshift.io/cluster-logging: 'true'
           openshift.io/cluster-monitoring: 'true'
         name: openshift-logging
+    - apiVersion: operators.coreos.com/v1
+      kind: CatalogSourceConfig
+      metadata:
+        name: installed-redhat-openshift-logging
+        namespace: openshift-marketplace
+      spec:
+        csDisplayName: Red Hat Operators
+        csPublisher: Red Hat
+        packages: cluster-logging
+        targetNamespace: openshift-logging
+    - apiVersion: operators.coreos.com/v1
+      kind: CatalogSourceConfig
+      metadata:
+        name: installed-redhat-openshift-operators
+        namespace: openshift-marketplace
+      spec:
+        csDisplayName: Red Hat Operators
+        csPublisher: Red Hat
+        packages: elasticsearch-operator
+        targetNamespace: openshift-operators
+    - apiVersion: operators.coreos.com/v1
+      kind: OperatorGroup
+      metadata:
+        annotations:
+          olm.providedAPIs: ClusterLogging.v1.logging.openshift.io
+        name: openshift-logging
+        namespace: openshift-logging
+      spec:
+        serviceAccount:
+          metadata:
+            creationTimestamp: null
+        targetNamespaces:
+        - openshift-logging
     - apiVersion: operators.coreos.com/v1alpha1
       kind: Subscription
       metadata:
@@ -736,6 +769,7 @@ objects:
           csc-owner-name: installed-redhat-openshift-logging
           csc-owner-namespace: openshift-marketplace
         name: cluster-logging
+        namespace: openshift-logging
       spec:
         channel: preview
         installPlanApproval: Automatic
@@ -747,16 +781,17 @@ objects:
       kind: Subscription
       metadata:
         labels:
-          csc-owner-name: installed-redhat-openshift-logging
+          csc-owner-name: installed-redhat-openshift-operators
           csc-owner-namespace: openshift-marketplace
-        name: cluster-logging
+        name: elasticsearch-operator
+        namespace: openshift-operators
       spec:
         channel: preview
         installPlanApproval: Automatic
-        name: cluster-logging
-        source: installed-redhat-openshift-logging
-        sourceNamespace: openshift-logging
-        startingCSV: clusterlogging.4.1.4-201906271212
+        name: elasticsearch-operator
+        source: installed-redhat-openshift-operators
+        sourceNamespace: openshift-operators
+        startingCSV: elasticsearch-operator.4.1.4-201906271212
     - apiVersion: v1
       data:
         actions.yaml: '# ---
