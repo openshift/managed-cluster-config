@@ -713,6 +713,186 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: osd-logging
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+    resourceApplyMode: sync
+    resources:
+    - apiVersion: v1
+      kind: Namespace
+      metadata:
+        annotations:
+          openshift.io/node-selector: ''
+        labels:
+          openshift.io/cluster-logging: 'true'
+          openshift.io/cluster-monitoring: 'true'
+        name: openshift-logging
+    - apiVersion: operators.coreos.com/v1
+      kind: CatalogSourceConfig
+      metadata:
+        name: installed-redhat-openshift-logging
+        namespace: openshift-marketplace
+      spec:
+        csDisplayName: Red Hat Operators
+        csPublisher: Red Hat
+        packages: cluster-logging
+        targetNamespace: openshift-logging
+    - apiVersion: operators.coreos.com/v1
+      kind: CatalogSourceConfig
+      metadata:
+        name: installed-redhat-openshift-operators
+        namespace: openshift-marketplace
+      spec:
+        csDisplayName: Red Hat Operators
+        csPublisher: Red Hat
+        packages: elasticsearch-operator
+        targetNamespace: openshift-operators
+    - apiVersion: operators.coreos.com/v1
+      kind: OperatorGroup
+      metadata:
+        annotations:
+          olm.providedAPIs: ClusterLogging.v1.logging.openshift.io
+        name: openshift-logging
+        namespace: openshift-logging
+      spec:
+        serviceAccount:
+          metadata:
+            creationTimestamp: null
+        targetNamespaces:
+        - openshift-logging
+    - apiVersion: operators.coreos.com/v1alpha1
+      kind: Subscription
+      metadata:
+        labels:
+          csc-owner-name: installed-redhat-openshift-logging
+          csc-owner-namespace: openshift-marketplace
+        name: cluster-logging
+        namespace: openshift-logging
+      spec:
+        channel: preview
+        installPlanApproval: Automatic
+        name: cluster-logging
+        source: installed-redhat-openshift-logging
+        sourceNamespace: openshift-logging
+        startingCSV: clusterlogging.4.1.4-201906271212
+    - apiVersion: operators.coreos.com/v1alpha1
+      kind: Subscription
+      metadata:
+        labels:
+          csc-owner-name: installed-redhat-openshift-operators
+          csc-owner-namespace: openshift-marketplace
+        name: elasticsearch-operator
+        namespace: openshift-operators
+      spec:
+        channel: preview
+        installPlanApproval: Automatic
+        name: elasticsearch-operator
+        source: installed-redhat-openshift-operators
+        sourceNamespace: openshift-operators
+        startingCSV: elasticsearch-operator.4.1.4-201906271212
+    - apiVersion: v1
+      data:
+        actions.yaml: '# ---
+
+          # Remember, leave a key empty if there is no value.  None will be a string,
+
+          # not a Python "NoneType"
+
+          #
+
+          # Also remember that all examples have ''disable_action'' set to True.  If
+          you
+
+          # want to use this action as a template, be sure to set this to False after
+
+          # copying it.
+
+          # actions:
+
+          #   1:
+
+          #     action: delete_indices
+
+          #     description: >-
+
+          #       Delete .operations indices older than 30 days.
+
+          #       Ignore the error if the filter does not
+
+          #       result in an actionable list of indices (ignore_empty_list).
+
+          #       See https://www.elastic.co/guide/en/elasticsearch/client/curator/5.2/ex_delete_indices.html
+
+          #     options:
+
+          #       # Swallow curator.exception.NoIndices exception
+
+          #       ignore_empty_list: True
+
+          #       # In seconds, default is 300
+
+          #       timeout_override: ${CURATOR_TIMEOUT}
+
+          #       # Don''t swallow any other exceptions
+
+          #       continue_if_exception: False
+
+          #       # Optionally disable action, useful for debugging
+
+          #       disable_action: False
+
+          #     # All filters are bound by logical AND
+
+          #     filters:
+
+          #     - filtertype: pattern
+
+          #       kind: regex
+
+          #       value: ''^\.operations\..*$''
+
+          #       exclude: False
+
+          #     - filtertype: age
+
+          #       # Parse timestamp from index name
+
+          #       source: name
+
+          #       direction: older
+
+          #       timestring: ''%Y.%m.%d''
+
+          #       unit: days
+
+          #       unit_count: 30
+
+          #       exclude: False
+
+'
+        config.yaml: "# Logging example curator config file\n\n# uncomment and use
+          this to override the defaults from env vars\n#.defaults:\n#  delete:\n#
+          \   days: 30\n.defaults:\n  delete:\n    days: 2\n\n# to keep ops logs for
+          a different duration:\n.operations:\n  delete:\n    days: 1\n\n# example
+          for a normal project\n#myapp:\n#  delete:\n#    weeks: 1\n"
+        curator5.yaml: "---\nclient:\n  hosts:\n  - ${ES_HOST}\n  port: ${ES_PORT}\n
+          \ use_ssl: True\n  certificate: ${ES_CA}\n  client_cert: ${ES_CLIENT_CERT}\n
+          \ client_key: ${ES_CLIENT_KEY}\n  ssl_no_validate: False\n  timeout: ${CURATOR_TIMEOUT}\n
+          \ master_only: False\nlogging:\n  loglevel: ${CURATOR_LOG_LEVEL}\n  logformat:
+          default\n  blacklist: ['elasticsearch', 'urllib3']\n  \n"
+      kind: ConfigMap
+      metadata:
+        name: curator
+        namespace: openshift-logging
+- apiVersion: hive.openshift.io/v1alpha1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: sre-authorization
   spec:
     clusterDeploymentSelector:

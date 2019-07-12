@@ -43,3 +43,8 @@ Docs TBA.
 
 pyyaml
 
+## Logging
+
+Installs ES and logging operators and pre-configures curator to retain 2 days of indexes (1 day for operations).
+
+Customer can install a `ClusterLogging` CR in `openshift-logging` as a `dedicated-admins` user to opt-in to logging in the cluster.
