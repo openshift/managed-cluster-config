@@ -19,3 +19,9 @@ RUN pip install pyyaml
 
 # Make
 RUN make 
+
+# This image will be replaced by the openshift/release
+FROM openshift/origin-cli
+
+# Ensure make ran as expected
+COPY --from=1 /managed-cluster-config/deploy/ deploy
