@@ -654,7 +654,8 @@ objects:
           \     name: prometheus-data\n    spec:\n      storageClassName: gp2\n      resources:\n
           \       requests:\n          storage: 50Gi\nalertmanagerMain:\n  volumeClaimTemplate:\n
           \   metadata:\n      name: alertmanager-data\n    spec:\n      storageClassName:
-          gp2\n      resources:\n        requests:\n          storage: 10Gi\n"
+          gp2\n      resources:\n        requests:\n          storage: 10Gi\ntelemeterClient:\n
+          \ telemeterServerURL: ${TELEMETER_SERVER_URL}\n"
       kind: ConfigMap
       metadata:
         name: cluster-monitoring-config
@@ -1092,4 +1093,6 @@ parameters:
 - name: IDENTITY_NAME
   required: true
 - name: IDENTITY_MAPPING_METHOD
+  required: true
+- name: TELEMETER_SERVER_URL
   required: true
