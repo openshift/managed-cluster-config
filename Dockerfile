@@ -1,10 +1,10 @@
-FROM openshift/origin-cli:v3.11
+FROM openshift/origin-cli:v3.11 AS builder
 
 # Multistage with python
-FROM python:2.7.15
+FROM python:2.7.15 AS runner
 
 # Bring oc binary to python image
-COPY --from=0 /bin/oc /bin/
+COPY --from=builder /bin/oc /bin/
 
 # TEST
 RUN printenv
@@ -22,10 +22,10 @@ WORKDIR ${REPO_PATH}
 RUN pip install pyyaml
 
 # Make
-RUN make 
+RUN make
 
 # This image will be replaced by the openshift/release
 FROM openshift/origin-cli
 
 # Ensure make ran as expected
-COPY --from=1 /managed-cluster-config/deploy/ deploy
+COPY --from=runner /managed-cluster-config/deploy/ deploy
