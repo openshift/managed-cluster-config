@@ -1,10 +1,14 @@
 FROM openshift/origin-cli:v3.11
 
 # Multistage with python
-FROM python:2.7
+FROM python:2.7.15
 
 # Bring oc binary to python image
 COPY --from=0 /bin/oc /bin/
+
+# TEST
+RUN printenv
+RUN ls -l /bin/oc
 
 # Environment
 ARG IN_DOCKER_CONTAINER="true"
