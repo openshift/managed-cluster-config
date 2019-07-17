@@ -18,10 +18,25 @@ NOW_EPOCH=$(date +"%s")
 
 # Verify we can actually upgrade (is this in the graph)
 CHANNEL_NAME=$(echo $OCP_VERSION_TO | sed 's/\([^.]*\.[^.]*\)\..*/stable-\1/g')
-GRAPH_VERSION=$(curl -s -H "Accept: application/json" https://api.openshift.com/api/upgrades_info/v1/graph?channel=$CHANNEL_NAME | jq -r ".nodes[] | select(.version == \"$OCP_VERSION_TO\") | .version")
-if [ "$OCP_VERSION_TO" != "$GRAPH_VERSION" ];
+GRAPH=$(curl -s -H "Accept: application/json" https://api.openshift.com/api/upgrades_info/v1/graph?channel=$CHANNEL_NAME)
+GRAPH_INDEX_FROM=$(echo $GRAPH | jq -r "[ .nodes[] | .version == \"$OCP_VERSION_FROM\" ] | index(true)")
+GRAPH_INDEX_TO=$(echo $GRAPH | jq -r "[ .nodes[] | .version == \"$OCP_VERSION_TO\" ] | index(true)")
+
+GRAPH_EDGE=$(echo $GRAPH | jq -r ".edges[] | select(.[0] == $GRAPH_INDEX_FROM) | .[1] == $GRAPH_INDEX_TO" | grep true)
+
+if [ "$GRAPH_INDEX_FROM" == "" ];
+then
+    echo "Cannot upgrade from $OCP_VERSION_FROM, it is not available in upgrade graph."
+    exit 2
+fi
+if [ "$GRAPH_INDEX_TO" == "" ];
 then
     echo "Cannot upgrade to $OCP_VERSION_TO, it is not available in upgrade graph."
+    exit 2
+fi
+if [ "$GRAPH_EDGE" != "true" ];
+then
+    echo "Cannot upgrade from $OCP_VERSION_FROM to $OCP_VERSION_TO, no path exists in upgrade graph."
     exit 2
 fi
 
