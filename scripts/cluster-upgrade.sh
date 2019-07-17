@@ -109,7 +109,7 @@ spec:
     patchType: merge
 EOF
 
-    oc $CD_NAMESPACE create -f $SS_FILENAME || oc $CD_NAMESPACE replace -f $SS_FILENAME
+    oc -n $CD_NAMESPACE create -f $SS_FILENAME || oc -n $CD_NAMESPACE replace -f $SS_FILENAME
     rm -f $SS_FILENAME
     echo "Created SyncSet for '$CD_NAME' upgrade: $OCP_CURRENT_VERSION -> $OCP_VERSION_TO"
     done
