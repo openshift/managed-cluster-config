@@ -19,13 +19,20 @@ NOW_EPOCH=$(date +"%s")
 # Verify we can actually upgrade (is this in the graph)
 CHANNEL_NAME=$(echo $OCP_VERSION_TO | sed 's/\([^.]*\.[^.]*\)\..*/stable-\1/g')
 GRAPH_VERSION=$(curl -s -H "Accept: application/json" https://api.openshift.com/api/upgrades_info/v1/graph?channel=$CHANNEL_NAME | jq -r ".nodes[] | select(.version == \"$OCP_VERSION_TO\") | .version")
-
 if [ "$OCP_VERSION_TO" != "$GRAPH_VERSION" ];
 then
-    echo "Cannot upgrade to $OCP_VERSION_TO, it is available in upgrade graph."
+    echo "Cannot upgrade to $OCP_VERSION_TO, it is not available in upgrade graph."
     exit 2
 fi
 
+# Verify the target version exists as a ClusterImageSet (CIS) on the cluster
+# (if not, the customer could never install to that target version)
+CIS_VERSION=$(oc get clusterimageset --all-namespaces -o json | jq -r ".items[].spec.releaseImage | split(\":\")[1] | select(. == \"$OCP_VERSION_TO\")")
+if [ "$OCP_VERSION_TO" != "$CIS_VERSION" ];
+then
+    echo "Cannot upgrade to $OCP_VERSION_TO, it is not available as a ClusterImageSet in the cluster."
+    exit 3
+fi
 
 # Verify we have ClusterDeployment CRs to work with
 if [ `oc get crd clusterdeployments.hive.openshift.io --no-headers 2>/dev/null | wc -l` == "0" ];
