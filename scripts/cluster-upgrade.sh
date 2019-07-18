@@ -22,14 +22,14 @@ GRAPH=$(curl -s -H "Accept: application/json" https://api.openshift.com/api/upgr
 GRAPH_INDEX_FROM=$(echo "${GRAPH}" | jq -r "[ .nodes[] | .version == \"$OCP_VERSION_FROM\" ] | index(true)")
 GRAPH_INDEX_TO=$(echo "${GRAPH}" | jq -r "[ .nodes[] | .version == \"$OCP_VERSION_TO\" ] | index(true)")
 
-GRAPH_EDGE=$(echo $GRAPH | jq -r ".edges[] | select(.[0] == $GRAPH_INDEX_FROM) | .[1] == $GRAPH_INDEX_TO" | grep true)
+GRAPH_EDGE=$(echo "${GRAPH}" | jq -r ".edges[] | select(.[0] == $GRAPH_INDEX_FROM) | .[1] == $GRAPH_INDEX_TO" | grep true)
 
-if [ "$GRAPH_INDEX_FROM" == "" ];
+if [ -z $GRAPH_INDEX_FROM ];
 then
     echo "Cannot upgrade from $OCP_VERSION_FROM, it is not available in upgrade graph."
     exit 2
 fi
-if [ "$GRAPH_INDEX_TO" == "" ];
+if [ -z $GRAPH_INDEX_TO ];
 then
     echo "Cannot upgrade to $OCP_VERSION_TO, it is not available in upgrade graph."
     exit 2
@@ -91,7 +91,7 @@ do
         else
             # cluster is already upgraded?
             echo "done ($OCP_CURRENT_VERSION)"
-            if [ "$SS_CURRENT_VERSION" != "" ];
+            if [ -z $SS_CURRENT_VERSION ];
             then
                 # delete the syncset, it's not needed anymore
                 oc -n $CD_NAMESPACE delete SyncSet $SS_NAME                
