@@ -56,6 +56,8 @@ then
     exit 1
 fi
 
+TMP_DIR=`mktemp -d`
+
 # kick off the upgrades
 for CD_NAMESPACE in `oc get clusterdeployment --all-namespaces | awk '{print $1}' | sort | uniq`;
 do
@@ -100,8 +102,7 @@ do
             continue
         fi
 
-        SS_FILENAME=$SS_NAME.syncset.yaml
-        rm -f $SS_FILENAME
+        SS_FILENAME=$TMP_DIR/$SS_NAME.syncset.yaml
         cat << EOF > $SS_FILENAME
 apiVersion: hive.openshift.io/v1alpha1
 kind: SyncSet
@@ -125,10 +126,11 @@ spec:
 EOF
 
     oc -n $CD_NAMESPACE create -f $SS_FILENAME || oc -n $CD_NAMESPACE replace -f $SS_FILENAME
-    rm -f $SS_FILENAME
     echo "Created SyncSet for '$CD_NAME' upgrade: $OCP_CURRENT_VERSION -> $OCP_VERSION_TO"
     done
 done
+
+rm -rf $TMP_DIR
 
 echo -e "\nUpgrades in progress for:\n$UPGRADE_PROGRESSING"
 echo -e "Upgrades not possible for:\n$UPGRADE_NOT_POSSIBLE"
