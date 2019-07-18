@@ -1,4 +1,4 @@
- #!/bin/bash
+#!/bin/bash
 
 OCP_VERSION_FROM=$1
 OCP_VERSION_TO=$2
