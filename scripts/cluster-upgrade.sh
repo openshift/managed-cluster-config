@@ -19,7 +19,7 @@ NOW_EPOCH=$(date +"%s")
 # Verify we can actually upgrade (is this in the graph)
 CHANNEL_NAME=$(echo "${OCP_VERSION_TO}" | sed 's/\([^.]*\.[^.]*\)\..*/stable-\1/g')
 GRAPH=$(curl -s -H "Accept: application/json" https://api.openshift.com/api/upgrades_info/v1/graph?channel="${CHANNEL_NAME}")
-GRAPH_INDEX_FROM=$(echo $GRAPH | jq -r "[ .nodes[] | .version == \"$OCP_VERSION_FROM\" ] | index(true)")
+GRAPH_INDEX_FROM=$(echo "${GRAPH}" | jq -r "[ .nodes[] | .version == \"$OCP_VERSION_FROM\" ] | index(true)")
 GRAPH_INDEX_TO=$(echo $GRAPH | jq -r "[ .nodes[] | .version == \"$OCP_VERSION_TO\" ] | index(true)")
 
 GRAPH_EDGE=$(echo $GRAPH | jq -r ".edges[] | select(.[0] == $GRAPH_INDEX_FROM) | .[1] == $GRAPH_INDEX_TO" | grep true)
