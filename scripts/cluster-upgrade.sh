@@ -3,7 +3,7 @@
 OCP_VERSION_FROM=$1
 OCP_VERSION_TO=$2
 
-if [ "$OCP_VERSION_TO" == "" ];
+if [ -z $OCP_VERSION_TO ];
 then
     echo "usage: $0 <from> <to>"
     echo "example: $0 4.1.0 4.1.2"
