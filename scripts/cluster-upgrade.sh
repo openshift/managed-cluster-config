@@ -1,4 +1,5 @@
 #!/bin/bash
+# This script contains non-portable components and is intended to run on a Hive cluster.
 
 OCP_VERSION_FROM=$1
 OCP_VERSION_TO=$2
