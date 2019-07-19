@@ -26,7 +26,7 @@ UPGRADE_DONE=""
 
 NOW_EPOCH=$(date +"%s")
 
-if [ ! -z $OCP_VERSION_FROM ];
+if [ -n $OCP_VERSION_FROM ];
 then
     # Verify we can actually upgrade (is this in the graph)
     CHANNEL_NAME=$(echo "${OCP_VERSION_TO}" | sed 's/\([^.]*\.[^.]*\)\..*/stable-\1/g')
