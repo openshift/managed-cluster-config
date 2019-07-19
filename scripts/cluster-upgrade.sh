@@ -71,7 +71,11 @@ fi
 
 TMP_DIR=`mktemp -d`
 OCP_PATCH="{\"spec\":{\"desiredUpdate\": {\"force\": false, \"image\": \"\", \"version\": \"$OCP_VERSION_TO\"}}}"
-
+if [[ $? -ne 0 ]];
+then
+    echo "ERROR: Couldn't create a temporary directory. Aborting.
+    exit 1
+fi
 # kick off the upgrades (or status check)
 for CD_NAMESPACE in `oc get clusterdeployment --all-namespaces | awk '{print $1}' | sort | uniq`;
 do  
