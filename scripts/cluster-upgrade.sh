@@ -151,7 +151,7 @@ done
 
 rm -rf $TMP_DIR
 
-if [ ! -z $OCP_VERSION_FROM ];
+if [ -n $OCP_VERSION_FROM ];
 then
     echo -e "\nUpgrades started:\n$UPGRADE_STARTED"
     echo -e "Upgrades in progress:\n$UPGRADE_PROGRESSING"
