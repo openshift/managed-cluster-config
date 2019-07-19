@@ -94,7 +94,7 @@ do
         # always report status
         echo "done ($OCP_CURRENT_VERSION)"
 
-        if [ ! -z $OCP_VERSION_FROM ];
+        if [ -n $OCP_VERSION_FROM ];
         then
             # upgrade
 
