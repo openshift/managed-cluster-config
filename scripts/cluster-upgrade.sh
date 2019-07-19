@@ -27,7 +27,7 @@ UPGRADE_DONE=""
 
 NOW_EPOCH=$(date +"%s")
 
-if [ -n $OCP_VERSION_FROM ];
+if [[ -n $OCP_VERSION_FROM ]];
 then
     # Verify we can actually upgrade (is this in the graph)
     CHANNEL_NAME=$(echo "${OCP_VERSION_TO}" | sed 's/\([^.]*\.[^.]*\)\..*/stable-\1/g')
@@ -52,7 +52,17 @@ then
         echo "Cannot upgrade from $OCP_VERSION_FROM to $OCP_VERSION_TO, no path exists in upgrade graph."
         exit 2
     fi
+fi
 
+# Verify we have ClusterDeployment CRs to work with
+if [ `oc get crd clusterdeployments.hive.openshift.io --no-headers 2>/dev/null | wc -l` == "0" ];
+then
+    echo "ERROR: Current cluster does not have Hive installed.  Verify where you are logged in."
+    exit 1
+fi
+
+if [[ -n $OCP_VERSION_TO ]];
+then
     # Verify the target version exists as a ClusterImageSet (CIS) on the cluster
     # (if not, the customer could never install to that target version)
     CIS_VERSION=$(oc get clusterimageset --all-namespaces -o json | jq -r ".items[].spec.releaseImage | split(\":\")[1] | select(. == \"$OCP_VERSION_TO\")")
@@ -61,22 +71,17 @@ then
         echo "Cannot upgrade to $OCP_VERSION_TO, it is not available as a ClusterImageSet in the cluster."
         exit 3
     fi
-
-    # Verify we have ClusterDeployment CRs to work with
-    if [ `oc get crd clusterdeployments.hive.openshift.io --no-headers 2>/dev/null | wc -l` == "0" ];
-    then
-        echo "ERROR: Current cluster does not have Hive installed.  Verify where you are logged in."
-        exit 1
-    fi
 fi
+
+OCP_PATCH="{\"spec\":{\"desiredUpdate\": {\"force\": false, \"image\": \"\", \"version\": \"$OCP_VERSION_TO\"}}}"
 
 TMP_DIR=`mktemp -d`
-OCP_PATCH="{\"spec\":{\"desiredUpdate\": {\"force\": false, \"image\": \"\", \"version\": \"$OCP_VERSION_TO\"}}}"
 if [[ $? -ne 0 ]];
 then
-    echo "ERROR: Couldn't create a temporary directory. Aborting.
+    echo "ERROR: Couldn't create a temporary directory. Aborting."
     exit 1
 fi
+
 # kick off the upgrades (or status check)
 for CD_NAMESPACE in `oc get clusterdeployment --all-namespaces | awk '{print $1}' | sort | uniq`;
 do  
@@ -95,7 +100,7 @@ do
         # always report status
         echo "done ($OCP_CURRENT_VERSION)"
 
-        if [ -n $OCP_VERSION_FROM ];
+        if [[ -n $OCP_VERSION_FROM ]];
         then
             # upgrade
 
@@ -152,7 +157,7 @@ done
 
 rm -rf $TMP_DIR
 
-if [ -n $OCP_VERSION_FROM ];
+if [[ -n $OCP_VERSION_FROM ]];
 then
     echo -e "\nUpgrades started:\n$UPGRADE_STARTED"
     echo -e "Upgrades in progress:\n$UPGRADE_PROGRESSING"
