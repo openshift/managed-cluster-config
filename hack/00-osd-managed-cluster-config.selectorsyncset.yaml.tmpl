@@ -276,6 +276,41 @@ objects:
       subjects:
       - kind: Group
         name: osd-sre-admins
+    - allowHostDirVolumePlugin: true
+      allowHostIPC: true
+      allowHostNetwork: true
+      allowHostPID: true
+      allowHostPorts: true
+      allowPrivilegeEscalation: true
+      allowPrivilegedContainer: true
+      allowedCapabilities:
+      - '*'
+      allowedUnsafeSysctls:
+      - '*'
+      apiVersion: security.openshift.io/v1
+      fsGroup:
+        type: RunAsAny
+      groups:
+      - osd-sre-admins
+      kind: SecurityContextConstraints
+      metadata:
+        annotations:
+          kubernetes.io/description: 'privileged allows access to all privileged and
+            host features and the ability to run as any user, any group, any fsGroup,
+            and with any SELinux context.  WARNING: this is the most relaxed SCC and
+            should be used only for cluster administration. Grant with caution.'
+        name: sd-sre-privileged
+      readOnlyRootFilesystem: false
+      runAsUser:
+        type: RunAsAny
+      seLinuxContext:
+        type: RunAsAny
+      seccompProfiles:
+      - '*'
+      supplementalGroups:
+        type: RunAsAny
+      volumes:
+      - '*'
 - apiVersion: hive.openshift.io/v1alpha1
   kind: SelectorSyncSet
   metadata:
