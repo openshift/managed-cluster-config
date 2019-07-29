@@ -6,6 +6,12 @@ This repo contains static configuration specific to a "managed" OpenShift Dedica
 
 To add a new SelectorSyncSet, add your yaml manifest to the `deploy` dir, then run the `make` command.
 
+# Building
+
+## Dependencies
+
+- oyaml: `pip install oyaml`
+
 # Selector Sync Sets included in this repo
 
 ## Prometheus

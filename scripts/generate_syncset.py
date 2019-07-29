@@ -1,34 +1,11 @@
 #!/usr/bin/env python
 
-# logic for sorted output: https://gist.github.com/oglops/c70fb69eef42d40bed06
-
-try:
-        # for python newer than 2.7
-    from collections import OrderedDict
-except ImportError:
-        # use backport from pypi
-    from ordereddict import OrderedDict
-
-import yaml
-
-try:
-    from yaml import CLoader as Loader, CDumper as Dumper
-except ImportError:
-    from yaml import Loader, Dumper
-from yaml.representer import SafeRepresenter
-_mapping_tag = yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG
+import oyaml as yaml
 
 import os
 import sys
 import argparse
 import copy
-
-def dict_representer(dumper, data):
-    return dumper.represent_dict(data.iteritems())
-
-def dict_constructor(loader, node):
-    return OrderedDict(loader.construct_pairs(node))
-
 
 def get_yaml_all(filename):
     with open(filename,'r') as input_file:
@@ -55,7 +32,6 @@ def get_all_yaml_obj(file_paths):
         objects = get_yaml_all(file)
         for obj in objects:
             yaml_objs.append(obj)
-    yaml_objs = sorted(yaml_objs)
     return yaml_objs
 
 def process_yamls(name, directory, obj):
@@ -65,7 +41,6 @@ def process_yamls(name, directory, obj):
     if len(yamls) == 0:
         return
 
-    yamls = sorted(yamls)
     for y in yamls:
         if 'patch' in y:
             if not 'patches' in o['spec']:
@@ -113,14 +88,5 @@ if __name__ == '__main__':
             process_yamls(sss_name, dirpath, selectorsyncset_data)
 
     # write template file ordering by keys
-    Dumper.add_representer(OrderedDict, dict_representer)
-    Loader.add_constructor(_mapping_tag, dict_constructor)
-
-    Dumper.add_representer(str,
-                        SafeRepresenter.represent_str)
-
-    Dumper.add_representer(unicode,
-                        SafeRepresenter.represent_unicode)
-
     with open(arguments.destination,'w') as outfile:
-        yaml.dump(template_data, outfile, Dumper=Dumper, default_flow_style=False)
+        yaml.dump(template_data, outfile)

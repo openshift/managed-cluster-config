@@ -39,7 +39,7 @@ generate-oauth-templates:
 .PHONY: generate-syncset
 generate-syncset: generate-oauth-templates
 	if [ -z ${IN_DOCKER_CONTAINER} ]; then \
-		docker run --rm -v `pwd -P`:`pwd -P` python:2.7.15 /bin/sh -c "cd `pwd`; pip install pyyaml; ${GEN_SYNCSET}"; \
+		docker run --rm -v `pwd -P`:`pwd -P` python:2.7.15 /bin/sh -c "cd `pwd`; pip install oyaml; ${GEN_SYNCSET}"; \
 	else \
 		${GEN_SYNCSET}; \
 	fi
