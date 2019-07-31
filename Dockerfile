@@ -17,7 +17,7 @@ COPY . ${REPO_PATH}
 WORKDIR ${REPO_PATH}
 
 # Upgrade pip and install necessasry packages
-RUN pip install pyyaml
+RUN pip install oyaml
 
 # Make
 RUN make
