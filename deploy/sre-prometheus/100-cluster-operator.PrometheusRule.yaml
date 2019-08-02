@@ -1,0 +1,17 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: sre-cluster-operator-down-alerts
+    role: alert-rules
+  name: sre-cluster-operator-down-alerts
+  namespace: openshift-monitoring
+spec:
+  groups:
+  - name: sre-cluster-operator-down-alerts
+    rules:
+    - alert: ConfigureAlertmanagerOperatorOfflineSRE
+      expr: cluster_operator_up == 0
+      for: 15m
+      labels:
+        severity: critical
