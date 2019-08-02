@@ -10,8 +10,13 @@ spec:
   groups:
   - name: sre-cluster-operator-down-alerts
     rules:
-    - alert: ConfigureAlertmanagerOperatorOfflineSRE
+    - alert: ClusterOperatorOfflineSRE
       expr: cluster_operator_up == 0
+      for: 15m
+      labels:
+        severity: critical
+    - alert: ClusterOperatorDegradedSRE
+      expr: cluster_operator_conditions{condition='Degraded'} == 1
       for: 15m
       labels:
         severity: critical
