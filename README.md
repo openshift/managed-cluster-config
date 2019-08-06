@@ -27,7 +27,7 @@ Persistent storage is configured using the configmap `cluster-monitoring-config`
 
 ## SRE Authorization
 
-Instead of SRE having `cluster-admin` a new ClusterRole `osd-sre-admin` is created with some permissions removed.  The ClusterRole can be regenerated in the `generate/sre-authorization` directory.  The role is granted to SRE via `osd-sre-admins` group.
+Instead of SRE having the `cluster-admin` role, a new ClusterRole, `osd-sre-admin`, is created with some permissions removed.  The ClusterRole can be regenerated in the `generate/sre-authorization` directory.  The role is granted to SRE via `osd-sre-admins` group.
 
 To elevate privileges, SRE can add themselves to the group `osd-sre-cluster-admins` which is bound to the ClusterRole `cluster-admin`.  When this group is created and managed by Hive, all users are wiped because the SelectorSyncSet will always have `users: null`.  Therefore, SRE will get elevated privileges for a limited time.
 
