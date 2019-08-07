@@ -59,9 +59,13 @@ pyyaml
 
 ## Logging
 
-Installs ES and logging operators and pre-configures curator to retain 2 days of indexes (1 day for operations).
+Prepares the cluster for `elasticsearch` and `logging` operator installation and pre-configures curator to retain 2 days of indexes (1 day for operations).
 
-Customer can install a `ClusterLogging` CR in `openshift-logging` as a `dedicated-admins` user to opt-in to logging in the cluster.
+To opt-in to logging, the customer must:
+1. install the `logging` operator
+2. install the `elasticsearch` operator
+3. create `ClusterLogging` CR in `openshift-logging`
+
 
 # Additional Scripts
 
