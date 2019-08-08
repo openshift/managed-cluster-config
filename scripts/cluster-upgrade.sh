@@ -1,19 +1,76 @@
-#!/bin/bash
-# This script contains non-portable components and is intended to run on a Hive cluster.
+#!/usr/bin/env bash
+set -o errexit
+set -o nounset
+set -o pipefail
 
-OCP_VERSION_FROM=$1
-OCP_VERSION_TO=$2
+STATUS=false
+SCRIPT_NAME=$(basename "$0")
 
-if [ -z $OCP_VERSION_FROM ];
-then
-    echo "This script can be used to get the status of all managed clusters or to upgrade clusters."
-    echo "usage: $0 status"
-    echo "usage: $0 <from> <to>"
-    echo "  example: $0 4.1.0 4.1.2"
+usage() {
+    cat <<EOF
+    This script contains non-portable components and is intended to run on a Hive cluster.
+
+    usage: $SCRIPT_NAME [ OPTION ]
+    Options
+    -f         [ VERSION ] OSD version to upgrade from
+    -t         [ VERSION ] OSD version to upgrade to
+    -s         Status of cluster versions
+
+    Example upgrade:
+      $0 -f 4.1.0 -t 4.1.2
+
+    Example status:
+      $0 -s
+EOF
+}
+
+if ( ! getopts ":t:f:sh" opt); then
+    cat <<EOF
+
+    $SCRIPT_NAME requries an argument!
+
+EOF
+    usage
     exit 1
 fi
 
-if [ "$OCP_VERSION_FROM" == "status" ];
+while getopts ":f:t:sh" opt; do
+    case $opt in
+        f)
+            OSD_UPGRADE_FROM="$OPTARG" >&2
+            ;;
+        t)
+            OSD_UPGRADE_TO="$OPTARG" >&2
+            ;;
+        s)
+            STATUS=true >&2
+            ;;
+        h)
+            usage
+            exit 1
+            ;;
+        \?)
+            usage
+            exit 1
+            ;;
+        :)
+            echo "$0 Requires an argument" >&2
+            usage
+            exit 1
+            ;;
+        esac
+    done
+
+
+OCP_VERSION_FROM=OSD_UPGRADE_FROM
+OCP_VERSION_TO=OSD_UPGRADE_TO
+
+if [ -z $OCP_VERSION_FROM ];
+then
+    usage
+fi
+
+if $STATUS;
 then
     # absense of versions implies status check
     unset OCP_VERSION_FROM
