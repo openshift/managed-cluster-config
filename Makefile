@@ -45,7 +45,7 @@ generate-syncset: generate-oauth-templates
 	fi
 
 .PHONY: clean
-clean: 
+clean:
 	rm -rf ${SELECTOR_SYNC_SET_DESTINATION}
 	@$(MAKE) --directory=deploy/resource-quotas clean
 
