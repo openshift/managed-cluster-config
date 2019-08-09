@@ -144,7 +144,7 @@ EOF
                 UPGRADE_NOT_POSSIBLE="${UPGRADE_NOT_POSSIBLE}  $CD_NAME ($OCP_CURRENT_VERSION)\n"
             else
                 # delete the syncset, it's not needed anymore
-                oc -n $CD_NAMESPACE delete SyncSet $SS_NAME 2>/dev/null
+                oc -n "$CD_NAMESPACE" delete SyncSet "$SS_NAME" 2>/dev/null
                 UPGRADE_DONE="${UPGRADE_DONE}  $CD_NAME ($OCP_CURRENT_VERSION)\n"
             fi
         fi
