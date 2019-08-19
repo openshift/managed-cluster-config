@@ -1,0 +1,24 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: sre-rbac-permission-operator
+    role: alert-rules
+  name: sre-rbac-permission-operator
+  namespace: openshift-monitoring
+spec:
+  groups:
+  - name: sre-rbac-permission-operator
+    rules:
+    - alert: SRERBACNoConfiguredClusterRolebindings
+      expr: absent(rbac_permissions_operator_cluster_permission{group_name=~"osd-sre-admins|dedicated-admins"}) == 0
+      severity: critical
+      for: 10m
+      annotations:
+        message: "The {{ $labels.group_name }} group has no ClusterRoleBindings configured. This may be a misconfiguration."
+    - alert: SRERBACNoConfiguredRolebindings
+      expr: absent(rbac_permissions_operator_namespace_permission{group_name=~"osd-sre-admins|dedicated-admins"}) == 0
+      severity: critical
+      for: 10m
+      annotations:
+        message: "The {{ $labels.group_name }} group has no RoleBindings configured. This may be a misconfiguration."
