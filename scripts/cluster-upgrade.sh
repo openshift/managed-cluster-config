@@ -15,7 +15,7 @@ then
     exit 1
 fi
 
-if [ -z $CLUSTER_NAMES ];
+if [ -z "$CLUSTER_NAMES" ];
 then
     echo "This script is used to upgrade clusters from a version to another."
     echo "Optionally can target a subset of clusters by name."
@@ -33,6 +33,14 @@ then
     unset OCP_VERSION_FROM
     unset OCP_VERSION_TO
 fi
+
+log() {
+    CD_NAME=$1
+    STAGE=$2
+    MESSAGE=$3
+    
+    echo "$(date "+%Y-%m-%d_%H.%M.%S") - $CD_NAME - $STAGE - $MESSAGE"
+}
 
 setup() {
     CD_NAMESPACE=$1
@@ -55,14 +63,14 @@ setup() {
         oc -n $CD_NAMESPACE label clusterdeployment $CD_NAME managed.openshift.io/original-worker-replicas=$ORIGINAL_REPLICAS
         oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r ".spec.compute[0].replicas=$DESIRED_REPLICAS" | oc replace -f -
 
-        echo "$CD_NAME - setup - bumping replicas from $ORIGINAL_REPLICAS to $DESIRED_REPLICAS"
+        log $CD_NAME "setup" "bumping replicas from $ORIGINAL_REPLICAS to $DESIRED_REPLICAS"
     fi
 
     # make sure we are at capacity in cluster
     MS_REPLICAS=$(($DESIRED_REPLICAS/$ZONE_COUNT))
     for MS_NAME in $(KUBECONFIG=$TMP_DIR/kubeconfig-$CD_NAME oc -n openshift-machine-api get machineset --no-headers | grep worker | awk '{print $1}');
     do
-        echo "$CD_NAME - setup - waiting for replicas, machineset=$MS_NAME"
+        log $CD_NAME "setup" "waiting for replicas, machineset=$MS_NAME"
         AVAILABLE_REPLICAS=$(KUBECONFIG=$TMP_DIR/kubeconfig-$CD_NAME oc -n openshift-machine-api get machineset $MS_NAME -o jsonpath='{.status.availableReplicas}')
 
         while [ "$AVAILABLE_REPLICAS" != "$MS_REPLICAS" ];
@@ -72,7 +80,7 @@ setup() {
             AVAILABLE_REPLICAS=$(KUBECONFIG=$TMP_DIR/kubeconfig-$CD_NAME oc -n openshift-machine-api get machineset $MS_NAME -o jsonpath='{.status.availableReplicas}')
         done
 
-        echo "$CD_NAME - setup - replicas are ready for upgrade, machineset=$MS_NAME"
+        log $CD_NAME "setup" "replicas are ready for upgrade, machineset=$MS_NAME"
     done
 }
 
@@ -82,21 +90,21 @@ upgrade() {
     FROM=$3
     TO=$4
     
-    echo "Checking $CD_NAME..."
+    log $CD_NAME "upgrade" "Checking $CD_NAME..."
 
     # - do we need to upgrade?
     OCP_CURRENT_VERSION=$(oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r '.status.clusterVersionStatus.history[] | select(.state == "Completed") | .version' | head -n1)
 
     if [ "$OCP_CURRENT_VERSION" == "$TO" ];
     then
-        echo "$CD_NAME - upgrade - skipping, already on version $TO"
+        log $CD_NAME "upgrade" "skipping, already on version $TO"
         teardown $CD_NAMESPACE $CD_NAME
         return
     fi
 
     if [ "$OCP_CURRENT_VERSION" != "$FROM" ];
     then
-        echo "$CD_NAME - upgrade - skipping, expect version $FROM, found version $OCP_CURRENT_VERSION"
+        log $CD_NAME "upgrade" "skipping, expect version $FROM, found version $OCP_CURRENT_VERSION"
         return
     fi
 
@@ -108,7 +116,7 @@ upgrade() {
     if [ "$IN_PROGRESS" == "" ];
     then
         # hive doesn't know about this version.. try to start the upgrade
-        echo "$CD_NAME - upgrade - upgrading from $FROM to $TO"
+        log $CD_NAME "upgrade" "upgrading from $FROM to $TO"
 
         oc -n $CD_NAMESPACE get secrets "${CD_NAME}-admin-kubeconfig" -o jsonpath='{.data.kubeconfig}' | base64 -d > $TMP_DIR/kubeconfig-$CD_NAME
 
@@ -116,7 +124,7 @@ upgrade() {
     fi
 
     # 3. wait for upgrade to complete
-    echo "$CD_NAME - upgrade - waiting for cluster version"
+    log $CD_NAME "upgrade" "waiting for cluster version"
     OCP_CURRENT_VERSION=$(oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r '.status.clusterVersionStatus.history[] | select(.state == "Completed") | .version' | head -n1)
     
     while [ "$OCP_CURRENT_VERSION" != "$TO" ];
@@ -125,8 +133,8 @@ upgrade() {
         OCP_CURRENT_VERSION=$(oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r '.status.clusterVersionStatus.history[] | select(.state == "Completed") | .version' | head -n1)
     done
 
-    echo "$CD_NAME - upgrade - ClusterVersion on $TO"
-    echo "$CD_NAME - upgrade - checking kubelet versions"
+    log $CD_NAME "upgrade" "ClusterVersion on $TO"
+    log $CD_NAME "upgrade" "checking kubelet versions"
 
     # fun fact!  after clusterversion says it is done, individual nodes could still be updated.
     # make sure all nodes run same kubelet version
@@ -138,8 +146,8 @@ upgrade() {
         sleep 15
     done
 
-    echo "$CD_NAME - upgrade - all kubelets on same version"
-    echo "$CD_NAME - upgrade - upgrade is complete"
+    log $CD_NAME "upgrade" "all kubelets on same version"
+    log $CD_NAME "upgrade" "upgrade is complete"
 
     teardown $CD_NAMESPACE $CD_NAME
 }
@@ -157,7 +165,7 @@ teardown() {
         oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r ".spec.compute[0].replicas=$ORIGINAL_REPLICAS" | oc replace -f -
         oc -n $CD_NAMESPACE label clusterdeployment $CD_NAME managed.openshift.io/original-worker-replicas-
 
-        echo "$CD_NAME - teardown - dropping replicas back from $DESIRED_REPLICAS to $ORIGINAL_REPLICAS"
+        log $CD_NAME "teardown" "dropping replicas back from $DESIRED_REPLICAS to $ORIGINAL_REPLICAS"
     fi
 }
 
