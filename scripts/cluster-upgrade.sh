@@ -6,6 +6,7 @@ trap "trap - SIGTERM && kill -- -$$" SIGINT SIGTERM EXIT
 
 OCP_VERSION_FROM=$1
 OCP_VERSION_TO=$2
+CLUSTER_NAMES=${@:3}
 
 TMP_DIR=$(mktemp -d)
 if [[ $? -ne 0 ]];
@@ -14,12 +15,15 @@ then
     exit 1
 fi
 
-if [ -z $OCP_VERSION_FROM ];
+if [ -z $CLUSTER_NAMES ];
 then
-    echo "This script can be used to get the status of all managed clusters or to upgrade clusters."
-    echo "usage: $0 status"
-    echo "usage: $0 <from> <to>"
-    echo "  example: $0 4.1.0 4.1.2"
+    echo "This script is used to upgrade clusters from a version to another."
+    echo "Optionally can target a subset of clusters by name."
+    echo "When upgrading all, must specify 'all' for cluster name."
+    echo ""
+    echo "usage: $0 <from> <to> [cluster name1] .. [cluster nameN]"
+    echo "  example: $0 4.1.0 4.1.2 all"
+    echo "  example: $0 4.1.0 4.1.2 nmalik1 nmalik2"
     exit 1
 fi
 
@@ -207,6 +211,25 @@ for CD_NAMESPACE in `oc get clusterdeployment --all-namespaces | awk '{print $1}
 do  
     for CD_NAME in `oc -n $CD_NAMESPACE get clusterdeployment -o json | jq -r '.items[] | select(.metadata.labels["api.openshift.com/managed"] == "true") | select(.status.installed == true) | select(.status.clusterVersionStatus.history[0].state == "Completed") | .metadata.name'`;
     do  
+        if [ "$CLUSTER_NAMES" != "all" ];
+        then
+            PROCESS=0
+            for CLUSTER_NAME in $CLUSTER_NAMES
+            do
+                if [ "$CD_NAME" == "$CLUSTER_NAME" ];
+                then
+                    # a match, process it
+                    PROCESS=1
+                    break
+                fi
+            done
+
+            if [ "$PROCESS" == "0" ];
+            then
+                # not one to process, skip it
+                continue
+            fi
+        fi
         upgrade $CD_NAMESPACE $CD_NAME $OCP_VERSION_FROM $OCP_VERSION_TO &
     done
 done
