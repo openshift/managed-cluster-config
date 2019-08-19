@@ -2,13 +2,13 @@ apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
   labels:
-    prometheus: sre-rbac-permission-operator
+    prometheus: sre-rbac-permissions-operator
     role: alert-rules
   name: sre-rbac-permission-operator
-  namespace: openshift-monitoring
+  namespace: openshift-rbac-permissions
 spec:
   groups:
-  - name: sre-rbac-permission-operator
+  - name: sre-rbac-permissions-operator
     rules:
     - alert: SRERBACNoConfiguredClusterRolebindings
       expr: absent(rbac_permissions_operator_cluster_permission{group_name=~"osd-sre-admins|dedicated-admins"}) == 0
