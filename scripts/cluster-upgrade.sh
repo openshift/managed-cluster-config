@@ -47,7 +47,7 @@ setup() {
     CD_NAME=$2
 
     # get kubeconfig so we can check status of cluster's nodes (extra capacity)
-    oc -n $CD_NAMESPACE get secrets "${CD_NAME}-admin-kubeconfig" -o jsonpath='{.data.kubeconfig}' | base64 -d > $TMP_DIR/kubeconfig-$CD_NAME
+    oc -n $CD_NAMESPACE extract secret/"${CD_NAME}-admin-kubeconfig" --keys=kubeconfig --to=- > ${TMP_DIR}/kubeconfig-${CD_NAME}
 
     ORIGINAL_REPLICAS=$(oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r '.metadata.labels["managed.openshift.io/original-worker-replicas"] | select(. != null)')
     DESIRED_REPLICAS=$(oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r '.spec.compute[] | select(.name == "worker") | .replicas')
