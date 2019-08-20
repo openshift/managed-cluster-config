@@ -1,15 +1,29 @@
 #!/bin/bash
 # This script contains non-portable components and is intended to run on a Hive cluster.
 
+# make sure if the script is killed all child processes are killed:
+trap "trap - SIGTERM && kill -- -$$" SIGINT SIGTERM EXIT
+
 OCP_VERSION_FROM=$1
 OCP_VERSION_TO=$2
+CLUSTER_NAMES=${@:3}
 
-if [ -z $OCP_VERSION_FROM ];
+TMP_DIR=$(mktemp -d)
+if [[ $? -ne 0 ]];
 then
-    echo "This script can be used to get the status of all managed clusters or to upgrade clusters."
-    echo "usage: $0 status"
-    echo "usage: $0 <from> <to>"
-    echo "  example: $0 4.1.0 4.1.2"
+    echo "ERROR: Couldn't create a temporary directory. Aborting."
+    exit 1
+fi
+
+if [ -z "$CLUSTER_NAMES" ];
+then
+    echo "This script is used to upgrade clusters from a version to another."
+    echo "Optionally can target a subset of clusters by name."
+    echo "When upgrading all, must specify 'all' for cluster name."
+    echo ""
+    echo "usage: $0 <from> <to> [cluster name1] .. [cluster nameN]"
+    echo "  example: $0 4.1.0 4.1.2 all"
+    echo "  example: $0 4.1.0 4.1.2 nmalik1 nmalik2"
     exit 1
 fi
 
@@ -20,12 +34,140 @@ then
     unset OCP_VERSION_TO
 fi
 
-UPGRADE_STARTED=""
-UPGRADE_PROGRESSING=""
-UPGRADE_NOT_POSSIBLE=""
-UPGRADE_DONE=""
+log() {
+    CD_NAME=$1
+    STAGE=$2
+    MESSAGE=$3
+    
+    echo "$(date "+%Y-%m-%d_%H.%M.%S") - $CD_NAME - $STAGE - $MESSAGE"
+}
 
-NOW_EPOCH=$(date +"%s")
+setup() {
+    CD_NAMESPACE=$1
+    CD_NAME=$2
+
+    # get kubeconfig so we can check status of cluster's nodes (extra capacity)
+    oc -n $CD_NAMESPACE extract secret/"${CD_NAME}-admin-kubeconfig" --keys=kubeconfig --to=- > ${TMP_DIR}/kubeconfig-${CD_NAME}
+
+    ORIGINAL_REPLICAS=$(oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r '.metadata.labels["managed.openshift.io/original-worker-replicas"] | select(. != null)')
+    DESIRED_REPLICAS=$(oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r '.spec.compute[] | select(.name == "worker") | .replicas')
+    ZONE_COUNT=$(oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r '.spec.compute[] | select(.name == "worker") | .platform.aws.zones[]' | wc -l)
+
+    if [ "$ORIGINAL_REPLICAS" == "" ];
+    then
+        # nope, need to bump replicas!
+        ORIGINAL_REPLICAS=$(oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r '.spec.compute[0].replicas')
+        DESIRED_REPLICAS=$(($ORIGINAL_REPLICAS+$ZONE_COUNT))
+
+        # update replicas
+        oc -n $CD_NAMESPACE label clusterdeployment $CD_NAME managed.openshift.io/original-worker-replicas=$ORIGINAL_REPLICAS
+        oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r ".spec.compute[0].replicas=$DESIRED_REPLICAS" | oc replace -f -
+
+        log $CD_NAME "setup" "bumping replicas from $ORIGINAL_REPLICAS to $DESIRED_REPLICAS"
+    fi
+
+    # make sure we are at capacity in cluster
+    MS_REPLICAS=$(($DESIRED_REPLICAS/$ZONE_COUNT))
+    for MS_NAME in $(KUBECONFIG=$TMP_DIR/kubeconfig-$CD_NAME oc -n openshift-machine-api get machineset --no-headers | grep worker | awk '{print $1}');
+    do
+        log $CD_NAME "setup" "waiting for replicas, machineset=$MS_NAME"
+        AVAILABLE_REPLICAS=$(KUBECONFIG=$TMP_DIR/kubeconfig-$CD_NAME oc -n openshift-machine-api get machineset $MS_NAME -o jsonpath='{.status.availableReplicas}')
+
+        while [ "$AVAILABLE_REPLICAS" != "$MS_REPLICAS" ];
+        do
+            sleep 15
+
+            AVAILABLE_REPLICAS=$(KUBECONFIG=$TMP_DIR/kubeconfig-$CD_NAME oc -n openshift-machine-api get machineset $MS_NAME -o jsonpath='{.status.availableReplicas}')
+        done
+
+        log $CD_NAME "setup" "replicas are ready for upgrade, machineset=$MS_NAME"
+    done
+}
+
+upgrade() {
+    CD_NAMESPACE=$1
+    CD_NAME=$2
+    FROM=$3
+    TO=$4
+    
+    log $CD_NAME "upgrade" "Checking $CD_NAME..."
+
+    # - do we need to upgrade?
+    OCP_CURRENT_VERSION=$(oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r '.status.clusterVersionStatus.history[] | select(.state == "Completed") | .version' | head -n1)
+
+    if [ "$OCP_CURRENT_VERSION" == "$TO" ];
+    then
+        log $CD_NAME "upgrade" "skipping, already on version $TO"
+        teardown $CD_NAMESPACE $CD_NAME
+        return
+    fi
+
+    if [ "$OCP_CURRENT_VERSION" != "$FROM" ];
+    then
+        log $CD_NAME "upgrade" "skipping, expect version $FROM, found version $OCP_CURRENT_VERSION"
+        return
+    fi
+
+    setup $CD_NAMESPACE $CD_NAME
+
+    # is upgrade already progressing?
+    IN_PROGRESS=$(oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r ".status.clusterVersionStatus.history[] | select(.version == \"$TO\") | .version" | grep -v null)
+
+    if [ "$IN_PROGRESS" == "" ];
+    then
+        # hive doesn't know about this version.. try to start the upgrade
+        log $CD_NAME "upgrade" "upgrading from $FROM to $TO"
+
+        oc -n $CD_NAMESPACE get secrets "${CD_NAME}-admin-kubeconfig" -o jsonpath='{.data.kubeconfig}' | base64 -d > $TMP_DIR/kubeconfig-$CD_NAME
+
+        KUBECONFIG=$TMP_DIR/kubeconfig-$CD_NAME oc patch clusterversion version --type merge -p "{\"spec\":{\"desiredUpdate\": {\"version\": \"$TO\"}}}"
+    fi
+
+    # 3. wait for upgrade to complete
+    log $CD_NAME "upgrade" "waiting for cluster version"
+    OCP_CURRENT_VERSION=$(oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r '.status.clusterVersionStatus.history[] | select(.state == "Completed") | .version' | head -n1)
+    
+    while [ "$OCP_CURRENT_VERSION" != "$TO" ];
+    do
+        sleep 15
+        OCP_CURRENT_VERSION=$(oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r '.status.clusterVersionStatus.history[] | select(.state == "Completed") | .version' | head -n1)
+    done
+
+    log $CD_NAME "upgrade" "ClusterVersion on $TO"
+    log $CD_NAME "upgrade" "checking kubelet versions"
+
+    # fun fact!  after clusterversion says it is done, individual nodes could still be updated.
+    # make sure all nodes run same kubelet version
+    KUBELET_VERSION_COUNT=0
+    while [ "$KUBELET_VERSION_COUNT" != "1" ];
+    do
+        KUBELET_VERSION_COUNT=$(KUBECONFIG=$TMP_DIR/kubeconfig-$CD_NAME oc get nodes --no-headers -o custom-columns=VERSION:.status.nodeInfo.kubeletVersion | sort | uniq | wc -l)
+
+        sleep 15
+    done
+
+    log $CD_NAME "upgrade" "all kubelets on same version"
+    log $CD_NAME "upgrade" "upgrade is complete"
+
+    teardown $CD_NAMESPACE $CD_NAME
+}
+
+teardown() {
+    CD_NAMESPACE=$1
+    CD_NAME=$2
+
+    ORIGINAL_REPLICAS=$(oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r '.metadata.labels["managed.openshift.io/original-worker-replicas"] | select(. != null)' 2>/dev/null)
+    DESIRED_REPLICAS=$(oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r '.spec.compute[] | select(.name == "worker") | .replicas')
+
+    if [ "$ORIGINAL_REPLICAS" != "" ] && [ "$ORIGINAL_REPLICAS" != "$DESIRED_REPLICAS" ];
+    then
+        # need to set replicas back to the original and clear the label
+        oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r ".spec.compute[0].replicas=$ORIGINAL_REPLICAS" | oc replace -f -
+        oc -n $CD_NAMESPACE label clusterdeployment $CD_NAME managed.openshift.io/original-worker-replicas-
+
+        log $CD_NAME "teardown" "dropping replicas back from $DESIRED_REPLICAS to $ORIGINAL_REPLICAS"
+    fi
+}
 
 if [[ -n $OCP_VERSION_FROM ]];
 then
@@ -73,91 +215,34 @@ then
     fi
 fi
 
-OCP_PATCH="{\"spec\":{\"desiredUpdate\": {\"force\": false, \"image\": \"\", \"version\": \"$OCP_VERSION_TO\"}}}"
-
-TMP_DIR=`mktemp -d`
-if [[ $? -ne 0 ]];
-then
-    echo "ERROR: Couldn't create a temporary directory. Aborting."
-    exit 1
-fi
-
-# kick off the upgrades (or status check)
 for CD_NAMESPACE in `oc get clusterdeployment --all-namespaces | awk '{print $1}' | sort | uniq`;
 do  
     for CD_NAME in `oc -n $CD_NAMESPACE get clusterdeployment -o json | jq -r '.items[] | select(.metadata.labels["api.openshift.com/managed"] == "true") | select(.status.installed == true) | select(.status.clusterVersionStatus.history[0].state == "Completed") | .metadata.name'`;
     do  
-        echo -n "Checking $CD_NAME..."
-        # TODO figure out how to get the latest version, for now just getting the first one (ordered descending)
-        OCP_CURRENT_VERSION=`oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r '.status.clusterVersionStatus.history[] | select(.state == "Completed") | .version' | head -n1`
-
-        SS_NAME=$CD_NAME-upgrade
-        SS_VERSION_FROM=`oc -n $CD_NAMESPACE get syncset $SS_NAME --show-labels --no-headers 2> /dev/null | sed 's|.*managed.openshift.io/from=\([^,]*\).*|\1|g'`
-        SS_VERSION_TO=`oc -n $CD_NAMESPACE get syncset $SS_NAME --show-labels --no-headers 2> /dev/null | sed 's|.*managed.openshift.io/to=\([^,]*\).*|\1|g'`
-        SS_CREATED_ON=$(date --date="$(oc -n $CD_NAMESPACE get syncset $SS_NAME --template '{{ .metadata.creationTimestamp }}' 2>/dev/null)" +"%s" 2>/dev/null)
-        SS_AGE_MIN=$(($(($NOW_EPOCH-$SS_CREATED_ON))/60))
-
-        # always report status
-        echo "done ($OCP_CURRENT_VERSION)"
-
-        if [[ -n $OCP_VERSION_FROM ]];
+        if [ "$CLUSTER_NAMES" != "all" ];
         then
-            # upgrade
+            PROCESS=0
+            for CLUSTER_NAME in $CLUSTER_NAMES
+            do
+                if [ "$CD_NAME" == "$CLUSTER_NAME" ];
+                then
+                    # a match, process it
+                    PROCESS=1
+                    break
+                fi
+            done
 
-            # do nothing if the current version in SS is what we got out of CD
-            if [ "$OCP_CURRENT_VERSION" == "$SS_VERSION_FROM" ];
+            if [ "$PROCESS" == "0" ];
             then
-                UPGRADE_PROGRESSING="${UPGRADE_PROGRESSING}  $CD_NAME ($SS_VERSION_FROM->$SS_VERSION_TO) [age=$SS_AGE_MIN(min)]\n"
+                # not one to process, skip it
                 continue
             fi
-
-            if [ "$OCP_CURRENT_VERSION" == "$OCP_VERSION_FROM" ];
-            then
-                SS_FILENAME=$TMP_DIR/$SS_NAME.syncset.yaml
-                cat << EOF > $SS_FILENAME
-apiVersion: hive.openshift.io/v1alpha1
-kind: SyncSet
-metadata:
-  name: $SS_NAME
-  namespace: $CD_NAMESPACE
-  labels:
-    managed.openshift.io/from: "$OCP_CURRENT_VERSION"
-    managed.openshift.io/to: "$OCP_VERSION_TO"
-spec:
-  clusterDeploymentRefs:
-  - name: $CD_NAME
-  resourceApplyMode: Sync
-  patches:
-  - apiVersion: config.openshift.io/v1
-    applyMode: ApplyOnce
-    kind: ClusterVersion
-    name: version
-    patch: '$OCP_PATCH'
-    patchType: merge
-EOF
-
-                oc -n $CD_NAMESPACE create -f $SS_FILENAME || oc -n $CD_NAMESPACE replace -f $SS_FILENAME
-                UPGRADE_STARTED="${UPGRADE_STARTED}  $CD_NAME ($OCP_VERSION_FROM->$OCP_VERSION_TO)\n"
-            elif [ -z $SS_VERSION_FROM ] && [ "$OCP_CURRENT_VERSION" != "$OCP_VERSION_TO" ];
-            then
-                # report can't upgrade if version is not upgradable and upgrade is not in progress
-                UPGRADE_NOT_POSSIBLE="${UPGRADE_NOT_POSSIBLE}  $CD_NAME ($OCP_CURRENT_VERSION)\n"
-            else
-                # delete the syncset, it's not needed anymore
-                oc -n "$CD_NAMESPACE" delete SyncSet "$SS_NAME" 2>/dev/null
-                UPGRADE_DONE="${UPGRADE_DONE}  $CD_NAME ($OCP_CURRENT_VERSION)\n"
-            fi
         fi
+        upgrade $CD_NAMESPACE $CD_NAME $OCP_VERSION_FROM $OCP_VERSION_TO &
     done
 done
 
-rm -rf $TMP_DIR
+wait
 
-if [[ -n $OCP_VERSION_FROM ]];
-then
-    echo -e "\nUpgrades started:\n$UPGRADE_STARTED"
-    echo -e "Upgrades in progress:\n$UPGRADE_PROGRESSING"
-    echo -e "Upgrades completed:\n$UPGRADE_DONE"
-    echo -e "Upgrades not possible:\n$UPGRADE_NOT_POSSIBLE"
-fi
+rm -rf $TMP_DIR
 
