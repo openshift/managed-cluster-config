@@ -1,0 +1,18 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: sre-telemeter-client
+    role: alert-rules
+  name: sre-telemeter-client
+  namespace: openshift-monitoring
+spec:
+  groups:
+  - name: sre-telemeter-client
+    rules:
+    - alert: MetricsClientSendFailingSRE
+      expr: absent(rate(metricsclient_request_send{status_code="200"}[5m]) > 0) or rate(metricsclient_request_send{status_code!="200"}[5m]) > 0
+      for: 15m
+      labels:
+        severity: critical
+        namespace: openshift-monitoring
