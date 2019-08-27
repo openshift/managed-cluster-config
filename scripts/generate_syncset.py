@@ -9,7 +9,7 @@ import copy
 
 def get_yaml_all(filename):
     with open(filename,'r') as input_file:
-        return list(yaml.load_all(input_file))
+        return list(yaml.safe_load_all(input_file))
 
 def get_yaml(filename):
     with open(filename,'r') as input_file:
