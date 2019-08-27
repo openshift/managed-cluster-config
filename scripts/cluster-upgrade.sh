@@ -243,7 +243,6 @@ then
     exit 1
 fi
 
-
 if [[ -n $OCP_VERSION_TO ]];
 then
     # Verify the target version exists as a ClusterImageSet (CIS) on the cluster
