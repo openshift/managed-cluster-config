@@ -54,7 +54,7 @@ vercomp() {
     fi
 
     # If requested version ($1) is greater than the default ($2), return 1
-    if [[ $1 == $2 ]]
+    if [[ "$1" == "$2" ]]
     then
         # Equal, Pass
         return 0
