@@ -52,6 +52,12 @@ vercomp() {
         # Input missing, fail
         return 1
     fi
+    
+    if [[ "$1" == "" ]] || [[ "$2" == "" ]]
+    then
+        # Input missing, fail
+        return 1
+    fi
 
     # If requested version ($1) is greater than the default ($2), return 1
     if [[ "$1" == "$2" ]]
