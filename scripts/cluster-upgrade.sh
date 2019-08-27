@@ -66,6 +66,7 @@ vercomp() {
     do
         ver1[i]=0
     done
+    # NOTE any non-numeric versions that are not identical will fail in the following loop, it expects numeric components to all versions
     for ((i=0; i<${#ver1[@]}; i++))
     do
         if [[ -z ${ver2[i]} ]]
