@@ -45,13 +45,6 @@ log() {
 vercomp() {
     # Need to be able to compare Semver to decide if requested version > default
     # Adapted from https://stackoverflow.com/questions/4023830/how-to-compare-two-strings-in-dot-separated-version-format-in-bash/4025065#4025065
-    # because bash is bad at this
-    
-    if [[ "$1" == "" ]] || [[ "$2" == "" ]]
-    then
-        # Input missing, fail
-        return 1
-    fi
     
     if [[ "$1" == "" ]] || [[ "$2" == "" ]]
     then
@@ -72,8 +65,6 @@ vercomp() {
     do
         ver1[i]=0
     done
-    # NOTE any non-numeric versions that are not identical will fail in the following loop, it expects numeric components to all versions
-    # NOTE any non-numeric versions that are not identical will fail in the following loop, it expects numeric components to all versions
     # NOTE any non-numeric versions that are not identical will fail in the following loop, it expects numeric components to all versions
     for ((i=0; i<${#ver1[@]}; i++))
     do
