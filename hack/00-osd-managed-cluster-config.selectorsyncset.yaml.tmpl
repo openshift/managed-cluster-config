@@ -777,6 +777,294 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: managed-velero-operator
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+    resourceApplyMode: sync
+    resources:
+    - apiVersion: apiextensions.k8s.io/v1beta1
+      kind: CustomResourceDefinition
+      metadata:
+        name: veleros.managed.openshift.io
+      spec:
+        additionalPrinterColumns:
+        - JSONPath: .status.s3Bucket.name
+          description: Name of the S3 bucket
+          name: Bucket
+          type: string
+        - JSONPath: .status.s3Bucket.provisioned
+          description: Has the S3 bucket been successfully provisioned
+          name: Provisioned
+          type: boolean
+        - JSONPath: .status.s3Bucket.lastSyncTimestamp
+          name: Last Sync
+          type: date
+        group: managed.openshift.io
+        names:
+          kind: Velero
+          listKind: VeleroList
+          plural: veleros
+          singular: velero
+        scope: Namespaced
+        subresources:
+          status: {}
+        validation:
+          openAPIV3Schema:
+            properties:
+              apiVersion:
+                description: 'APIVersion defines the versioned schema of this representation
+                  of an object. Servers should convert recognized schemas to the latest
+                  internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+                type: string
+              kind:
+                description: 'Kind is a string value representing the REST resource
+                  this object represents. Servers may infer this from the endpoint
+                  the client submits requests to. Cannot be updated. In CamelCase.
+                  More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+                type: string
+              metadata:
+                type: object
+              spec:
+                type: object
+              status:
+                properties:
+                  s3Bucket:
+                    description: S3Bucket contains details of the S3 storage bucket
+                      for backups
+                    properties:
+                      lastSyncTimestamp:
+                        description: LastSyncTimestamp is the time that the bucket
+                          policy was last synced.
+                        format: date-time
+                        type: string
+                      name:
+                        description: Name is the name of the S3 bucket created to
+                          store Velero backup details
+                        maxLength: 63
+                        type: string
+                      provisioned:
+                        description: Provisioned is true once the bucket has been
+                          initially provisioned.
+                        type: boolean
+                    required:
+                    - provisioned
+                    type: object
+                type: object
+        version: v1alpha1
+        versions:
+        - name: v1alpha1
+          served: true
+          storage: true
+    - apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: openshift-velero
+        labels:
+          openshift.io/cluster-monitoring: 'true'
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: managed-velero-operator
+        namespace: openshift-velero
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        creationTimestamp: null
+        name: managed-velero-operator
+        namespace: openshift-velero
+      rules:
+      - apiGroups:
+        - apiextensions.k8s.io
+        resources:
+        - customresourcedefinitions
+        verbs:
+        - '*'
+      - apiGroups:
+        - config.openshift.io
+        resources:
+        - infrastructures
+        verbs:
+        - get
+        - list
+        - watch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        creationTimestamp: null
+        name: managed-velero-operator
+        namespace: openshift-velero
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        - services
+        - services/finalizers
+        - endpoints
+        - persistentvolumeclaims
+        - events
+        - configmaps
+        - secrets
+        verbs:
+        - '*'
+      - apiGroups:
+        - apps
+        resources:
+        - deployments
+        - daemonsets
+        - replicasets
+        - statefulsets
+        verbs:
+        - '*'
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - servicemonitors
+        verbs:
+        - get
+        - create
+      - apiGroups:
+        - apps
+        resourceNames:
+        - managed-velero-operator
+        resources:
+        - deployments/finalizers
+        verbs:
+        - update
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - get
+      - apiGroups:
+        - apps
+        resources:
+        - replicasets
+        verbs:
+        - get
+      - apiGroups:
+        - managed.openshift.io
+        resources:
+        - veleros
+        - veleros/status
+        - veleros/finalizers
+        verbs:
+        - '*'
+      - apiGroups:
+        - velero.io
+        resources:
+        - '*'
+        verbs:
+        - '*'
+      - apiGroups:
+        - cloudcredential.openshift.io
+        resources:
+        - credentialsrequests
+        verbs:
+        - '*'
+    - kind: ClusterRoleBinding
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        name: managed-velero-operator
+        namespace: openshift-velero
+      subjects:
+      - kind: ServiceAccount
+        name: managed-velero-operator
+        namespace: openshift-velero
+      roleRef:
+        kind: ClusterRole
+        name: managed-velero-operator
+        apiGroup: rbac.authorization.k8s.io
+    - kind: RoleBinding
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        name: managed-velero-operator
+        namespace: openshift-velero
+      subjects:
+      - kind: ServiceAccount
+        name: managed-velero-operator
+        namespace: openshift-velero
+      roleRef:
+        kind: Role
+        name: managed-velero-operator
+        apiGroup: rbac.authorization.k8s.io
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: velero
+        namespace: openshift-velero
+    - kind: ClusterRoleBinding
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        name: velero
+      subjects:
+      - kind: ServiceAccount
+        name: velero
+        namespace: openshift-velero
+      roleRef:
+        kind: ClusterRole
+        name: cluster-admin
+        apiGroup: rbac.authorization.k8s.io
+    - apiVersion: cloudcredential.openshift.io/v1
+      kind: CredentialsRequest
+      metadata:
+        name: managed-velero-operator-iam-credentials
+        namespace: openshift-velero
+      spec:
+        secretRef:
+          name: managed-velero-operator-iam-credentials
+          namespace: openshift-velero
+        providerSpec:
+          apiVersion: cloudcredential.openshift.io/v1
+          kind: AWSProviderSpec
+          statementEntries:
+          - effect: Allow
+            action:
+            - s3:CreateBucket
+            - s3:ListBucket
+            - s3:PutBucketAcl
+            - s3:PutBucketPublicAccessBlock
+            - s3:PutEncryptionConfiguration
+            - s3:PutLifecycleConfiguration
+            resource: '*'
+    - apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: managed-velero-operator
+        namespace: openshift-velero
+      spec:
+        replicas: 1
+        selector:
+          matchLabels:
+            name: managed-velero-operator
+        template:
+          metadata:
+            labels:
+              name: managed-velero-operator
+          spec:
+            serviceAccountName: managed-velero-operator
+            containers:
+            - name: managed-velero-operator
+              image: quay.io/openshift-sre/managed-velero-operator:v0.1.27-0b753c9
+              command:
+              - managed-velero-operator
+              env:
+              - name: POD_NAME
+                valueFrom:
+                  fieldRef:
+                    fieldPath: metadata.name
+              - name: OPERATOR_NAME
+                value: managed-velero-operator
+- apiVersion: hive.openshift.io/v1alpha1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: resource-quotas
   spec:
     clusterDeploymentSelector:
@@ -1212,280 +1500,6 @@ objects:
         api.openshift.com/managed: 'true'
     resourceApplyMode: sync
     resources:
-    - apiVersion: apiextensions.k8s.io/v1beta1
-      kind: CustomResourceDefinition
-      metadata:
-        name: veleros.managed.openshift.io
-      spec:
-        additionalPrinterColumns:
-        - JSONPath: .status.s3Bucket.name
-          description: Name of the S3 bucket
-          name: Bucket
-          type: string
-        - JSONPath: .status.s3Bucket.provisioned
-          description: Has the S3 bucket been successfully provisioned
-          name: Provisioned
-          type: boolean
-        - JSONPath: .status.s3Bucket.lastSyncTimestamp
-          name: Last Sync
-          type: date
-        group: managed.openshift.io
-        names:
-          kind: Velero
-          listKind: VeleroList
-          plural: veleros
-          singular: velero
-        scope: Namespaced
-        subresources:
-          status: {}
-        validation:
-          openAPIV3Schema:
-            properties:
-              apiVersion:
-                description: 'APIVersion defines the versioned schema of this representation
-                  of an object. Servers should convert recognized schemas to the latest
-                  internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
-                type: string
-              kind:
-                description: 'Kind is a string value representing the REST resource
-                  this object represents. Servers may infer this from the endpoint
-                  the client submits requests to. Cannot be updated. In CamelCase.
-                  More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
-                type: string
-              metadata:
-                type: object
-              spec:
-                type: object
-              status:
-                properties:
-                  s3Bucket:
-                    description: S3Bucket contains details of the S3 storage bucket
-                      for backups
-                    properties:
-                      lastSyncTimestamp:
-                        description: LastSyncTimestamp is the time that the bucket
-                          policy was last synced.
-                        format: date-time
-                        type: string
-                      name:
-                        description: Name is the name of the S3 bucket created to
-                          store Velero backup details
-                        maxLength: 63
-                        type: string
-                      provisioned:
-                        description: Provisioned is true once the bucket has been
-                          initially provisioned.
-                        type: boolean
-                    required:
-                    - provisioned
-                    type: object
-                type: object
-        version: v1alpha1
-        versions:
-        - name: v1alpha1
-          served: true
-          storage: true
-    - apiVersion: v1
-      kind: Namespace
-      metadata:
-        name: openshift-velero
-        labels:
-          openshift.io/cluster-monitoring: 'true'
-    - apiVersion: v1
-      kind: ServiceAccount
-      metadata:
-        name: managed-velero-operator
-        namespace: openshift-velero
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        creationTimestamp: null
-        name: managed-velero-operator
-        namespace: openshift-velero
-      rules:
-      - apiGroups:
-        - apiextensions.k8s.io
-        resources:
-        - customresourcedefinitions
-        verbs:
-        - '*'
-      - apiGroups:
-        - config.openshift.io
-        resources:
-        - infrastructures
-        verbs:
-        - get
-        - list
-        - watch
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: Role
-      metadata:
-        creationTimestamp: null
-        name: managed-velero-operator
-        namespace: openshift-velero
-      rules:
-      - apiGroups:
-        - ''
-        resources:
-        - pods
-        - services
-        - services/finalizers
-        - endpoints
-        - persistentvolumeclaims
-        - events
-        - configmaps
-        - secrets
-        verbs:
-        - '*'
-      - apiGroups:
-        - apps
-        resources:
-        - deployments
-        - daemonsets
-        - replicasets
-        - statefulsets
-        verbs:
-        - '*'
-      - apiGroups:
-        - monitoring.coreos.com
-        resources:
-        - servicemonitors
-        verbs:
-        - get
-        - create
-      - apiGroups:
-        - apps
-        resourceNames:
-        - managed-velero-operator
-        resources:
-        - deployments/finalizers
-        verbs:
-        - update
-      - apiGroups:
-        - ''
-        resources:
-        - pods
-        verbs:
-        - get
-      - apiGroups:
-        - apps
-        resources:
-        - replicasets
-        verbs:
-        - get
-      - apiGroups:
-        - managed.openshift.io
-        resources:
-        - veleros
-        - veleros/status
-        - veleros/finalizers
-        verbs:
-        - '*'
-      - apiGroups:
-        - velero.io
-        resources:
-        - '*'
-        verbs:
-        - '*'
-      - apiGroups:
-        - cloudcredential.openshift.io
-        resources:
-        - credentialsrequests
-        verbs:
-        - '*'
-    - kind: ClusterRoleBinding
-      apiVersion: rbac.authorization.k8s.io/v1
-      metadata:
-        name: managed-velero-operator
-        namespace: openshift-velero
-      subjects:
-      - kind: ServiceAccount
-        name: managed-velero-operator
-        namespace: openshift-velero
-      roleRef:
-        kind: ClusterRole
-        name: managed-velero-operator
-        apiGroup: rbac.authorization.k8s.io
-    - kind: RoleBinding
-      apiVersion: rbac.authorization.k8s.io/v1
-      metadata:
-        name: managed-velero-operator
-        namespace: openshift-velero
-      subjects:
-      - kind: ServiceAccount
-        name: managed-velero-operator
-        namespace: openshift-velero
-      roleRef:
-        kind: Role
-        name: managed-velero-operator
-        apiGroup: rbac.authorization.k8s.io
-    - apiVersion: v1
-      kind: ServiceAccount
-      metadata:
-        name: velero
-        namespace: openshift-velero
-    - kind: ClusterRoleBinding
-      apiVersion: rbac.authorization.k8s.io/v1
-      metadata:
-        name: velero
-      subjects:
-      - kind: ServiceAccount
-        name: velero
-        namespace: openshift-velero
-      roleRef:
-        kind: ClusterRole
-        name: cluster-admin
-        apiGroup: rbac.authorization.k8s.io
-    - apiVersion: cloudcredential.openshift.io/v1
-      kind: CredentialsRequest
-      metadata:
-        name: managed-velero-operator-iam-credentials
-        namespace: openshift-velero
-      spec:
-        secretRef:
-          name: managed-velero-operator-iam-credentials
-          namespace: openshift-velero
-        providerSpec:
-          apiVersion: cloudcredential.openshift.io/v1
-          kind: AWSProviderSpec
-          statementEntries:
-          - effect: Allow
-            action:
-            - s3:CreateBucket
-            - s3:ListBucket
-            - s3:PutBucketAcl
-            - s3:PutBucketPublicAccessBlock
-            - s3:PutEncryptionConfiguration
-            - s3:PutLifecycleConfiguration
-            resource: '*'
-    - apiVersion: apps/v1
-      kind: Deployment
-      metadata:
-        name: managed-velero-operator
-        namespace: openshift-velero
-      spec:
-        replicas: 1
-        selector:
-          matchLabels:
-            name: managed-velero-operator
-        template:
-          metadata:
-            labels:
-              name: managed-velero-operator
-          spec:
-            serviceAccountName: managed-velero-operator
-            containers:
-            - name: managed-velero-operator
-              image: quay.io/openshift-sre/managed-velero-operator:v0.1.27-0b753c9
-              command:
-              - managed-velero-operator
-              env:
-              - name: POD_NAME
-                valueFrom:
-                  fieldRef:
-                    fieldPath: metadata.name
-              - name: OPERATOR_NAME
-                value: managed-velero-operator
     - apiVersion: managed.openshift.io/v1alpha1
       kind: Velero
       metadata:
