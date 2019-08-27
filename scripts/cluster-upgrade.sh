@@ -272,7 +272,7 @@ then
     # Gets first item, but there should only be 1
     CIS_VERSION_DEFAULT=$(oc get clusterimageset --all-namespaces -l api.openshift.com/default=true -o json | jq -r ".items[0].spec.releaseImage | split(\":\")[1]")
     # Verify the target version is <= default CIS version
-    if ! vercomp ${OCP_VERSION_TO} ${CIS_VERSION_DEFAULT};
+    if ! vercomp "${OCP_VERSION_TO}" "${CIS_VERSION_DEFAULT}";
     then
         echo "Cannot upgrade past Default ClusterImageSet ${CIS_VERSION_DEFAULT}"
         exit 4
