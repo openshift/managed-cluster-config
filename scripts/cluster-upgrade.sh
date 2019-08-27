@@ -42,6 +42,52 @@ log() {
     echo "$(date "+%Y-%m-%d_%H.%M.%S") - $CD_NAME - $STAGE - $MESSAGE"
 }
 
+vercomp() {
+    # Need to be able to compare Semver to decide if requested version > default
+    # Adapted from https://stackoverflow.com/questions/4023830/how-to-compare-two-strings-in-dot-separated-version-format-in-bash/4025065#4025065
+    
+    if [[ "$1" == "" ]] || [[ "$2" == "" ]]
+    then
+        # Input missing, fail
+        return 1
+    fi
+
+    # If requested version ($1) is greater than the default ($2), return 1
+    if [[ "$1" == "$2" ]]
+    then
+        # Equal, Pass
+        return 0
+    fi
+    local IFS=.
+    local i ver1=($1) ver2=($2)
+    # fill empty fields in ver1 with zeros
+    for ((i=${#ver1[@]}; i<${#ver2[@]}; i++))
+    do
+        ver1[i]=0
+    done
+    # NOTE any non-numeric versions that are not identical will fail in the following loop, it expects numeric components to all versions
+    for ((i=0; i<${#ver1[@]}; i++))
+    do
+        if [[ -z ${ver2[i]} ]]
+        then
+            # fill empty fields in ver2 with zeros
+            ver2[i]=0
+        fi
+        # Greater-than, fail
+        if ((10#${ver1[i]} > 10#${ver2[i]}))
+        then
+            return 1
+        fi
+        if ((10#${ver1[i]} < 10#${ver2[i]}))
+        then
+            # Less-than, Pass
+            return 0
+        fi
+    done
+    # Equal, Pass
+    return 0
+}
+
 setup() {
     CD_NAMESPACE=$1
     CD_NAME=$2
@@ -212,6 +258,16 @@ then
     then
         echo "Cannot upgrade to $OCP_VERSION_TO, it is not available as a ClusterImageSet in the cluster."
         exit 3
+    fi
+
+    # Get the default install ClusterImageSet (CIS)
+    # Gets first item, but there should only be 1
+    CIS_VERSION_DEFAULT=$(oc get clusterimageset --all-namespaces -l api.openshift.com/default=true -o json | jq -r ".items[0].spec.releaseImage | split(\":\")[1]")
+    # Verify the target version is <= default CIS version
+    if ! vercomp "${OCP_VERSION_TO}" "${CIS_VERSION_DEFAULT}";
+    then
+        echo "Cannot upgrade past Default ClusterImageSet ${CIS_VERSION_DEFAULT}"
+        exit 4
     fi
 fi
 
