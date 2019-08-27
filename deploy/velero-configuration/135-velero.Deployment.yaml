@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: managed-velero-operator
+  namespace: openshift-velero
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: managed-velero-operator
+  template:
+    metadata:
+      labels:
+        name: managed-velero-operator
+    spec:
+      serviceAccountName: managed-velero-operator
+      containers:
+        - name: managed-velero-operator
+          image: quay.io/openshift-sre/managed-velero-operator:v0.1.27-0b753c9
+          command:
+          - managed-velero-operator
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: OPERATOR_NAME
+              value: "managed-velero-operator"
