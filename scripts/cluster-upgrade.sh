@@ -93,7 +93,7 @@ setup() {
     CD_NAME=$2
 
     # get kubeconfig so we can check status of cluster's nodes (extra capacity)
-    oc -n $CD_NAMESPACE extract secret/"${CD_NAME}-admin-kubeconfig" --keys=kubeconfig --to=- > ${TMP_DIR}/kubeconfig-${CD_NAME}
+    oc -n $CD_NAMESPACE extract secret/"$(oc -n $CD_NAMESPACE get secrets | grep $CD_NAME | grep kubeconfig | awk '{print $1}')" --keys=kubeconfig --to=- > ${TMP_DIR}/kubeconfig-${CD_NAME}
 
     ORIGINAL_REPLICAS=$(oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r '.metadata.labels["managed.openshift.io/original-worker-replicas"] | select(. != null)')
     DESIRED_REPLICAS=$(oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r '.spec.compute[] | select(.name == "worker") | .replicas')
@@ -164,7 +164,7 @@ upgrade() {
         # hive doesn't know about this version.. try to start the upgrade
         log $CD_NAME "upgrade" "upgrading from $FROM to $TO"
 
-        oc -n $CD_NAMESPACE get secrets "${CD_NAME}-admin-kubeconfig" -o jsonpath='{.data.kubeconfig}' | base64 -d > $TMP_DIR/kubeconfig-$CD_NAME
+        oc -n $CD_NAMESPACE extract secret/"$(oc -n $CD_NAMESPACE get secrets | grep $CD_NAME | grep kubeconfig | awk '{print $1}')" --keys=kubeconfig --to=- > ${TMP_DIR}/kubeconfig-${CD_NAME}
 
         KUBECONFIG=$TMP_DIR/kubeconfig-$CD_NAME oc patch clusterversion version --type merge -p "{\"spec\":{\"desiredUpdate\": {\"version\": \"$TO\"}}}"
     fi
@@ -177,6 +177,48 @@ upgrade() {
     do
         sleep 15
         OCP_CURRENT_VERSION=$(oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r '.status.clusterVersionStatus.history[] | select(.state == "Completed") | .version' | head -n1)
+
+        # check several things about the cluster and report problems
+        # * api availability
+        # * degraded operators
+        # * critical alerts
+        # * count of pods in state not "Running" or "Completed"
+
+        API_RESPONSE=$(KUBECONFIG=$TMP_DIR/kubeconfig-$CD_NAME oc get --raw /api 2>&1)
+        API_VERSION=$(echo $API_RESPONSE | jq -r '.versions[]' || echo "FAIL")
+
+        if [ "$API_VERSION" == "v1" ];
+        then
+            OUTPUT="$OUTPUT,\"API=OK\""
+        else
+            log $CD_NAME "upgrade" "ERROR: API requests are failing, msg = $API_RESPONSE"
+            # don't bother with other checks, there is a good chance they won't work
+            continue
+        fi
+
+        DCO=$(KUBECONFIG=$TMP_DIR/kubeconfig-$CD_NAME oc get clusteroperator --no-headers | awk '{print $1 "," $5}' | grep -v ",False" | awk -F, '{print $1 ","}' | xargs)
+        
+        if [ "$DCO" != "" ];
+        then
+            log $CD_NAME "upgrade" "ERROR: Degraded Operators = $DCO"
+        fi
+
+        CA=$(curl -G -s -k -H "Authorization: Bearer $(KUBECONFIG=$TMP_DIR/kubeconfig-$CD_NAME oc -n openshift-monitoring sa get-token prometheus-k8s)" --data-urlencode "query=ALERTS{alertstate!=\"pending\",severity=\"critical\"}" "https://$(KUBECONFIG=$TMP_DIR/kubeconfig-$CD_NAME oc -n openshift-monitoring get routes prometheus-k8s -o json | jq -r .spec.host)/api/v1/query" | jq -r '.data.result[].metric.alertname' | tr '\n' ',' )
+
+        if [ "$CA" != "" ];
+        then
+            log $CD_NAME "upgrade" "ERROR: Critical Alerts = $CA"
+        fi
+
+        POD_ISSUES=$(KUBECONFIG=$TMP_DIR/kubeconfig-$CD_NAME oc get pods --all-namespaces --no-headers | grep -v -e Running -e Completed -e Terminating -e ContainerCreating -e Init -e Pending)
+        PPC=$(echo "$POD_ISSUES" | grep -v "^$" | wc -l)
+        
+
+        if [ "$PPC" != "0" ];
+        then
+            log $CD_NAME "upgrade" "ERROR: Problem Pod Count = $PPC
+$POD_ISSUES"
+        fi
     done
 
     log $CD_NAME "upgrade" "ClusterVersion on $TO"
