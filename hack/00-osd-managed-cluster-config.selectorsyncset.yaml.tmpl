@@ -965,6 +965,21 @@ objects:
         - credentialsrequests
         verbs:
         - '*'
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        creationTimestamp: null
+        name: cluster-config-v1-reader
+        namespace: kube-system
+      rules:
+      - apiGroups:
+        - ''
+        resourceNames:
+        - cluster-config-v1
+        resources:
+        - configmaps
+        verbs:
+        - get
     - kind: ClusterRoleBinding
       apiVersion: rbac.authorization.k8s.io/v1
       metadata:
@@ -991,6 +1006,22 @@ objects:
         kind: Role
         name: managed-velero-operator
         apiGroup: rbac.authorization.k8s.io
+    - kind: RoleBinding
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        name: managed-velero-operator-cluster-config-v1-reader
+        namespace: kube-system
+        labels:
+          owner: managed-velero-operator
+          owner.namespace: managed-velero-operator
+      subjects:
+      - kind: ServiceAccount
+        name: managed-velero-operator
+        namespace: openshift-velero
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: cluster-config-v1-reader
     - apiVersion: v1
       kind: ServiceAccount
       metadata:
@@ -1048,7 +1079,7 @@ objects:
             serviceAccountName: managed-velero-operator
             containers:
             - name: managed-velero-operator
-              image: quay.io/openshift-sre/managed-velero-operator:v0.1.31-28fc0f2
+              image: quay.io/openshift-sre/managed-velero-operator:v0.1.35-49347f0
               command:
               - managed-velero-operator
               env:
