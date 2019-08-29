@@ -164,7 +164,7 @@ upgrade() {
         # hive doesn't know about this version.. try to start the upgrade
         log $CD_NAME "upgrade" "upgrading from $FROM to $TO"
 
-        oc -n $CD_NAMESPACE extract secret/"$(oc -n $CD_NAMESPACE get secrets | grep $CD_NAME | grep kubeconfig | awk '{print $1}')" --keys=kubeconfig --to=- > ${TMP_DIR}/kubeconfig-${CD_NAME}
+        oc -n $CD_NAMESPACE extract "$(oc -n $CD_NAMESPACE get secrets -o name | grep $CD_NAME | grep kubeconfig)" --keys=kubeconfig --to=- > ${TMP_DIR}/kubeconfig-${CD_NAME}
 
         KUBECONFIG=$TMP_DIR/kubeconfig-$CD_NAME oc patch clusterversion version --type merge -p "{\"spec\":{\"desiredUpdate\": {\"version\": \"$TO\"}}}"
     fi
