@@ -17,7 +17,9 @@ spec:
         * kubelet_volume_stats_available_bytes{job="kubelet",namespace!~"(openshift-.*|kube-.*|default|logging)"}
         / kubelet_volume_stats_capacity_bytes{job="kubelet",namespace!~"(openshift-.*|kube-.*|default|logging)"}
         < 3
-      severity: warning
+      labels:
+        severity: warning
+        namespace: openshift-monitoring
       annotations:
         message: "The customer PersistentVolume claimed by {{ $labels.persistentvolumeclaim }} in Namespace {{ $labels.namespace }} is only {{ printf \"%0.2f\" $value }}% free."
         link: "https://github.com/openshift/ops-sop/blob/master/v3/alerts/check_filesys_full.asciidoc"
@@ -30,7 +32,9 @@ spec:
         / kubelet_volume_stats_capacity_bytes{job="kubelet",namespace!~"(openshift-.*|kube-.*|default|logging)"})
         < 15 and predict_linear(kubelet_volume_stats_available_bytes{job="kubelet",namespace!~"(openshift-.*|kube-.*|default|logging)"}[6h],
         4 * 24 * 3600) < 0
-      severity: warning
+      labels:
+        severity: warning
+        namespace: openshift-monitoring
       annotations:
         message: "Based on recent sampling, the customer PersistentVolume claimed by {{ $labels.persistentvolumeclaim }} in Namespace {{ $labels.namespace }} is expected to fill up within four days. Currently {{ printf \"%0.2f\" $value }}% is available."
         link: "https://github.com/openshift/ops-sop/blob/master/v3/alerts/check_filesys_full.asciidoc"
