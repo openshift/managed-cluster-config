@@ -18,6 +18,7 @@ spec:
         max(kube_replicationcontroller_status_replicas{namespace="default",replicationcontroller=~"router.?-.*"} >0) by (replicationcontroller,namespace)) < 0.5
       labels:
         severity: warning
+        namespace: openshift-monitoring
     - alert: RouterAvailabilityLT30PctSRE
       expr: |
         (sum(avg_over_time(kube_replicationcontroller_status_ready_replicas[1h])) by (replicationcontroller,namespace) 
@@ -26,3 +27,4 @@ spec:
         max(kube_replicationcontroller_status_replicas{namespace="default",replicationcontroller=~"router.?-.*"} >0) by (replicationcontroller,namespace)) < 0.3
       labels:
         severity: critical
+        namespace: openshift-monitoring
