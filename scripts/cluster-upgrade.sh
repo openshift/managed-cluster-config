@@ -42,50 +42,20 @@ log() {
     echo "$(date "+%Y-%m-%d_%H.%M.%S") - $CD_NAME - $STAGE - $MESSAGE"
 }
 
+# Compares two version strings together to determine which is more recent.
+# First parameter is the candidate version
+# Second parameter is the check version.
+# If the candidate > check, or either version are omitted, return 1. Otherwise return 0
+# Functionally this is used to determine if the requested (candidate) version exceeds the maximum allowed version (check).
+# This relies on Bash (due to input redirection), and sort to do the comparing
 vercomp() {
-    # Need to be able to compare Semver to decide if requested version > default
-    # Adapted from https://stackoverflow.com/questions/4023830/how-to-compare-two-strings-in-dot-separated-version-format-in-bash/4025065#4025065
-    
-    if [[ "$1" == "" ]] || [[ "$2" == "" ]]
-    then
-        # Input missing, fail
+    local requested=$1 default=$2 rescheck=
+    rescheck=$(sort --version-sort <(echo $requested) <(echo $default) | tail -n1)
+    if [[ $requested == $rescheck && $requested != $default ]]; then
         return 1
-    fi
-
-    # If requested version ($1) is greater than the default ($2), return 1
-    if [[ "$1" == "$2" ]]
-    then
-        # Equal, Pass
+    else
         return 0
     fi
-    local IFS=.
-    local i ver1=($1) ver2=($2)
-    # fill empty fields in ver1 with zeros
-    for ((i=${#ver1[@]}; i<${#ver2[@]}; i++))
-    do
-        ver1[i]=0
-    done
-    # NOTE any non-numeric versions that are not identical will fail in the following loop, it expects numeric components to all versions
-    for ((i=0; i<${#ver1[@]}; i++))
-    do
-        if [[ -z ${ver2[i]} ]]
-        then
-            # fill empty fields in ver2 with zeros
-            ver2[i]=0
-        fi
-        # Greater-than, fail
-        if ((10#${ver1[i]} > 10#${ver2[i]}))
-        then
-            return 1
-        fi
-        if ((10#${ver1[i]} < 10#${ver2[i]}))
-        then
-            # Less-than, Pass
-            return 0
-        fi
-    done
-    # Equal, Pass
-    return 0
 }
 
 setup() {
