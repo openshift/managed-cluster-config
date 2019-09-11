@@ -322,7 +322,8 @@ do
             PROCESS=0
             for CLUSTER_NAME in $CLUSTER_NAMES
             do
-                if [ "$CD_NAME" == "$CLUSTER_NAME" ];
+              # $CD_NAME is limited to 15 chars, apply limit to $CLUSTER_NAME
+              if [ "$CD_NAME" == "$(echo $CLUSTER_NAME | cut -c -15)" ];
                 then
                     # a match, process it
                     PROCESS=1
