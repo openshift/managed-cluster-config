@@ -43,15 +43,15 @@ log() {
 }
 
 # Compares two version strings together to determine which is more recent.
-# First parameter is the candidate version
-# Second parameter is the check version.
+# First parameter is the requested version
+# Second parameter is the max allowed version.
 # If the candidate > check, or either version are omitted, return 1. Otherwise return 0
 # Functionally this is used to determine if the requested (candidate) version exceeds the maximum allowed version (check).
 # This relies on Bash (due to input redirection), and sort to do the comparing
 vercomp() {
-    local requested=$1 default=$2 rescheck=
-    rescheck=$(sort --version-sort <(echo $requested) <(echo $default) | tail -n1)
-    if [[ $requested == $rescheck && $requested != $default ]]; then
+    local requested_version=$1 max_allowed_version=$2 sort_result=
+    sort_result=$(sort --version-sort <(echo $requested_version) <(echo $max_allowed_version) | tail -n1)
+    if [[ $requested_version == $sort_result && $requested_version != $max_allowed_version ]]; then
         return 1
     else
         return 0
