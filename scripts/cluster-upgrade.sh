@@ -210,10 +210,9 @@ upgrade() {
             log $CD_NAME "upgrade" "ERROR: Critical Alerts = $CA"
         fi
 
-        POD_ISSUES=$(KUBECONFIG=$TMP_DIR/kubeconfig-$CD_NAME oc get pods --all-namespaces --no-headers | grep -v -e Running -e Completed -e Terminating -e ContainerCreating -e Init -e Pending)
+        POD_ISSUES=$(KUBECONFIG=$TMP_DIR/kubeconfig-$CD_NAME oc get pods --all-namespaces --no-headers | grep -v -e Running -e Completed -e Terminating -e ContainerCreating -e Init -e Pending | grep -e ^default -e ^kube -e ^openshift)
         PPC=$(echo "$POD_ISSUES" | grep -v "^$" | wc -l)
         
-
         if [ "$PPC" != "0" ];
         then
             log $CD_NAME "upgrade" "ERROR: Problem Pod Count = $PPC
