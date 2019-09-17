@@ -66,8 +66,8 @@ setup() {
     oc -n $CD_NAMESPACE extract "$(oc -n $CD_NAMESPACE get secrets -o name | grep $CD_NAME | grep kubeconfig)" --keys=kubeconfig --to=- > ${TMP_DIR}/kubeconfig-${CD_NAME}
 
     ORIGINAL_REPLICAS=$(oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r '.metadata.labels["managed.openshift.io/original-worker-replicas"] | select(. != null)')
-    DESIRED_REPLICAS=$(oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r '.spec.compute[] | select(.name == "worker") | .replicas')
-    ZONE_COUNT=$(oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r '.spec.compute[] | select(.name == "worker") | .platform.aws.zones[]' | wc -l)
+    DESIRED_REPLICAS=$(oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r '.spec.compute[] | select(.name | startswith("worker")) | .replicas')
+    ZONE_COUNT=$(oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r '.spec.compute[] | select(.name | startswith("worker")) | .platform.aws.zones[]' | wc -l)
 
     if [ "$ORIGINAL_REPLICAS" == "" ];
     then
@@ -214,7 +214,7 @@ teardown() {
     CD_NAME=$2
 
     ORIGINAL_REPLICAS=$(oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r '.metadata.labels["managed.openshift.io/original-worker-replicas"] | select(. != null)' 2>/dev/null)
-    DESIRED_REPLICAS=$(oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r '.spec.compute[] | select(.name == "worker") | .replicas')
+    DESIRED_REPLICAS=$(oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r '.spec.compute[] | select(.name | startswith("worker")) | .replicas')
 
     if [ "$ORIGINAL_REPLICAS" != "" ] && [ "$ORIGINAL_REPLICAS" != "$DESIRED_REPLICAS" ];
     then
