@@ -12,7 +12,10 @@ spec:
     rules:
     - alert: PruningCronjobErrorSRE
       expr: kube_cronjob_status_active{namespace="openshift-sre-pruning"}>0
-      for: 2h
+      for: 30m
       labels:
         severity: critical
         namespace: openshift-sre-pruning
+      annotations:
+        message: SRE Pruning Job {{ $labels.namespace }}/{{ $labels.job_name }}
+          is taking more than thirty minutes to complete.
