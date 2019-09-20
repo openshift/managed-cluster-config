@@ -63,7 +63,7 @@ setup() {
     CD_NAME=$2
 
     # get kubeconfig so we can check status of cluster's nodes (extra capacity)
-    oc -n $CD_NAMESPACE extract "$(oc -n $CD_NAMESPACE get secrets -o name | grep $CD_NAME | grep kubeconfig)" --keys=kubeconfig --to=- > ${TMP_DIR}/kubeconfig-${CD_NAME}
+    oc -n $CD_NAMESPACE extract "$(oc -n $CD_NAMESPACE get secrets -o name | grep $CD_NAME | grep kubeconfig)" --keys=kubeconfig --to=- > ${TMP_DIR}/kubeconfig-${CD_NAMESPACE}
 
     ORIGINAL_REPLICAS=$(oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r '.metadata.labels["managed.openshift.io/original-worker-replicas"] | select(. != null)')
     DESIRED_REPLICAS=$(oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r '.spec.compute[] | select(.name | startswith("worker")) | .replicas')
@@ -84,16 +84,16 @@ setup() {
 
     # make sure we are at capacity in cluster
     MS_REPLICAS=$(($DESIRED_REPLICAS/$ZONE_COUNT))
-    for MS_NAME in $(KUBECONFIG=$TMP_DIR/kubeconfig-$CD_NAME oc -n openshift-machine-api get machineset --no-headers | grep worker | awk '{print $1}');
+    for MS_NAME in $(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc -n openshift-machine-api get machineset --no-headers | grep worker | awk '{print $1}');
     do
         log $CD_NAME "setup" "waiting for replicas, machineset=$MS_NAME"
-        AVAILABLE_REPLICAS=$(KUBECONFIG=$TMP_DIR/kubeconfig-$CD_NAME oc -n openshift-machine-api get machineset $MS_NAME -o jsonpath='{.status.availableReplicas}')
+        AVAILABLE_REPLICAS=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc -n openshift-machine-api get machineset $MS_NAME -o jsonpath='{.status.availableReplicas}')
 
         while [ "$AVAILABLE_REPLICAS" != "$MS_REPLICAS" ];
         do
             sleep 15
 
-            AVAILABLE_REPLICAS=$(KUBECONFIG=$TMP_DIR/kubeconfig-$CD_NAME oc -n openshift-machine-api get machineset $MS_NAME -o jsonpath='{.status.availableReplicas}')
+            AVAILABLE_REPLICAS=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc -n openshift-machine-api get machineset $MS_NAME -o jsonpath='{.status.availableReplicas}')
         done
 
         log $CD_NAME "setup" "replicas are ready for upgrade, machineset=$MS_NAME"
@@ -134,9 +134,9 @@ upgrade() {
         # hive doesn't know about this version.. try to start the upgrade
         log $CD_NAME "upgrade" "upgrading from $FROM to $TO"
 
-        oc -n $CD_NAMESPACE extract "$(oc -n $CD_NAMESPACE get secrets -o name | grep $CD_NAME | grep kubeconfig)" --keys=kubeconfig --to=- > ${TMP_DIR}/kubeconfig-${CD_NAME}
+        oc -n $CD_NAMESPACE extract "$(oc -n $CD_NAMESPACE get secrets -o name | grep $CD_NAME | grep kubeconfig)" --keys=kubeconfig --to=- > ${TMP_DIR}/kubeconfig-${CD_NAMESPACE}
 
-        KUBECONFIG=$TMP_DIR/kubeconfig-$CD_NAME oc patch clusterversion version --type merge -p "{\"spec\":{\"desiredUpdate\": {\"version\": \"$TO\"}}}"
+        KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc patch clusterversion version --type merge -p "{\"spec\":{\"desiredUpdate\": {\"version\": \"$TO\"}}}"
     fi
 
     # 3. wait for upgrade to complete
@@ -154,7 +154,7 @@ upgrade() {
         # * critical alerts
         # * count of pods in state not "Running" or "Completed"
 
-        API_RESPONSE=$(KUBECONFIG=$TMP_DIR/kubeconfig-$CD_NAME oc get --raw /api 2>&1)
+        API_RESPONSE=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get --raw /api 2>&1)
         API_VERSION=$(echo $API_RESPONSE | jq -r '.versions[]' || echo "FAIL")
 
         if [ "$API_VERSION" == "v1" ];
@@ -166,21 +166,21 @@ upgrade() {
             continue
         fi
 
-        DCO=$(KUBECONFIG=$TMP_DIR/kubeconfig-$CD_NAME oc get clusteroperator --no-headers | awk '{print $1 "," $5}' | grep -v ",False" | awk -F, '{print $1 ","}' | xargs)
+        DCO=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get clusteroperator --no-headers | awk '{print $1 "," $5}' | grep -v ",False" | awk -F, '{print $1 ","}' | xargs)
         
         if [ "$DCO" != "" ];
         then
             log $CD_NAME "upgrade" "ERROR: Degraded Operators = $DCO"
         fi
 
-        CA=$(curl -G -s -k -H "Authorization: Bearer $(KUBECONFIG=$TMP_DIR/kubeconfig-$CD_NAME oc -n openshift-monitoring sa get-token prometheus-k8s)" --data-urlencode "query=ALERTS{alertstate!=\"pending\",severity=\"critical\"}" "https://$(KUBECONFIG=$TMP_DIR/kubeconfig-$CD_NAME oc -n openshift-monitoring get routes prometheus-k8s -o json | jq -r .spec.host)/api/v1/query" | jq -r '.data.result[].metric.alertname' | tr '\n' ',' )
+        CA=$(curl -G -s -k -H "Authorization: Bearer $(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc -n openshift-monitoring sa get-token prometheus-k8s)" --data-urlencode "query=ALERTS{alertstate!=\"pending\",severity=\"critical\"}" "https://$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc -n openshift-monitoring get routes prometheus-k8s -o json | jq -r .spec.host)/api/v1/query" | jq -r '.data.result[].metric.alertname' | tr '\n' ',' )
 
         if [ "$CA" != "" ];
         then
             log $CD_NAME "upgrade" "ERROR: Critical Alerts = $CA"
         fi
 
-        POD_ISSUES=$(KUBECONFIG=$TMP_DIR/kubeconfig-$CD_NAME oc get pods --all-namespaces --no-headers | grep -v -e Running -e Completed -e Terminating -e ContainerCreating -e Init -e Pending | grep -e ^default -e ^kube -e ^openshift)
+        POD_ISSUES=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get pods --all-namespaces --no-headers | grep -v -e Running -e Completed -e Terminating -e ContainerCreating -e Init -e Pending | grep -e ^default -e ^kube -e ^openshift)
         PPC=$(echo "$POD_ISSUES" | grep -v "^$" | wc -l)
         
         if [ "$PPC" != "0" ];
@@ -198,7 +198,7 @@ $POD_ISSUES"
     KUBELET_VERSION_COUNT=0
     while [ "$KUBELET_VERSION_COUNT" != "1" ];
     do
-        KUBELET_VERSION_COUNT=$(KUBECONFIG=$TMP_DIR/kubeconfig-$CD_NAME oc get nodes --no-headers -o custom-columns=VERSION:.status.nodeInfo.kubeletVersion | sort | uniq | wc -l)
+        KUBELET_VERSION_COUNT=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get nodes --no-headers -o custom-columns=VERSION:.status.nodeInfo.kubeletVersion | sort | uniq | wc -l)
 
         sleep 15
     done
