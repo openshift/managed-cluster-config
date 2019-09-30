@@ -35,11 +35,13 @@ then
 fi
 
 log() {
-    CD_NAME=$1
+    NAME=$1
     STAGE=$2
     MESSAGE=$3
+
+    MESSAGE=$(echo $MESSAGE | sed 's/\(.*\),$/\1/g')
     
-    echo "$(date "+%Y-%m-%d_%H.%M.%S") - $CD_NAME - $STAGE - $MESSAGE"
+    echo "$(date "+%Y-%m-%d_%H.%M.%S") - $NAME - $STAGE - $MESSAGE"
 }
 
 # Compares two version strings together to determine which is more recent.
@@ -59,8 +61,9 @@ vercomp() {
 }
 
 setup() {
-    CD_NAMESPACE=$1
-    CD_NAME=$2
+    OCM_NAME=$1
+    CD_NAMESPACE=$2
+    CD_NAME=$3
 
     # get kubeconfig so we can check status of cluster's nodes (extra capacity)
     oc -n $CD_NAMESPACE extract "$(oc -n $CD_NAMESPACE get secrets -o name | grep $CD_NAME | grep kubeconfig)" --keys=kubeconfig --to=- > ${TMP_DIR}/kubeconfig-${CD_NAMESPACE}
@@ -79,14 +82,14 @@ setup() {
         oc -n $CD_NAMESPACE label clusterdeployment $CD_NAME managed.openshift.io/original-worker-replicas=$ORIGINAL_REPLICAS
         oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r ".spec.compute[0].replicas=$DESIRED_REPLICAS" | oc replace -f -
 
-        log $CD_NAME "setup" "bumping replicas from $ORIGINAL_REPLICAS to $DESIRED_REPLICAS"
+        log $OCM_NAME "setup" "bumping replicas from $ORIGINAL_REPLICAS to $DESIRED_REPLICAS"
     fi
 
     # make sure we are at capacity in cluster
     MS_REPLICAS=$(($DESIRED_REPLICAS/$ZONE_COUNT))
     for MS_NAME in $(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc -n openshift-machine-api get machineset --no-headers | grep worker | awk '{print $1}');
     do
-        log $CD_NAME "setup" "waiting for replicas, machineset=$MS_NAME"
+        log $OCM_NAME "setup" "waiting for replicas, machineset=$MS_NAME"
         AVAILABLE_REPLICAS=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc -n openshift-machine-api get machineset $MS_NAME -o jsonpath='{.status.availableReplicas}')
 
         while [ "$AVAILABLE_REPLICAS" != "$MS_REPLICAS" ];
@@ -96,35 +99,36 @@ setup() {
             AVAILABLE_REPLICAS=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc -n openshift-machine-api get machineset $MS_NAME -o jsonpath='{.status.availableReplicas}')
         done
 
-        log $CD_NAME "setup" "replicas are ready for upgrade, machineset=$MS_NAME"
+        log $OCM_NAME "setup" "replicas are ready for upgrade, machineset=$MS_NAME"
     done
 }
 
 upgrade() {
-    CD_NAMESPACE=$1
-    CD_NAME=$2
-    FROM=$3
-    TO=$4
+    OCM_NAME=$1
+    CD_NAMESPACE=$2
+    CD_NAME=$3
+    FROM=$4
+    TO=$5
     
-    log $CD_NAME "upgrade" "Checking $CD_NAME..."
+    log $OCM_NAME "upgrade" "Checking $OCM_NAME..."
 
     # - do we need to upgrade?
     OCP_CURRENT_VERSION=$(oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r '.status.clusterVersionStatus.history[] | select(.state == "Completed") | .version' | head -n1)
 
     if [ "$OCP_CURRENT_VERSION" == "$TO" ];
     then
-        log $CD_NAME "upgrade" "skipping, already on version $TO"
-        teardown $CD_NAMESPACE $CD_NAME
+        log $OCM_NAME "upgrade" "skipping, already on version $TO"
+        teardown $OCM_NAME $CD_NAMESPACE $CD_NAME
         return
     fi
 
     if [ "$OCP_CURRENT_VERSION" != "$FROM" ];
     then
-        log $CD_NAME "upgrade" "skipping, expect version $FROM, found version $OCP_CURRENT_VERSION"
+        log $OCM_NAME "upgrade" "skipping, expect version $FROM, found version $OCP_CURRENT_VERSION"
         return
     fi
 
-    setup $CD_NAMESPACE $CD_NAME
+    setup $OCM_NAME $CD_NAMESPACE $CD_NAME
 
     # is upgrade already progressing?
     IN_PROGRESS=$(oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r ".status.clusterVersionStatus.history[] | select(.version == \"$TO\") | .version" | grep -v null)
@@ -132,7 +136,7 @@ upgrade() {
     if [ "$IN_PROGRESS" == "" ];
     then
         # hive doesn't know about this version.. try to start the upgrade
-        log $CD_NAME "upgrade" "upgrading from $FROM to $TO"
+        log $OCM_NAME "upgrade" "upgrading from $FROM to $TO"
 
         oc -n $CD_NAMESPACE extract "$(oc -n $CD_NAMESPACE get secrets -o name | grep $CD_NAME | grep kubeconfig)" --keys=kubeconfig --to=- > ${TMP_DIR}/kubeconfig-${CD_NAMESPACE}
 
@@ -140,7 +144,7 @@ upgrade() {
     fi
 
     # 3. wait for upgrade to complete
-    log $CD_NAME "upgrade" "waiting for cluster version"
+    log $OCM_NAME "upgrade" "waiting for cluster version"
     OCP_CURRENT_VERSION=$(oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r '.status.clusterVersionStatus.history[] | select(.state == "Completed") | .version' | head -n1)
     
     while [ "$OCP_CURRENT_VERSION" != "$TO" ];
@@ -161,7 +165,7 @@ upgrade() {
         then
             OUTPUT="$OUTPUT,\"API=OK\""
         else
-            log $CD_NAME "upgrade" "ERROR: API requests are failing, msg = $API_RESPONSE"
+            log $OCM_NAME "upgrade" "INFO: API requests are failing, msg = $API_RESPONSE"
             # don't bother with other checks, there is a good chance they won't work
             continue
         fi
@@ -170,14 +174,14 @@ upgrade() {
         
         if [ "$DCO" != "" ];
         then
-            log $CD_NAME "upgrade" "ERROR: Degraded Operators = $DCO"
+            log $OCM_NAME "upgrade" "INFO: Degraded Operators = $DCO"
         fi
 
         CA=$(curl -G -s -k -H "Authorization: Bearer $(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc -n openshift-monitoring sa get-token prometheus-k8s)" --data-urlencode "query=ALERTS{alertstate!=\"pending\",severity=\"critical\"}" "https://$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc -n openshift-monitoring get routes prometheus-k8s -o json | jq -r .spec.host)/api/v1/query" | jq -r '.data.result[].metric.alertname' | tr '\n' ',' )
 
         if [ "$CA" != "" ];
         then
-            log $CD_NAME "upgrade" "ERROR: Critical Alerts = $CA"
+            log $OCM_NAME "upgrade" "WARNING: Critical Alerts = $CA"
         fi
 
         POD_ISSUES=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get pods --all-namespaces --no-headers | grep -v -e Running -e Completed -e Terminating -e ContainerCreating -e Init -e Pending | grep -e ^default -e ^kube -e ^openshift)
@@ -185,13 +189,13 @@ upgrade() {
         
         if [ "$PPC" != "0" ];
         then
-            log $CD_NAME "upgrade" "ERROR: Problem Pod Count = $PPC
+            log $OCM_NAME "upgrade" "INFO: Problem Pod Count = $PPC
 $POD_ISSUES"
         fi
     done
 
-    log $CD_NAME "upgrade" "ClusterVersion on $TO"
-    log $CD_NAME "upgrade" "checking kubelet versions"
+    log $OCM_NAME "upgrade" "ClusterVersion on $TO"
+    log $OCM_NAME "upgrade" "checking kubelet versions"
 
     # fun fact!  after clusterversion says it is done, individual nodes could still be updated.
     # make sure all nodes run same kubelet version
@@ -203,15 +207,16 @@ $POD_ISSUES"
         sleep 15
     done
 
-    log $CD_NAME "upgrade" "all kubelets on same version"
-    log $CD_NAME "upgrade" "upgrade is complete"
+    log $OCM_NAME "upgrade" "all kubelets on same version"
+    log $OCM_NAME "upgrade" "upgrade is complete"
 
-    teardown $CD_NAMESPACE $CD_NAME
+    teardown $OCM_NAME $CD_NAMESPACE $CD_NAME
 }
 
 teardown() {
-    CD_NAMESPACE=$1
-    CD_NAME=$2
+    OCM_NAME=$1
+    CD_NAMESPACE=$2
+    CD_NAME=$3
 
     ORIGINAL_REPLICAS=$(oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r '.metadata.labels["managed.openshift.io/original-worker-replicas"] | select(. != null)' 2>/dev/null)
     DESIRED_REPLICAS=$(oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r '.spec.compute[] | select(.name | startswith("worker")) | .replicas')
@@ -222,7 +227,7 @@ teardown() {
         oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r ".spec.compute[0].replicas=$ORIGINAL_REPLICAS" | oc replace -f -
         oc -n $CD_NAMESPACE label clusterdeployment $CD_NAME managed.openshift.io/original-worker-replicas-
 
-        log $CD_NAME "teardown" "dropping replicas back from $DESIRED_REPLICAS to $ORIGINAL_REPLICAS"
+        log $OCM_NAME "teardown" "dropping replicas back from $DESIRED_REPLICAS to $ORIGINAL_REPLICAS"
     fi
 }
 
@@ -289,10 +294,10 @@ do
         if [ "$CLUSTER_NAMES" != "all" ];
         then
             PROCESS=0
+            OCM_NAME=$(oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r '.metadata.labels["api.openshift.com/name"]')
             for CLUSTER_NAME in $CLUSTER_NAMES
             do
-              # $CD_NAME is limited to 15 chars, apply limit to $CLUSTER_NAME
-              if [ "$CD_NAME" == "$(echo $CLUSTER_NAME | cut -c -15)" ];
+              if [ "$OCM_NAME" == "$(echo $CLUSTER_NAME | cut -c -15)" ];
                 then
                     # a match, process it
                     PROCESS=1
@@ -306,7 +311,7 @@ do
                 continue
             fi
         fi
-        upgrade $CD_NAMESPACE $CD_NAME $OCP_VERSION_FROM $OCP_VERSION_TO &
+        upgrade $OCM_NAME $CD_NAMESPACE $CD_NAME $OCP_VERSION_FROM $OCP_VERSION_TO &
     done
 done
 
