@@ -297,11 +297,13 @@ do
             OCM_NAME=$(oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r '.metadata.labels["api.openshift.com/name"]')
             for CLUSTER_NAME in $CLUSTER_NAMES
             do
-              if [ "$OCM_NAME" == "$(echo $CLUSTER_NAME | cut -c -15)" ];
+                if [ "$OCM_NAME" == "$CLUSTER_NAME" ];
                 then
                     # a match, process it
                     PROCESS=1
                     break
+                else
+                    log $OCM_NAME "prepare" "ERROR: unable to schedule upgrade for cluster name '$OCM_NAME'"
                 fi
             done
 
