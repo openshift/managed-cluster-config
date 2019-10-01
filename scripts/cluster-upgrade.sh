@@ -302,8 +302,6 @@ do
                     # a match, process it
                     PROCESS=1
                     break
-                else
-                    log $OCM_NAME "prepare" "ERROR: unable to schedule upgrade for cluster name '$OCM_NAME'"
                 fi
             done
 
