@@ -1326,6 +1326,103 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: osd-codeready-workspaces
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+    resourceApplyMode: sync
+    resources:
+    - apiVersion: operators.coreos.com/v1
+      kind: OperatorGroup
+      metadata:
+        annotations:
+          olm.providedAPIs: ClusterLogging.v1.logging.openshift.io
+        name: openshift-codeready-workspaces
+        namespace: openshift-codeready-workspaces
+      spec:
+        serviceAccount:
+          metadata:
+            creationTimestamp: null
+        targetNamespaces:
+        - openshift-codeready-workspaces
+    - apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: openshift-codeready-workspaces
+        annotations:
+          openshift.io/node-selector: ''
+        labels:
+          openshift.io/cluster-logging: 'true'
+          openshift.io/cluster-monitoring: 'true'
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: dedicated-admins-openshift-codeready-workspaces
+        namespace: openshift-codeready-workspaces
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - namespaces
+        - pods
+        - pods/log
+        verbs:
+        - list
+        - get
+        - watch
+      - apiGroups:
+        - logging.openshift.io
+        resources:
+        - clusterloggings
+        verbs:
+        - create
+        - delete
+        - deletecollection
+        - get
+        - list
+        - patch
+        - update
+        - watch
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - subscriptions
+        - clusterserviceversions
+        verbs:
+        - '*'
+      - apiGroups:
+        - ''
+        resources:
+        - secrets
+        - configmaps
+        verbs:
+        - list
+      - apiGroups:
+        - org.eclipse.che
+        resources:
+        - '*'
+        verbs:
+        - '*'
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: dedicated-admins-openshift-codeready-workspaces
+        namespace: openshift-codeready-workspaces
+      subjects:
+      - kind: Group
+        name: dedicated-admins
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: dedicated-admins-openshift-codeready-workspaces
+- apiVersion: hive.openshift.io/v1alpha1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: sre-authorization
   spec:
     clusterDeploymentSelector:
@@ -1714,3 +1811,51 @@ objects:
       spec:
         hard:
           requests.storage: 600Gi
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: dedicated-admins-openshift-logging
+        namespace: openshift-logging
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - namespaces
+        - pods
+        - pods/log
+        verbs:
+        - list
+        - get
+        - watch
+      - apiGroups:
+        - logging.openshift.io
+        resources:
+        - clusterloggings
+        verbs:
+        - create
+        - delete
+        - deletecollection
+        - get
+        - list
+        - patch
+        - update
+        - watch
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - subscriptions
+        - clusterserviceversions
+        verbs:
+        - '*'
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: dedicated-admins-openshift-logging
+        namespace: openshift-logging
+      subjects:
+      - kind: Group
+        name: dedicated-admins
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: dedicated-admins-openshift-logging
