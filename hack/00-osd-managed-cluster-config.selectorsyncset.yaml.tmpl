@@ -1333,6 +1333,15 @@ objects:
         api.openshift.com/managed: 'true'
     resourceApplyMode: sync
     resources:
+    - apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: openshift-codeready-workspaces
+        annotations:
+          openshift.io/node-selector: ''
+        labels:
+          openshift.io/cluster-logging: 'true'
+          openshift.io/cluster-monitoring: 'true'
     - apiVersion: operators.coreos.com/v1
       kind: OperatorGroup
       metadata:
@@ -1346,15 +1355,6 @@ objects:
             creationTimestamp: null
         targetNamespaces:
         - openshift-codeready-workspaces
-    - apiVersion: v1
-      kind: Namespace
-      metadata:
-        name: openshift-codeready-workspaces
-        annotations:
-          openshift.io/node-selector: ''
-        labels:
-          openshift.io/cluster-logging: 'true'
-          openshift.io/cluster-monitoring: 'true'
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: Role
       metadata:
@@ -1685,6 +1685,17 @@ objects:
         api.openshift.com/managed: 'true'
     resourceApplyMode: sync
     resources:
+    - apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: openshift-logging
+        annotations:
+          openshift.io/node-selector: ''
+        labels:
+          managed.openshift.io/service-lb-quota-exempt: 'true'
+          managed.openshift.io/storage-pv-quota-exempt: 'true'
+          openshift.io/cluster-logging: 'true'
+          openshift.io/cluster-monitoring: 'true'
     - apiVersion: operators.coreos.com/v1
       kind: OperatorGroup
       metadata:
@@ -1698,17 +1709,6 @@ objects:
             creationTimestamp: null
         targetNamespaces:
         - openshift-logging
-    - apiVersion: v1
-      kind: Namespace
-      metadata:
-        name: openshift-logging
-        annotations:
-          openshift.io/node-selector: ''
-        labels:
-          managed.openshift.io/service-lb-quota-exempt: 'true'
-          managed.openshift.io/storage-pv-quota-exempt: 'true'
-          openshift.io/cluster-logging: 'true'
-          openshift.io/cluster-monitoring: 'true'
     - apiVersion: v1
       data:
         actions.yaml: '# ---
