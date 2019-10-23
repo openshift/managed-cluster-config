@@ -2,9 +2,6 @@ package sync
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
-	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -30,7 +27,6 @@ import (
 	kaggregator "k8s.io/kube-aggregator/pkg/client/clientset_generated/clientset"
 
 	"github.com/openshift/managed-cluster-config/pkg/config"
-	"github.com/openshift/managed-cluster-config/pkg/util/jsonpath"
 )
 
 type ClusterPlatform string
@@ -202,36 +198,6 @@ func (s *sync) convertToSyncSet(o unstructured.Unstructured) (map[string]interfa
 	}
 
 	return runtime.DefaultUnstructuredConverter.ToUnstructured(sss.DeepCopyObject())
-}
-
-// setPodTemplateAnnotation sets the provided key-value pair as an annotation
-// inside the provided object's pod template.
-func setPodTemplateAnnotation(key, value string, o unstructured.Unstructured) {
-	annotations, _, _ := unstructured.NestedStringMap(o.Object, "spec", "template", "metadata", "annotations")
-	if annotations == nil {
-		annotations = make(map[string]string)
-	}
-	annotations[key] = value
-	unstructured.SetNestedStringMap(o.Object, annotations, "spec", "template", "metadata", "annotations")
-}
-
-func getHash(o *unstructured.Unstructured) string {
-	var content map[string]interface{}
-	var keys []string
-
-	for _, v := range jsonpath.MustCompile("$.data").Get(o.Object) {
-		content = v.(map[string]interface{})
-	}
-	for key := range content {
-		keys = append(keys, key)
-	}
-	sort.Strings(keys)
-	h := sha256.New()
-	for _, key := range keys {
-		fmt.Fprintf(h, "%s: %#v", key, content[key])
-	}
-	return hex.EncodeToString(h.Sum(nil))
-
 }
 
 // Main loop
