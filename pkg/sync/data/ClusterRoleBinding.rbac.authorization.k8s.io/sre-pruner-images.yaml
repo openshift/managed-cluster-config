@@ -1,0 +1,14 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    api.openshift.com/managed: "true"
+  name: sre-pruner-images
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:image-pruner
+subjects:
+- kind: ServiceAccount
+  name: sre-pruner-sa
+  namespace: openshift-sre-pruning

@@ -1,0 +1,21 @@
+apiVersion: hive.openshift.io/v1alpha1
+kind: SelectorSyncSet
+metadata:
+  labels:
+    managed.openshift.io/gitHash: ${IMAGE_TAG}
+    managed.openshift.io/gitRepoName: ${REPO_NAME}
+    managed.openshift.io/osd: "true"
+  name: kubelet-config
+spec:
+  clusterDeploymentSelector:
+    matchLabels:
+      api.openshift.com/managed: "true"
+  patches:
+  - apiVersion: machineconfiguration.openshift.io/v1
+    applyMode: AlwaysApply
+    kind: MachineConfigPool
+    name: worker
+    patch: '{ "metadata": {"labels": {"managed.openshift.io/custom-kubelet":""} }
+      }'
+    patchType: merge
+  resourceApplyMode: sync

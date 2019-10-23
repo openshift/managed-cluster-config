@@ -1,0 +1,19 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    api.openshift.com/managed: "true"
+    prometheus: sre-configure-alertmanager-operator-offline-alerts
+    role: alert-rules
+  name: sre-configure-alertmanager-operator-offline-alerts
+  namespace: openshift-monitoring
+spec:
+  groups:
+  - name: sre-configure-alertmanager-operator-offline-alerts
+    rules:
+    - alert: ConfigureAlertmanagerOperatorOfflineSRE
+      expr: absent(up{service="configure-alertmanager-operator"})
+      for: 15m
+      labels:
+        namespace: openshift-monitoring
+        severity: critical

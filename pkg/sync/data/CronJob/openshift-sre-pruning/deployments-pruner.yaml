@@ -1,0 +1,30 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  labels:
+    api.openshift.com/managed: "true"
+  name: deployments-pruner
+  namespace: openshift-sre-pruning
+spec:
+  concurrencyPolicy: Replace
+  failedJobsHistoryLimit: 5
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - command:
+            - oc
+            - adm
+            - prune
+            - deployments
+            - --keep-complete=1
+            - --keep-younger-than=24h
+            - --keep-failed=1
+            - --confirm
+            image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+            imagePullPolicy: Always
+            name: deployments-pruner
+          restartPolicy: Never
+          serviceAccountName: sre-pruner-sa
+  schedule: 0 */1 * * *

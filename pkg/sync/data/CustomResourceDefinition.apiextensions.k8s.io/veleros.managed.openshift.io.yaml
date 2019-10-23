@@ -1,0 +1,75 @@
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  labels:
+    api.openshift.com/managed: "true"
+    hive.openshift.io/cluster-platform: aws
+  name: veleros.managed.openshift.io
+spec:
+  additionalPrinterColumns:
+  - JSONPath: .status.s3Bucket.name
+    description: Name of the S3 bucket
+    name: Bucket
+    type: string
+  - JSONPath: .status.s3Bucket.provisioned
+    description: Has the S3 bucket been successfully provisioned
+    name: Provisioned
+    type: boolean
+  - JSONPath: .status.s3Bucket.lastSyncTimestamp
+    name: Last Sync
+    type: date
+  group: managed.openshift.io
+  names:
+    kind: Velero
+    listKind: VeleroList
+    plural: veleros
+    singular: velero
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+            of an object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          type: object
+        status:
+          properties:
+            s3Bucket:
+              description: S3Bucket contains details of the S3 storage bucket for
+                backups
+              properties:
+                lastSyncTimestamp:
+                  description: LastSyncTimestamp is the time that the bucket policy
+                    was last synced.
+                  format: date-time
+                  type: string
+                name:
+                  description: Name is the name of the S3 bucket created to store
+                    Velero backup details
+                  maxLength: 63
+                  type: string
+                provisioned:
+                  description: Provisioned is true once the bucket has been initially
+                    provisioned.
+                  type: boolean
+              required:
+              - provisioned
+              type: object
+          type: object
+  version: v1alpha1
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true

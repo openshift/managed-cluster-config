@@ -1,0 +1,23 @@
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  labels:
+    api.openshift.com/managed: "true"
+    hive.openshift.io/cluster-platform: aws
+  name: weekly-full-backup
+  namespace: openshift-velero
+spec:
+  schedule: 0 2 * * 1
+  template:
+    excludedNamespaces: null
+    excludedResources: null
+    hooks:
+      resources: null
+    includeClusterResources: null
+    includedNamespaces:
+    - '*'
+    includedResources: null
+    labelSelector: null
+    storageLocation: ""
+    ttl: 720h0m0s
+    volumeSnapshotLocations: null

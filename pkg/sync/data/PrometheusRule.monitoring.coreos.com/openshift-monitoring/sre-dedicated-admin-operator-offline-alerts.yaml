@@ -1,0 +1,19 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    api.openshift.com/managed: "true"
+    prometheus: sre-dedicated-admin-operator-offline-alerts
+    role: alert-rules
+  name: sre-dedicated-admin-operator-offline-alerts
+  namespace: openshift-monitoring
+spec:
+  groups:
+  - name: sre-dedicated-admin-operator-offline-alerts
+    rules:
+    - alert: DedicatedAdminOperatorOfflineSRE
+      expr: absent(up{service="dedicated-admin-operator"})
+      for: 15m
+      labels:
+        namespace: openshift-monitoring
+        severity: critical

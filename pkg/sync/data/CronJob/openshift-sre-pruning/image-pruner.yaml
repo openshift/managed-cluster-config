@@ -1,0 +1,28 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  labels:
+    api.openshift.com/managed: "true"
+  name: image-pruner
+  namespace: openshift-sre-pruning
+spec:
+  concurrencyPolicy: Replace
+  failedJobsHistoryLimit: 5
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - args:
+            - /bin/bash
+            - -c
+            - oc adm prune images --token=$$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+              --server=https://$(KUBERNETES_SERVICE_HOST):$(KUBERNETES_SERVICE_PORT)
+              --keep-younger-than=24h --keep-tag-revisions=5 --insecure-skip-tls-verify=true
+              --confirm
+            image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+            imagePullPolicy: Always
+            name: image-pruner
+          restartPolicy: Never
+          serviceAccountName: sre-pruner-sa
+  schedule: 0 */1 * * *

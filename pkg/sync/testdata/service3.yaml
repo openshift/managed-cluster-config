@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    oprometheus.io/scheme: https
+    oprometheus.io/scrape: "true"
+    service.alpha.openshift.io/serving-cert-secret-name: prometheus-tls
+    service.alpha.openshift.io/serving-cert-signed-by: openshift-service-serving-signer
+  labels:
+    name: prometheus
+  name: prometheus
+  namespace: openshift-metrics
+spec:
+  clusterIP: 172.30.34.11
+  ports:
+  - name: prometheus
+    port: 443
+    protocol: TCP
+    targetPort: 443
+  selector:
+    app: prometheus
+  sessionAffinity: None
+  type: ClusterIP

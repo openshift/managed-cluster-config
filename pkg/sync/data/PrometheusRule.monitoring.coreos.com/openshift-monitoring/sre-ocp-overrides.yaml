@@ -1,0 +1,23 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    api.openshift.com/managed: "true"
+    prometheus: k8s
+    role: alert-rules
+  name: sre-ocp-overrides
+  namespace: openshift-monitoring
+spec:
+  groups:
+  - name: sre-ocp-overrides
+    rules:
+    - alert: KubeAPILatencyHighSRE
+      annotations:
+        message: The API server has a 99th percentile latency of {{ $value }} seconds
+          for {{ $labels.verb }} {{ $labels.resource }}.
+      expr: |
+        cluster_quantile:apiserver_request_duration_seconds:histogram_quantile{job="apiserver",quantile="0.99",subresource!="log",verb!~"^(?:LIST|WATCH|WATCHLIST|PROXY|CONNECT)$"} > 1
+      for: 25m
+      labels:
+        namespace: openshift-monitoring
+        severity: warning

@@ -1,0 +1,31 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    api.openshift.com/managed: "true"
+    prometheus: sre-excessive-memory
+    role: alert-rules
+  name: sre-excessive-memory
+  namespace: openshift-monitoring
+spec:
+  groups:
+  - name: sre-excessive-memory
+    rules:
+    - alert: ExcessiveContainerMemoryWarningSRE
+      annotations:
+        message: System container {{ $labels.namespace }}/{{ $labels.pod_name }}/{{
+          $labels.container_name }} is using in excess of 3G of memory for over 30
+          minutes.
+      expr: container_memory_rss{namespace=~"(^openshift.*|^kube.*|^default$)",container_name!="",container_name!="POD"}/1024/1024/1024>3
+      for: 30m
+      labels:
+        severity: none
+    - alert: ExcessiveContainerMemoryCriticalSRE
+      annotations:
+        message: System container {{ $labels.namespace }}/{{ $labels.pod_name }}/{{
+          $labels.container_name }} is using in excess of 5G of memory for over 30
+          minutes.
+      expr: container_memory_rss{namespace=~"(^openshift.*|^kube.*|^default$)",container_name!="",container_name!="POD"}/1024/1024/1024>5
+      for: 30m
+      labels:
+        severity: none

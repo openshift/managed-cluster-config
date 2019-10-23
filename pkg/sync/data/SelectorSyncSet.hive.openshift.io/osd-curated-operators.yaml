@@ -1,0 +1,45 @@
+apiVersion: hive.openshift.io/v1alpha1
+kind: SelectorSyncSet
+metadata:
+  labels:
+    managed.openshift.io/gitHash: ${IMAGE_TAG}
+    managed.openshift.io/gitRepoName: ${REPO_NAME}
+    managed.openshift.io/osd: "true"
+  name: osd-curated-operators
+spec:
+  clusterDeploymentSelector:
+    matchLabels:
+      api.openshift.com/managed: "true"
+  patches:
+  - apiVersion: config.openshift.io/v1
+    applyMode: AlwaysApply
+    kind: ClusterVersion
+    name: version
+    patch: '{ "spec": { "overrides": [ { "kind": "OperatorSource", "name": "redhat-operators",
+      "namespace": "openshift-marketplace", "unmanaged": true }, { "kind": "OperatorSource",
+      "name": "certified-operators", "namespace": "openshift-marketplace", "unmanaged":
+      true }, { "kind": "OperatorSource", "name": "community-operators", "namespace":
+      "openshift-marketplace", "unmanaged": true } ] } }'
+    patchType: merge
+  - apiVersion: operators.coreos.com/v1
+    applyMode: AlwaysApply
+    kind: OperatorSource
+    name: certified-operators
+    namespace: openshift-marketplace
+    patch: '{ "spec": { "registryNamespace": "curated-certified-operators" } }'
+    patchType: merge
+  - apiVersion: operators.coreos.com/v1
+    applyMode: AlwaysApply
+    kind: OperatorSource
+    name: community-operators
+    namespace: openshift-marketplace
+    patch: '{ "spec": { "registryNamespace": "curated-community-operators" } }'
+    patchType: merge
+  - apiVersion: operators.coreos.com/v1
+    applyMode: AlwaysApply
+    kind: OperatorSource
+    name: redhat-operators
+    namespace: openshift-marketplace
+    patch: '{ "spec": { "registryNamespace": "curated-redhat-operators" } }'
+    patchType: merge
+  resourceApplyMode: sync

@@ -4,13 +4,20 @@ This repo contains static configuration specific to a "managed" OpenShift Dedica
 
 ## How to use this repo
 
-To add a new SelectorSyncSet, add your yaml manifest to the `deploy` dir, then run the `make` command.
+To add a new SelectorSyncSet, add your yaml manifest to the `pkg/sync/data` directory to the coresponding API folders
+Then run the `make` command.
+
+It will generate list of objects into `_data` directory. Generator relies on `pkg/config` structure 
+and `pkg/sync/translate.go` for translation. 
+
+In addition some defaulting logic is located in `pkg/sync/default.go` and `convertToSyncSet` function.
+Some of this logic should go away when converted to operator pattern.
 
 # Building
 
 ## Dependencies
 
-- oyaml: `pip install oyaml`
+Project is using `go modules` and `go 1.12` for dependency management.s
 
 # Selector Sync Sets included in this repo
 
@@ -23,17 +30,17 @@ A set of rules and alerts that SRE requires to ensure a cluster is functioning. 
 
 ## Prometheus and Alertmanager persistent storage
 
-Persistent storage is configured using the configmap `cluster-monitoring-config`, which is read by the cluster-monitoring-operator to generate PersistentVolumeClaims and attach them to the Prometheus and Alertmanager pods.
+Persistent storage is configured using the configmap `ConfigMap/openshift-monitoring/cluster-monitoring-config`, which is read by the cluster-monitoring-operator to generate PersistentVolumeClaims and attach them to the Prometheus and Alertmanager pods.
 
 ## SRE Authorization
 
-Instead of SRE having the `cluster-admin` role, a new ClusterRole, `osd-sre-admin`, is created with some permissions removed.  The ClusterRole can be regenerated in the `generate/sre-authorization` directory.  The role is granted to SRE via `osd-sre-admins` group.
+Instead of SRE having the `cluster-admin` role, a new ClusterRole, `ClusterRole.rbac.authorization.k8s.io/osd-sre-admin`, is created with some permissions removed.  The ClusterRole can be regenerated in the `generate/sre-authorization` directory. The role is granted to SRE via `osd-sre-admins` group.
 
 To elevate privileges, SRE can add themselves to the group `osd-sre-cluster-admins`, which is bound to the ClusterRole `cluster-admin`.  When this group is created and managed by Hive, all users are wiped because the SelectorSyncSet will always have `users: null`.  Therefore, SRE will get elevated privileges for a limited time.
 
 ## Curated Operators
 
-Initially OSD will support a subset of operators only.  These are managed by patching the OCP shipped OperatorSource CRs.  See `deploy/osd-curated-operators`.
+Initially OSD will support a subset of operators only. These are managed by patching the OCP shipped OperatorSource CRs. See `SelectorSyncSet.hive.openshift.io/osd-curated-operators`.
 
 NOTE that ClusterVersion is being patched to add overrides.  If other overrides are needed we'll have to tune how we do this patching.  It must be done along with the OperatorSource patching to ensure CVO doesn't revert the OperatorSource patching.
 

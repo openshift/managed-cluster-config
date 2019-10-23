@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    api.openshift.com/managed: "true"
+    hive.openshift.io/cluster-platform: aws
+  name: managed-velero-operator
+  namespace: openshift-velero
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: managed-velero-operator
+  template:
+    metadata:
+      labels:
+        name: managed-velero-operator
+    spec:
+      containers:
+      - command:
+        - managed-velero-operator
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: OPERATOR_NAME
+          value: managed-velero-operator
+        image: '*** GENERATED ***'
+        name: managed-velero-operator
+      serviceAccountName: managed-velero-operator

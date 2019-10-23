@@ -1,0 +1,21 @@
+apiVersion: hive.openshift.io/v1alpha1
+kind: SelectorSyncSet
+metadata:
+  labels:
+    managed.openshift.io/gitHash: ${IMAGE_TAG}
+    managed.openshift.io/gitRepoName: ${REPO_NAME}
+    managed.openshift.io/osd: "true"
+  name: osd-oauth-templates
+spec:
+  clusterDeploymentSelector:
+    matchLabels:
+      api.openshift.com/managed: "true"
+  patches:
+  - apiVersion: config.openshift.io/v1
+    applyMode: ApplyOnce
+    kind: OAuth
+    name: cluster
+    patch: '{"spec":{"templates": {"login": {"name": "osd-oauth-templates-login"},"providerSelection":
+      {"name": "osd-oauth-templates-providers"},"error": {"name": "osd-oauth-templates-errors"}}}}'
+    patchType: merge
+  resourceApplyMode: sync

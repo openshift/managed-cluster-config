@@ -1,0 +1,19 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  labels:
+    api.openshift.com/managed: "true"
+    hive.openshift.io/cluster-platform: aws
+  name: prometheus-k8s
+  namespace: openshift-velero
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - services
+  - endpoints
+  - pods
+  verbs:
+  - get
+  - list
+  - watch

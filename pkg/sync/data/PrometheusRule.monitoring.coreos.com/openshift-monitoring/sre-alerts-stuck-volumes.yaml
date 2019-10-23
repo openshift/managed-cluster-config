@@ -1,0 +1,35 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    api.openshift.com/managed: "true"
+    prometheus: sre-alerts-stuck-volumes
+    role: alert-rules
+  name: sre-alerts-stuck-volumes
+  namespace: openshift-monitoring
+spec:
+  groups:
+  - name: sre-alerts-stuck-volumes
+    rules:
+    - alert: EbsVolumeStuckAttaching5MinSRE
+      expr: min_over_time(ebs_volume_state{ebs_volume_state="attaching"}[5m]) == 1
+      labels:
+        namespace: openshift-monitoring
+        severity: warning
+    - alert: EbsVolumeStuckAttaching10MinSRE
+      expr: min_over_time(ebs_volume_state{ebs_volume_state="attaching"}[10m]) ==
+        1
+      labels:
+        namespace: openshift-monitoring
+        severity: critical
+    - alert: EbsVolumeStuckDetaching5MinSRE
+      expr: min_over_time(ebs_volume_state{ebs_volume_state="detaching"}[5m]) == 1
+      labels:
+        namespace: openshift-monitoring
+        severity: warning
+    - alert: EbsVolumeStuckDetaching10MinSRE
+      expr: min_over_time(ebs_volume_state{ebs_volume_state="detaching"}[10m]) ==
+        1
+      labels:
+        namespace: openshift-monitoring
+        severity: critical

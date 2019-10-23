@@ -1,0 +1,31 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    api.openshift.com/managed: "true"
+    prometheus: sre-machine-api-node-mismatch
+    role: alert-rules
+  name: sre-machine-api-node-mismatch
+  namespace: openshift-monitoring
+spec:
+  groups:
+  - name: sre-machine-api-node-mismatch
+    rules:
+    - alert: NoNodeObjectForMachineWarningSRE
+      annotations:
+        message: The Machine object {{ $labels.machine_name }} hasn't had an associated
+          Node for the past 30 minutes.
+      expr: machine_api_status == 0
+      for: 15m
+      labels:
+        namespace: openshift-monitoring
+        severity: warning
+    - alert: NoNodeObjectForMachineCriticalSRE
+      annotations:
+        message: The Machine object {{ $labels.machine_name }} hasn't had an associated
+          Node for the past 60 minutes.
+      expr: machine_api_status == 0
+      for: 30m
+      labels:
+        namespace: openshift-monitoring
+        severity: critical

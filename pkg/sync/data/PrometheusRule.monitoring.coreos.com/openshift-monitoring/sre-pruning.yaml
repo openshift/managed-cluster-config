@@ -1,0 +1,22 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    api.openshift.com/managed: "true"
+    prometheus: sre-pruning
+    role: alert-rules
+  name: sre-pruning
+  namespace: openshift-monitoring
+spec:
+  groups:
+  - name: sre-pruning
+    rules:
+    - alert: PruningCronjobErrorSRE
+      annotations:
+        message: SRE Pruning Job {{ $labels.namespace }}/{{ $labels.cronjob }} is
+          taking more than thirty minutes to complete.
+      expr: kube_cronjob_status_active{namespace="openshift-sre-pruning"}>0
+      for: 30m
+      labels:
+        namespace: openshift-sre-pruning
+        severity: critical

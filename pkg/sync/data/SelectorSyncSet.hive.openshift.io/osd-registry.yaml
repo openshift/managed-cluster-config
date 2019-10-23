@@ -1,0 +1,20 @@
+apiVersion: hive.openshift.io/v1alpha1
+kind: SelectorSyncSet
+metadata:
+  labels:
+    managed.openshift.io/gitHash: ${IMAGE_TAG}
+    managed.openshift.io/gitRepoName: ${REPO_NAME}
+    managed.openshift.io/osd: "true"
+  name: osd-registry
+spec:
+  clusterDeploymentSelector:
+    matchLabels:
+      api.openshift.com/managed: "true"
+  patches:
+  - apiVersion: imageregistry.operator.openshift.io/v1
+    applyMode: ApplyOnce
+    kind: Config
+    name: cluster
+    patch: '{"spec":{"defaultRoute":true}}'
+    patchType: merge
+  resourceApplyMode: sync

@@ -1,0 +1,40 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: sre-pruner-buildsdeploys-cr
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - replicationcontrollers
+  verbs:
+  - list
+  - get
+- apiGroups:
+  - ""
+  resources:
+  - replicationcontrollers
+  verbs:
+  - delete
+- apiGroups:
+  - apps.openshift.io
+  resources:
+  - deploymentconfigs
+  verbs:
+  - get
+  - list
+- apiGroups:
+  - build.openshift.io
+  resources:
+  - buildconfigs
+  - builds
+  verbs:
+  - list
+  - get
+- apiGroups:
+  - build.openshift.io
+  resources:
+  - builds
+  verbs:
+  - delete

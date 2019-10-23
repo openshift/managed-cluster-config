@@ -1,0 +1,23 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    api.openshift.com/managed: "true"
+    prometheus: sre-node-unschedulable
+    role: alert-rules
+  name: sre-node-unschedulable
+  namespace: openshift-monitoring
+spec:
+  groups:
+  - name: sre-node-unschedulable
+    rules:
+    - alert: KubeNodeUnschedulableSRE
+      annotations:
+        link: https://github.com/openshift/ops-sop/blob/master/v3/alerts/openshift_node_not_schedulable.asciidoc
+        message: The node {{ $labels.node }} has been unscedulable for more than an
+          hour.
+      expr: kube_node_spec_unschedulable > 0
+      for: 1h
+      labels:
+        namespace: openshift-monitoring
+        severity: warning

@@ -1,0 +1,25 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    api.openshift.com/managed: "true"
+    prometheus: sre-ebs-iops-burstbalance
+    role: alert-rules
+  name: sre-ebs-iops-burstbalance
+  namespace: openshift-monitoring
+spec:
+  groups:
+  - name: sre-ebs-iops-burstbalance
+    rules:
+    - alert: EbsVolumeBurstBalanceLT40PctSRE
+      expr: avg(ebs_iops_credits) < 40
+      for: 60m
+      labels:
+        namespace: openshift-monitoring
+        severity: warning
+    - alert: EbsVolumeBurstBalanceLT20PctSRE
+      expr: avg(ebs_iops_credits) < 20
+      for: 60m
+      labels:
+        namespace: openshift-monitoring
+        severity: critical

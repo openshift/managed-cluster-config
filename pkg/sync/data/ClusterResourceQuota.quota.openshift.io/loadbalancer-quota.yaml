@@ -1,0 +1,17 @@
+apiVersion: quota.openshift.io/v1
+kind: ClusterResourceQuota
+metadata:
+  labels:
+    api.openshift.com/managed: "true"
+    hive.openshift.io/cluster-platform: aws
+  name: loadbalancer-quota
+spec:
+  quota:
+    hard:
+      services.loadbalancers: "2"
+  selector:
+    annotations: null
+    labels:
+      matchExpressions:
+      - key: managed.openshift.io/service-lb-quota-exempt
+        operator: DoesNotExist

@@ -1,0 +1,43 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    api.openshift.com/managed: "true"
+    prometheus: sre-filesysfull
+    role: alert-rules
+  name: sre-filesysfull
+  namespace: openshift-monitoring
+spec:
+  groups:
+  - name: sre-filesysfull
+    rules:
+    - alert: KubeCustomerPersistentVolumeUsageCriticalSRE
+      annotations:
+        link: https://github.com/openshift/ops-sop/blob/master/v4/alerts/KubeCustomerPersistentVolumeUsageCritical.md
+        message: The customer PersistentVolume claimed by {{ $labels.persistentvolumeclaim
+          }} in Namespace {{ $labels.namespace }} is only {{ printf "%0.2f" $value
+          }}% free.
+      expr: |
+        100
+        * kubelet_volume_stats_available_bytes{job="kubelet",namespace!~"(openshift-.*|kube-.*|default|logging)"}
+        / kubelet_volume_stats_capacity_bytes{job="kubelet",namespace!~"(openshift-.*|kube-.*|default|logging)"}
+        < 3
+      labels:
+        namespace: openshift-monitoring
+        severity: warning
+    - alert: KubeCustomerPersistentVolumeFullInFourDaysSRE
+      annotations:
+        link: https://github.com/openshift/ops-sop/blob/master/v4/alerts/KubeCustomerPersistentVolumeUsageCritical.md
+        message: Based on recent sampling, the customer PersistentVolume claimed by
+          {{ $labels.persistentvolumeclaim }} in Namespace {{ $labels.namespace }}
+          is expected to fill up within four days. Currently {{ printf "%0.2f" $value
+          }}% is available.
+      expr: |
+        100
+        * (kubelet_volume_stats_available_bytes{job="kubelet",namespace!~"(openshift-.*|kube-.*|default|logging)"}
+        / kubelet_volume_stats_capacity_bytes{job="kubelet",namespace!~"(openshift-.*|kube-.*|default|logging)"})
+        < 15 and predict_linear(kubelet_volume_stats_available_bytes{job="kubelet",namespace!~"(openshift-.*|kube-.*|default|logging)"}[6h],
+        4 * 24 * 3600) < 0
+      labels:
+        namespace: openshift-monitoring
+        severity: warning

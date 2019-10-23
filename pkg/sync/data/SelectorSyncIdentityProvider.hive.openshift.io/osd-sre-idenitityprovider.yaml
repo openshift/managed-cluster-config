@@ -1,0 +1,33 @@
+apiVersion: hive.openshift.io/v1alpha1
+kind: SelectorSyncIdentityProvider
+metadata:
+  labels:
+    api.openshift.com/managed: "true"
+  name: osd-sre-identityprovider
+spec:
+  clusterDeploymentSelector:
+    matchLabels:
+      api.openshift.com/managed: "true"
+  identityProviders:
+  - challenge: true
+    ldap:
+      attributes:
+        email:
+        - ${IDENTITY_ATTR_EMAIL}
+        id:
+        - ${IDENTITY_ATTR_ID}
+        name:
+        - ${IDENTITY_ATTR_NAME}
+        preferredUsername:
+        - ${IDENTITY_ATTR_PREFERRED_USERNAME}
+      bindDN: ${IDENTITY_BIND_DN}
+      bindPassword:
+        name: osd-ldap-secret
+      ca:
+        name: osd-ldap-ca-configmap
+      insecure: false
+      url: ${IDENTITY_URL}
+    login: true
+    mappingMethod: ${IDENTITY_MAPPING_METHOD}
+    name: ${IDENTITY_NAME}
+    type: LDAP

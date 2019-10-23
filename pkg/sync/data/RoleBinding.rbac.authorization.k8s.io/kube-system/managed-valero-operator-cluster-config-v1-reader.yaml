@@ -1,0 +1,18 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    api.openshift.com/managed: "true"
+    hive.openshift.io/cluster-platform: aws
+    owner: managed-velero-operator
+    owner.namespace: managed-velero-operator
+  name: managed-velero-operator-cluster-config-v1-reader
+  namespace: kube-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: cluster-config-v1-reader
+subjects:
+- kind: ServiceAccount
+  name: managed-velero-operator
+  namespace: openshift-velero
