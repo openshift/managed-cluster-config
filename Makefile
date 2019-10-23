@@ -1,7 +1,8 @@
 SHELL := /bin/bash
 GITCOMMIT=$(shell git rev-parse --short HEAD)$(shell [[ $$(git status --porcelain) = "" ]] || echo -dirty)
 LDFLAGS="-X main.gitCommit=$(GITCOMMIT)"
-IMAGE ?= managed-cluster-config:$(GITCOMMIT)
+#REGISTRY    ?= quay.io/openshift/
+IMAGE        = $(REGISTRY)managed-cluster-config:$(GITCOMMIT)
 
 .PHONY: default
 default: clean generate generate-syncset
@@ -30,7 +31,7 @@ verify:
 
 .PHONY: build
 build:
-	go build -ldflags ${LDFLAGS} ./cmd/template/
+	go build -ldflags ${LDFLAGS} -o _data/template ./cmd/template/ 
 
 .PHONY: image
 image:
@@ -38,4 +39,4 @@ image:
 
 .PHONY: run
 run: clean generate build
-	./template
+	./_data/template
