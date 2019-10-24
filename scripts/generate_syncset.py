@@ -7,6 +7,9 @@ import sys
 import argparse
 import copy
 
+managed_ann = "api.openshift.com/managed"
+cluster_platform_ann = "hive.openshift.io/cluster-platform"
+
 def get_yaml_all(filename):
     with open(filename,'r') as input_file:
         return list(yaml.safe_load_all(input_file))
@@ -42,6 +45,15 @@ def process_yamls(name, directory, obj):
         return
 
     for y in yamls:
+        if 'metadata' in y:
+            if 'labels' in y['metadata']:
+                if managed_ann in y['metadata']['labels']:
+                    o['spec']['clusterDeploymentSelector']['matchLabels'][managed_ann] = y['metadata']['labels'][managed_ann]
+                    del y['metadata']['labels'][managed_ann]
+                if cluster_platform_ann in y['metadata']['labels']:
+                    o['spec']['clusterDeploymentSelector']['matchLabels'][cluster_platform_ann] = y['metadata']['labels'][cluster_platform_ann]
+                    del y['metadata']['labels'][cluster_platform_ann]
+
         if 'patch' in y:
             if not 'patches' in o['spec']:
                 o['spec']['patches'] = []

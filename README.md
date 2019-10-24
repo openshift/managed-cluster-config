@@ -4,7 +4,25 @@ This repo contains static configuration specific to a "managed" OpenShift Dedica
 
 ## How to use this repo
 
-To add a new SelectorSyncSet, add your yaml manifest to the `deploy` dir, then run the `make` command.
+To add a new SelectorSyncSet:
+1. Add your yaml manifest to the `deploy` dir
+2. Add labels, based to which cloud provider this SelectorSyncSet should target:
+```
+  # Target GCP only
+  labels:
+    api.openshift.com/managed: "true"
+    hive.openshift.io/cluster-platform: "gcp"
+
+  # Target AWS only
+  labels:
+    api.openshift.com/managed: "true"
+    hive.openshift.io/cluster-platform: "aws"
+
+  # Target All clouds
+  labels:
+    api.openshift.com/managed: "true"
+```
+3. Run the `make` command.
 
 # Building
 
