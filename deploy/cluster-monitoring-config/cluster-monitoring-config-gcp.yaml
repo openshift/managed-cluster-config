@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cluster-monitoring-config
+  namespace: openshift-monitoring
+  labels:
+     hive.openshift.io/cluster-platform: "gcp"
+data:
+  config.yaml: |
+    prometheusK8s:
+      retention: 15d
+      volumeClaimTemplate:
+        metadata:
+          name: prometheus-data
+        spec:
+          storageClassName: standard
+          resources:
+            requests:
+              storage: 50Gi
+    alertmanagerMain:
+      volumeClaimTemplate:
+        metadata:
+          name: alertmanager-data
+        spec:
+          storageClassName: standard
+          resources:
+            requests:
+              storage: 10Gi
+    telemeterClient:
+      telemeterServerURL: ${TELEMETER_SERVER_URL}

@@ -37,8 +37,10 @@ def get_all_yaml_obj(file_paths):
             yaml_objs.append(obj)
     return yaml_objs
 
-def process_yamls(name, directory, obj):
-    o = copy.deepcopy(obj)
+def process_yamls(name, directory, syncset):
+    o_gcp = copy.deepcopy(syncset)
+    o_aws = copy.deepcopy(syncset)
+    o_all = copy.deepcopy(syncset)
     # Get all yaml files as array of yaml objects
     yamls = get_all_yaml_obj(get_all_yaml_files(directory))
     if len(yamls) == 0:
@@ -46,26 +48,58 @@ def process_yamls(name, directory, obj):
 
     for y in yamls:
         if 'metadata' in y:
-            if 'labels' in y['metadata']:
-                if managed_ann in y['metadata']['labels']:
-                    o['spec']['clusterDeploymentSelector']['matchLabels'][managed_ann] = y['metadata']['labels'][managed_ann]
-                    del y['metadata']['labels'][managed_ann]
+            if 'labels' in y['metadata']:       
                 if cluster_platform_ann in y['metadata']['labels']:
-                    o['spec']['clusterDeploymentSelector']['matchLabels'][cluster_platform_ann] = y['metadata']['labels'][cluster_platform_ann]
-                    del y['metadata']['labels'][cluster_platform_ann]
+                    # append to specific object only
+                    if y['metadata']['labels'][cluster_platform_ann] == "aws":
+                        o_aws['spec']['clusterDeploymentSelector']['matchLabels'][cluster_platform_ann] = y['metadata']['labels'][cluster_platform_ann]
+                    if y['metadata']['labels'][cluster_platform_ann] == "gcp":
+                        o_gcp['spec']['clusterDeploymentSelector']['matchLabels'][cluster_platform_ann] = y['metadata']['labels'][cluster_platform_ann]
+            else:
+                o_all['spec']['clusterDeploymentSelector']['matchLabels'][managed_ann] = "true"
 
+        
+
+        # handle patches - patches are for all clouds (for now)
         if 'patch' in y:
-            if not 'patches' in o['spec']:
-                o['spec']['patches'] = []
-            o['spec']['patches'].append(y)
+            # init empty patches
+            if 'patches' not in o_all['spec']:
+                o_all['spec']['patches'] = []
+            o_all['spec']['patches'].append(y)
+        # handle resources
         else:
-            if not 'resources' in o['spec']:
-                o['spec']['resources'] = []
-            o['spec']['resources'].append(y)
+            # init empty resources
+            if 'resources' not in o_all['spec']:
+                o_all['spec']['resources'] = []
+            if 'resources' not in o_gcp['spec']:
+                o_gcp['spec']['resources'] = []
+            if 'resources' not in o_aws['spec']:
+                o_aws['spec']['resources'] = []
 
-    o['metadata']['name'] = name
-    # append object to the template's objects
-    template_data['objects'].append(o)
+            # append to right object
+            if "labels" in y['metadata'] and cluster_platform_ann in y['metadata']['labels']:
+                # append to specific object only
+                if y['metadata']['labels'][cluster_platform_ann] == "aws":
+                    o_aws['spec']['resources'].append(y)
+                if y['metadata']['labels'][cluster_platform_ann] == "gcp":
+                     o_gcp['spec']['resources'].append(y)
+            else:
+                o_all['spec']['resources'].append(y)
+           
+    o_aws['metadata']['name'] = name+"-aws"
+    o_gcp['metadata']['name'] = name+"-gcp"
+    o_all['metadata']['name'] = name
+
+    # append to right template   
+    if "patches" in o_all['spec'] and len(o_all['spec']['patches']) > 0:
+        template_data['objects'].append(o_aws)
+
+    if "resources" in o_aws['spec'] and len(o_aws['spec']['resources']) > 0:
+        template_data['objects'].append(o_aws)
+    if "resources" in o_gcp['spec'] and len(o_gcp['spec']['resources']) > 0:
+        template_data['objects'].append(o_gcp)
+    if "resources" in o_all['spec'] and len(o_all['spec']['resources']) > 0:
+        template_data['objects'].append(o_all)
 
 
 if __name__ == '__main__':

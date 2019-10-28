@@ -75,7 +75,7 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: REPLACED_BY_SCRIPT
+    name: osd-oauth-templates-errors
   spec:
     clusterDeploymentSelector:
       matchLabels:
@@ -97,7 +97,7 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: REPLACED_BY_SCRIPT
+    name: managed-velero-operator-aws
   spec:
     clusterDeploymentSelector:
       matchLabels:
@@ -109,7 +109,8 @@ objects:
       kind: CustomResourceDefinition
       metadata:
         name: veleros.managed.openshift.io
-        labels: {}
+        labels:
+          hive.openshift.io/cluster-platform: aws
       spec:
         additionalPrinterColumns:
         - JSONPath: .status.s3Bucket.name
@@ -185,19 +186,22 @@ objects:
         name: openshift-velero
         labels:
           openshift.io/cluster-monitoring: 'true'
+          hive.openshift.io/cluster-platform: aws
     - apiVersion: v1
       kind: ServiceAccount
       metadata:
         name: managed-velero-operator
         namespace: openshift-velero
-        labels: {}
+        labels:
+          hive.openshift.io/cluster-platform: aws
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
         creationTimestamp: null
         name: managed-velero-operator
         namespace: openshift-velero
-        labels: {}
+        labels:
+          hive.openshift.io/cluster-platform: aws
       rules:
       - apiGroups:
         - apiextensions.k8s.io
@@ -219,7 +223,8 @@ objects:
         creationTimestamp: null
         name: managed-velero-operator
         namespace: openshift-velero
-        labels: {}
+        labels:
+          hive.openshift.io/cluster-platform: aws
       rules:
       - apiGroups:
         - ''
@@ -294,25 +299,10 @@ objects:
       kind: Role
       metadata:
         creationTimestamp: null
-        name: cluster-config-v1-reader
-        namespace: kube-system
-        labels: {}
-      rules:
-      - apiGroups:
-        - ''
-        resourceNames:
-        - cluster-config-v1
-        resources:
-        - configmaps
-        verbs:
-        - get
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: Role
-      metadata:
-        creationTimestamp: null
         name: prometheus-k8s
         namespace: openshift-velero
-        labels: {}
+        labels:
+          hive.openshift.io/cluster-platform: aws
       rules:
       - apiGroups:
         - ''
@@ -329,7 +319,8 @@ objects:
       metadata:
         name: managed-velero-operator
         namespace: openshift-velero
-        labels: {}
+        labels:
+          hive.openshift.io/cluster-platform: aws
       subjects:
       - kind: ServiceAccount
         name: managed-velero-operator
@@ -343,7 +334,8 @@ objects:
       metadata:
         name: managed-velero-operator
         namespace: openshift-velero
-        labels: {}
+        labels:
+          hive.openshift.io/cluster-platform: aws
       subjects:
       - kind: ServiceAccount
         name: managed-velero-operator
@@ -360,6 +352,7 @@ objects:
         labels:
           owner: managed-velero-operator
           owner.namespace: managed-velero-operator
+          hive.openshift.io/cluster-platform: aws
       subjects:
       - kind: ServiceAccount
         name: managed-velero-operator
@@ -373,7 +366,8 @@ objects:
       metadata:
         name: prometheus-k8s
         namespace: openshift-velero
-        labels: {}
+        labels:
+          hive.openshift.io/cluster-platform: aws
       subjects:
       - kind: ServiceAccount
         name: prometheus-k8s
@@ -387,12 +381,14 @@ objects:
       metadata:
         name: velero
         namespace: openshift-velero
-        labels: {}
+        labels:
+          hive.openshift.io/cluster-platform: aws
     - kind: ClusterRoleBinding
       apiVersion: rbac.authorization.k8s.io/v1
       metadata:
         name: velero
-        labels: {}
+        labels:
+          hive.openshift.io/cluster-platform: aws
       subjects:
       - kind: ServiceAccount
         name: velero
@@ -406,7 +402,8 @@ objects:
       metadata:
         name: managed-velero-operator-iam-credentials
         namespace: openshift-velero
-        labels: {}
+        labels:
+          hive.openshift.io/cluster-platform: aws
       spec:
         secretRef:
           name: managed-velero-operator-iam-credentials
@@ -429,7 +426,8 @@ objects:
       metadata:
         name: managed-velero-operator
         namespace: openshift-velero
-        labels: {}
+        labels:
+          hive.openshift.io/cluster-platform: aws
       spec:
         replicas: 1
         selector:
@@ -460,7 +458,36 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: REPLACED_BY_SCRIPT
+    name: managed-velero-operator
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+    resourceApplyMode: sync
+    resources:
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        creationTimestamp: null
+        name: cluster-config-v1-reader
+        namespace: kube-system
+      rules:
+      - apiGroups:
+        - ''
+        resourceNames:
+        - cluster-config-v1
+        resources:
+        - configmaps
+        verbs:
+        - get
+- apiVersion: hive.openshift.io/v1alpha1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: cluster-monitoring-config-aws
   spec:
     clusterDeploymentSelector:
       matchLabels:
@@ -473,7 +500,8 @@ objects:
       metadata:
         name: cluster-monitoring-config
         namespace: openshift-monitoring
-        labels: {}
+        labels:
+          hive.openshift.io/cluster-platform: aws
       data:
         config.yaml: "prometheusK8s:\n  retention: 15d\n  volumeClaimTemplate:\n \
           \   metadata:\n      name: prometheus-data\n    spec:\n      storageClassName:\
@@ -488,20 +516,29 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: REPLACED_BY_SCRIPT
+    name: cluster-monitoring-config-gcp
   spec:
     clusterDeploymentSelector:
       matchLabels:
         api.openshift.com/managed: 'true'
+        hive.openshift.io/cluster-platform: gcp
     resourceApplyMode: sync
-    patches:
-    - apiVersion: config.openshift.io/v1
-      applyMode: ApplyOnce
-      kind: OAuth
-      name: cluster
-      patch: '{"spec":{"templates": {"login": {"name": "osd-oauth-templates-login"},"providerSelection":
-        {"name": "osd-oauth-templates-providers"},"error": {"name": "osd-oauth-templates-errors"}}}}'
-      patchType: merge
+    resources:
+    - apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: cluster-monitoring-config
+        namespace: openshift-monitoring
+        labels:
+          hive.openshift.io/cluster-platform: gcp
+      data:
+        config.yaml: "prometheusK8s:\n  retention: 15d\n  volumeClaimTemplate:\n \
+          \   metadata:\n      name: prometheus-data\n    spec:\n      storageClassName:\
+          \ standard\n      resources:\n        requests:\n          storage: 50Gi\n\
+          alertmanagerMain:\n  volumeClaimTemplate:\n    metadata:\n      name: alertmanager-data\n\
+          \    spec:\n      storageClassName: standard\n      resources:\n       \
+          \ requests:\n          storage: 10Gi\ntelemeterClient:\n  telemeterServerURL:\
+          \ ${TELEMETER_SERVER_URL}\n"
 - apiVersion: hive.openshift.io/v1alpha1
   kind: SelectorSyncSet
   metadata:
@@ -509,7 +546,20 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: REPLACED_BY_SCRIPT
+    name: osd-oauth-templates-aws
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+    resourceApplyMode: sync
+- apiVersion: hive.openshift.io/v1alpha1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-codeready-workspaces
   spec:
     clusterDeploymentSelector:
       matchLabels:
@@ -532,7 +582,6 @@ objects:
           olm.providedAPIs: ClusterLogging.v1.logging.openshift.io
         name: openshift-codeready-workspaces
         namespace: openshift-codeready-workspaces
-        labels: {}
       spec:
         serviceAccount:
           metadata:
@@ -544,7 +593,6 @@ objects:
       metadata:
         name: dedicated-admins-openshift-codeready-workspaces
         namespace: openshift-codeready-workspaces
-        labels: {}
       rules:
       - apiGroups:
         - ''
@@ -593,7 +641,6 @@ objects:
       metadata:
         name: dedicated-admins-openshift-codeready-workspaces
         namespace: openshift-codeready-workspaces
-        labels: {}
       subjects:
       - kind: Group
         name: dedicated-admins
@@ -608,7 +655,7 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: REPLACED_BY_SCRIPT
+    name: velero-configuration-aws
   spec:
     clusterDeploymentSelector:
       matchLabels:
@@ -621,13 +668,15 @@ objects:
       metadata:
         name: cluster
         namespace: openshift-velero
-        labels: {}
+        labels:
+          hive.openshift.io/cluster-platform: aws
     - apiVersion: velero.io/v1
       kind: Schedule
       metadata:
         name: daily-full-backup
         namespace: openshift-velero
-        labels: {}
+        labels:
+          hive.openshift.io/cluster-platform: aws
       spec:
         schedule: 0 1 * * *
         template:
@@ -648,7 +697,8 @@ objects:
       metadata:
         name: hourly-object-backup
         namespace: openshift-velero
-        labels: {}
+        labels:
+          hive.openshift.io/cluster-platform: aws
       spec:
         schedule: 17 * * * *
         template:
@@ -670,7 +720,8 @@ objects:
       metadata:
         name: weekly-full-backup
         namespace: openshift-velero
-        labels: {}
+        labels:
+          hive.openshift.io/cluster-platform: aws
       spec:
         schedule: 0 2 * * 1
         template:
@@ -693,7 +744,7 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: REPLACED_BY_SCRIPT
+    name: sre-authorization
   spec:
     clusterDeploymentSelector:
       matchLabels:
@@ -704,7 +755,6 @@ objects:
       kind: ClusterRoleBinding
       metadata:
         name: osd-sre-cluster-admins
-        labels: {}
       roleRef:
         apiGroup: rbac.authorization.k8s.io
         kind: ClusterRole
@@ -716,13 +766,11 @@ objects:
       kind: Group
       metadata:
         name: osd-sre-cluster-admins
-        labels: {}
       users: []
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
         name: osd-sre-admin
-        labels: {}
       rules:
       - apiGroups:
         - '*'
@@ -858,7 +906,6 @@ objects:
       kind: ClusterRoleBinding
       metadata:
         name: osd-sre-admin
-        labels: {}
       roleRef:
         apiGroup: rbac.authorization.k8s.io
         kind: ClusterRole
@@ -923,7 +970,6 @@ objects:
       metadata:
         name: osd-ldap-ca-configmap
         namespace: openshift-config
-        labels: {}
 - apiVersion: hive.openshift.io/v1alpha1
   kind: SelectorSyncSet
   metadata:
@@ -931,7 +977,7 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: REPLACED_BY_SCRIPT
+    name: osd-console-branding
   spec:
     clusterDeploymentSelector:
       matchLabels:
@@ -942,7 +988,6 @@ objects:
       kind: Console
       metadata:
         name: cluster
-        labels: {}
       spec:
         managementState: Managed
         authentication:
@@ -957,7 +1002,21 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: REPLACED_BY_SCRIPT
+    name: resource-quotas-aws
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+    resourceApplyMode: sync
+    resources: []
+- apiVersion: hive.openshift.io/v1alpha1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: resource-quotas
   spec:
     clusterDeploymentSelector:
       matchLabels:
@@ -1014,7 +1073,7 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: REPLACED_BY_SCRIPT
+    name: sre-pruning
   spec:
     clusterDeploymentSelector:
       matchLabels:
@@ -1025,18 +1084,15 @@ objects:
       kind: Namespace
       metadata:
         name: openshift-sre-pruning
-        labels: {}
     - apiVersion: v1
       kind: ServiceAccount
       metadata:
         name: sre-pruner-sa
         namespace: openshift-sre-pruning
-        labels: {}
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRoleBinding
       metadata:
         name: sre-pruner-images
-        labels: {}
       roleRef:
         kind: ClusterRole
         name: system:image-pruner
@@ -1049,7 +1105,6 @@ objects:
       kind: ClusterRole
       metadata:
         name: sre-pruner-buildsdeploys-cr
-        labels: {}
       rules:
       - apiGroups:
         - ''
@@ -1090,7 +1145,6 @@ objects:
       kind: ClusterRoleBinding
       metadata:
         name: sre-pruner-buildsdeploys-pruning
-        labels: {}
       roleRef:
         kind: ClusterRole
         name: sre-pruner-buildsdeploys-cr
@@ -1104,7 +1158,6 @@ objects:
       metadata:
         name: builds-pruner
         namespace: openshift-sre-pruning
-        labels: {}
       spec:
         failedJobsHistoryLimit: 5
         successfulJobsHistoryLimit: 3
@@ -1134,7 +1187,6 @@ objects:
       metadata:
         name: deployments-pruner
         namespace: openshift-sre-pruning
-        labels: {}
       spec:
         failedJobsHistoryLimit: 5
         successfulJobsHistoryLimit: 3
@@ -1164,7 +1216,6 @@ objects:
       metadata:
         name: image-pruner
         namespace: openshift-sre-pruning
-        labels: {}
       spec:
         failedJobsHistoryLimit: 5
         successfulJobsHistoryLimit: 3
@@ -1194,44 +1245,12 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: REPLACED_BY_SCRIPT
+    name: osd-curated-operators-aws
   spec:
     clusterDeploymentSelector:
       matchLabels:
         api.openshift.com/managed: 'true'
     resourceApplyMode: sync
-    patches:
-    - apiVersion: config.openshift.io/v1
-      applyMode: AlwaysApply
-      kind: ClusterVersion
-      name: version
-      patch: '{ "spec": { "overrides": [ { "kind": "OperatorSource", "name": "redhat-operators",
-        "namespace": "openshift-marketplace", "unmanaged": true }, { "kind": "OperatorSource",
-        "name": "certified-operators", "namespace": "openshift-marketplace", "unmanaged":
-        true }, { "kind": "OperatorSource", "name": "community-operators", "namespace":
-        "openshift-marketplace", "unmanaged": true } ] } }'
-      patchType: merge
-    - apiVersion: operators.coreos.com/v1
-      applyMode: AlwaysApply
-      kind: OperatorSource
-      name: certified-operators
-      namespace: openshift-marketplace
-      patch: '{ "spec": { "registryNamespace": "curated-certified-operators" } }'
-      patchType: merge
-    - apiVersion: operators.coreos.com/v1
-      applyMode: AlwaysApply
-      kind: OperatorSource
-      name: community-operators
-      namespace: openshift-marketplace
-      patch: '{ "spec": { "registryNamespace": "curated-community-operators" } }'
-      patchType: merge
-    - apiVersion: operators.coreos.com/v1
-      applyMode: AlwaysApply
-      kind: OperatorSource
-      name: redhat-operators
-      namespace: openshift-marketplace
-      patch: '{ "spec": { "registryNamespace": "curated-redhat-operators" } }'
-      patchType: merge
 - apiVersion: hive.openshift.io/v1alpha1
   kind: SelectorSyncSet
   metadata:
@@ -1239,7 +1258,7 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: REPLACED_BY_SCRIPT
+    name: osd-oauth-templates-login
   spec:
     clusterDeploymentSelector:
       matchLabels:
@@ -1261,12 +1280,88 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: REPLACED_BY_SCRIPT
+    name: sre-prometheus-aws
   spec:
     clusterDeploymentSelector:
       matchLabels:
         api.openshift.com/managed: 'true'
         hive.openshift.io/cluster-platform: aws
+    resourceApplyMode: sync
+    resources:
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
+          prometheus: sre-ebs-iops-burstbalance
+          role: alert-rules
+          hive.openshift.io/cluster-platform: aws
+        name: sre-ebs-iops-burstbalance
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-ebs-iops-burstbalance
+          rules:
+          - alert: EbsVolumeBurstBalanceLT40PctSRE
+            expr: avg(ebs_iops_credits) < 40
+            for: 60m
+            labels:
+              severity: warning
+              namespace: openshift-monitoring
+          - alert: EbsVolumeBurstBalanceLT20PctSRE
+            expr: avg(ebs_iops_credits) < 20
+            for: 60m
+            labels:
+              severity: critical
+              namespace: openshift-monitoring
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
+          prometheus: sre-alerts-stuck-volumes
+          role: alert-rules
+          hive.openshift.io/cluster-platform: aws
+        name: sre-alerts-stuck-volumes
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-alerts-stuck-volumes
+          rules:
+          - alert: EbsVolumeStuckAttaching5MinSRE
+            expr: min_over_time(ebs_volume_state{ebs_volume_state="attaching"}[5m])
+              == 1
+            labels:
+              severity: warning
+              namespace: openshift-monitoring
+          - alert: EbsVolumeStuckAttaching10MinSRE
+            expr: min_over_time(ebs_volume_state{ebs_volume_state="attaching"}[10m])
+              == 1
+            labels:
+              severity: critical
+              namespace: openshift-monitoring
+          - alert: EbsVolumeStuckDetaching5MinSRE
+            expr: min_over_time(ebs_volume_state{ebs_volume_state="detaching"}[5m])
+              == 1
+            labels:
+              severity: warning
+              namespace: openshift-monitoring
+          - alert: EbsVolumeStuckDetaching10MinSRE
+            expr: min_over_time(ebs_volume_state{ebs_volume_state="detaching"}[10m])
+              == 1
+            labels:
+              severity: critical
+              namespace: openshift-monitoring
+- apiVersion: hive.openshift.io/v1alpha1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: sre-prometheus
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
     resourceApplyMode: sync
     resources:
     - apiVersion: monitoring.coreos.com/v1
@@ -1399,30 +1494,6 @@ objects:
               namespace: openshift-monitoring
           - alert: DNSErrors05MinSRE
             expr: rate(dns_failure_failure_total[5m]) > 0
-            labels:
-              severity: critical
-              namespace: openshift-monitoring
-    - apiVersion: monitoring.coreos.com/v1
-      kind: PrometheusRule
-      metadata:
-        labels:
-          prometheus: sre-ebs-iops-burstbalance
-          role: alert-rules
-        name: sre-ebs-iops-burstbalance
-        namespace: openshift-monitoring
-      spec:
-        groups:
-        - name: sre-ebs-iops-burstbalance
-          rules:
-          - alert: EbsVolumeBurstBalanceLT40PctSRE
-            expr: avg(ebs_iops_credits) < 40
-            for: 60m
-            labels:
-              severity: warning
-              namespace: openshift-monitoring
-          - alert: EbsVolumeBurstBalanceLT20PctSRE
-            expr: avg(ebs_iops_credits) < 20
-            for: 60m
             labels:
               severity: critical
               namespace: openshift-monitoring
@@ -1605,42 +1676,6 @@ objects:
       kind: PrometheusRule
       metadata:
         labels:
-          prometheus: sre-alerts-stuck-volumes
-          role: alert-rules
-        name: sre-alerts-stuck-volumes
-        namespace: openshift-monitoring
-      spec:
-        groups:
-        - name: sre-alerts-stuck-volumes
-          rules:
-          - alert: EbsVolumeStuckAttaching5MinSRE
-            expr: min_over_time(ebs_volume_state{ebs_volume_state="attaching"}[5m])
-              == 1
-            labels:
-              severity: warning
-              namespace: openshift-monitoring
-          - alert: EbsVolumeStuckAttaching10MinSRE
-            expr: min_over_time(ebs_volume_state{ebs_volume_state="attaching"}[10m])
-              == 1
-            labels:
-              severity: critical
-              namespace: openshift-monitoring
-          - alert: EbsVolumeStuckDetaching5MinSRE
-            expr: min_over_time(ebs_volume_state{ebs_volume_state="detaching"}[5m])
-              == 1
-            labels:
-              severity: warning
-              namespace: openshift-monitoring
-          - alert: EbsVolumeStuckDetaching10MinSRE
-            expr: min_over_time(ebs_volume_state{ebs_volume_state="detaching"}[10m])
-              == 1
-            labels:
-              severity: critical
-              namespace: openshift-monitoring
-    - apiVersion: monitoring.coreos.com/v1
-      kind: PrometheusRule
-      metadata:
-        labels:
           prometheus: sre-telemeter-client
           role: alert-rules
         name: sre-telemeter-client
@@ -1663,7 +1698,7 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: REPLACED_BY_SCRIPT
+    name: osd-logging
   spec:
     clusterDeploymentSelector:
       matchLabels:
@@ -1688,7 +1723,6 @@ objects:
           olm.providedAPIs: ClusterLogging.v1.logging.openshift.io
         name: openshift-logging
         namespace: openshift-logging
-        labels: {}
       spec:
         serviceAccount:
           metadata:
@@ -1789,13 +1823,11 @@ objects:
       metadata:
         name: curator
         namespace: openshift-logging
-        labels: {}
     - apiVersion: v1
       kind: ResourceQuota
       metadata:
         name: logging-storage-quota
         namespace: openshift-logging
-        labels: {}
       spec:
         hard:
           requests.storage: 600Gi
@@ -1804,7 +1836,6 @@ objects:
       metadata:
         name: dedicated-admins-openshift-logging
         namespace: openshift-logging
-        labels: {}
       rules:
       - apiGroups:
         - ''
@@ -1841,7 +1872,6 @@ objects:
       metadata:
         name: dedicated-admins-openshift-logging
         namespace: openshift-logging
-        labels: {}
       subjects:
       - kind: Group
         name: dedicated-admins
@@ -1856,7 +1886,21 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: REPLACED_BY_SCRIPT
+    name: kubelet-config-aws
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+    resourceApplyMode: sync
+    resources: []
+- apiVersion: hive.openshift.io/v1alpha1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: kubelet-config
   spec:
     clusterDeploymentSelector:
       matchLabels:
@@ -1882,7 +1926,6 @@ objects:
       kind: KubeletConfig
       metadata:
         name: custom-kubelet
-        labels: {}
       spec:
         machineConfigPoolSelector:
           matchLabels:
@@ -1898,7 +1941,7 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: REPLACED_BY_SCRIPT
+    name: osd-oauth-templates-providers
   spec:
     clusterDeploymentSelector:
       matchLabels:
@@ -1920,7 +1963,7 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: REPLACED_BY_SCRIPT
+    name: osd-customer-monitoring
   spec:
     clusterDeploymentSelector:
       matchLabels:
@@ -2009,16 +2052,9 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: REPLACED_BY_SCRIPT
+    name: osd-registry-aws
   spec:
     clusterDeploymentSelector:
       matchLabels:
         api.openshift.com/managed: 'true'
     resourceApplyMode: sync
-    patches:
-    - apiVersion: imageregistry.operator.openshift.io/v1
-      applyMode: ApplyOnce
-      kind: Config
-      name: cluster
-      patch: '{"spec":{"defaultRoute":true}}'
-      patchType: merge

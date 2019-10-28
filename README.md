@@ -21,6 +21,8 @@ To add a new SelectorSyncSet:
   # Target All clouds
   labels:
     api.openshift.com/managed: "true"
+
+  OR no labels at all
 ```
 3. Run the `make` command.
 
