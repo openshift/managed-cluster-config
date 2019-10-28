@@ -27,17 +27,315 @@ parameters:
 metadata:
   name: selectorsyncset-template
 objects:
-# replace old SSS w/ nothing so we don't have manual cleanup to do
+# HACK to manage quota for service lb and storage
 - apiVersion: hive.openshift.io/v1alpha1
   kind: SelectorSyncSet
   metadata:
-    name: osd-managed-cluster-config
+    name: resource-quota-storage-default
+  spec:
+    clusterDeploymentSelector:
+      matchExpressions:
+      - key: api.openshift.com/managed
+        operator: In
+        values: 
+        - "true"
+      - key: api.openshift.com/storage-quota-gb
+        operator: DoesNotExist
+    resourceApplyMode: sync
+    resources: 
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: persistent-volume-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/storage-pv-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            requests.storage: "100Gi"
+- apiVersion: hive.openshift.io/v1alpha1
+  kind: SelectorSyncSet
+  metadata:
+    name: resource-quota-storage-100gb
   spec:
     clusterDeploymentSelector:
       matchLabels:
         api.openshift.com/managed: "true"
+        api.openshift.com/storage-quota-gb: "100"
     resourceApplyMode: sync
-    resources: []
+    resources: 
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: persistent-volume-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/storage-pv-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            requests.storage: "100Gi"
+- apiVersion: hive.openshift.io/v1alpha1
+  kind: SelectorSyncSet
+  metadata:
+    name: resource-quota-storage-600gb
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: "true"
+        api.openshift.com/storage-quota-gb: "600"
+    resourceApplyMode: sync
+    resources: 
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: persistent-volume-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/storage-pv-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            requests.storage: "600Gi"
+- apiVersion: hive.openshift.io/v1alpha1
+  kind: SelectorSyncSet
+  metadata:
+    name: resource-quota-storage-1100gb
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: "true"
+        api.openshift.com/storage-quota-gb: "1100"
+    resourceApplyMode: sync
+    resources: 
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: persistent-volume-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/storage-pv-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            requests.storage: "1100Gi"
+- apiVersion: hive.openshift.io/v1alpha1
+  kind: SelectorSyncSet
+  metadata:
+    name: resource-quota-storage-1600gb
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: "true"
+        api.openshift.com/storage-quota-gb: "1600"
+    resourceApplyMode: sync
+    resources: 
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: persistent-volume-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/storage-pv-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            requests.storage: "1600Gi"
+- apiVersion: hive.openshift.io/v1alpha1
+  kind: SelectorSyncSet
+  metadata:
+    name: resource-quota-storage-2100gb
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: "true"
+        api.openshift.com/storage-quota-gb: "2100"
+    resourceApplyMode: sync
+    resources: 
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: persistent-volume-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/storage-pv-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            requests.storage: "2100Gi"
+- apiVersion: hive.openshift.io/v1alpha1
+  kind: SelectorSyncSet
+  metadata:
+    name: resource-quota-service-lb-default
+  spec:
+    clusterDeploymentSelector:
+      matchExpressions:
+      - key: api.openshift.com/managed
+        operator: In
+        values: 
+        - "true"
+      - key: api.openshift.com/service-lb-quota
+        operator: DoesNotExist
+    resourceApplyMode: sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: loadbalancer-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/service-lb-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            services.loadbalancers: "0"
+- apiVersion: hive.openshift.io/v1alpha1
+  kind: SelectorSyncSet
+  metadata:
+    name: resource-quota-service-lb-0
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: "true"
+        api.openshift.com/service-lb-quota: "0"
+    resourceApplyMode: sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: loadbalancer-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/service-lb-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            services.loadbalancers: "0"
+- apiVersion: hive.openshift.io/v1alpha1
+  kind: SelectorSyncSet
+  metadata:
+    name: resource-quota-service-lb-1
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: "true"
+        api.openshift.com/service-lb-quota: "1"
+    resourceApplyMode: sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: loadbalancer-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/service-lb-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            services.loadbalancers: "1"
+- apiVersion: hive.openshift.io/v1alpha1
+  kind: SelectorSyncSet
+  metadata:
+    name: resource-quota-service-lb-2
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: "true"
+        api.openshift.com/service-lb-quota: "2"
+    resourceApplyMode: sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: loadbalancer-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/service-lb-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            services.loadbalancers: "2"
+- apiVersion: hive.openshift.io/v1alpha1
+  kind: SelectorSyncSet
+  metadata:
+    name: resource-quota-service-lb-3
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: "true"
+        api.openshift.com/service-lb-quota: "3"
+    resourceApplyMode: sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: loadbalancer-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/service-lb-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            services.loadbalancers: "3"
+- apiVersion: hive.openshift.io/v1alpha1
+  kind: SelectorSyncSet
+  metadata:
+    name: resource-quota-service-lb-4
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: "true"
+        api.openshift.com/service-lb-quota: "4"
+    resourceApplyMode: sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: loadbalancer-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/service-lb-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            services.loadbalancers: "4"
 # the SelectorSyncIdentityProvider is not something you can oc apply in-cluster, so is not created in `deploy/`
 - apiVersion: hive.openshift.io/v1alpha1
   kind: SelectorSyncIdentityProvider
