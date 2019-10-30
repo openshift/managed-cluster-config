@@ -25,7 +25,7 @@ $(error GEN_SYNCSET is not set; check project.mk file)
 endif
 
 .PHONY: default
-default: clean resource-quotas generate-syncset
+default: clean generate-syncset
 
 .PHONY: generate-oauth-templates
 generate-oauth-templates:
@@ -47,11 +47,6 @@ generate-syncset: generate-oauth-templates
 .PHONY: clean
 clean:
 	rm -rf ${SELECTOR_SYNC_SET_DESTINATION}
-	@$(MAKE) --directory=deploy/resource-quotas clean
-
-.PHONY: resource-quotas
-resource-quotas:
-	@$(MAKE) --directory=deploy/resource-quotas clean all
 
 .PHONY: git-commit
 git-commit:
