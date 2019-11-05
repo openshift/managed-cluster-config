@@ -139,7 +139,10 @@ upgrade() {
         log $OCM_NAME "upgrade" "upgrading from $FROM to $TO"
 
         oc -n $CD_NAMESPACE extract "$(oc -n $CD_NAMESPACE get secrets -o name | grep $CD_NAME | grep kubeconfig)" --keys=kubeconfig --to=- > ${TMP_DIR}/kubeconfig-${CD_NAMESPACE}
+        CHANNEL_NAME=$(get_channel $TO)
 
+        KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc patch clusterversion version --type merge -p "{\"spec\":{\"channel\": \"$CHANNEL_NAME\"}}"
+        sleep 15
         KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc patch clusterversion version --type merge -p "{\"spec\":{\"desiredUpdate\": {\"version\": \"$TO\"}}}"
     fi
 
