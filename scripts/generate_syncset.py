@@ -34,8 +34,11 @@ def get_all_yaml_obj(file_paths):
             yaml_objs.append(obj)
     return yaml_objs
 
-def process_yamls(name, directory, obj):
+def process_yamls(name, directory, obj, sss_mode="sync"):
     o = copy.deepcopy(obj)
+    
+    # Set the SSS mode, the default value is sync
+    o['spec']['resourceApplyMode'] = sss_mode 
     # Get all yaml files as array of yaml objects
     yamls = get_all_yaml_obj(get_all_yaml_files(directory))
     if len(yamls) == 0:
@@ -77,6 +80,9 @@ if __name__ == '__main__':
 
     # for each subdir of yaml_directory append 'object' to template
     for (dirpath, dirnames, filenames) in os.walk(arguments.yaml_directory):
+        if "UPSERT" in dirpath:
+            continue
+
         if filenames:
             sss_name = dirpath.replace('/','-')
             if sss_name == arguments.yaml_directory:
@@ -86,6 +92,13 @@ if __name__ == '__main__':
                 # SSS name is based on dirpath which has the root path prefixed.. remove that prefix
                 sss_name = sss_name[(len(arguments.yaml_directory) + 1):]
             process_yamls(sss_name, dirpath, selectorsyncset_data)
+
+    # SSSs under the UPSERT folder will have the upsert resourceApplyMode, instead of the default type "sync"
+    for (dirpath, dirnames, filenames) in os.walk(arguments.yaml_directory + "/UPSERT/"):
+        if filenames:
+            sss_name = dirpath.split('/')[-1]
+            process_yamls(sss_name, dirpath, selectorsyncset_data, "upsert")
+
 
     # write template file ordering by keys
     with open(arguments.destination,'w') as outfile:
