@@ -7,6 +7,8 @@ import sys
 import argparse
 import copy
 
+cluster_platform_ann = "hive.openshift.io/cluster-platform"
+
 def get_yaml_all(filename):
     with open(filename,'r') as input_file:
         return list(yaml.safe_load_all(input_file))
@@ -34,11 +36,16 @@ def get_all_yaml_obj(file_paths):
             yaml_objs.append(obj)
     return yaml_objs
 
-def process_yamls(name, directory, obj, sss_mode="sync"):
+def process_yamls(name, directory, obj, platform="", sss_mode="sync"):
     o = copy.deepcopy(obj)
-    
+
     # Set the SSS mode, the default value is sync
-    o['spec']['resourceApplyMode'] = sss_mode 
+    o['spec']['resourceApplyMode'] = sss_mode
+
+    # Set the platform label if one is specified
+    if platform in ("aws", "gcp"):
+        o['spec']['clusterDeploymentSelector']['matchLabels'][cluster_platform_ann] = platform
+
     # Get all yaml files as array of yaml objects
     yamls = get_all_yaml_obj(get_all_yaml_files(directory))
     if len(yamls) == 0:
@@ -80,10 +87,18 @@ if __name__ == '__main__':
 
     # for each subdir of yaml_directory append 'object' to template
     for (dirpath, dirnames, filenames) in os.walk(arguments.yaml_directory):
-        if "UPSERT" in dirpath:
-            continue
-
         if filenames:
+
+            sss_mode = "sync"
+            if "UPSERT/" in dirpath:
+                sss_mode = "upsert"
+
+            platform = ""
+            if "/gcp" in dirpath:
+                platform = "gcp"
+            if "/aws" in dirpath:
+                platform = "aws"
+
             sss_name = dirpath.replace('/','-')
             if sss_name == arguments.yaml_directory:
                 # files in the root dir, use repo-name for SSS name
@@ -91,13 +106,10 @@ if __name__ == '__main__':
             else:
                 # SSS name is based on dirpath which has the root path prefixed.. remove that prefix
                 sss_name = sss_name[(len(arguments.yaml_directory) + 1):]
-            process_yamls(sss_name, dirpath, selectorsyncset_data)
+                if sss_name.startswith("UPSERT-"):
+                    sss_name = sss_name[7:]
 
-    # SSSs under the UPSERT folder will have the upsert resourceApplyMode, instead of the default type "sync"
-    for (dirpath, dirnames, filenames) in os.walk(arguments.yaml_directory + "/UPSERT/"):
-        if filenames:
-            sss_name = dirpath.split('/')[-1]
-            process_yamls(sss_name, dirpath, selectorsyncset_data, "upsert")
+            process_yamls(sss_name, dirpath, selectorsyncset_data, platform=platform, sss_mode=sss_mode)
 
 
     # write template file ordering by keys
