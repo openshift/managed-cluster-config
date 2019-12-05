@@ -1,0 +1,223 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  annotations:
+    authorization.openshift.io/system-only: "true"
+  name: dedicated-admins-cluster
+rules:
+- apiGroups:
+  - rbac.authorization.k8s.io
+  attributeRestrictions: null
+  resources:
+  - clusterrolebindings
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  - oauth.openshift.io
+  attributeRestrictions: null
+  resources:
+  - oauthclientauthorizations
+  verbs:
+  - delete
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  - authorization.openshift.io
+  attributeRestrictions: null
+  resources:
+  - resourceaccessreviews
+  - subjectaccessreviews
+  verbs:
+  - create
+- apiGroups:
+  - authorization.k8s.io
+  attributeRestrictions: null
+  resources:
+  - subjectaccessreviews
+  verbs:
+  - create
+- apiGroups:
+  - ""
+  - project.openshift.io
+  attributeRestrictions: null
+  resources:
+  - projectrequests
+  verbs:
+  - create
+- apiGroups:
+  - ""
+  attributeRestrictions: null
+  resources:
+  - nodes
+  - persistentvolumes
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  - security.openshift.io
+  attributeRestrictions: null
+  resources:
+  - securitycontextconstraints
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  - quota.openshift.io
+  attributeRestrictions: null
+  resources:
+  - clusterresourcequotas
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  - authorization.openshift.io
+  attributeRestrictions: null
+  resources:
+  - clusterpolicybindings
+  verbs:
+  - get
+  - list
+- apiGroups:
+  - ""
+  - network.openshift.io
+  attributeRestrictions: null
+  resources:
+  - netnamespaces
+  verbs:
+  - get
+  - list
+  - update
+### BEGIN - customer can use monitoring web applications
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  verbs:
+  - get
+### END - customer can use monitoring web applications
+### BEGIN - customer can see project status (nice UX from use monitoring web applications)
+- apiGroups:
+  - build.openshift.io
+  resources:
+  - builds
+  - buildconfigs
+  verbs:
+  - list
+- apiGroups:
+  - apps
+  resources:
+  - daemonsets
+  - deployments
+  - replicasets
+  - statefulsets
+  verbs:
+  - list
+- apiGroups:
+  - apps.openshift.io
+  resources:
+  - deploymentconfigs
+  verbs:
+  - list
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - replicationcontrollers
+  - services
+  verbs:
+  - list
+- apiGroups:
+  - project.openshift.io
+  resources:
+  - projects
+  verbs:
+  - get
+- apiGroups:
+  - route.openshift.io
+  resources:
+  - routes
+  verbs:
+  - list
+  - get # https://jira.coreos.com/browse/SREP-1945
+### END - customer can see project status (nice UX from use monitoring web applications)
+### BEGIN - customer can create verify tokens and access
+- apiGroups:
+  - authentication.k8s.io
+  resources:
+  - tokenreviews
+  verbs:
+  - create
+- apiGroups:
+  - authorization.k8s.io
+  resources:
+  - subjectaccessreviews
+  verbs:
+  - create
+### END - customer can create verify tokens and access
+### BEGIN - customer can view OperatorHub in console
+- apiGroups:
+  - operators.coreos.com
+  - packages.operators.coreos.com
+  resources:
+  - "*"
+  verbs:
+  - list
+  - get
+  - watch
+- apiGroups:
+  - '*' # using package.opeartors.coreos.com does not work
+  resources:
+  - packagemanifests
+  verbs:
+  - list
+### END - customer can view OperatorHub in console
+### START - customer can managed CRs for curated operators
+- apiGroups:
+# AMQ Certificate Manager Operator
+  - certificates.certmanager.k8s.io
+  - issuers.certmanager.k8s.io
+  - clusterissuers.certmanager.k8s.io
+  - orders.certmanager.k8s.io
+  - challenges.certmanager.k8s.io
+# Anchore Engine Operator
+  - anchoreengines.anchore.com
+# AtlasMap Operator
+  - atlasmaps.atlasmap.io
+# Camel K Operator
+  - builds.camel.apache.org
+  - camelcatalogs.camel.apache.org
+  - integrations.camel.apache.org
+  - integrationcontexts.camel.apache.org
+  - integrationplatforms.camel.apache.org
+# Couchbase Operator
+  - couchbaseclusters.couchbase.com
+# Open Liberty Operator
+  - openliberties.openliberty.io
+# Opsmx Spinnaker Operator
+  - opsmxspinnakeroperators.charts.helm.k8s.io
+# Seldon Operator
+  - seldondeployments.machinelearning.seldon.io
+# Spinnaker Operator
+  - spinnakeroperators.charts.helm.k8s.io
+# Twistlock Console Operator
+  - twistlockconsoles.charts.helm.k8s.io
+  resources:
+  - '*'
+  verbs:
+  - '*'
+### END
