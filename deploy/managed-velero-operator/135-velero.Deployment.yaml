@@ -14,6 +14,18 @@ spec:
         name: managed-velero-operator
     spec:
       serviceAccountName: managed-velero-operator
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - preference:
+              matchExpressions:
+              - key: node-role.kubernetes.io/infra
+                operator: Exists
+            weight: 1
+      tolerations:
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/infra
+          operator: Exists
       containers:
         - name: managed-velero-operator
           image: quay.io/openshift-sre/managed-velero-operator:v0.1.53-3ef2ade
