@@ -86,9 +86,12 @@ if __name__ == '__main__':
             p['value'] = arguments.repo_name
 
     # for each subdir of yaml_directory append 'object' to template
+    dirpaths = []
     for (dirpath, dirnames, filenames) in os.walk(arguments.yaml_directory):
         if filenames:
+            dirpaths.append(dirpath)
 
+    for dirpath in sorted(dirpaths):
             sss_mode = "sync"
             if "UPSERT/" in dirpath:
                 sss_mode = "upsert"
