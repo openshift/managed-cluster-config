@@ -86,30 +86,33 @@ if __name__ == '__main__':
             p['value'] = arguments.repo_name
 
     # for each subdir of yaml_directory append 'object' to template
+    dirpaths = []
     for (dirpath, dirnames, filenames) in os.walk(arguments.yaml_directory):
         if filenames:
+            dirpaths.append(dirpath)
 
-            sss_mode = "sync"
-            if "UPSERT/" in dirpath:
-                sss_mode = "upsert"
+    for dirpath in sorted(dirpaths):
+        sss_mode = "sync"
+        if "UPSERT/" in dirpath:
+            sss_mode = "upsert"
 
-            platform = ""
-            if "/gcp" in dirpath:
-                platform = "gcp"
-            if "/aws" in dirpath:
-                platform = "aws"
+        platform = ""
+        if "/gcp" in dirpath:
+            platform = "gcp"
+        if "/aws" in dirpath:
+            platform = "aws"
 
-            sss_name = dirpath.replace('/','-')
-            if sss_name == arguments.yaml_directory:
-                # files in the root dir, use repo-name for SSS name
-                sss_name = arguments.repo_name
-            else:
-                # SSS name is based on dirpath which has the root path prefixed.. remove that prefix
-                sss_name = sss_name[(len(arguments.yaml_directory) + 1):]
-                if sss_name.startswith("UPSERT-"):
-                    sss_name = sss_name[7:]
+        sss_name = dirpath.replace('/','-')
+        if sss_name == arguments.yaml_directory:
+            # files in the root dir, use repo-name for SSS name
+            sss_name = arguments.repo_name
+        else:
+            # SSS name is based on dirpath which has the root path prefixed.. remove that prefix
+            sss_name = sss_name[(len(arguments.yaml_directory) + 1):]
+            if sss_name.startswith("UPSERT-"):
+                sss_name = sss_name[7:]
 
-            process_yamls(sss_name, dirpath, selectorsyncset_data, platform=platform, sss_mode=sss_mode)
+        process_yamls(sss_name, dirpath, selectorsyncset_data, platform=platform, sss_mode=sss_mode)
 
 
     # write template file ordering by keys
