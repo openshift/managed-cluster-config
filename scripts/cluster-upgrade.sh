@@ -157,7 +157,7 @@ setup_maintenance_window() {
             # TODO use a real value.. this would break if nmalik leaves SRE!
             PD_USER_EMAIL=nmalik@redhat.com
 
-            MAINT_MINUTES="40"
+            MAINT_MINUTES="60"
             DATE_FROM=$(date +"%Y-%m-%dT%H:%M:%S%:z")
             DATE_TO=$(date -d "now + $MAINT_MINUTES minutes" +"%Y-%m-%dT%H:%M:%S%:z")
 
