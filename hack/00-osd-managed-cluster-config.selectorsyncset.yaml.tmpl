@@ -3208,6 +3208,12 @@ objects:
       name: cluster
       patch: '{"spec":{"defaultRoute":true}}'
       patchType: merge
+    - apiVersion: imageregistry.operator.openshift.io/v1
+      applyMode: AlwaysApply
+      kind: Config
+      name: cluster
+      patch: '{"spec":{"nodeSelector":{"node-role.kubernetes.io/infra":""},"tolerations":[{"effect":"NoSchedule","key":"node-role.kubernetes.io/infra","operator":"Exists"}]}}'
+      patchType: merge
 - apiVersion: hive.openshift.io/v1alpha1
   kind: SelectorSyncSet
   metadata:
