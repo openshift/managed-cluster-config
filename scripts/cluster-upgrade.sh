@@ -481,7 +481,7 @@ if [[ -n $OCP_VERSION_TO ]];
 then
     # Verify the target version exists as a ClusterImageSet (CIS) on the cluster
     # (if not, the customer could never install to that target version)
-    CIS_VERSION=$(oc get clusterimageset --all-namespaces -o json | jq -r ".items[].spec.releaseImage | split(\":\")[1] | select(. == \"$OCP_VERSION_TO\")")
+    CIS_VERSION=$(oc get clusterimageset -o json | jq -r ".items[].metadata.name | split(\"v\")[1] | select(. == \"$OCP_VERSION_TO\")")
     if [ "$OCP_VERSION_TO" != "$CIS_VERSION" ];
     then
         echo "Cannot upgrade to $OCP_VERSION_TO, it is not available as a ClusterImageSet in the cluster."
