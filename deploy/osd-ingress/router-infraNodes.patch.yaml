@@ -1,0 +1,9 @@
+
+apiVersion: operator.openshift.io/v1
+applyMode: AlwaysApply
+kind: IngressController
+name: default
+namespace: openshift-ingress-operator
+# patch registry to deploy on infras: https://docs.openshift.com/container-platform/4.2/machine_management/creating-infrastructure-machinesets.html#infrastructure-moving-registry_creating-infrastructure-machinesets
+patch: '{"spec":{"nodePlacement":{"nodeSelector":{"matchLabels":{"node-role.kubernetes.io/infra":""}},"tolerations":[{"effect":"NoSchedule","key":"node-role.kubernetes.io/infra","operator":"Exists"}]}}}'
+patchType: merge 
