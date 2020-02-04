@@ -2830,6 +2830,27 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: osd-ingress
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+    resourceApplyMode: sync
+    patches:
+    - apiVersion: operator.openshift.io/v1
+      applyMode: AlwaysApply
+      kind: IngressController
+      name: default
+      namespace: openshift-ingress-operator
+      patch: '{"spec":{"nodePlacement":{"nodeSelector":{"matchLabels":{"node-role.kubernetes.io/infra":""}},"tolerations":[{"effect":"NoSchedule","key":"node-role.kubernetes.io/infra","operator":"Exists"}]}}}'
+      patchType: merge
+- apiVersion: hive.openshift.io/v1alpha1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: osd-logging
   spec:
     clusterDeploymentSelector:
