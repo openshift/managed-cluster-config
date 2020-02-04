@@ -6,6 +6,12 @@ metadata:
 data:
   config.yaml: |
     prometheusK8s:
+      nodeSelector:
+        node-role.kubernetes.io/infra: ""
+      tolerations: 
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/infra
+          operator: Exists
       retention: 15d
       volumeClaimTemplate:
         metadata:
@@ -15,6 +21,12 @@ data:
             requests:
               storage: 50Gi
     alertmanagerMain:
+      nodeSelector:
+        node-role.kubernetes.io/infra: ""
+      tolerations: 
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/infra
+          operator: Exists
       volumeClaimTemplate:
         metadata:
           name: alertmanager-data
@@ -23,4 +35,38 @@ data:
             requests:
               storage: 10Gi
     telemeterClient:
+      nodeSelector:
+        node-role.kubernetes.io/infra: ""
+      tolerations: 
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/infra
+          operator: Exists
       telemeterServerURL: ${TELEMETER_SERVER_URL}
+    prometheusOperator:
+      nodeSelector:
+        node-role.kubernetes.io/infra: ""
+      tolerations: 
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/infra
+          operator: Exists
+    grafana:
+      nodeSelector:
+        node-role.kubernetes.io/infra: ""
+      tolerations: 
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/infra
+          operator: Exists
+    k8sPrometheusAdapter:
+      nodeSelector:
+        node-role.kubernetes.io/infra: ""
+      tolerations: 
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/infra
+          operator: Exists
+    kubeStateMetrics:
+      nodeSelector:
+        node-role.kubernetes.io/infra: ""
+      tolerations: 
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/infra
+          operator: Exists
