@@ -6,6 +6,15 @@ trap "trap - SIGTERM && kill -- -$$" SIGINT SIGTERM EXIT
 
 PD_MAINT_DESCRIPTION="OSD v4 Cluster Upgrade"
 
+# base single-az cluster takes about 60 minutes to upgrade
+PD_MAINT_BASE_MIN=60
+
+# base cluster, single-az, is 4 nodes + 1 for extra capacity on upgrade
+PD_MAINT_BASE_NODE_COUNT=5
+
+# additional time to upgrade per node beyond the base count
+PD_MAINT_ADDITIONAL_NODE_MIN=5
+
 OCP_VERSION_FROM=$1
 OCP_VERSION_TO=$2
 CLUSTER_NAMES=${@:3}
@@ -69,18 +78,24 @@ setup() {
 
     prepare_kubeconfig $OCM_NAME $CD_NAMESPACE $CD_NAME
 
-    # start with it "bad" to force a check, which will continue until it's good
-    CLUSTER_STATUS=0
+    # do initial check of state only if not already upgrading
+    DESIRED_VERSION=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get clusterversion version -o json | jq -r '.spec.desiredUpdate')
 
-    while [ "$CLUSTER_STATUS" != "1" ];
-    do
-        sleep 15
-        check_cluster_status $OCM_NAME $CD_NAMESPACE $CD_NAME "setup"
-        if [ "$CLUSTER_STATUS" == "0" ];
-        then
-            log $OCM_NAME "setup" "ERROR: cluster state needs fixed, see prior logs (UPGRADE BLOCKED)"
-        fi
-    done
+    if [ "$DESIRED_VERSION" != "$TO" ];
+    then
+        # start with it "bad" to force a check, which will continue until it's good
+        CLUSTER_STATUS=0
+
+        while [ "$CLUSTER_STATUS" != "1" ];
+        do
+            check_cluster_status $OCM_NAME $CD_NAMESPACE $CD_NAME "setup"
+            if [ "$CLUSTER_STATUS" == "0" ];
+            then
+                log $OCM_NAME "setup" "ERROR: cluster state needs fixed, see prior logs (UPGRADE BLOCKED)"
+                sleep 15
+            fi
+        done
+    fi
 
     ORIGINAL_REPLICAS=$(oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r '.metadata.labels["managed.openshift.io/original-worker-replicas"] | select(. != null)')
     DESIRED_REPLICAS=$(oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r '.spec.compute[] | select(.name | startswith("worker")) | .replicas')
@@ -116,13 +131,20 @@ setup() {
         log $OCM_NAME "setup" "replicas are ready for upgrade, machineset=$MS_NAME"
     done
 
-    setup_maintenance_window $OCM_NAME $CD_NAMESPACE $CD_NAME
+    # Maint window duration is calculated based on number of nodes.
+    # A standard cluster upgrade (PD_MAINT_BASE_NODE_COUNT workers) takes PD_MAINT_BASE_MIN minutes.
+    # For every additional worker (including for upgrade capacity)
+    # we add PD_MAINT_ADDITIONAL_NODE_MIN minutes to the base window.
+    MAINT_WINDOW_MIN=$((PD_MAINT_BASE_MIN+(DESIRED_REPLICAS-PD_MAINT_BASE_NODE_COUNT)*PD_MAINT_ADDITIONAL_NODE_MIN))
+
+    setup_maintenance_window $OCM_NAME $CD_NAMESPACE $CD_NAME $MAINT_WINDOW_MIN
 }
 
 setup_maintenance_window() {
     OCM_NAME=$1
     CD_NAMESPACE=$2
     CD_NAME=$3
+    MAINT_WINDOW_MIN=$4
 
     # start maintenance in PagerDuty (if not already in mainteance)
     PD_API_KEY=$(oc -n pagerduty-operator get secrets pagerduty-api-key -o json | jq -r '.data.PAGERDUTY_API_KEY' | base64 --decode)
@@ -157,9 +179,8 @@ setup_maintenance_window() {
             # TODO use a real value.. this would break if nmalik leaves SRE!
             PD_USER_EMAIL=nmalik@redhat.com
 
-            MAINT_MINUTES="60"
             DATE_FROM=$(date +"%Y-%m-%dT%H:%M:%S%:z")
-            DATE_TO=$(date -d "now + $MAINT_MINUTES minutes" +"%Y-%m-%dT%H:%M:%S%:z")
+            DATE_TO=$(date -d "now + $MAINT_WINDOW_MIN minutes" +"%Y-%m-%dT%H:%M:%S%:z")
 
             curl --max-time 10 -s -X POST -H 'Accept: application/vnd.pagerduty+json;version=2' -H 'Content-Type: application/json' -H "Authorization: Token token=$PD_API_KEY" -H "From: $PD_USER_EMAIL" -d "{
                 \"maintenance_window\": {
@@ -180,7 +201,7 @@ setup_maintenance_window() {
 
             if [ "$PD_MAINT_ID" != "null" ] && [ "$PD_MAINT_ID" != "" ];
             then
-                log $OCM_NAME "setup" "INFO: maintenance created for $MAINT_MINUTES minutes"
+                log $OCM_NAME "setup" "INFO: maintenance created for $MAINT_WINDOW_MIN minutes"
             else
                 log $OCM_NAME "setup" "WARNING: maintenance failed to create"
             fi
@@ -317,7 +338,8 @@ check_cluster_status() {
         CLUSTER_STATUS=0
     fi
 
-    CA=$(curl -G -s -k -H "Authorization: Bearer $(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc -n openshift-monitoring sa get-token prometheus-k8s)" --data-urlencode "query=ALERTS{alertstate!=\"pending\",severity=\"critical\"}" "https://$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc -n openshift-monitoring get routes prometheus-k8s -o json | jq -r .spec.host)/api/v1/query" | jq -r '.data.result[].metric.alertname' | tr '\n' ',' )
+    # get a list of firing critical alerts in core namespaces (these would alert SREP in PD)
+    CA=$(curl -G -s -k -H "Authorization: Bearer $(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc -n openshift-monitoring sa get-token prometheus-k8s)" --data-urlencode "query=ALERTS{alertstate=\"firing\",severity=\"critical\",namespace=~\"^openshift.*|^kube.*|^default$\"}" "https://$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc -n openshift-monitoring get routes prometheus-k8s -o json | jq -r .spec.host)/api/v1/query" | jq -r '.data.result[].metric.alertname' | tr '\n' ',' )
 
     if [ "$CA" != "" ];
     then
@@ -325,9 +347,10 @@ check_cluster_status() {
         CLUSTER_STATUS=0
     fi
 
-    POD_ISSUES=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get pods --all-namespaces --no-headers | grep -v -e Running -e Completed -e Terminating -e ContainerCreating -e Init -e Pending | grep -e ^default -e ^kube -e ^openshift)
+    # get a count of bad pods in core namespaces, except intsaller and pruner
+    POD_ISSUES=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get pods --all-namespaces --no-headers | grep -v -e Running -e Completed -e Terminating -e ContainerCreating -e Init -e Pending | grep -e ^default -e ^kube -e ^openshift | grep -v -e installer -e revision-pruner)
     PPC=$(echo "$POD_ISSUES" | grep -v "^$" | wc -l)
-    
+
     if [ "$PPC" != "0" ];
     then
         log $OCM_NAME $LOG_NAME "INFO: Problem Pod Count = $PPC
