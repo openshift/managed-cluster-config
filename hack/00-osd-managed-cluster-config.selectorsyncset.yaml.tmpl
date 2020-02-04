@@ -2301,10 +2301,17 @@ objects:
         - monitoring.coreos.com
         resources:
         - prometheuses
-        - alertmanagers
         - prometheusrules
         - servicemonitors
         - podmonitors
+        verbs:
+        - '*'
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - alertmanagers
+        resourceNames:
+        - instance
         verbs:
         - '*'
       - apiGroups:
@@ -3656,8 +3663,15 @@ objects:
       - apiGroups:
         - monitoring.coreos.com
         resources:
-        - prometheuses
         - alertmanagers
+        resourceNames:
+        - instance
+        verbs:
+        - '*'
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - prometheuses
         - prometheusrules
         - servicemonitors
         - podmonitors
