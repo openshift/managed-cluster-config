@@ -2269,7 +2269,7 @@ objects:
         - alertmanager-main-proxy
         - prometheus-additional-scrape-config
         - prometheus-additional-alertmanager-config
-        - alertmanager-config
+        - alertmanager-instance
         - prometheus-auth-proxy
         - alertmanager-auth-proxy
         verbs:
@@ -2306,7 +2306,7 @@ objects:
         - alertmanager-main-proxy
         - prometheus-additional-scrape-config
         - prometheus-additional-alertmanager-config
-        - alertmanager-config
+        - alertmanager-instance
         - prometheus-auth-proxy
         - alertmanager-auth-proxy
         verbs:
@@ -2315,10 +2315,17 @@ objects:
         - monitoring.coreos.com
         resources:
         - prometheuses
-        - alertmanagers
         - prometheusrules
         - servicemonitors
         - podmonitors
+        verbs:
+        - '*'
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - alertmanagers
+        resourceNames:
+        - instance
         verbs:
         - '*'
       - apiGroups:
@@ -3697,8 +3704,15 @@ objects:
       - apiGroups:
         - monitoring.coreos.com
         resources:
-        - prometheuses
         - alertmanagers
+        resourceNames:
+        - instance
+        verbs:
+        - '*'
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - prometheuses
         - prometheusrules
         - servicemonitors
         - podmonitors

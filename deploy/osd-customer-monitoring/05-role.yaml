@@ -30,7 +30,7 @@ rules:
   - alertmanager-main-proxy
   - prometheus-additional-scrape-config
   - prometheus-additional-alertmanager-config
-  - alertmanager-config
+  - alertmanager-instance
   - prometheus-auth-proxy
   - alertmanager-auth-proxy
   verbs:
@@ -39,10 +39,17 @@ rules:
   - "monitoring.coreos.com"
   resources:
   - prometheuses
-  - alertmanagers
   - prometheusrules
   - servicemonitors
   - podmonitors
+  verbs:
+  - "*"
+- apiGroups:
+  - "monitoring.coreos.com"
+  resources:
+  - alertmanagers
+  resourceNames:
+  - instance
   verbs:
   - "*"
 - apiGroups:
