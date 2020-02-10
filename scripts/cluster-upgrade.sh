@@ -522,7 +522,7 @@ then
     TARGET_IMAGE=$(oc get clusterimageset --all-namespaces openshift-v$OCP_VERSION_TO -o json | jq -r ".spec.releaseImage | split(\":\")[1]")
 
     # Verify the target version is greater than the "from" version
-    if vercomp "${OCP_VERSION_FROM}" "${TARGET_IMAGE}";
+    if ! vercomp "${OCP_VERSION_FROM}" "${TARGET_IMAGE}";
     then
         echo "Cannot upgrade to ClusterImageSet $TARGET_IMAGE because it is not greater than $OCP_VERSION_FROM"
         exit 5
