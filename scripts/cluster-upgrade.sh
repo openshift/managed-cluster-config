@@ -511,14 +511,21 @@ then
         exit 3
     fi
 
-    # Get the default install ClusterImageSet (CIS)
-    # Gets first item, but there should only be 1
-    CIS_VERSION_DEFAULT=$(oc get clusterimageset --all-namespaces -l api.openshift.com/default=true -o json | jq -r ".items[0].spec.releaseImage | split(\":\")[1]")
-    # Verify the target version is <= default CIS version
-    if ! vercomp "${OCP_VERSION_TO}" "${CIS_VERSION_DEFAULT}";
+    # If the image isn't even enabled, we certainly can't upgrade to it. But if it is enabled, we're going there anyways.
+    CIS_ENABLED=$(oc get clusterimageset --all-namespaces -l api.openshift.com/enabled=true -o json | jq -r ".items[].metadata.name | split(\"v\")[1] | select(. == \"$OCP_VERSION_TO\")")
+    if [ -z "$CIS_ENABLED" ];
     then
-        echo "Cannot upgrade past Default ClusterImageSet ${CIS_VERSION_DEFAULT}"
+        echo "Cannot upgrade to $OCP_VERSION_TO, it is not currently 'enabled'."
         exit 4
+    fi
+
+    TARGET_IMAGE=$(oc get clusterimageset --all-namespaces openshift-v$OCP_VERSION_TO -o json | jq -r ".spec.releaseImage | split(\":\")[1]")
+
+    # Verify the target version is greater than the "from" version
+    if vercomp "${OCP_VERSION_FROM}" "${TARGET_IMAGE}";
+    then
+        echo "Cannot upgrade to ClusterImageSet $TARGET_IMAGE because it is not greater than $OCP_VERSION_FROM"
+        exit 5
     fi
 fi
 
