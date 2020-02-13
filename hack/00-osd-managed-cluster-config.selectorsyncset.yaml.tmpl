@@ -2879,12 +2879,12 @@ objects:
     resourceApplyMode: sync
     patches:
     - apiVersion: operator.openshift.io/v1
-      applyMode: AlwaysApply
+      applyMode: ApplyOnce
       kind: IngressController
       name: default
       namespace: openshift-ingress-operator
-      patch: '{"spec":{"nodePlacement":{"nodeSelector":{"matchLabels":{"node-role.kubernetes.io/infra":""}},"tolerations":[{"effect":"NoSchedule","key":"node-role.kubernetes.io/infra","operator":"Exists"}]}}}'
-      patchType: merge
+      patch: '[{"op":"remove","path":"/spec/nodePlacement"}]'
+      patchType: json
 - apiVersion: hive.openshift.io/v1alpha1
   kind: SelectorSyncSet
   metadata:
