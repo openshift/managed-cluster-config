@@ -285,6 +285,18 @@ upgrade() {
     done
 
     log $OCM_NAME "upgrade" "all kubelets on same version"
+
+    # 4.3.0 - Delete ingress-operator and cluster-autoscaler-operator Deployments
+    if [ "${TO}" == "4.3.0" ];
+    then
+        KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc -n openshift-ingress-operator delete deployment ingress-operator
+        sleep 15
+        log $OCM_NAME "upgrade" "deleted openshift-ingress-operator/deployment/ingress-operator"
+        KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc -n openshift-machine-api delete deployment cluster-autoscaler-operator
+        sleep 15
+        log $OCM_NAME "upgrade" "deleted openshift-machine-api/deployment/cluster-autoscaler-operator"
+    fi
+
     log $OCM_NAME "upgrade" "upgrade is complete"
 
     teardown $OCM_NAME $CD_NAMESPACE $CD_NAME
