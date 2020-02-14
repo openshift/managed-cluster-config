@@ -7,6 +7,8 @@ CLUSTER_ID=$2
 unset AWS_PROFILE
 unset AWS_ACCESS_KEY_ID
 unset AWS_SECRET_ACCESS_KEY
+# Region is a mandatory value to be set when using AWS CLI.
+# All AWS CLI requests are related to IAM and are global, so picking any region will be OK.
 export AWS_DEFAULT_REGION=us-east-1
 
 if [ "$CLUSTER_ID" == "" ] || [ "$ENVIRONMENT" == "" ];
