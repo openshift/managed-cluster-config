@@ -1,0 +1,20 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: layered-sre-cluster-admins
+    role: alert-rules
+  name: layered-sre-cluster-admins
+  namespace: openshift-monitoring
+spec:
+  groups:
+  - name: layered-sre-cluster-admins
+    rules:
+    - alert: ElevatingClusterAdminLayeredSRE
+      expr: openshift_group_user_account{group="layered-sre-cluster-admins"} == 1
+      for: 130m
+      labels:
+        severity: warning
+      annotations:
+        message: Layered SRE "{{ $labels.user }}"
+          elevated to layered cluster-admin({{ $labels.group }}) more than 2 hours.
