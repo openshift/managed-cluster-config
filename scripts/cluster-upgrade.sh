@@ -323,7 +323,7 @@ upgrade() {
     log $OCM_NAME "upgrade" "nodes upgraded: $MACHINE_COUNT_UPGRADED/$MACHINE_COUNT_ALL"
 
     # make sure all nodes run same kubelet version
-    while [ ! $MACHINE_COUNT_UPGRADED -ge $MACHINE_COUNT_ALL ];
+    while [ $MACHINE_COUNT_UPGRADED -lt $MACHINE_COUNT_ALL ];
     do
         # sleep at beginning because we've already checked that we are not done.
         SLEEP_DURATION="$((PD_MAINT_ADDITIONAL_NODE_MIN*60/4))s"
