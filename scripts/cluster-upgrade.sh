@@ -297,7 +297,7 @@ upgrade() {
     log $OCM_NAME "upgrade" "checking node versions"
 
     # fun fact!  after clusterversion says it is done, individual nodes could still be updated.
-    MASTER_KUBELET_VERSION=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get nodes --no-headers | grep master | sort | uniq | awk '{print $5}' | sort | uniq)
+    MASTER_KUBELET_VERSION=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get nodes --no-headers | grep master | sort | uniq | awk '{print $5}' | sort -u)
 
     MACHINE_COUNT_ALL=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get nodes --no-headers | wc -l)
 
