@@ -4262,6 +4262,26 @@ objects:
       kind: PrometheusRule
       metadata:
         labels:
+          prometheus: sre-cluster-upgrade-alerts
+          role: alert-rules
+        name: sre-cluster-upgrade-alerts
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-cluster-upgrade-alerts
+          rules:
+          - alert: ClusterUpgradingSRE
+            expr: cluster_version{type="updating"} > 0
+            labels:
+              severity: warning
+              namespace: openshift-monitoring
+            annotations:
+              from_version: $labels.from_version
+              to_version: $labels.version
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
           prometheus: sre-configure-alertmanager-operator-offline-alerts
           role: alert-rules
         name: sre-configure-alertmanager-operator-offline-alerts

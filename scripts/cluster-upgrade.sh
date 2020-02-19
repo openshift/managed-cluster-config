@@ -4,16 +4,18 @@
 # make sure if the script is killed all child processes are killed:
 trap "trap - SIGTERM && kill -- -$$" SIGINT SIGTERM EXIT
 
-PD_MAINT_DESCRIPTION="OSD v4 Cluster Upgrade"
+PD_MAINT_DESCRIPTION_BASE="OSD v4 Cluster Upgrade Control Plane"
+PD_MAINT_DESCRIPTION_WORKERS="OSD v4 Cluster Upgrade Nodes"
 
-# base single-az cluster takes about 60 minutes to upgrade
-PD_MAINT_BASE_MIN=60
+# base single-az cluster takes about this long to upgrade
+PD_MAINT_BASE_MIN=90
 
-# base cluster, single-az, is 4 nodes + 1 for extra capacity on upgrade
+# base cluster, single-az, is 4 workers + 1 worker for extra capacity on upgrade
 PD_MAINT_BASE_NODE_COUNT=5
+PD_MAINT_BASE_INFRA_COUNT=3
 
 # additional time to upgrade per node beyond the base count
-PD_MAINT_ADDITIONAL_NODE_MIN=5
+PD_MAINT_ADDITIONAL_NODE_MIN=8
 
 OCP_VERSION_FROM=$1
 OCP_VERSION_TO=$2
@@ -79,7 +81,7 @@ setup() {
     prepare_kubeconfig $OCM_NAME $CD_NAMESPACE $CD_NAME
 
     # do initial check of state only if not already upgrading
-    DESIRED_VERSION=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get clusterversion version -o json | jq -r '.spec.desiredUpdate')
+    DESIRED_VERSION=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get clusterversion version -o json | jq -r '.spec.desiredUpdate.version')
 
     if [ "$DESIRED_VERSION" != "$TO" ];
     then
@@ -118,12 +120,20 @@ setup() {
     MS_REPLICAS=$(($DESIRED_REPLICAS/$ZONE_COUNT))
     for MS_NAME in $(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc -n openshift-machine-api get machineset --no-headers | grep worker | awk '{print $1}');
     do
-        log $OCM_NAME "setup" "waiting for replicas, machineset=$MS_NAME"
         AVAILABLE_REPLICAS=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc -n openshift-machine-api get machineset $MS_NAME -o jsonpath='{.status.availableReplicas}')
 
         while [ "$AVAILABLE_REPLICAS" != "$MS_REPLICAS" ];
         do
-            sleep 15
+            log $OCM_NAME "setup" "waiting for replicas, machineset=$MS_NAME"
+
+            # sign CSRs, sometimes new node provisioning is stuck because of this
+            # https://github.com/openshift/ops-sop/blob/master/v4/alerts/NoNodeObjectForMachineCriticalSRE.md
+            for CSR in $(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get csr --no-headers 2>/dev/null | grep Pending | awk '{print $1}');
+            do
+                KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc adm certificate approve $CSR
+            done
+
+            sleep 30
 
             AVAILABLE_REPLICAS=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc -n openshift-machine-api get machineset $MS_NAME -o jsonpath='{.status.availableReplicas}')
         done
@@ -131,13 +141,8 @@ setup() {
         log $OCM_NAME "setup" "replicas are ready for upgrade, machineset=$MS_NAME"
     done
 
-    # Maint window duration is calculated based on number of nodes.
-    # A standard cluster upgrade (PD_MAINT_BASE_NODE_COUNT workers) takes PD_MAINT_BASE_MIN minutes.
-    # For every additional worker (including for upgrade capacity)
-    # we add PD_MAINT_ADDITIONAL_NODE_MIN minutes to the base window.
-    MAINT_WINDOW_MIN=$((PD_MAINT_BASE_MIN+(DESIRED_REPLICAS-PD_MAINT_BASE_NODE_COUNT)*PD_MAINT_ADDITIONAL_NODE_MIN))
-
-    setup_maintenance_window $OCM_NAME $CD_NAMESPACE $CD_NAME $MAINT_WINDOW_MIN
+    # Set the initial maintenance window to the base so control plane issues will page earlier for very large clusters.
+    setup_maintenance_window $OCM_NAME $CD_NAMESPACE $CD_NAME $PD_MAINT_BASE_MIN "$PD_MAINT_DESCRIPTION_BASE"
 }
 
 setup_maintenance_window() {
@@ -145,6 +150,7 @@ setup_maintenance_window() {
     CD_NAMESPACE=$2
     CD_NAME=$3
     MAINT_WINDOW_MIN=$4
+    MAINT_DESC=$5
 
     # start maintenance in PagerDuty (if not already in mainteance)
     PD_API_KEY=$(oc -n pagerduty-operator get secrets pagerduty-api-key -o json | jq -r '.data.PAGERDUTY_API_KEY' | base64 --decode)
@@ -167,7 +173,7 @@ setup_maintenance_window() {
     then
         # search for existing maintenance ID
         # IMPORTANT: description must match, else we might remove maintenance put in place for other reasons.
-        PD_MAINT_ID=$(curl --max-time 10 -s -X GET -H 'Accept: application/vnd.pagerduty+json;version=2' -H "Authorization: Token token=$PD_API_KEY" "https://api.pagerduty.com/maintenance_windows?service_ids%5B%5D=$PD_SERVICE_ID&query=$(echo $PD_MAINT_DESCRIPTION | tr ' ' '+')&filter=open" | jq -r 'select(.maintenance_windows != null) | .maintenance_windows[0].id')
+        PD_MAINT_ID=$(curl --max-time 10 -s -X GET -H 'Accept: application/vnd.pagerduty+json;version=2' -H "Authorization: Token token=$PD_API_KEY" "https://api.pagerduty.com/maintenance_windows?service_ids%5B%5D=$PD_SERVICE_ID&query=$(echo $MAINT_DESC | tr ' ' '+')&filter=open" | jq -r 'select(.maintenance_windows != null) | .maintenance_windows[0].id')
 
         # if we got null maintenance doesn't exist
         # if we got "" there is a configuration issue (nothing we can do)
@@ -187,7 +193,7 @@ setup_maintenance_window() {
                     \"type\": \"maintenance_window\",
                     \"start_time\": \"$DATE_FROM\",
                     \"end_time\": \"$DATE_TO\",
-                    \"description\": \"$PD_MAINT_DESCRIPTION\",
+                    \"description\": \"$MAINT_DESC\",
                     \"services\": [
                         {
                             \"id\": \"$PD_SERVICE_ID\",
@@ -197,16 +203,16 @@ setup_maintenance_window() {
                 }
             }" 'https://api.pagerduty.com/maintenance_windows' > /dev/null
 
-            PD_MAINT_ID=$(curl --max-time 10 -s -X GET -H 'Accept: application/vnd.pagerduty+json;version=2' -H "Authorization: Token token=$PD_API_KEY" "https://api.pagerduty.com/maintenance_windows?service_ids%5B%5D=$PD_SERVICE_ID&query=$(echo $PD_MAINT_DESCRIPTION | tr ' ' '+')&filter=open" | jq -r 'select(.maintenance_windows != null) | .maintenance_windows[0].id')
+            PD_MAINT_ID=$(curl --max-time 10 -s -X GET -H 'Accept: application/vnd.pagerduty+json;version=2' -H "Authorization: Token token=$PD_API_KEY" "https://api.pagerduty.com/maintenance_windows?service_ids%5B%5D=$PD_SERVICE_ID&query=$(echo $MAINT_DESC | tr ' ' '+')&filter=open" | jq -r 'select(.maintenance_windows != null) | .maintenance_windows[0].id')
 
             if [ "$PD_MAINT_ID" != "null" ] && [ "$PD_MAINT_ID" != "" ];
             then
-                log $OCM_NAME "setup" "INFO: maintenance created for $MAINT_WINDOW_MIN minutes"
+                log $OCM_NAME "setup" "INFO: maintenance created for $MAINT_WINDOW_MIN minutes = '$MAINT_DESC'"
             else
-                log $OCM_NAME "setup" "WARNING: maintenance failed to create"
+                log $OCM_NAME "setup" "WARNING: maintenance failed to create = '$MAINT_DESC' for $MAINT_WINDOW_MIN minutes"
             fi
         else
-            log $OCM_NAME "setup" "INFO: mainteance already created, skipping"
+            log $OCM_NAME "setup" "INFO: mainteance already created, skipping = '$MAINT_DESC'"
         fi
     else
         log $OCM_NAME "setup" "WARNING: maintenance failed to create, no service exists"
@@ -226,24 +232,25 @@ upgrade() {
     
     log $OCM_NAME "upgrade" "Checking $OCM_NAME..."
 
-    # - do we need to upgrade?
-    OCP_CURRENT_VERSION=$(oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r '.status.clusterVersionStatus.history[] | select(.state == "Completed") | .version' | head -n1)
+    # do we need to upgrade?
+    OCP_CURRENT_VERSION=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get clusterversion version -o json | jq -r '.status.history[] | select(.state == "Completed") | .version' | grep $FROM)
+    KUBELET_VERSION_COUNT=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get nodes --no-headers -o custom-columns=VERSION:.status.nodeInfo.kubeletVersion | sort -u | wc -l)
 
-    if [ "$OCP_CURRENT_VERSION" == "$TO" ];
+    if [ "$OCP_CURRENT_VERSION" == "$TO" ] && [ "$KUBELET_VERSION_COUNT" == "1" ];
     then
         log $OCM_NAME "upgrade" "skipping, already on version $TO"
         teardown $OCM_NAME $CD_NAMESPACE $CD_NAME
         return
     fi
 
-    if [ "$OCP_CURRENT_VERSION" != "$FROM" ];
+    if [ "$OCP_CURRENT_VERSION" != "" ] && [ "$OCP_CURRENT_VERSION" != "$FROM" ] && [ "$KUBELET_VERSION_COUNT" == "1" ];
     then
         log $OCM_NAME "upgrade" "skipping, expect version $FROM, found version $OCP_CURRENT_VERSION"
         return
     fi
 
     # is upgrade already progressing?
-    DESIRED_VERSION=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get clusterversion version -o json | jq -r '.spec.desiredUpdate')
+    DESIRED_VERSION=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get clusterversion version -o jsonpath='{.spec.desiredUpdate.version}')
 
     if [ "$DESIRED_VERSION" != "$TO" ];
     then
@@ -255,45 +262,90 @@ upgrade() {
         CHANNEL_NAME=$(get_channel $TO)
 
         KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc patch clusterversion version --type merge -p "{\"spec\":{\"channel\": \"$CHANNEL_NAME\"}}"
-        sleep 15
         KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc patch clusterversion version --type merge -p "{\"spec\":{\"desiredUpdate\": {\"version\": \"$TO\"}}}"
     fi
 
     # 3. wait for upgrade to complete
     log $OCM_NAME "upgrade" "waiting for cluster version"
-    OCP_CURRENT_VERSION=$(oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r '.status.clusterVersionStatus.history[] | select(.state == "Completed") | .version' | head -n1)
+    OCP_CURRENT_VERSION=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get clusterversion version -o json | jq -r '.status.history[] | select(.verified == true and .state == "Completed") | .version' | grep $TO)
     
     while [ "$OCP_CURRENT_VERSION" != "$TO" ];
     do
-        sleep 15
-        OCP_CURRENT_VERSION=$(oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r '.status.clusterVersionStatus.history[] | select(.state == "Completed") | .version' | head -n1)
+        # print current CVO status (else it's very quiet output)
+        CO_JSON=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get clusteroperator -o json)
+        CO_COUNT=$(echo "$CO_JSON" | jq -r '.items | length')
+        DEGRADED_COUNT=$(echo "$CO_JSON" | jq -r '.items[] | .metadata.name as $name | .status.conditions[] | select(.status == "True" and .type == "Degraded") | $name' | wc -l)
+        PROGRESSING_COUNT=$(echo "$CO_JSON" | jq -r '.items[] | .metadata.name as $name | .status.conditions[] | select(.status == "True" and .type == "Progressing") | $name' | wc -l)
 
+        CO_COUNT_TO=$(echo "$CO_JSON" | jq -r '.items[].status.versions[] | select(.name == "operator") | .version' | grep $TO | wc -l)
+
+        # do not print status if there's nothing to print (i.e. the get failed for some reason)        
+        if [ $CO_COUNT -gt 0 ];
+        then
+            log $OCM_NAME "upgrade" "ClusterOperators: Progressing: $PROGRESSING_COUNT, Degraded: $DEGRADED_COUNT, Upgraded: $CO_COUNT_TO/$CO_COUNT"
+        fi
+
+        # check status if we are not at the same version
         check_cluster_status $OCM_NAME $CD_NAMESPACE $CD_NAME "upgrade"
+
+        # wait a (relatively) short time before checking version (and status when we look back through, if we do)
+        sleep 60
+        OCP_CURRENT_VERSION=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get clusterversion version -o json | jq -r '.status.history[] | select(.verified == true and .state == "Completed") | .version' | grep $TO)
     done
 
     log $OCM_NAME "upgrade" "ClusterVersion on $TO"
-    log $OCM_NAME "upgrade" "checking kubelet versions"
+    log $OCM_NAME "upgrade" "checking node versions"
 
     # fun fact!  after clusterversion says it is done, individual nodes could still be updated.
-    # make sure all nodes run same kubelet version
-    KUBELET_VERSION_COUNT=0
-    while [ "$KUBELET_VERSION_COUNT" != "1" ];
-    do
-        KUBELET_VERSION_COUNT=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get nodes --no-headers -o custom-columns=VERSION:.status.nodeInfo.kubeletVersion | sort | uniq | wc -l)
+    MASTER_KUBELET_VERSION=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get nodes --no-headers | grep master | sort | uniq | awk '{print $5}' | sort -u)
 
-        sleep 15
+    MACHINE_COUNT_ALL=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get nodes --no-headers | wc -l)
+
+    # could do joins from machine to node, but it's just all non-master at this time
+    MACHINE_COUNT_UPGRADED=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get nodes --no-headers | grep $MASTER_KUBELET_VERSION | wc -l)
+
+    MACHINE_COUNT_PENDING=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get nodes --no-headers | grep -v $MASTER_KUBELET_VERSION | wc -l)
+
+    # start maintenance only if we need to
+    if [ ! $MACHINE_COUNT_UPGRADED -ge $MACHINE_COUNT_ALL ];
+    then
+        # Create a new maintenance window for the kubelet (non master) upgrades based on the number of nodes.
+        MAINT_WINDOW_MIN=$((MACHINE_COUNT_PENDING*PD_MAINT_ADDITIONAL_NODE_MIN))
+
+        # create worker maintenance window
+        setup_maintenance_window $OCM_NAME $CD_NAMESPACE $CD_NAME $MAINT_WINDOW_MIN "$PD_MAINT_DESCRIPTION_WORKERS"
+
+        # close control plane maintenance window
+        teardown_maintenance_window $OCM_NAME $CD_NAMESPACE $CD_NAME "$PD_MAINT_DESCRIPTION_BASE"
+    fi
+
+    # log current state
+    log $OCM_NAME "upgrade" "nodes upgraded: $MACHINE_COUNT_UPGRADED/$MACHINE_COUNT_ALL"
+
+    # make sure all nodes run same kubelet version
+    while [ $MACHINE_COUNT_UPGRADED -lt $MACHINE_COUNT_ALL ];
+    do
+        # sleep at beginning because we've already checked that we are not done.
+        SLEEP_DURATION="$((PD_MAINT_ADDITIONAL_NODE_MIN*60/4))s"
+        sleep "$SLEEP_DURATION"
+
+        # could do joins from machine to node, but it's just all non-master at this time
+        MACHINE_COUNT_UPGRADED=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get nodes --no-headers| grep $MASTER_KUBELET_VERSION | wc -l)
+
+        MACHINE_COUNT_PENDING=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get nodes --no-headers | grep -v $MASTER_KUBELET_VERSION | wc -l)
+
+        # and log current state
+        log $OCM_NAME "upgrade" "nodes upgraded: $MACHINE_COUNT_UPGRADED/$MACHINE_COUNT_ALL"
     done
 
-    log $OCM_NAME "upgrade" "all kubelets on same version"
+    log $OCM_NAME "upgrade" "all nodes on same version"
 
     # 4.3.0 - Delete ingress-operator and cluster-autoscaler-operator Deployments
     if [ "${TO}" == "4.3.0" ];
     then
         KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc -n openshift-ingress-operator delete deployment ingress-operator
-        sleep 15
         log $OCM_NAME "upgrade" "deleted openshift-ingress-operator/deployment/ingress-operator"
         KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc -n openshift-machine-api delete deployment cluster-autoscaler-operator
-        sleep 15
         log $OCM_NAME "upgrade" "deleted openshift-machine-api/deployment/cluster-autoscaler-operator"
     fi
 
@@ -325,9 +377,8 @@ check_cluster_status() {
 
     # check several things about the cluster and report problems
     # * api availability
-    # * degraded operators
     # * critical alerts
-    # * count of pods in state not "Running" or "Completed"
+    # * degraded operators (if there are critical alerts only)
 
     API_RESPONSE=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get --raw /api 2>&1)
     API_VERSION=$(echo $API_RESPONSE | jq -r '.versions[]' || echo "FAIL")
@@ -342,32 +393,33 @@ check_cluster_status() {
         return
     fi
 
-    DCO=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get clusteroperator --no-headers | awk '{print $1 "," $5}' | grep -v ",False" | awk -F, '{print $1 ","}' | xargs)
-    
-    if [ "$DCO" != "" ];
-    then
-        log $OCM_NAME $LOG_NAME "INFO: Degraded Operators = $DCO"
-        CLUSTER_STATUS=0
-    fi
-
     # get a list of firing critical alerts in core namespaces (these would alert SREP in PD)
-    CA=$(curl -G -s -k -H "Authorization: Bearer $(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc -n openshift-monitoring sa get-token prometheus-k8s)" --data-urlencode "query=ALERTS{alertstate=\"firing\",severity=\"critical\",namespace=~\"^openshift.*|^kube.*|^default$\"}" "https://$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc -n openshift-monitoring get routes prometheus-k8s -o json | jq -r .spec.host)/api/v1/query" | jq -r '.data.result[].metric.alertname' | tr '\n' ',' )
+    # NOTE exclude ClusterUpgradingSRE and DNSErrors05MinSRE
+    CA=$(curl -G -s -k -H "Authorization: Bearer $(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc -n openshift-monitoring sa get-token prometheus-k8s)" --data-urlencode "query=ALERTS{alertstate=\"firing\",severity=\"critical\",namespace=~\"^openshift.*|^kube.*|^default$\",alertname!=\"ClusterUpgradingSRE\",alertname!=\"DNSErrors05MinSRE\"}" "https://$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc -n openshift-monitoring get routes prometheus-k8s -o json | jq -r .spec.host)/api/v1/query" | jq -r '.data.result[].metric.alertname' | tr '\n' ',' )
 
     if [ "$CA" != "" ];
     then
         log $OCM_NAME $LOG_NAME "WARNING: Critical Alerts = $CA"
         CLUSTER_STATUS=0
-    fi
 
-    # get a count of bad pods in core namespaces, except intsaller and pruner
-    POD_ISSUES=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get pods --all-namespaces --no-headers | grep -v -e Running -e Completed -e Terminating -e ContainerCreating -e Init -e Pending | grep -e ^default -e ^kube -e ^openshift | grep -v -e installer -e revision-pruner)
-    PPC=$(echo "$POD_ISSUES" | grep -v "^$" | wc -l)
+        # degraded operators
+        DCO=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get clusteroperator --no-headers | awk '{print $1 "," $5}' | grep -v ",False" | awk -F, '{print $1 ","}' | xargs)
+        
+        if [ "$DCO" != "" ];
+        then
+            log $OCM_NAME $LOG_NAME "INFO: Degraded Operators = $DCO"
 
-    if [ "$PPC" != "0" ];
-    then
-        log $OCM_NAME $LOG_NAME "INFO: Problem Pod Count = $PPC
-$POD_ISSUES"
-        # NOTE do not set CLUSTER_STATUS to 0 (bad), this could be a false positive
+            for CO in $DCO;
+            do
+                CO_MESSAGE=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get clusteroperator $CO -o json | jq -r '.status.extension.lastSyncError')
+
+                if [ "$CO_MESSAGE" != "" ];
+                then
+                    log $OCM_NAME $LOG_NAME "INFO: Operator $CO lastSyncError = $CO_MESSAGE"
+                fi
+            done
+
+        fi
     fi
 }
 
@@ -390,18 +442,22 @@ teardown() {
         log $OCM_NAME "teardown" "dropping replicas back from $DESIRED_REPLICAS to $ORIGINAL_REPLICAS"
     fi
 
-    teardown_maintenance_window $OCM_NAME $CD_NAMESPACE $CD_NAME
+    # take down maintenance windows (both just to be sure they're all gone)
+    teardown_maintenance_window $OCM_NAME $CD_NAMESPACE $CD_NAME "$PD_MAINT_DESCRIPTION_BASE"
+    teardown_maintenance_window $OCM_NAME $CD_NAMESPACE $CD_NAME "$PD_MAINT_DESCRIPTION_WORKERS"
 
     # start with it "bad" to force a check, which will continue until it's good
-    CLUSTER_STATUS=0
-
-    while [ "$CLUSTER_STATUS" != "1" ];
+    while [ true ];
     do
-        sleep 15
         check_cluster_status $OCM_NAME $CD_NAMESPACE $CD_NAME "teardown"
-        if [ "$CLUSTER_STATUS" == "0" ];
+        if [ $CLUSTER_STATUS -eq 0 ];
         then
             log $OCM_NAME "teardown" "ERROR: cluster state needs fixed, see prior logs"
+            # wait a bit so we give things a chance to change and not spam the api
+            sleep 15
+        else
+            # things are healthy, we're done
+            break
         fi
     done
 }
@@ -410,6 +466,7 @@ teardown_maintenance_window() {
     OCM_NAME=$1
     CD_NAMESPACE=$2
     CD_NAME=$3
+    MAINT_DESC=$4
 
     # stop maintenance in PagerDuty (if not in mainteance)
     PD_API_KEY=$(oc -n pagerduty-operator get secrets pagerduty-api-key -o json | jq -r '.data.PAGERDUTY_API_KEY' | base64 --decode)
@@ -432,7 +489,7 @@ teardown_maintenance_window() {
     then
         # search for existing maintenance ID
         # IMPORTANT: description must match, else we might remove maintenance put in place for other reasons.
-        PD_MAINT_ID=$(curl --max-time 10 -s -X GET -H 'Accept: application/vnd.pagerduty+json;version=2' -H "Authorization: Token token=$PD_API_KEY" "https://api.pagerduty.com/maintenance_windows?service_ids%5B%5D=$PD_SERVICE_ID&query=$(echo $PD_MAINT_DESCRIPTION | tr ' ' '+')&filter=open" | jq -r 'select(.maintenance_windows != null) | .maintenance_windows[0].id')
+        PD_MAINT_ID=$(curl --max-time 10 -s -X GET -H 'Accept: application/vnd.pagerduty+json;version=2' -H "Authorization: Token token=$PD_API_KEY" "https://api.pagerduty.com/maintenance_windows?service_ids%5B%5D=$PD_SERVICE_ID&query=$(echo $MAINT_DESC | tr ' ' '+')&filter=open" | jq -r 'select(.maintenance_windows != null) | .maintenance_windows[0].id')
 
         # if we got null maintenance doesn't exist
         # if we got "" there is a configuration issue (nothing we can do)
@@ -445,19 +502,19 @@ teardown_maintenance_window() {
             # make sure it was ended / deleted
             sleep 5 # give it a while to apply
 
-            PD_MAINT_ID=$(curl --max-time 10 -s -X GET -H 'Accept: application/vnd.pagerduty+json;version=2' -H "Authorization: Token token=$PD_API_KEY" "https://api.pagerduty.com/maintenance_windows?service_ids%5B%5D=$PD_SERVICE_ID&query=$(echo $PD_MAINT_DESCRIPTION | tr ' ' '+')&filter=open" | jq -r 'select(.maintenance_windows != null) | .maintenance_windows[0].id')
+            PD_MAINT_ID=$(curl --max-time 10 -s -X GET -H 'Accept: application/vnd.pagerduty+json;version=2' -H "Authorization: Token token=$PD_API_KEY" "https://api.pagerduty.com/maintenance_windows?service_ids%5B%5D=$PD_SERVICE_ID&query=$(echo $MAINT_DESC | tr ' ' '+')&filter=open" | jq -r 'select(.maintenance_windows != null) | .maintenance_windows[0].id')
 
             if [ "$PD_MAINT_ID" == "null" ] || [ "$PD_MAINT_ID" == "" ];
             then
-                log $OCM_NAME "teardown" "INFO: maintenance ended"
+                log $OCM_NAME "teardown" "INFO: maintenance ended = '$MAINT_DESC'"
             else
-                log $OCM_NAME "teardown" "WARNING: maintenance failed to end"
+                log $OCM_NAME "teardown" "WARNING: maintenance failed to end = '$MAINT_DESC'"
             fi
         else
-            log $OCM_NAME "teardown" "INFO: maintenance doesn't exist, not ending"
+            log $OCM_NAME "teardown" "INFO: maintenance doesn't exist, not ending = '$MAINT_DESC'"
         fi
     else
-        log $OCM_NAME "teardown" "WARNING: maintenance failed to end, no service exists"
+        log $OCM_NAME "teardown" "WARNING: maintenance failed to end, no service exists = '$MAINT_DESC'"
     fi
 
     unset PD_API_KEY
@@ -572,4 +629,3 @@ done
 wait
 
 rm -rf $TMP_DIR
-
