@@ -419,7 +419,6 @@ check_cluster_status() {
                 fi
             done
 
-            CLUSTER_STATUS=0
         fi
     fi
 }
