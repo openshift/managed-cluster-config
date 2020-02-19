@@ -234,7 +234,7 @@ upgrade() {
 
     # do we need to upgrade?
     OCP_CURRENT_VERSION=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get clusterversion version -o json | jq -r '.status.history[] | select(.state == "Completed") | .version' | grep $FROM)
-    KUBELET_VERSION_COUNT=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get nodes --no-headers -o custom-columns=VERSION:.status.nodeInfo.kubeletVersion | sort | uniq | wc -l)
+    KUBELET_VERSION_COUNT=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get nodes --no-headers -o custom-columns=VERSION:.status.nodeInfo.kubeletVersion | sort -u | wc -l)
 
     if [ "$OCP_CURRENT_VERSION" == "$TO" ] && [ "$KUBELET_VERSION_COUNT" == "1" ];
     then
@@ -630,4 +630,3 @@ done
 wait
 
 rm -rf $TMP_DIR
-
