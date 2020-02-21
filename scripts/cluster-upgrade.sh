@@ -350,25 +350,15 @@ upgrade() {
     log $OCM_NAME "upgrade" "checking availability of ReplicaSets and DaemonSets"
 
     # verify all replicasets are at expected counts
-    TOTAL_DESIRED=0
-    TOTAL_SCHEDULED=0
-    while [ $TOTAL_DESIRED -eq 0 ] || [ $TOTAL_DESIRED -ne $TOTAL_SCHEDULED ];
+    while true;
     do
-        # don't sleep on first pass
-        if [ $TOTAL_DESIRED -gt 0 ];
-        then
-            sleep 15
-        fi
-
-        # reset counters
         TOTAL_DESIRED=0
-        TOTAL_SCHEDULED=0
-
         for DESIRED in $(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get replicasets --all-namespaces -o json | jq -r '.items[] | select(.metadata.namespace | startswith("default") or startswith("kube") or startswith("openshift")) | select(.status.replicas > 0) | .status.replicas');
         do
             TOTAL_DESIRED=$((TOTAL_DESIRED+DESIRED))
         done
         
+        TOTAL_SCHEDULED=0
         for READY in $(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get replicasets --all-namespaces -o json | jq -r '.items[] | select(.metadata.namespace | startswith("default") or startswith("kube") or startswith("openshift")) | select(.status.replicas > 0) | select(.status.replicas == .status.readyReplicas) | select(.status.replicas == .status.availableReplicas) | .status.replicas');
         do
             TOTAL_SCHEDULED=$((TOTAL_SCHEDULED+READY))
@@ -376,28 +366,25 @@ upgrade() {
         
         # output status
         log $OCM_NAME "upgrade" "ReplicaSets status: $TOTAL_SCHEDULED/$TOTAL_DESIRED"
+
+        if [ $TOTAL_DESIRED -eq 0 ] || [ $TOTAL_DESIRED -ne $TOTAL_SCHEDULED ];
+        then
+            sleep 15
+        else
+            break
+        fi
     done
 
     # verify all daemonsets are at expected counts
-    TOTAL_DESIRED=0
-    TOTAL_SCHEDULED=0
-    while [ $TOTAL_DESIRED -eq 0 ] || [ $TOTAL_DESIRED -ne $TOTAL_SCHEDULED ];
+    while true;
     do
-        # don't sleep on first pass
-        if [ $TOTAL_DESIRED -gt 0 ];
-        then
-            sleep 15
-        fi
-
-        # reset counters
         TOTAL_DESIRED=0
-        TOTAL_SCHEDULED=0
-
         for DESIRED in $(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get daemonsets --all-namespaces -o json | jq -r '.items[] | select(.metadata.namespace | startswith("default") or startswith("kube") or startswith("openshift")) | select(.status.desiredNumberScheduled > 0) | .status.desiredNumberScheduled');
         do
             TOTAL_DESIRED=$((TOTAL_DESIRED+DESIRED))
         done
         
+        TOTAL_SCHEDULED=0
         for READY in $(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get daemonsets --all-namespaces -o json | jq -r '.items[] | select(.metadata.namespace | startswith("default") or startswith("kube") or startswith("openshift")) | select(.status.desiredNumberScheduled > 0) | select(.status.desiredNumberScheduled == .status.numberReady) | select(.status.desiredNumberScheduled == .status.numberAvailable) | .status.desiredNumberScheduled');
         do
             TOTAL_SCHEDULED=$((TOTAL_SCHEDULED+READY))
@@ -405,6 +392,13 @@ upgrade() {
         
         # output status
         log $OCM_NAME "upgrade" "DaemonSets status: $TOTAL_SCHEDULED/$TOTAL_DESIRED"
+
+        if [ $TOTAL_DESIRED -eq 0 ] || [ $TOTAL_DESIRED -ne $TOTAL_SCHEDULED ];
+        then
+            sleep 15
+        else
+            break
+        fi
     done
 
     log $OCM_NAME "upgrade" "all ReplicaSets and DaemonSets available"
