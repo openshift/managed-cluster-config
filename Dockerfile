@@ -9,10 +9,10 @@ FROM python:2.7.15 AS runner
 COPY --from=builder /oc /bin/
 
 # Environment
-ARG IN_DOCKER_CONTAINER="true"
+ARG IN_CONTAINER="true"
 ENV REPO_PATH=/managed-cluster-config
 
-# Copy repo into docker image:
+# Copy repo into container image:
 COPY . ${REPO_PATH}
 WORKDIR ${REPO_PATH}
 
