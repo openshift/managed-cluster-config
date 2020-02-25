@@ -4713,7 +4713,7 @@ objects:
                 restartPolicy: Never
                 containers:
                 - name: builds-pruner
-                  image: quay.io/openshift/origin-cli:4.2
+                  image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
                   imagePullPolicy: Always
                   command:
                   - oc
@@ -4742,7 +4742,7 @@ objects:
                 restartPolicy: Never
                 containers:
                 - name: deployments-pruner
-                  image: quay.io/openshift/origin-cli:4.2
+                  image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
                   imagePullPolicy: Always
                   command:
                   - oc
@@ -4771,15 +4771,15 @@ objects:
                 restartPolicy: Never
                 containers:
                 - name: image-pruner
-                  image: quay.io/openshift/origin-cli:4.2
+                  image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
                   imagePullPolicy: Always
                   args:
                   - /bin/bash
                   - -c
                   - oc adm prune images --token=$$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
-                    --server=https://$(KUBERNETES_SERVICE_HOST):$(KUBERNETES_SERVICE_PORT)
+                    --certificate-authority=/var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt
                     --keep-younger-than=24h --keep-tag-revisions=5 --ignore-invalid-refs=true
-                    --insecure-skip-tls-verify=true --confirm
+                    --confirm
 - apiVersion: hive.openshift.io/v1alpha1
   kind: SelectorSyncSet
   metadata:
