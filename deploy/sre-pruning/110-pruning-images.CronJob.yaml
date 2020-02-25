@@ -22,4 +22,11 @@ spec:
             args:
             - /bin/bash
             - -c
-            - "oc adm prune images --token=$$(cat /var/run/secrets/kubernetes.io/serviceaccount/token) --server=https://$(KUBERNETES_SERVICE_HOST):$(KUBERNETES_SERVICE_PORT) --keep-younger-than=24h --keep-tag-revisions=5 --ignore-invalid-refs=true --insecure-skip-tls-verify=true --confirm"
+            - >-
+              oc adm prune images
+              --token=$$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+              --certificate-authority=/var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt
+              --keep-younger-than=24h
+              --keep-tag-revisions=5
+              --ignore-invalid-refs=true
+              --confirm
