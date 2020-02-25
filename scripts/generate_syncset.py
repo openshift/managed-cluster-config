@@ -22,7 +22,6 @@ def get_all_yaml_files(path):
     file_paths = []
     for r,d,f in os.walk(path):
         for file in f:
-            print file
             if (file.endswith('.yml') or file.endswith('.yaml') and not(file == sss_config_filename)):
                 file_paths.append(os.path.join(r,file))
         # break, so we don't recurse
