@@ -8,6 +8,7 @@ import argparse
 import copy
 
 cluster_platform_ann = "hive.openshift.io/cluster-platform"
+sss_config_filename = "sss-config.yaml"
 
 def get_yaml_all(filename):
     with open(filename,'r') as input_file:
@@ -21,7 +22,8 @@ def get_all_yaml_files(path):
     file_paths = []
     for r,d,f in os.walk(path):
         for file in f:
-            if file.endswith('.yml') or file.endswith('.yaml'):
+            print file
+            if (file.endswith('.yml') or file.endswith('.yaml') and not(file == sss_config_filename)):
                 file_paths.append(os.path.join(r,file))
         # break, so we don't recurse
         break
@@ -36,15 +38,15 @@ def get_all_yaml_obj(file_paths):
             yaml_objs.append(obj)
     return yaml_objs
 
-def process_yamls(name, directory, obj, platform="", sss_mode="sync"):
+def process_yamls(name, directory, obj, sss_config):
     o = copy.deepcopy(obj)
 
-    # Set the SSS mode, the default value is sync
-    o['spec']['resourceApplyMode'] = sss_mode
+    # Set the apply mode
+    o['spec']['resourceApplyMode'] = sss_config["resourceApplyMode"]
 
-    # Set the platform label if one is specified
-    if platform in ("aws", "gcp"):
-        o['spec']['clusterDeploymentSelector']['matchLabels'][cluster_platform_ann] = platform
+    # Set any labels
+    for key in sss_config["matchLabels"]:    
+        o['spec']['clusterDeploymentSelector']['matchLabels'][key] = sss_config["matchLabels"][key]
 
     # Get all yaml files as array of yaml objects
     yamls = get_all_yaml_obj(get_all_yaml_files(directory))
@@ -92,15 +94,17 @@ if __name__ == '__main__':
             dirpaths.append(dirpath)
 
     for dirpath in sorted(dirpaths):
-        sss_mode = "sync"
-        if "UPSERT/" in dirpath:
-            sss_mode = "upsert"
+        # load sss_config if it exists
+        sss_config = {}
+        path_sss_config = os.path.join(dirpath, sss_config_filename)
+        if os.path.exists(path_sss_config):
+            sss_config = get_yaml(path_sss_config)
 
-        platform = ""
-        if "/gcp" in dirpath:
-            platform = "gcp"
-        if "/aws" in dirpath:
-            platform = "aws"
+        # initialize defaults for sss_config
+        if "matchLabels" not in sss_config:
+            sss_config["matchLabels"] = {}
+        if "resourceApplyMode" not in sss_config:
+            sss_config["resourceApplyMode"] = "sync"
 
         sss_name = dirpath.replace('/','-')
         if sss_name == arguments.yaml_directory:
@@ -109,10 +113,11 @@ if __name__ == '__main__':
         else:
             # SSS name is based on dirpath which has the root path prefixed.. remove that prefix
             sss_name = sss_name[(len(arguments.yaml_directory) + 1):]
+            # legacy, get rid of this!
             if sss_name.startswith("UPSERT-"):
                 sss_name = sss_name[7:]
 
-        process_yamls(sss_name, dirpath, selectorsyncset_data, platform=platform, sss_mode=sss_mode)
+        process_yamls(sss_name, dirpath, selectorsyncset_data, sss_config)
 
 
     # write template file ordering by keys
