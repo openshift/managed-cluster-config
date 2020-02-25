@@ -4176,6 +4176,137 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: sre-build-test
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+    resourceApplyMode: sync
+    resources:
+    - apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: openshift-build-test
+        labels:
+          openshift.io/cluster-monitoring: 'true'
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: sre-build-test
+        namespace: openshift-build-test
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: sre-build-test
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - namespaces
+        verbs:
+        - create
+        - delete
+      - apiGroups:
+        - build.openshift.io
+        resources:
+        - buildconfigs
+        - builds
+        verbs:
+        - create
+        - list
+      - apiGroups:
+        - image.openshift.io
+        resources:
+        - imagestreams
+        verbs:
+        - create
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: sre-build-test
+      roleRef:
+        kind: ClusterRole
+        name: sre-build-test
+        apiGroup: rbac.authorization.k8s.io
+      subjects:
+      - kind: ServiceAccount
+        name: sre-build-test
+        namespace: openshift-build-test
+    - apiVersion: batch/v1beta1
+      kind: CronJob
+      metadata:
+        name: sre-build-test
+        namespace: openshift-build-test
+      spec:
+        failedJobsHistoryLimit: 5
+        successfulJobsHistoryLimit: 3
+        concurrencyPolicy: Forbid
+        schedule: 11 */1 * * *
+        jobTemplate:
+          spec:
+            template:
+              spec:
+                affinity:
+                  nodeAffinity:
+                    requiredDuringSchedulingIgnoredDuringExecution:
+                      nodeSelectorTerms:
+                      - matchExpressions:
+                        - key: node-role.kubernetes.io
+                          operator: In
+                          values:
+                          - infra
+                tolerations:
+                - operator: Equal
+                  key: node-role.kubernetes.io
+                  value: infra
+                  effect: NoSchedule
+                serviceAccountName: sre-build-test
+                restartPolicy: Never
+                containers:
+                - name: sre-build-test
+                  image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+                  imagePullPolicy: Always
+                  command:
+                  - /bin/sh
+                  - -ec
+                  - 'export NS=openshift-build-test-$(date +%s) ; oc create ns $NS
+                    && oc -n $NS new-build nodejs~https://github.com/openshift/nodejs-ex
+                    --name=sre-build-test; echo $(date): Waiting for build to complete.;
+                    while :; do oc -n $NS get build -o custom-columns=STATUS:.status.phase
+                    --no-headers | grep Complete && break; echo $(date): Checking
+                    build again in 15 seconds, NS=$NS; sleep 15; done; echo $(date):
+                    Done, deleting build NS=$NS; oc delete ns $NS'
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
+          prometheus: sre-alerts-stuck-builds
+          role: alert-rules
+        name: sre-alerts-stuck-builds
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-alerts-stuck-builds
+          rules:
+          - alert: StuckNewBuilds3MinSRE
+            expr: count(openshift_build_active_time_seconds{phase="New",exported_namespace=~"^openshift-build-test.*"}
+              < time() - 180) > 0
+            labels:
+              severity: warning
+              namespace: openshift-monitoring
+          - alert: StuckPendingBuilds3MinSRE
+            expr: count(openshift_build_active_time_seconds{phase="Pending",exported_namespace=~"^openshift-build-test.*"}
+              < time() - 180) > 0
+            labels:
+              severity: warning
+              namespace: openshift-monitoring
+- apiVersion: hive.openshift.io/v1alpha1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: sre-prometheus
   spec:
     clusterDeploymentSelector:
@@ -4496,24 +4627,6 @@ objects:
             annotations:
               message: SRE Pruning Job {{ $labels.namespace }}/{{ $labels.cronjob
                 }} is taking more than thirty minutes to complete.
-    - apiVersion: monitoring.coreos.com/v1
-      kind: PrometheusRule
-      metadata:
-        labels:
-          prometheus: sre-alerts-stuck-builds
-          role: alert-rules
-        name: sre-alerts-stuck-builds
-        namespace: openshift-monitoring
-      spec:
-        groups:
-        - name: sre-alerts-stuck-builds
-          rules:
-          - alert: StuckNewBuilds3MinSRE
-            expr: count(openshift_build_active_time_seconds{phase="New"} < time()
-              - 180) > 0
-            labels:
-              severity: warning
-              namespace: openshift-monitoring
     - apiVersion: monitoring.coreos.com/v1
       kind: PrometheusRule
       metadata:
