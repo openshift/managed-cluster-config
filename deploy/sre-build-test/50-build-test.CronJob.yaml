@@ -36,4 +36,16 @@ spec:
             command:
             - /bin/sh
             - -ec
-            - "export NS=openshift-build-test-$(date +%s) ; oc create ns $NS && oc -n $NS new-build nodejs~https://github.com/openshift/nodejs-ex --name=sre-build-test; echo $(date): Waiting for build to complete.; while :; do oc -n $NS get build -o custom-columns=STATUS:.status.phase --no-headers | grep Complete && break; echo $(date): Checking build again in 15 seconds, NS=$NS; sleep 15; done; echo $(date): Done, deleting build NS=$NS; oc delete ns $NS"
+            - >-
+              export NS=openshift-build-test-$(date +%s); 
+              oc create ns $NS; 
+              oc -n $NS new-build nodejs~https://github.com/openshift/nodejs-ex --name=sre-build-test; 
+              echo $(date): Waiting for build to complete.; 
+              while :; 
+              do 
+                oc -n $NS get build -o custom-columns=STATUS:.status.phase --no-headers | grep Complete && break; 
+                echo $(date): Checking build again in 15 seconds, NS=$NS; 
+                sleep 15; 
+              done; 
+              echo $(date): Done, deleting build NS=$NS; 
+              oc delete ns $NS
