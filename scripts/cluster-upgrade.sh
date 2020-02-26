@@ -301,10 +301,9 @@ upgrade() {
 
     MACHINE_COUNT_ALL=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get nodes --no-headers | wc -l)
 
-    # could do joins from machine to node, but it's just all non-master at this time
-    MACHINE_COUNT_UPGRADED=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get nodes --no-headers | grep $MASTER_KUBELET_VERSION | wc -l)
+    MACHINE_COUNT_UPGRADED=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get nodes -o json | jq -r ".items[].status | select(.nodeInfo.kubeletVersion == \"$MASTER_KUBELET_VERSION\") | .conditions[] | select(.type == \"Ready\" and .status == \"True\") | .reason" | wc -l)
 
-    MACHINE_COUNT_PENDING=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get nodes --no-headers | grep -v $MASTER_KUBELET_VERSION | wc -l)
+    MACHINE_COUNT_PENDING=$((MACHINE_COUNT_ALL-MACHINE_COUNT_UPGRADED))
 
     # start maintenance only if we need to
     if [ ! $MACHINE_COUNT_UPGRADED -ge $MACHINE_COUNT_ALL ];
@@ -329,10 +328,9 @@ upgrade() {
         SLEEP_DURATION="$((PD_MAINT_ADDITIONAL_NODE_MIN*60/4))s"
         sleep "$SLEEP_DURATION"
 
-        # could do joins from machine to node, but it's just all non-master at this time
-        MACHINE_COUNT_UPGRADED=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get nodes --no-headers| grep $MASTER_KUBELET_VERSION | wc -l)
+        MACHINE_COUNT_UPGRADED=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get nodes -o json | jq -r ".items[].status | select(.nodeInfo.kubeletVersion == \"$MASTER_KUBELET_VERSION\") | .conditions[] | select(.type == \"Ready\" and .status == \"True\") | .reason" | wc -l)
 
-        MACHINE_COUNT_PENDING=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get nodes --no-headers | grep -v $MASTER_KUBELET_VERSION | wc -l)
+        MACHINE_COUNT_PENDING=$((MACHINE_COUNT_ALL-MACHINE_COUNT_UPGRADED))
 
         # and log current state
         log $OCM_NAME "upgrade" "nodes upgraded: $MACHINE_COUNT_UPGRADED/$MACHINE_COUNT_ALL"
@@ -348,6 +346,62 @@ upgrade() {
         KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc -n openshift-machine-api delete deployment cluster-autoscaler-operator
         log $OCM_NAME "upgrade" "deleted openshift-machine-api/deployment/cluster-autoscaler-operator"
     fi
+
+    log $OCM_NAME "upgrade" "checking availability of ReplicaSets and DaemonSets"
+
+    # verify all replicasets are at expected counts
+    while true;
+    do
+        TOTAL_DESIRED=0
+        for DESIRED in $(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get replicasets --all-namespaces -o json | jq -r '.items[] | select(.metadata.namespace | startswith("default") or startswith("kube") or startswith("openshift")) | select(.status.replicas > 0) | .status.replicas');
+        do
+            TOTAL_DESIRED=$((TOTAL_DESIRED+DESIRED))
+        done
+        
+        TOTAL_SCHEDULED=0
+        for READY in $(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get replicasets --all-namespaces -o json | jq -r '.items[] | select(.metadata.namespace | startswith("default") or startswith("kube") or startswith("openshift")) | select(.status.replicas > 0) | select(.status.replicas == .status.readyReplicas) | select(.status.replicas == .status.availableReplicas) | .status.replicas');
+        do
+            TOTAL_SCHEDULED=$((TOTAL_SCHEDULED+READY))
+        done
+        
+        # output status
+        log $OCM_NAME "upgrade" "ReplicaSets status: $TOTAL_SCHEDULED/$TOTAL_DESIRED"
+
+        if [ $TOTAL_DESIRED -eq 0 ] || [ $TOTAL_DESIRED -ne $TOTAL_SCHEDULED ];
+        then
+            sleep 15
+        else
+            break
+        fi
+    done
+
+    # verify all daemonsets are at expected counts
+    while true;
+    do
+        TOTAL_DESIRED=0
+        for DESIRED in $(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get daemonsets --all-namespaces -o json | jq -r '.items[] | select(.metadata.namespace | startswith("default") or startswith("kube") or startswith("openshift")) | select(.status.desiredNumberScheduled > 0) | .status.desiredNumberScheduled');
+        do
+            TOTAL_DESIRED=$((TOTAL_DESIRED+DESIRED))
+        done
+        
+        TOTAL_SCHEDULED=0
+        for READY in $(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get daemonsets --all-namespaces -o json | jq -r '.items[] | select(.metadata.namespace | startswith("default") or startswith("kube") or startswith("openshift")) | select(.status.desiredNumberScheduled > 0) | select(.status.desiredNumberScheduled == .status.numberReady) | select(.status.desiredNumberScheduled == .status.numberAvailable) | .status.desiredNumberScheduled');
+        do
+            TOTAL_SCHEDULED=$((TOTAL_SCHEDULED+READY))
+        done
+        
+        # output status
+        log $OCM_NAME "upgrade" "DaemonSets status: $TOTAL_SCHEDULED/$TOTAL_DESIRED"
+
+        if [ $TOTAL_DESIRED -eq 0 ] || [ $TOTAL_DESIRED -ne $TOTAL_SCHEDULED ];
+        then
+            sleep 15
+        else
+            break
+        fi
+    done
+
+    log $OCM_NAME "upgrade" "all ReplicaSets and DaemonSets available"
 
     log $OCM_NAME "upgrade" "upgrade is complete"
 
@@ -411,7 +465,8 @@ check_cluster_status() {
 
             for CO in $DCO;
             do
-                CO_MESSAGE=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get clusteroperator $CO -o json | jq -r '.status.extension.lastSyncError')
+                # get clusteroperator error if we can
+                CO_MESSAGE=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get clusteroperator $CO -o json 2>/dev/null | jq -r '.status.extension.lastSyncError')
 
                 if [ "$CO_MESSAGE" != "" ];
                 then
@@ -563,7 +618,7 @@ then
 fi
 
 # Verify we have ClusterDeployment CRs to work with
-if [ `oc get crd clusterdeployments.hive.openshift.io --no-headers 2>/dev/null | wc -l` == "0" ];
+if [ $(oc get crd clusterdeployments.hive.openshift.io --no-headers 2>/dev/null | wc -l) == "0" ];
 then
     echo "ERROR: Current cluster does not have Hive installed.  Verify where you are logged in."
     exit 1
@@ -598,9 +653,9 @@ then
     fi
 fi
 
-for CD_NAMESPACE in `oc get clusterdeployment --all-namespaces | awk '{print $1}' | sort | uniq`;
+for CD_NAMESPACE in $(oc get clusterdeployment --all-namespaces | awk '{print $1}' | sort | uniq);
 do  
-    for CD_NAME in `oc -n $CD_NAMESPACE get clusterdeployment -o json | jq -r '.items[] | select(.metadata.labels["api.openshift.com/managed"] == "true") | select(.status.installed == true) | select(.status.clusterVersionStatus.history[0].state == "Completed") | .metadata.name'`;
+    for CD_NAME in $(oc -n $CD_NAMESPACE get clusterdeployment -o json | jq -r '.items[] | select(.metadata.labels["api.openshift.com/managed"] == "true") | select(.metadata.deletionTimestamp == null or .metadata.deletionTimestamp == "") | select(.status.installed == true) | select(.status.clusterVersionStatus.history[0].state == "Completed") | .metadata.name');
     do  
         if [ "$CLUSTER_NAMES" != "all" ];
         then
