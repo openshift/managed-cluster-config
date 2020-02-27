@@ -1,0 +1,51 @@
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: sre-build-test
+  namespace: openshift-build-test
+spec:
+  failedJobsHistoryLimit: 5
+  successfulJobsHistoryLimit: 3
+  concurrencyPolicy: Forbid
+  schedule: "11 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          affinity:
+            nodeAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                nodeSelectorTerms:
+                - matchExpressions:
+                  - key: "node-role.kubernetes.io"
+                    operator: In
+                    values:
+                      - infra
+          tolerations:
+          - operator: Equal
+            key: node-role.kubernetes.io
+            value: infra
+            effect: NoSchedule
+          serviceAccountName: sre-build-test
+          restartPolicy: Never
+          containers:
+          - name: sre-build-test
+            image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+            imagePullPolicy: Always
+            command:
+            - /bin/sh
+            - -c
+            - >-
+              export NS=openshift-build-test-$(date +%s); 
+              oc create ns $NS; 
+              oc -n $NS new-build nodejs~https://github.com/openshift/nodejs-ex --name=sre-build-test; 
+              echo $(date): Waiting for build to complete.; 
+              while :; 
+              do 
+                oc -n $NS get build -o custom-columns=STATUS:.status.phase --no-headers | grep Complete && break; 
+                echo $(date): Checking build again in 15 seconds, NS=$NS; 
+                sleep 15; 
+              done; 
+              echo $(date): Done, deleting build NS=$NS; 
+              oc delete ns $NS
