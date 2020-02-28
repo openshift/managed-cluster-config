@@ -3952,6 +3952,66 @@ objects:
       kind: PrometheusRule
       metadata:
         labels:
+          prometheus: sre-logging-channels
+          role: alert-rules
+        name: sre-logging-channels
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-logging-channels
+          rules:
+          - alert: LoggingOperatorVersionInvalidSRE
+            expr: '((max(rate(subscription_sync_total{installed!=""}[30m])) by (name,
+              channel) > 0)
+
+              * on(name) group_left(expected_channel)
+
+              label_replace(label_replace(cluster_version{type="current"}, "expected_channel",
+              "$1.$2", "version", "([^.]*)*[.]([^.]*)[.].*"), "name", "elasticsearch-operator",
+              "", ""))
+
+              unless
+
+              max(label_replace(label_replace(label_replace(cluster_version{type="current"},
+              "expected_channel", "$1.$2", "version", "([^.]*)*[.]([^.]*)[.].*"),
+              "channel", "$1", "expected_channel", "(.*)"), "name", "elasticsearch-operator",
+              "", "")) by (name, expected_channel, channel)
+
+              '
+            labels:
+              severity: warning
+              namespace: openshift-logging
+            annotations:
+              message: Channel mismatch for '{{ $labels.name }}'.  Expected '{{ $labels.expected_channel
+                }}' but found '{{ $labels.channel }}'.
+          - alert: LoggingOperatorVersionInvalidSRE
+            expr: '((max(rate(subscription_sync_total{installed!=""}[30m])) by (name,
+              channel) > 0)
+
+              * on(name) group_left(expected_channel)
+
+              label_replace(label_replace(cluster_version{type="current"}, "expected_channel",
+              "$1.$2", "version", "([^.]*)*[.]([^.]*)[.].*"), "name", "cluster-logging",
+              "", ""))
+
+              unless
+
+              max(label_replace(label_replace(label_replace(cluster_version{type="current"},
+              "expected_channel", "$1.$2", "version", "([^.]*)*[.]([^.]*)[.].*"),
+              "channel", "$1", "expected_channel", "(.*)"), "name", "cluster-logging",
+              "", "")) by (name, expected_channel, channel)
+
+              '
+            labels:
+              severity: warning
+              namespace: openshift-logging
+            annotations:
+              message: Channel mismatch for '{{ $labels.name }}'.  Expected '{{ $labels.expected_channel
+                }}' but found '{{ $labels.channel }}'.
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
           prometheus: sre-machine-api-node-mismatch
           role: alert-rules
         name: sre-machine-api-node-mismatch
