@@ -24,6 +24,22 @@ parameters:
   required: true
 - name: TELEMETER_SERVER_URL
   required: true
+- name: RHMI_SRE_USER1
+  required: false
+- name: RHMI_SRE_USER2
+  required: false
+- name: RHMI_SRE_USER3
+  required: false
+- name: RHMI_SRE_USER4
+  required: false
+- name: RHMI_SRE_USER5
+  required: false
+- name: RHMI_SRE_USER6
+  required: false
+- name: RHMI_SRE_USER7
+  required: false
+- name: RHMI_SRE_USER8
+  required: false
 metadata:
   name: selectorsyncset-template
 objects:
@@ -535,6 +551,151 @@ objects:
           systemReserved:
             cpu: 1000m
             memory: 1Gi
+- apiVersion: hive.openshift.io/v1alpha1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: layered-sre-authorization
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/addon-rhmi-operator: 'true'
+    resourceApplyMode: sync
+    resources:
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: layered-sre-cluster-admins
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: cluster-admin
+      subjects:
+      - kind: Group
+        name: layered-sre-cluster-admins
+    - apiVersion: user.openshift.io/v1
+      kind: Group
+      metadata:
+        name: layered-sre-cluster-admins
+      users: []
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: layered-cs-sre-admin-cluster
+      rules:
+      - apiGroups:
+        - config.openshift.io
+        resources:
+        - projects
+        verbs:
+        - '*'
+      - apiGroups:
+        - project.openshift.io
+        resources:
+        - projects
+        verbs:
+        - '*'
+      - apiGroups:
+        - ''
+        resources:
+        - namespaces
+        - namespaces/finalize
+        verbs:
+        - '*'
+      - apiGroups:
+        - user.openshift.io
+        resources:
+        - groups
+        verbs:
+        - patch
+        - update
+      - apiGroups:
+        - quota.openshift.io
+        resources:
+        - clusterresourcequotas/status
+        - clusterresourcequotas
+        verbs:
+        - '*'
+        resourceNames:
+        - rhmi-loadbalancer-quota
+        - rhmi-persistent-volume-quota
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: layered-cs-sre-admin-project
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods/exec
+        verbs:
+        - create
+      - apiGroups:
+        - batch
+        resources:
+        - jobs
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - build.openshift.io
+        resources:
+        - builds
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        - pods/attach
+        verbs:
+        - create
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - delete
+      - apiGroups:
+        - integreatly.org
+        resources:
+        - '*'
+        verbs:
+        - '*'
+    - apiVersion: user.openshift.io/v1
+      kind: Group
+      metadata:
+        name: layered-cs-sre-admins
+      users:
+      - ${RHMI_SRE_USER1}
+      - ${RHMI_SRE_USER2}
+      - ${RHMI_SRE_USER3}
+      - ${RHMI_SRE_USER4}
+      - ${RHMI_SRE_USER5}
+      - ${RHMI_SRE_USER6}
+      - ${RHMI_SRE_USER7}
+      - ${RHMI_SRE_USER8}
+    - apiVersion: managed.openshift.io/v1alpha1
+      kind: SubjectPermission
+      metadata:
+        name: layered-cs-sre-admin
+        namespace: openshift-rbac-permissions
+      spec:
+        clusterPermissions:
+        - dedicated-admins-cluster
+        - layered-cs-sre-admin-cluster
+        permissions:
+        - allowFirst: true
+          clusterRoleName: layered-cs-sre-admin-project
+          namespacesAllowedRegex: .*
+          namespacesDeniedRegex: (^openshift-.*|^kube-.*|^ops-health-monitoring$|^management-infra$|^default$|^logging$|^sre-app-check$)
+        subjectKind: Group
+        subjectName: layered-cs-sre-admins
 - apiVersion: hive.openshift.io/v1alpha1
   kind: SelectorSyncSet
   metadata:
@@ -3948,6 +4109,27 @@ objects:
             labels:
               severity: warning
               namespace: openshift-monitoring
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
+          prometheus: layered-sre-cluster-admins
+          role: alert-rules
+        name: layered-sre-cluster-admins
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: layered-sre-cluster-admins
+          rules:
+          - alert: ElevatingClusterAdminLayeredSRE
+            expr: openshift_group_user_account{group="layered-sre-cluster-admins"}
+              == 1
+            for: 130m
+            labels:
+              severity: warning
+            annotations:
+              message: Layered SRE "{{ $labels.user }}" elevated to layered cluster-admin({{
+                $labels.group }}) more than 2 hours.
     - apiVersion: monitoring.coreos.com/v1
       kind: PrometheusRule
       metadata:

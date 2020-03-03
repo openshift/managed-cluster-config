@@ -1,0 +1,49 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: layered-cs-sre-admin-project
+rules:
+ # CS SRE can run commands in pods
+- apiGroups:
+  - ""
+  resources:
+  - pods/exec
+  verbs:
+  - create
+# CS SRE can delete jobs and builds
+- apiGroups:
+  - batch
+  resources:
+  - jobs
+  verbs:
+  - delete
+  - deletecollection
+- apiGroups:
+  - build.openshift.io
+  resources:
+  - builds
+  verbs:
+  - delete
+  - deletecollection
+# CS SRE can use oc debug
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - pods/attach
+  verbs:
+  - create
+# CS SRE can delete pods
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - delete
+# CS SRE can interact with RHMI
+- apiGroups:
+  - integreatly.org
+  resources:
+  - '*'
+  verbs:
+  - '*'
