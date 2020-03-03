@@ -249,6 +249,17 @@ upgrade() {
         return
     fi
 
+    # is the desired version supported?
+    ALLOWED_UPDATE=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get clusterversion version -o json | jq ".status.availableUpdates[] | select(.force == false and .version == \"$TO\")")
+    VERSION_CANDIDATES=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get clusterversion version -o json | jq ".status.availableUpdates | map(.version) | join(\", \")")
+    if [ "$ALLOWED_UPDATE" == "" ];
+    then
+        log $OCM_NAME $LOG_NAME "Cannot upgrade from $FROM, it is not available in upgrade graph."
+        log $OCM_NAME $LOG_NAME "Candidate versions are: $VERSION_CANDIDATES"
+        teardown $OCM_NAME $CD_NAMESPACE $CD_NAME
+        return
+    fi
+
     # is upgrade already progressing?
     DESIRED_VERSION=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get clusterversion version -o jsonpath='{.spec.desiredUpdate.version}')
 
@@ -589,33 +600,6 @@ get_channel() {
 
     echo $CHANNEL_NAME
 }
-
-if [[ -n $OCP_VERSION_FROM ]];
-then
-    # Verify we can actually upgrade (is this in the graph)
-    CHANNEL_NAME=$(get_channel $OCP_VERSION_TO)
-    GRAPH=$(curl -s -H "Accept: application/json" https://api.openshift.com/api/upgrades_info/v1/graph?channel="${CHANNEL_NAME}&arch=amd64&version=$OCP_VERSION_TO")
-    GRAPH_INDEX_FROM=$(echo "${GRAPH}" | jq -r "[ .nodes[] | .version == \"$OCP_VERSION_FROM\" ] | index(true)")
-    GRAPH_INDEX_TO=$(echo "${GRAPH}" | jq -r "[ .nodes[] | .version == \"$OCP_VERSION_TO\" ] | index(true)")
-
-    GRAPH_EDGE=$(echo "${GRAPH}" | jq -r ".edges[] | select(.[0] == $GRAPH_INDEX_FROM) | .[1] == $GRAPH_INDEX_TO" | grep true)
-
-    if [ -z $GRAPH_INDEX_FROM ];
-    then
-        echo "Cannot upgrade from $OCP_VERSION_FROM, it is not available in upgrade graph."
-        exit 2
-    fi
-    if [ -z $GRAPH_INDEX_TO ];
-    then
-        echo "Cannot upgrade to $OCP_VERSION_TO, it is not available in upgrade graph."
-        exit 2
-    fi
-    if [ "$GRAPH_EDGE" != "true" ];
-    then
-        echo "Cannot upgrade from $OCP_VERSION_FROM to $OCP_VERSION_TO, no path exists in upgrade graph."
-        exit 2
-    fi
-fi
 
 # Verify we have ClusterDeployment CRs to work with
 if [ $(oc get crd clusterdeployments.hive.openshift.io --no-headers 2>/dev/null | wc -l) == "0" ];
