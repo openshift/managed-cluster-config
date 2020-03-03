@@ -251,9 +251,9 @@ upgrade() {
 
     # is the desired version supported?
     ALLOWED_UPDATE=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get clusterversion version -o json | jq ".status.availableUpdates[] | select(.force == false and .version == \"$TO\")")
-    VERSION_CANDIDATES=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get clusterversion version -o json | jq ".status.availableUpdates | map(.version) | join(\", \")")
     if [ "$ALLOWED_UPDATE" == "" ];
     then
+        VERSION_CANDIDATES=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get clusterversion version -o json | jq ".status.availableUpdates | map(.version) | join(\", \")")
         log $OCM_NAME $LOG_NAME "Cannot upgrade from $FROM, it is not available in upgrade graph."
         log $OCM_NAME $LOG_NAME "Candidate versions are: $VERSION_CANDIDATES"
         teardown $OCM_NAME $CD_NAMESPACE $CD_NAME
