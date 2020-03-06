@@ -3266,7 +3266,7 @@ objects:
       - apiGroups:
         - operator.openshift.io
         resources:
-        - dns
+        - dnses
         resourceNames:
         - default
         verbs:
@@ -3541,6 +3541,32 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: dedicated-admins-openshift-marketplace
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: dedicated-admins-openshift-dns
+        namespace: openshift-dns
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - configmaps
+        verbs:
+        - list
+        - get
+        - watch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: dedicated-admins-openshift-dns
+        namespace: openshift-dns
+      subjects:
+      - kind: Group
+        name: dedicated-admins
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: dedicated-admins-openshift-dns
 - apiVersion: hive.openshift.io/v1alpha1
   kind: SelectorSyncSet
   metadata:
