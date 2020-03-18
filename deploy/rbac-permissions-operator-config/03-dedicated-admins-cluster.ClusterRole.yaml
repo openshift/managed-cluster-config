@@ -1,0 +1,18 @@
+aggregationRule:
+  clusterRoleSelectors:
+  - matchLabels:
+    # aggregate all "cluster" scope rbac from SRE to dedicated-admins-cluster
+    rbac.authorization.k8s.io/aggregate-to-dedicated-admins: "cluster"
+  - matchExpressions:
+    # aggregate all customer installed operator rbac from OLM to dedicated-admins-cluster
+    - key: olm.opgroup.permissions/aggregate-to-admin
+      operator: In
+      values:
+        - openshift-logging
+        - openshift-operators
+        - openshift-operators-redhat
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: dedicated-admins-cluster
+rules: []
