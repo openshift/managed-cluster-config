@@ -3122,12 +3122,46 @@ objects:
         name: dedicated-admin
         annotations:
           openshift.io/node-selector: ''
+    - aggregationRule:
+        clusterRoleSelectors:
+        - matchLabels: null
+          rbac.authorization.k8s.io/aggregate-to-dedicated-admins: cluster
+        - matchExpressions:
+          - key: olm.opgroup.permissions/aggregate-to-admin
+            operator: In
+            values:
+            - openshift-logging
+            - openshift-operators
+            - openshift-operators-redhat
+      apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: dedicated-admins-cluster
+      rules: []
+    - aggregationRule:
+        clusterRoleSelectors:
+        - matchLabels: null
+          rbac.authorization.k8s.io/aggregate-to-dedicated-admins: project
+        - matchLabels: null
+          rbac.authorization.k8s.io/aggregate-to-admin: 'true'
+        - matchExpressions:
+          - key: olm.opgroup.permissions/aggregate-to-admin
+            operator: In
+            values:
+            - openshift-logging
+            - openshift-operators
+            - openshift-operators-redhat
+      apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: dedicated-admins-project
+      rules: []
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        annotations:
-          authorization.openshift.io/system-only: 'true'
-        name: dedicated-admins-cluster
+        label:
+          rbac.authorization.k8s.io/aggregate-to-dedicated-admins: cluster
+        name: dedicated-admins-aggregate-cluster
       rules:
       - apiGroups:
         - rbac.authorization.k8s.io
@@ -3369,22 +3403,11 @@ objects:
         - update
         - watch
     - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRoleBinding
-      metadata:
-        name: dedicated-admins-cluster
-      subjects:
-      - kind: Group
-        name: dedicated-admins
-      - kind: Group
-        name: system:serviceaccounts:dedicated-admin
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: ClusterRole
-        name: dedicated-admins-cluster
-    - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: dedicated-admins-project
+        labels:
+          rbac.authorization.k8s.io/aggregate-to-dedicated-admins: project
+        name: dedicated-admins-aggregate-project
       rules:
       - apiGroups:
         - ''
@@ -3531,44 +3554,19 @@ objects:
         - events
         verbs:
         - create
-    - apiVersion: managed.openshift.io/v1alpha1
-      kind: SubjectPermission
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
       metadata:
-        name: dedicated-admin-serviceaccounts
-        namespace: openshift-rbac-permissions
-      spec:
-        subjectKind: Group
-        subjectName: system:serviceaccounts:dedicated-admin
-        clusterPermissions:
-        - dedicated-admins-cluster
-        permissions:
-        - clusterRoleName: dedicated-admins-project
-          namespacesAllowedRegex: .*
-          namespacesDeniedRegex: (^kube-.*|^openshift.*|^ops-health-monitoring$|^management-infra$|^default$|^logging$|^sre-app-check$|^redhat-.*)
-          allowFirst: true
-        - clusterRoleName: admin
-          namespacesAllowedRegex: .*
-          namespacesDeniedRegex: (^kube-.*|^openshift.*|^ops-health-monitoring$|^management-infra$|^default$|^logging$|^sre-app-check$|^redhat-.*)
-          allowFirst: true
-    - apiVersion: managed.openshift.io/v1alpha1
-      kind: SubjectPermission
-      metadata:
+        name: dedicated-admins-cluster
+      subjects:
+      - kind: Group
         name: dedicated-admins
-        namespace: openshift-rbac-permissions
-      spec:
-        subjectKind: Group
-        subjectName: dedicated-admins
-        clusterPermissions:
-        - dedicated-admins-cluster
-        permissions:
-        - clusterRoleName: dedicated-admins-project
-          namespacesAllowedRegex: .*
-          namespacesDeniedRegex: (^kube-.*|^openshift.*|^ops-health-monitoring$|^management-infra$|^default$|^logging$|^sre-app-check$|^redhat-.*)
-          allowFirst: true
-        - clusterRoleName: admin
-          namespacesAllowedRegex: .*
-          namespacesDeniedRegex: (^kube-.*|^openshift.*|^ops-health-monitoring$|^management-infra$|^default$|^logging$|^sre-app-check$|^redhat-.*)
-          allowFirst: true
+      - kind: Group
+        name: system:serviceaccounts:dedicated-admin
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: dedicated-admins-cluster
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: Role
       metadata:
@@ -3669,6 +3667,44 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: dedicated-admins-openshift-dns
+    - apiVersion: managed.openshift.io/v1alpha1
+      kind: SubjectPermission
+      metadata:
+        name: dedicated-admin-serviceaccounts
+        namespace: openshift-rbac-permissions
+      spec:
+        subjectKind: Group
+        subjectName: system:serviceaccounts:dedicated-admin
+        clusterPermissions:
+        - dedicated-admins-cluster
+        permissions:
+        - clusterRoleName: dedicated-admins-project
+          namespacesAllowedRegex: .*
+          namespacesDeniedRegex: (^kube-.*|^openshift.*|^ops-health-monitoring$|^management-infra$|^default$|^logging$|^sre-app-check$|^redhat-.*)
+          allowFirst: true
+        - clusterRoleName: admin
+          namespacesAllowedRegex: .*
+          namespacesDeniedRegex: (^kube-.*|^openshift.*|^ops-health-monitoring$|^management-infra$|^default$|^logging$|^sre-app-check$|^redhat-.*)
+          allowFirst: true
+    - apiVersion: managed.openshift.io/v1alpha1
+      kind: SubjectPermission
+      metadata:
+        name: dedicated-admins
+        namespace: openshift-rbac-permissions
+      spec:
+        subjectKind: Group
+        subjectName: dedicated-admins
+        clusterPermissions:
+        - dedicated-admins-cluster
+        permissions:
+        - clusterRoleName: dedicated-admins-project
+          namespacesAllowedRegex: .*
+          namespacesDeniedRegex: (^kube-.*|^openshift.*|^ops-health-monitoring$|^management-infra$|^default$|^logging$|^sre-app-check$|^redhat-.*)
+          allowFirst: true
+        - clusterRoleName: admin
+          namespacesAllowedRegex: .*
+          namespacesDeniedRegex: (^kube-.*|^openshift.*|^ops-health-monitoring$|^management-infra$|^default$|^logging$|^sre-app-check$|^redhat-.*)
+          allowFirst: true
 - apiVersion: hive.openshift.io/v1alpha1
   kind: SelectorSyncSet
   metadata:
