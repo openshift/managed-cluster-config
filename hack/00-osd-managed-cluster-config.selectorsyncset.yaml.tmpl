@@ -517,6 +517,86 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: customer-registry-cas
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+    resourceApplyMode: sync
+    resources:
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: dedicated-admins-registry-cas-cluster
+      rules:
+      - apiGroups:
+        - config.openshift.io
+        resources:
+        - images
+        resourceNames:
+        - cluster
+        verbs:
+        - get
+        - list
+        - watch
+        - patch
+        - update
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: dedicated-admins-registry-cas-project
+        namespace: openshift-config
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - configmaps
+        verbs:
+        - create
+      - apiGroups:
+        - ''
+        resources:
+        - configmaps
+        verbs:
+        - '*'
+        resourceNames:
+        - registry-cas
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: dedicated-admins-registry-cas-cluster
+      subjects:
+      - apiGroup: rbac.authorization.k8s.io
+        kind: Group
+        name: dedicated-admins
+      - kind: Group
+        name: system:serviceaccounts:dedicated-admin
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: dedicated-admins-registry-cas-cluster
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: dedicated-admins-registry-cas-project
+        namespace: openshift-config
+      subjects:
+      - apiGroup: rbac.authorization.k8s.io
+        kind: Group
+        name: dedicated-admins
+      - kind: Group
+        name: system:serviceaccounts:dedicated-admin
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: dedicated-admins-registry-cas-project
+- apiVersion: hive.openshift.io/v1alpha1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: kubelet-config
   spec:
     clusterDeploymentSelector:
