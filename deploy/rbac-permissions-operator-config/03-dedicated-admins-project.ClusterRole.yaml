@@ -1,13 +1,19 @@
 aggregationRule:
   clusterRoleSelectors:
-  - matchLabels:
-    # aggregate all "project" scope rbac from SRE to dedicated-admins-project
-    rbac.authorization.k8s.io/aggregate-to-dedicated-admins: "project"
-  - matchLabels:
-    # aggregate all "admin" scope rbac from OCP to dedicated-admins-project
-    rbac.authorization.k8s.io/aggregate-to-admin: "true"
+  # aggregate all "project" scope rbac from SRE to dedicated-admins-project
   - matchExpressions:
-    # aggregate all customer installed operator rbac from OLM to dedicated-admins-project
+    - key: managed.openshift.io/aggregate-to-dedicated-admins
+      operator: In
+      values:
+        - "project"
+  # aggregate all "admin" scope rbac from OCP to dedicated-admins-project
+  - matchExpressions:
+    - key: rbac.authorization.k8s.io/aggregate-to-admin
+      operator: In
+      values:
+        - "true"
+  # aggregate all customer installed operator rbac from OLM to dedicated-admins-project
+  - matchExpressions:
     - key: olm.opgroup.permissions/aggregate-to-admin
       operator: In
       values:

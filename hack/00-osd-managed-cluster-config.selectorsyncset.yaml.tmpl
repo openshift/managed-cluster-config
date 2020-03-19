@@ -3124,8 +3124,11 @@ objects:
           openshift.io/node-selector: ''
     - aggregationRule:
         clusterRoleSelectors:
-        - matchLabels: null
-          rbac.authorization.k8s.io/aggregate-to-dedicated-admins: cluster
+        - matchExpressions:
+          - key: managed.openshift.io/aggregate-to-dedicated-admins
+            operator: In
+            values:
+            - cluster
         - matchExpressions:
           - key: olm.opgroup.permissions/aggregate-to-admin
             operator: In
@@ -3140,10 +3143,16 @@ objects:
       rules: []
     - aggregationRule:
         clusterRoleSelectors:
-        - matchLabels: null
-          rbac.authorization.k8s.io/aggregate-to-dedicated-admins: project
-        - matchLabels: null
-          rbac.authorization.k8s.io/aggregate-to-admin: 'true'
+        - matchExpressions:
+          - key: managed.openshift.io/aggregate-to-dedicated-admins
+            operator: In
+            values:
+            - project
+        - matchExpressions:
+          - key: rbac.authorization.k8s.io/aggregate-to-admin
+            operator: In
+            values:
+            - 'true'
         - matchExpressions:
           - key: olm.opgroup.permissions/aggregate-to-admin
             operator: In
@@ -3159,8 +3168,8 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        label:
-          rbac.authorization.k8s.io/aggregate-to-dedicated-admins: cluster
+        labels:
+          managed.openshift.io/aggregate-to-dedicated-admins: cluster
         name: dedicated-admins-aggregate-cluster
       rules:
       - apiGroups:
@@ -3406,7 +3415,7 @@ objects:
       kind: ClusterRole
       metadata:
         labels:
-          rbac.authorization.k8s.io/aggregate-to-dedicated-admins: project
+          managed.openshift.io/aggregate-to-dedicated-admins: project
         name: dedicated-admins-aggregate-project
       rules:
       - apiGroups:
