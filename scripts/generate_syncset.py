@@ -103,7 +103,7 @@ if __name__ == '__main__':
         if "matchLabels" not in sss_config:
             sss_config["matchLabels"] = {}
         if "resourceApplyMode" not in sss_config:
-            sss_config["resourceApplyMode"] = "sync"
+            sss_config["resourceApplyMode"] = "Sync"
 
         sss_name = dirpath.replace('/','-')
         if sss_name == arguments.yaml_directory:

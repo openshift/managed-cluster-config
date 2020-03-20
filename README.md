@@ -16,7 +16,7 @@ To add a new SelectorSyncSet, add your yaml manifest to the `deploy` dir, then r
 There is a limited configuration available at this time.  The file `sss-config.yaml` contains configurations that apply to the current directly only and it supports the following features:
 
 * matchLabels (default: `{}`) - adds additional `matchLabels` conditions to the `clusterDeploymentSelector`
-* resourceApplyMode (default: `"sync"`) - sets the `resourceApplyMode`
+* resourceApplyMode (default: `"Sync"`) - sets the `resourceApplyMode`
 
 # Selector Sync Sets included in this repo
 
