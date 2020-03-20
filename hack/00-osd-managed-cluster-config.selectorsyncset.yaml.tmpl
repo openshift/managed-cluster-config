@@ -4138,57 +4138,6 @@ objects:
       kind: PrometheusRule
       metadata:
         labels:
-          prometheus: sre-filesysfull
-          role: alert-rules
-        name: sre-filesysfull
-        namespace: openshift-monitoring
-      spec:
-        groups:
-        - name: sre-filesysfull
-          rules:
-          - alert: KubeCustomerPersistentVolumeUsageCriticalSRE
-            expr: '100
-
-              * kubelet_volume_stats_available_bytes{job="kubelet",namespace!~"(openshift-.*|kube-.*|default|logging)"}
-
-              / kubelet_volume_stats_capacity_bytes{job="kubelet",namespace!~"(openshift-.*|kube-.*|default|logging)"}
-
-              < 3
-
-              '
-            labels:
-              severity: warning
-              namespace: openshift-monitoring
-            annotations:
-              message: The customer PersistentVolume claimed by {{ $labels.persistentvolumeclaim
-                }} in Namespace {{ $labels.namespace }} is only {{ printf "%0.2f"
-                $value }}% free.
-              link: https://github.com/openshift/ops-sop/blob/master/v4/alerts/KubeCustomerPersistentVolumeUsageCritical.md
-          - alert: KubeCustomerPersistentVolumeFullInFourDaysSRE
-            expr: '100
-
-              * (kubelet_volume_stats_available_bytes{job="kubelet",namespace!~"(openshift-.*|kube-.*|default|logging)"}
-
-              / kubelet_volume_stats_capacity_bytes{job="kubelet",namespace!~"(openshift-.*|kube-.*|default|logging)"})
-
-              < 15 and predict_linear(kubelet_volume_stats_available_bytes{job="kubelet",namespace!~"(openshift-.*|kube-.*|default|logging)"}[6h],
-
-              4 * 24 * 3600) < 0
-
-              '
-            labels:
-              severity: warning
-              namespace: openshift-monitoring
-            annotations:
-              message: Based on recent sampling, the customer PersistentVolume claimed
-                by {{ $labels.persistentvolumeclaim }} in Namespace {{ $labels.namespace
-                }} is expected to fill up within four days. Currently {{ printf "%0.2f"
-                $value }}% is available.
-              link: https://github.com/openshift/ops-sop/blob/master/v4/alerts/KubeCustomerPersistentVolumeUsageCritical.md
-    - apiVersion: monitoring.coreos.com/v1
-      kind: PrometheusRule
-      metadata:
-        labels:
           prometheus: sre-cluster-operator-down-alerts
           role: alert-rules
         name: sre-cluster-operator-down-alerts
@@ -4498,6 +4447,94 @@ objects:
             annotations:
               message: SRE Pruning Job {{ $labels.namespace }}/{{ $labels.cronjob
                 }} is taking more than thirty minutes to complete.
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
+          prometheus: sre-pv
+          role: alert-rules
+        name: sre-pv
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-pv-customer
+          rules:
+          - alert: KubePersistentVolumeUsageCriticalCustomer
+            expr: '100
+
+              * kubelet_volume_stats_available_bytes{job="kubelet",namespace!~"(^openshift-.*|^kube-.*|^default$|^redhat-.*)"}
+
+              / kubelet_volume_stats_capacity_bytes{job="kubelet",namespace!~"(^openshift-.*|^kube-.*|^default$|^redhat-.*)"}
+
+              < 3
+
+              '
+            labels:
+              severity: critical
+              namespace: dedicated-admin
+            annotations:
+              message: The customer PersistentVolume claimed by {{ $labels.persistentvolumeclaim
+                }} in Namespace {{ $labels.namespace }} is only {{ printf "%0.2f"
+                $value }}% free.
+          - alert: KubePersistentVolumeFullInFourDaysCustomer
+            expr: '100
+
+              * (kubelet_volume_stats_available_bytes{job="kubelet",namespace!~"(^openshift-.*|^kube-.*|^default$|^redhat-.*)"}
+
+              / kubelet_volume_stats_capacity_bytes{job="kubelet",namespace!~"(^openshift-.*|^kube-.*|^default$|^redhat-.*)"})
+
+              < 15 and predict_linear(kubelet_volume_stats_available_bytes{job="kubelet",namespace!~"(^openshift-.*|^kube-.*|^default$|^redhat-.*)"}[6h],
+
+              4 * 24 * 3600) < 0
+
+              '
+            labels:
+              severity: warning
+              namespace: dedicated-admin
+            annotations:
+              message: Based on recent sampling, the customer PersistentVolume claimed
+                by {{ $labels.persistentvolumeclaim }} in Namespace {{ $labels.namespace
+                }} is expected to fill up within four days. Currently {{ printf "%0.2f"
+                $value }}% is available.
+        - name: sre-pv-lp
+          rules:
+          - alert: KubePersistentVolumeUsageCriticalLayeredProduct
+            expr: '100
+
+              * kubelet_volume_stats_available_bytes{job="kubelet",namespace=~"(^redhat-.*)",namespace!~"(^redhat-rhmi.*)"}
+
+              / kubelet_volume_stats_capacity_bytes{job="kubelet",namespace=~"(^redhat-.*)",namespace!~"(^redhat-rhmi.*)"}
+
+              < 3
+
+              '
+            labels:
+              severity: critical
+              namespace: openshift-monitoring
+            annotations:
+              message: The customer PersistentVolume claimed by {{ $labels.persistentvolumeclaim
+                }} in Namespace {{ $labels.namespace }} is only {{ printf "%0.2f"
+                $value }}% free.
+          - alert: KubePersistentVolumeFullInFourDaysLayeredProduct
+            expr: '100
+
+              * (kubelet_volume_stats_available_bytes{job="kubelet",namespace=~"(^redhat-.*)",namespace!~"(^redhat-rhmi.*)"}
+
+              / kubelet_volume_stats_capacity_bytes{job="kubelet",namespace=~"(^redhat-.*)",namespace!~"(^redhat-rhmi.*)"})
+
+              < 15 and predict_linear(kubelet_volume_stats_available_bytes{job="kubelet",namespace=~"(^redhat-.*)",namespace!~"(^redhat-rhmi.*)"}[6h],
+
+              4 * 24 * 3600) < 0
+
+              '
+            labels:
+              severity: warning
+              namespace: openshift-monitoring
+            annotations:
+              message: Based on recent sampling, the customer PersistentVolume claimed
+                by {{ $labels.persistentvolumeclaim }} in Namespace {{ $labels.namespace
+                }} is expected to fill up within four days. Currently {{ printf "%0.2f"
+                $value }}% is available.
     - apiVersion: monitoring.coreos.com/v1
       kind: PrometheusRule
       metadata:
