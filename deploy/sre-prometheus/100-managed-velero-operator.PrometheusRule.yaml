@@ -1,0 +1,49 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: sre-managed-velero-operator-alerts
+    role: alert-rules
+  name: sre-managed-velero-operator-alerts
+  namespace: openshift-monitoring
+spec:
+  groups:
+  - name: sre-managed-velero-operator-alerts
+    rules:
+    # Execution times for Velero backup jobs are fairly consistent, so these
+    # alerts measure the time since the last successful backup finished (or
+    # the deployment's creation time if there's been no backup yet), plus a
+    # small static buffer to account for some variation.
+    - alert: VeleroHourlyObjectBackupMissed
+      # Hourly backup should complete about 3600 seconds (1 hour) after the
+      # last successful backup, with a 600 second (10 minute) buffer.
+      expr: |
+        time() - clamp_min(velero_backup_last_successful_timestamp{namespace="openshift-velero",schedule="hourly-object-backup"},
+        scalar(max(kube_deployment_created{namespace="openshift-velero",deployment="velero"}))) > 3600 + 600
+      labels:
+        severity: warning
+        namespace: openshift-monitoring
+      annotations:
+        message: The hourly Velero backup has not successfully completed
+    - alert: VeleroDailyFullBackupMissed
+      # Daily backup should complete about 86,400 seconds (1 day) after the
+      # last successful backup, with a 600 second (10 minute) buffer.
+      expr: |
+        time() - clamp_min(velero_backup_last_successful_timestamp{namespace="openshift-velero",schedule="daily-full-backup"},
+        scalar(max(kube_deployment_created{namespace="openshift-velero",deployment="velero"}))) > 86400 + 600
+      labels:
+        severity: warning
+        namespace: openshift-monitoring
+      annotations:
+        message: The daily Velero backup has not successfully completed
+    - alert: VeleroWeeklyFullBackupMissed
+      # Weekly backup should complete about 604,800 seconds (1 week) after the
+      # last successful backup, with a 600 second (10 minute) buffer
+      expr: |
+        time() - clamp_min(velero_backup_last_successful_timestamp{namespace="openshift-velero",schedule="weekly-full-backup"},
+        scalar(max(kube_deployment_created{namespace="openshift-velero",deployment="velero"}))) > 604800 + 600
+      labels:
+        severity: warning
+        namespace: openshift-monitoring
+      annotations:
+        message: The weekly Velero backup has not successfully completed
