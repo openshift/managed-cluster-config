@@ -29,6 +29,7 @@ spec:
         < 3
       labels:
         severity: critical
+        namespace: "{{ $labels.namespace }}"
       annotations:
         message: "The customer PersistentVolume claimed by {{ $labels.persistentvolumeclaim }} in Namespace {{ $labels.namespace }} is only {{ printf \"%0.2f\" $value }}% free."
 
@@ -42,6 +43,7 @@ spec:
         4 * 24 * 3600) < 0
       labels:
         severity: warning
+        namespace: "{{ $labels.namespace }}"
       annotations:
         message: "Based on recent sampling, the customer PersistentVolume claimed by {{ $labels.persistentvolumeclaim }} in Namespace {{ $labels.namespace }} is expected to fill up within four days. Currently {{ printf \"%0.2f\" $value }}% is available."
 
@@ -56,6 +58,7 @@ spec:
         < 3
       labels:
         severity: critical
+        namespace: "{{ $labels.namespace }}"
       annotations:
         message: "The customer PersistentVolume claimed by {{ $labels.persistentvolumeclaim }} in Namespace {{ $labels.namespace }} is only {{ printf \"%0.2f\" $value }}% free."
 
@@ -69,5 +72,6 @@ spec:
         4 * 24 * 3600) < 0
       labels:
         severity: warning
+        namespace: "{{ $labels.namespace }}"
       annotations:
         message: "Based on recent sampling, the customer PersistentVolume claimed by {{ $labels.persistentvolumeclaim }} in Namespace {{ $labels.namespace }} is expected to fill up within four days. Currently {{ printf \"%0.2f\" $value }}% is available."

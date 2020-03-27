@@ -7,17 +7,18 @@ MISSING_NS="false"
 for F in $(ls deploy/sre-prometheus)
 do
     # requires yq
-    MISSING_NS_COUNT=$(yq '.spec.groups[].rules[] | select(.namespace == null) and select(.labels.namespace == null)' deploy/sre-prometheus/$F | wc -l)
+    MISSING_NS_COUNT=$(cat deploy/sre-prometheus/$F | python -c 'import json, sys, yaml ; y=yaml.safe_load(sys.stdin.read()) ; print(json.dumps(y))' | jq -r '.spec.groups[].rules[] | select(.namespace == null) and select(.labels.namespace == null)' | wc -l)
 
     if [ "$MISSING_NS_COUNT" != "0" ]
     then
-        echo "Rule missing 'namespace' in file '$F'"
+        echo "ERROR: Rule missing 'namespace' in file '$F'"
         MISSING_NS="true"
     fi
 done
 
 if [ "$MISSING_NS" == "true" ]
 then
+    echo "ERROR: one or more files missing 'namespace' label, see 'ERROR' output in above logs"
     exit 2
 fi
 
