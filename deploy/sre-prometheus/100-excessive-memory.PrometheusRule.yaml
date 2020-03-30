@@ -16,6 +16,7 @@ spec:
       for: 30m
       labels:
         severity: warning
+        namespace: "{{ $labels.namespace }}"
       annotations:
         message: System container {{ $labels.namespace }}/{{ $labels.pod_name }}/{{ $labels.container_name }}
           is using in excess of 3G of memory for over 30 minutes.
@@ -25,6 +26,7 @@ spec:
       for: 30m
       labels:
         severity: critical
+        namespace: "{{ $labels.namespace }}"
       annotations:
         message: System container {{ $labels.namespace }}/{{ $labels.pod_name }}/{{ $labels.container_name }}
           is using in excess of 5G of memory for over 30 minutes.
