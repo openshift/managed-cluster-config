@@ -862,54 +862,54 @@ objects:
     - apiVersion: apiextensions.k8s.io/v1beta1
       kind: CustomResourceDefinition
       metadata:
-        name: veleros.managed.openshift.io
+        name: veleroinstalls.managed.openshift.io
       spec:
         additionalPrinterColumns:
-        - JSONPath: .status.s3Bucket.name
-          description: Name of the S3 bucket
+        - JSONPath: .status.storageBucket.name
+          description: Name of the storage bucket
           name: Bucket
           type: string
-        - JSONPath: .status.s3Bucket.provisioned
-          description: Has the S3 bucket been successfully provisioned
+        - JSONPath: .status.storageBucket.provisioned
+          description: Has the storage bucket been successfully provisioned
           name: Provisioned
           type: boolean
-        - JSONPath: .status.s3Bucket.lastSyncTimestamp
+        - JSONPath: .status.storageBucket.lastSyncTimestamp
           name: Last Sync
           type: date
         group: managed.openshift.io
         names:
-          kind: Velero
-          listKind: VeleroList
-          plural: veleros
-          singular: velero
+          kind: VeleroInstall
+          listKind: VeleroInstallList
+          plural: veleroinstalls
+          singular: veleroinstall
         scope: Namespaced
         subresources:
           status: {}
         validation:
           openAPIV3Schema:
-            description: Velero is the Schema for the veleros API
+            description: VeleroInstall is the Schema for the veleroinstalls API
             properties:
               apiVersion:
                 description: 'APIVersion defines the versioned schema of this representation
                   of an object. Servers should convert recognized schemas to the latest
-                  internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+                  internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
                 type: string
               kind:
                 description: 'Kind is a string value representing the REST resource
                   this object represents. Servers may infer this from the endpoint
                   the client submits requests to. Cannot be updated. In CamelCase.
-                  More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+                  More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
                 type: string
               metadata:
                 type: object
               spec:
-                description: VeleroSpec defines the desired state of Velero
+                description: VeleroInstallSpec defines the desired state of Velero
                 type: object
               status:
-                description: VeleroStatus defines the observed state of Velero
+                description: VeleroInstallStatus defines the observed state of Velero
                 properties:
-                  s3Bucket:
-                    description: S3Bucket contains details of the S3 storage bucket
+                  storageBucket:
+                    description: StorageBucket contains details of the storage bucket
                       for backups
                     properties:
                       lastSyncTimestamp:
@@ -918,8 +918,8 @@ objects:
                         format: date-time
                         type: string
                       name:
-                        description: Name is the name of the S3 bucket created to
-                          store Velero backup details
+                        description: Name is the name of the storage bucket created
+                          to store Velero backup details
                         maxLength: 63
                         type: string
                       provisioned:
@@ -931,9 +931,9 @@ objects:
                     type: object
                 type: object
             type: object
-        version: v1alpha1
+        version: v1alpha2
         versions:
-        - name: v1alpha1
+        - name: v1alpha2
           served: true
           storage: true
     - apiVersion: v1
@@ -959,7 +959,13 @@ objects:
         resources:
         - customresourcedefinitions
         verbs:
-        - '*'
+        - create
+        - delete
+        - get
+        - list
+        - patch
+        - update
+        - watch
       - apiGroups:
         - config.openshift.io
         resources:
@@ -987,7 +993,13 @@ objects:
         - configmaps
         - secrets
         verbs:
-        - '*'
+        - create
+        - delete
+        - get
+        - list
+        - patch
+        - update
+        - watch
       - apiGroups:
         - apps
         resources:
@@ -996,14 +1008,25 @@ objects:
         - replicasets
         - statefulsets
         verbs:
-        - '*'
+        - create
+        - delete
+        - get
+        - list
+        - patch
+        - update
+        - watch
       - apiGroups:
         - monitoring.coreos.com
         resources:
         - servicemonitors
         verbs:
-        - get
         - create
+        - delete
+        - get
+        - list
+        - patch
+        - update
+        - watch
       - apiGroups:
         - apps
         resourceNames:
@@ -1027,9 +1050,9 @@ objects:
       - apiGroups:
         - managed.openshift.io
         resources:
-        - veleros
-        - veleros/status
-        - veleros/finalizers
+        - veleroinstalls
+        - veleroinstalls/status
+        - veleroinstalls/finalizers
         verbs:
         - '*'
       - apiGroups:
@@ -1037,13 +1060,25 @@ objects:
         resources:
         - '*'
         verbs:
-        - '*'
+        - create
+        - delete
+        - get
+        - list
+        - patch
+        - update
+        - watch
       - apiGroups:
         - cloudcredential.openshift.io
         resources:
         - credentialsrequests
         verbs:
-        - '*'
+        - create
+        - delete
+        - get
+        - list
+        - patch
+        - update
+        - watch
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: Role
       metadata:
@@ -1204,7 +1239,7 @@ objects:
               operator: Exists
             containers:
             - name: managed-velero-operator
-              image: quay.io/openshift-sre/managed-velero-operator:v0.1.72-6bca798
+              image: quay.io/openshift-sre/managed-velero-operator:v0.2.117-ededc3e
               command:
               - managed-velero-operator
               env:
@@ -1212,6 +1247,10 @@ objects:
                 valueFrom:
                   fieldRef:
                     fieldPath: metadata.name
+              - name: WATCH_NAMESPACE
+                valueFrom:
+                  fieldRef:
+                    fieldPath: metadata.namespace
               - name: OPERATOR_NAME
                 value: managed-velero-operator
 - apiVersion: hive.openshift.io/v1alpha1
@@ -4822,8 +4861,8 @@ objects:
         api.openshift.com/managed: 'true'
     resourceApplyMode: Sync
     resources:
-    - apiVersion: managed.openshift.io/v1alpha1
-      kind: Velero
+    - apiVersion: managed.openshift.io/v1alpha2
+      kind: VeleroInstall
       metadata:
         name: cluster
         namespace: openshift-velero
