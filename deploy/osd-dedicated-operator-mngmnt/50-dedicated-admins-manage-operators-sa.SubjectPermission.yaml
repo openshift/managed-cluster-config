@@ -1,0 +1,14 @@
+apiVersion: managed.openshift.io/v1alpha1
+kind: SubjectPermission
+metadata:
+  name: dedicated-admin-manage-opearators-sa
+  namespace: openshift-rbac-permissions
+spec:
+  subjectKind: Group
+  subjectName: system:serviceaccounts:dedicated-admin
+  permissions:
+    - 
+      clusterRoleName: dedicated-admins-manage-operators
+      namespacesAllowedRegex: ".*"
+      namespacesDeniedRegex: "(^kube-.*|^openshift.*|^ops-health-monitoring$|^management-infra$|^default$|^logging$|^sre-app-check$|^redhat-.*)"
+      allowFirst: true

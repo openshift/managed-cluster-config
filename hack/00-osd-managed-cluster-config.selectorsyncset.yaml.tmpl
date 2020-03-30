@@ -2568,6 +2568,58 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: osd-dedicated-operator-mngmnt
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/ccs: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: dedicated-admins-manage-operators
+      rules:
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - '*'
+        verbs:
+        - '*'
+    - apiVersion: managed.openshift.io/v1alpha1
+      kind: SubjectPermission
+      metadata:
+        name: dedicated-admin-manage-opearators-sa
+        namespace: openshift-rbac-permissions
+      spec:
+        subjectKind: Group
+        subjectName: system:serviceaccounts:dedicated-admin
+        permissions:
+        - clusterRoleName: dedicated-admins-manage-operators
+          namespacesAllowedRegex: .*
+          namespacesDeniedRegex: (^kube-.*|^openshift.*|^ops-health-monitoring$|^management-infra$|^default$|^logging$|^sre-app-check$|^redhat-.*)
+          allowFirst: true
+    - apiVersion: managed.openshift.io/v1alpha1
+      kind: SubjectPermission
+      metadata:
+        name: dedicated-admin-manage-opearators
+        namespace: openshift-rbac-permissions
+      spec:
+        subjectKind: Group
+        subjectName: dedicated-admins
+        permissions:
+        - clusterRoleName: dedicated-admins-manage-operators
+          namespacesAllowedRegex: .*
+          namespacesDeniedRegex: (^kube-.*|^openshift.*|^ops-health-monitoring$|^management-infra$|^default$|^logging$|^sre-app-check$|^redhat-.*)
+          allowFirst: true
+- apiVersion: hive.openshift.io/v1alpha1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: osd-ingress
   spec:
     clusterDeploymentSelector:
