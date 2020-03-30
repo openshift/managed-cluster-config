@@ -4,10 +4,10 @@ set -exv
 
 # all custom alerts must have a namespace label
 MISSING_NS="false"
-for F in $(ls deploy/sre-prometheus)
+for F in $(find ./deploy/sre-prometheus -type f -iname '*prometheusrule.yaml')
 do
     # requires yq
-    MISSING_NS_COUNT=$(cat deploy/sre-prometheus/$F | python -c 'import json, sys, yaml ; y=yaml.safe_load(sys.stdin.read()) ; print(json.dumps(y))' | jq -r '.spec.groups[].rules[] | select(.namespace == null) and select(.labels.namespace == null)' | wc -l)
+    MISSING_NS_COUNT=$(cat $F | python -c 'import json, sys, yaml ; y=yaml.safe_load(sys.stdin.read()) ; print(json.dumps(y))' | jq -r '.spec.groups[].rules[] | select(.namespace == null) and select(.labels.namespace == null)' | wc -l)
 
     if [ "$MISSING_NS_COUNT" != "0" ]
     then
