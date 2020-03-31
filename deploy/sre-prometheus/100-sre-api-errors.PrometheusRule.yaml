@@ -14,7 +14,7 @@ spec:
       annotations:
         message: The API server has had 100 percent request failures for 300 seconds.
       expr: |
-        (sum(rate(apiserver_request_count{job="apiserver", code=~"(400|5..)"}[5m])) / sum(rate(apiserver_request_count{job="apiserver"}[5m])) >= 1)
+        (sum(rate(apiserver_request_total{job="apiserver", code=~"(400|5..)"}[5m])) / sum(rate(apiserver_request_total{job="apiserver", code=~"(1..|2..|3..|4.[1-9])"}[5m])) >= 1)
       for: 5m
       labels:
         severity: warning
