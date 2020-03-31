@@ -1967,6 +1967,11 @@ objects:
     clusterDeploymentSelector:
       matchLabels:
         api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/ccs
+        operation: NotIn
+        values:
+        - 'true'
     resourceApplyMode: Sync
     resources:
     - apiVersion: config.openshift.io/v1
@@ -2019,6 +2024,33 @@ objects:
         publisher: Red Hat
         registryNamespace: curated-redhat-operators
         type: appregistry
+- apiVersion: hive.openshift.io/v1alpha1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-curated-operatorsources-revert
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/ccs
+        operation: In
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: config.openshift.io/v1
+      kind: OperatorHub
+      metadata:
+        name: cluster
+        annotations:
+          release.openshift.io/create-only: 'true'
+      spec:
+        disableAllDefaultSources: false
 - apiVersion: hive.openshift.io/v1alpha1
   kind: SelectorSyncSet
   metadata:

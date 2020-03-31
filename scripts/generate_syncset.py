@@ -41,11 +41,21 @@ def process_yamls(name, directory, obj, sss_config):
     o = copy.deepcopy(obj)
 
     # Set the apply mode
-    o['spec']['resourceApplyMode'] = sss_config["resourceApplyMode"]
+    if 'resourceApplyMode' in sss_config:
+        o['spec']['resourceApplyMode'] = sss_config['resourceApplyMode']
 
-    # Set any labels
-    for key in sss_config["matchLabels"]:    
-        o['spec']['clusterDeploymentSelector']['matchLabels'][key] = sss_config["matchLabels"][key]
+    # Merge matchLabels criteria
+    for key in sss_config['matchLabels']:
+        if 'matchLabels' not in o['spec']['clusterDeploymentSelector']:
+            o['spec']['clusterDeploymentSelector']['matchLabels'] = {}
+        o['spec']['clusterDeploymentSelector']['matchLabels'][key] = sss_config['matchLabels'][key]
+
+    # Merge matchExpressions criteria
+    if 'matchExpressions' in sss_config:
+        if 'matchExpressions' not in o['spec']['clusterDeploymentSelector']:
+            o['spec']['clusterDeploymentSelector']['matchExpressions'] = []
+        for item in sss_config['matchExpressions']:
+            o['spec']['clusterDeploymentSelector']['matchExpressions'].append(item)
 
     # Get all yaml files as array of yaml objects
     yamls = get_all_yaml_obj(get_all_yaml_files(directory))
