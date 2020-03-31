@@ -449,6 +449,11 @@ objects:
     clusterDeploymentSelector:
       matchLabels:
         api.openshift.com/managed: "true"
+      matchExpresions:
+        - key: api.openshift.com/environment
+          operator: notIn
+          values:
+          - "production"
     identityProviders:
     - challenge: true
       ldap:
@@ -472,3 +477,22 @@ objects:
       mappingMethod: ${IDENTITY_MAPPING_METHOD}
       name: ${IDENTITY_NAME}
       type: LDAP
+# SelectorSyncIdentityProvider for prod clusters
+- apiVersion: hive.openshift.io/v1alpha1
+  kind: SelectorSyncIdentityProvider
+  metadata:
+    name: osd-sre-google-identityprovider
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: "true"
+        api.openshift.com/environment: "production"
+    identityProviders:
+    - google:
+      clientID: 211953714079-afmg28lojv8m2vv97b56s64ivm5ercn4.apps.googleusercontent.com
+      clientSecret:
+        name: osd-google-secret
+      hostedDomain: redhat.com
+    mappingMethod: claim
+    name: Openshift-SRE
+    type: Google
