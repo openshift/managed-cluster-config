@@ -591,12 +591,7 @@ get_channel() {
 
     VERSION_MINOR=$(echo "${VERSION}" | sed 's/\([^.]*\.[^.]*\)\..*/\1/g')
     
-    if [ "$VERSION_MINOR" == "4.1" ];
-    then
-        CHANNEL_NAME="stable-$VERSION_MINOR"
-    else
-        CHANNEL_NAME="fast-$VERSION_MINOR"
-    fi
+    CHANNEL_NAME="stable-$VERSION_MINOR"
 
     echo $CHANNEL_NAME
 }
