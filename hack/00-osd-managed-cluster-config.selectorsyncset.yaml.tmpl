@@ -877,6 +877,192 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: layered-sre-authorization
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/addon-rhmi-operator-internal: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: layered-sre-cluster-admins
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: cluster-admin
+      subjects:
+      - kind: Group
+        name: layered-sre-cluster-admins
+    - apiVersion: user.openshift.io/v1
+      kind: Group
+      metadata:
+        name: layered-sre-cluster-admins
+      users: []
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: layered-cs-sre-admin-cluster
+      rules:
+      - apiGroups:
+        - config.openshift.io
+        resources:
+        - projects
+        verbs:
+        - create
+        - get
+        - list
+        - patch
+        - update
+        - watch
+      - apiGroups:
+        - config.openshift.io
+        resources:
+        - infrastructures
+        - oauths
+        verbs:
+        - get
+      - apiGroups:
+        - project.openshift.io
+        resources:
+        - projects
+        verbs:
+        - '*'
+      - apiGroups:
+        - ''
+        resources:
+        - namespaces
+        - namespaces/finalize
+        verbs:
+        - create
+        - get
+        - list
+        - patch
+        - update
+        - watch
+      - apiGroups:
+        - user.openshift.io
+        resources:
+        - groups
+        verbs:
+        - patch
+        - update
+        - get
+      - apiGroups:
+        - quota.openshift.io
+        resources:
+        - clusterresourcequotas/status
+        - clusterresourcequotas
+        verbs:
+        - '*'
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: layered-cs-sre-admin-project
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods/exec
+        verbs:
+        - create
+      - apiGroups:
+        - batch
+        resources:
+        - jobs
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - build.openshift.io
+        resources:
+        - builds
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        - pods/attach
+        verbs:
+        - create
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        - pods/log
+        verbs:
+        - get
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - delete
+      - apiGroups:
+        - integreatly.org
+        resources:
+        - '*'
+        verbs:
+        - create
+        - get
+        - list
+        - patch
+        - update
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - secrets
+        - configmaps
+        - persistentvolumeclaims
+        verbs:
+        - '*'
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - installplans
+        verbs:
+        - patch
+    - apiVersion: user.openshift.io/v1
+      kind: Group
+      metadata:
+        name: layered-cs-sre-admins
+      users:
+      - ${RHMI_SRE_USER1}
+      - ${RHMI_SRE_USER2}
+      - ${RHMI_SRE_USER3}
+      - ${RHMI_SRE_USER4}
+      - ${RHMI_SRE_USER5}
+      - ${RHMI_SRE_USER6}
+      - ${RHMI_SRE_USER7}
+      - ${RHMI_SRE_USER8}
+    - apiVersion: managed.openshift.io/v1alpha1
+      kind: SubjectPermission
+      metadata:
+        name: layered-cs-sre-admin
+        namespace: openshift-rbac-permissions
+      spec:
+        clusterPermissions:
+        - dedicated-admins-cluster
+        - layered-cs-sre-admin-cluster
+        permissions:
+        - allowFirst: true
+          clusterRoleName: layered-cs-sre-admin-project
+          namespacesAllowedRegex: .*
+          namespacesDeniedRegex: (^openshift-.*|^kube-.*|^ops-health-monitoring$|^management-infra$|^default$|^logging$|^sre-app-check$)
+        subjectKind: Group
+        subjectName: layered-cs-sre-admins
+- apiVersion: hive.openshift.io/v1alpha1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: managed-velero-operator
   spec:
     clusterDeploymentSelector:
