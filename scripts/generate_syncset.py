@@ -126,7 +126,18 @@ if __name__ == '__main__':
             if sss_name.startswith("UPSERT-"):
                 sss_name = sss_name[7:]
 
-        process_yamls(sss_name, dirpath, selectorsyncset_data, sss_config)
+        # If no matchLabelsApplyMode, process as nornmal
+        if "matchLabelsApplyMode" in sss_config and sss_config["matchLabelsApplyMode"] == "OR":
+            # generate new SSS per matchLabels line
+            for key, value in sss_config['matchLabels'].items():
+                o = copy.deepcopy(sss_config)
+                o['matchLabels'].clear()
+                o['matchLabels'].update({key:value})
+                del o["matchLabelsApplyMode"]
+                process_yamls(sss_name, dirpath, selectorsyncset_data, o)
+        else:
+            # Catches anyone with a rouge value
+            process_yamls(sss_name, dirpath, selectorsyncset_data, sss_config)
 
 
     # write template file ordering by keys

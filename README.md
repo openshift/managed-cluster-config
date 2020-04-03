@@ -17,6 +17,7 @@ There is a limited configuration available at this time.  The file `sss-config.y
 
 * matchLabels (default: `{}`) - adds additional `matchLabels` conditions to the `clusterDeploymentSelector`
 * resourceApplyMode (default: `"Sync"`) - sets the `resourceApplyMode`
+* matchLabelsApplyMode (optional, default: not set) - When set as `"OR"` generates additional SSS per `matchLabels` conditions. This is to tackle a situation where we want to apply configuration to multiple labels.
 
 # Selector Sync Sets included in this repo
 
