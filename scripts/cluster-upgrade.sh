@@ -100,18 +100,18 @@ setup() {
     fi
 
     ORIGINAL_REPLICAS=$(oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r '.metadata.labels["managed.openshift.io/original-worker-replicas"] | select(. != null)')
-    DESIRED_REPLICAS=$(oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r '.spec.compute[] | select(.name | startswith("worker")) | .replicas')
-    ZONE_COUNT=$(oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r '.spec.compute[] | select(.name | startswith("worker")) | .platform.aws.zones[]' | wc -l)
+    DESIRED_REPLICAS=$(oc -n $CD_NAMESPACE get machinepool "$CD_NAME-worker" -o json | jq -r '.spec.replicas')
+    ZONE_COUNT=$(oc -n $CD_NAMESPACE get machinepool "$CD_NAME-worker" -o json | jq -r '.spec.platform.aws.zones[]' | wc -l)
 
     if [ "$ORIGINAL_REPLICAS" == "" ];
     then
         # nope, need to bump replicas!
-        ORIGINAL_REPLICAS=$(oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r '.spec.compute[0].replicas')
+        ORIGINAL_REPLICAS=$(oc -n $CD_NAMESPACE get machinepool "$CD_NAME-worker" -o json | jq -r '.spec.replicas')
         DESIRED_REPLICAS=$(($ORIGINAL_REPLICAS+$ZONE_COUNT))
 
         # update replicas
         oc -n $CD_NAMESPACE label clusterdeployment $CD_NAME managed.openshift.io/original-worker-replicas=$ORIGINAL_REPLICAS
-        oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r ".spec.compute[0].replicas=$DESIRED_REPLICAS" | oc replace -f -
+        oc -n $CD_NAMESPACE get machinepool "$CD_NAME-worker" -o json | jq -r ".spec.replicas=$DESIRED_REPLICAS" | oc replace -f -
 
         log $OCM_NAME "setup" "bumping replicas from $ORIGINAL_REPLICAS to $DESIRED_REPLICAS"
     fi
@@ -426,7 +426,7 @@ prepare_kubeconfig() {
 
     if [ ! -f "${TMP_DIR}/kubeconfig-${CD_NAMESPACE}" ];
     then
-        oc -n $CD_NAMESPACE extract "$(oc -n $CD_NAMESPACE get secrets -o name | grep $CD_NAME | grep kubeconfig)" --keys=kubeconfig --to=- > ${TMP_DIR}/kubeconfig-${CD_NAMESPACE}
+        oc -n $CD_NAMESPACE extract "$(oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r '.spec.clusterMetdata.adminKubeconfigSecretRef.name')" --keys=kubeconfig --to=- > ${TMP_DIR}/kubeconfig-${CD_NAMESPACE}
     fi
 }
 
@@ -497,12 +497,12 @@ teardown() {
     prepare_kubeconfig $OCM_NAME $CD_NAMESPACE $CD_NAME
 
     ORIGINAL_REPLICAS=$(oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r '.metadata.labels["managed.openshift.io/original-worker-replicas"] | select(. != null)' 2>/dev/null)
-    DESIRED_REPLICAS=$(oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r '.spec.compute[] | select(.name | startswith("worker")) | .replicas')
+    DESIRED_REPLICAS=$(oc -n $CD_NAMESPACE get machinepool "$CD_NAME-worker" -o json | jq -r '.spec.replicas')
 
     if [ "$ORIGINAL_REPLICAS" != "" ] && [ "$ORIGINAL_REPLICAS" != "$DESIRED_REPLICAS" ];
     then
         # need to set replicas back to the original and clear the label
-        oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r ".spec.compute[0].replicas=$ORIGINAL_REPLICAS" | oc replace -f -
+        oc -n $CD_NAMESPACE get machinepool "$CD_NAME-worker" -o json | jq -r ".spec.replicas=$ORIGINAL_REPLICAS" | oc replace -f -
         oc -n $CD_NAMESPACE label clusterdeployment $CD_NAME managed.openshift.io/original-worker-replicas-
 
         log $OCM_NAME "teardown" "dropping replicas back from $DESIRED_REPLICAS to $ORIGINAL_REPLICAS"
