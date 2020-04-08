@@ -1397,7 +1397,7 @@ objects:
     - apiVersion: cloudcredential.openshift.io/v1
       kind: CredentialsRequest
       metadata:
-        name: managed-velero-operator-iam-credentials
+        name: managed-velero-operator-iam-credentials-aws
         namespace: openshift-velero
       spec:
         secretRef:
@@ -1421,6 +1421,22 @@ objects:
             - s3:PutEncryptionConfiguration
             - s3:PutLifecycleConfiguration
             resource: '*'
+    - apiVersion: cloudcredential.openshift.io/v1
+      kind: CredentialsRequest
+      metadata:
+        name: managed-velero-operator-iam-credentials-gcp
+        namespace: openshift-velero
+      spec:
+        secretRef:
+          name: managed-velero-operator-iam-credentials
+          namespace: openshift-velero
+        providerSpec:
+          apiVersion: cloudcredential.openshift.io/v1
+          kind: GCPProviderSpec
+          predefinedRoles:
+          - roles/storage.admin
+          - roles/iam.serviceAccountUser
+          skipServiceCheck: true
     - apiVersion: apps/v1
       kind: Deployment
       metadata:
@@ -1451,7 +1467,7 @@ objects:
               operator: Exists
             containers:
             - name: managed-velero-operator
-              image: quay.io/openshift-sre/managed-velero-operator:v0.2.117-ededc3e
+              image: quay.io/openshift-sre/managed-velero-operator:v0.2.133-c6455c5
               command:
               - managed-velero-operator
               env:
