@@ -13,7 +13,7 @@ To add a new SelectorSyncSet, add your yaml manifest to the `deploy` dir, then r
 - oyaml: `pip install oyaml`
 
 # Selector Sync Set Configuration
-There is a limited configuration available at this time.  The file `sss-config.yaml` contains configurations that apply to the current directly only and it supports the following features:
+There is a limited configuration available at this time.  The file `sss-config.yaml` contains configurations that apply to the current directory only and it supports the following features:
 
 * matchLabels (default: `{}`) - adds additional `matchLabels` conditions to the `clusterDeploymentSelector`
 * resourceApplyMode (default: `"Sync"`) - sets the `resourceApplyMode`
@@ -60,10 +60,6 @@ Refer to [deploy/resource/quotas/README.md](deploy/resource/quotas/README.md).
 
 Docs TBA.
 
-## Dependencies
-
-pyyaml
-
 ## Logging
 
 Prepares the cluster for `elasticsearch` and `logging` operator installation and pre-configures curator to retain 2 days of indexes (1 day for operations).
@@ -72,6 +68,24 @@ To opt-in to logging, the customer must:
 1. install the `logging` operator
 2. install the `elasticsearch` operator
 3. create `ClusterLogging` CR in `openshift-logging`
+
+## EFS Enablement via CSI
+
+[`efs-csi`](deploy/efs-csi) enables AWS EFS via the CSI driver. Customer
+opts in by opening a SNow ticket, whereupon SRE must add the appropriate
+[label](deploy/efs-csi/sss-config.yaml) to the cluster. The
+SelectorSyncSet:
+
+- Installs the CSIDriver and associated DaemonSet.
+- Creates a StorageClass pointing to the CSIDriver.
+- Sets up a ClusterRoleBinding allowing dedicated-admins to create
+  PersistentVolumes.
+- Creates a SecurityContextConstraints allowing dedicated-admins to
+  create pods with any UID.
+
+# Dependencies
+
+pyyaml
 
 
 # Additional Scripts
