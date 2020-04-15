@@ -1,9 +1,11 @@
 # Source: https://github.com/kubernetes-sigs/aws-efs-csi-driver/blob/51d19a433dcfc47fbb7b7a0e1c8ff6ab98ce87e9/deploy/kubernetes/base/node.yaml
+# Changes tagged with DELTA: comments
 kind: DaemonSet
 apiVersion: apps/v1
 metadata:
   name: efs-csi-node
-  namespace: kube-system
+  # DELTA: don't put this in kube-system
+  namespace: openshift-efs-csi-driver
 spec:
   selector:
     matchLabels:
@@ -14,6 +16,8 @@ spec:
         app: efs-csi-node
     spec:
       nodeSelector:
+        # DELTA: only deploy this on worker nodes
+        # NOTE: This will hit infra nodes as well.
         node-role.kubernetes.io/worker: ''
       hostNetwork: true
       priorityClassName: system-node-critical
@@ -23,7 +27,8 @@ spec:
         - name: efs-plugin
           securityContext:
             privileged: true
-          image: amazon/aws-efs-csi-driver:latest
+          # DELTA: fq image pinned to a release
+          image: registry.hub.docker.com/amazon/aws-efs-csi-driver:release-0.3
           args:
             - --endpoint=$(CSI_ENDPOINT)
             - --logtostderr

@@ -659,11 +659,15 @@ objects:
         hive.openshift.io/cluster-platform: aws
     resourceApplyMode: Sync
     resources:
+    - apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: openshift-efs-csi-driver
     - kind: DaemonSet
       apiVersion: apps/v1
       metadata:
         name: efs-csi-node
-        namespace: kube-system
+        namespace: openshift-efs-csi-driver
       spec:
         selector:
           matchLabels:
@@ -683,7 +687,7 @@ objects:
             - name: efs-plugin
               securityContext:
                 privileged: true
-              image: amazon/aws-efs-csi-driver:latest
+              image: registry.hub.docker.com/amazon/aws-efs-csi-driver:release-0.3
               args:
               - --endpoint=$(CSI_ENDPOINT)
               - --logtostderr
