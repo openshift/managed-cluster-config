@@ -502,12 +502,40 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: ccs-dedicated-admins
+    name: ccs-dedicated-admins-ccs
   spec:
     clusterDeploymentSelector:
       matchLabels:
         api.openshift.com/managed: 'true'
         api.openshift.com/ccs: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        labels:
+          managed.openshift.io/aggregate-to-dedicated-admins: project
+        name: dedicated-admins-manage-operators
+      rules:
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - '*'
+        verbs:
+        - '*'
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: ccs-dedicated-admins-extended-dedicated-admin
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/extended-dedicated-admin: 'true'
     resourceApplyMode: Sync
     resources:
     - apiVersion: rbac.authorization.k8s.io/v1
