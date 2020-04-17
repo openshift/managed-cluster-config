@@ -82,8 +82,8 @@ SelectorSyncSet:
 - Creates a StorageClass pointing to the CSIDriver.
 - Sets up a ClusterRoleBinding allowing dedicated-admins to create
   PersistentVolumes.
-- Creates a SecurityContextConstraints allowing dedicated-admins to
-  create pods with any UID.
+
+See [this SOP](https://github.com/openshift/ops-sop/blob/master/v4/howto/enable-efs-csi.asciidoc) for more details.
 
 # Dependencies
 
