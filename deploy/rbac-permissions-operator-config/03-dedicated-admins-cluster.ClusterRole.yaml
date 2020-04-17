@@ -6,7 +6,7 @@ aggregationRule:
       operator: In
       values:
         - "cluster"
-  # aggregate all customer installed operator rbac from OLM to dedicated-admins-cluster
+  # aggregate all customer installed operator rbac from OLM to dedicated-admins-cluster (pre 4.3.12)
   - matchExpressions:
     - key: olm.opgroup.permissions/aggregate-to-admin
       operator: In
@@ -14,6 +14,21 @@ aggregationRule:
         - openshift-logging
         - openshift-operators
         - openshift-operators-redhat
+  # aggregate all customer installed operator rbac from OLM to dedicated-admins-cluster (4.3.12+)
+  - matchExpressions:
+    - key: olm.owner.kind
+      operator: In
+      values:
+      - OperatorGroup
+    - key: olm.owner.namespace
+      operator: NotIn
+      values:
+      - openshift-cloud-ingress-operator
+      - openshift-monitoring
+      - openshift-operator-lifecycle-manager
+      - openshift-rbac-permissions
+      - openshift-splunk-forwarder-operator
+      - openshift-velero
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
