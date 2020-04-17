@@ -426,7 +426,7 @@ prepare_kubeconfig() {
 
     if [ ! -f "${TMP_DIR}/kubeconfig-${CD_NAMESPACE}" ];
     then
-        oc -n $CD_NAMESPACE extract "$(oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r '.spec.clusterMetdata.adminKubeconfigSecretRef.name')" --keys=kubeconfig --to=- > ${TMP_DIR}/kubeconfig-${CD_NAMESPACE}
+        oc -n $CD_NAMESPACE extract secret/"$(oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r '.spec.clusterMetadata.adminKubeconfigSecretRef.name')" --keys=kubeconfig --to=- > ${TMP_DIR}/kubeconfig-${CD_NAMESPACE}
     fi
 }
 
@@ -634,7 +634,7 @@ fi
 
 for CD_NAMESPACE in $(oc get clusterdeployment --all-namespaces | awk '{print $1}' | sort | uniq);
 do  
-    for CD_NAME in $(oc -n $CD_NAMESPACE get clusterdeployment -o json | jq -r '.items[] | select(.metadata.labels["api.openshift.com/managed"] == "true") | select(.metadata.deletionTimestamp == null or .metadata.deletionTimestamp == "") | select(.status.installed == true) | select(.status.clusterVersionStatus.history[0].state == "Completed") | .metadata.name');
+    for CD_NAME in $(oc -n $CD_NAMESPACE get clusterdeployment -o json | jq -r '.items[] | select(.metadata.labels["api.openshift.com/managed"] == "true") | select(.metadata.deletionTimestamp == null or .metadata.deletionTimestamp == "") | select(.spec.installed == true) | select(.status.clusterVersionStatus.history[0].state == "Completed") | .metadata.name');
     do  
         if [ "$CLUSTER_NAMES" != "all" ];
         then
