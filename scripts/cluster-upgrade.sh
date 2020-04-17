@@ -426,7 +426,7 @@ prepare_kubeconfig() {
 
     if [ ! -f "${TMP_DIR}/kubeconfig-${CD_NAMESPACE}" ];
     then
-        oc -n $CD_NAMESPACE extract secret/"$(oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r '.spec.clusterMetadata.adminKubeconfigSecretRef.name')" --keys=kubeconfig --to=- > ${TMP_DIR}/kubeconfig-${CD_NAMESPACE}
+        oc -n $CD_NAMESPACE extract "secret/$(oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r '.spec.clusterMetadata.adminKubeconfigSecretRef.name')" --keys=kubeconfig --to=- > ${TMP_DIR}/kubeconfig-${CD_NAMESPACE}
     fi
 }
 
