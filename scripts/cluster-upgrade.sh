@@ -308,11 +308,9 @@ upgrade() {
     log $OCM_NAME "upgrade" "checking node versions"
 
     # fun fact!  after clusterversion says it is done, individual nodes could still be updated.
-    MASTER_KUBELET_VERSION=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get nodes --no-headers | grep master | sort | uniq | awk '{print $5}' | sort -u)
-
     MACHINE_COUNT_ALL=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get nodes --no-headers | wc -l)
 
-    MACHINE_COUNT_UPGRADED=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get nodes -o json | jq -r ".items[].status | select(.nodeInfo.kubeletVersion == \"$MASTER_KUBELET_VERSION\") | .conditions[] | select(.type == \"Ready\" and .status == \"True\") | .reason" | wc -l)
+    MACHINE_COUNT_UPGRADED=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get nodes -o json | jq -r ".items[].status | select(.annotations[\"machineconfiguration.openshift.io/currentConfig\"] == .annotations[\"machineconfiguration.openshift.io/desiredConfig\"]) | .conditions[] | select(.type == \"Ready\" and .status == \"True\") | .reason" | wc -l)
 
     MACHINE_COUNT_PENDING=$((MACHINE_COUNT_ALL-MACHINE_COUNT_UPGRADED))
 
@@ -339,7 +337,7 @@ upgrade() {
         SLEEP_DURATION="$((PD_MAINT_ADDITIONAL_NODE_MIN*60/4))s"
         sleep "$SLEEP_DURATION"
 
-        MACHINE_COUNT_UPGRADED=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get nodes -o json | jq -r ".items[].status | select(.nodeInfo.kubeletVersion == \"$MASTER_KUBELET_VERSION\") | .conditions[] | select(.type == \"Ready\" and .status == \"True\") | .reason" | wc -l)
+        MACHINE_COUNT_UPGRADED=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get nodes -o json | jq -r ".items[].status | select(.annotations[\"machineconfiguration.openshift.io/currentConfig\"] == .annotations[\"machineconfiguration.openshift.io/desiredConfig\"]) | .conditions[] | select(.type == \"Ready\" and .status == \"True\") | .reason" | wc -l)
 
         MACHINE_COUNT_PENDING=$((MACHINE_COUNT_ALL-MACHINE_COUNT_UPGRADED))
 
