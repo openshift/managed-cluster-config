@@ -427,8 +427,15 @@ prepare_kubeconfig() {
 
     if [ ! -f "${TMP_DIR}/kubeconfig-${CD_NAMESPACE}" ];
     then
-        # https://issues.redhat.com/browse/OSD-3443 ==> change 'api' to 'rh-api'
-        oc -n $CD_NAMESPACE extract "secret/$(oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r '.spec.clusterMetadata.adminKubeconfigSecretRef.name')" --keys=kubeconfig --to=- | sed 's#server: https://api\.#server: https://rh-api\.#g' > ${TMP_DIR}/kubeconfig-${CD_NAMESPACE}
+        KFILE=${TMP_DIR}/kubeconfig-${CD_NAMESPACE}
+        oc -n $CD_NAMESPACE extract "secret/$(oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r '.spec.clusterMetadata.adminKubeconfigSecretRef.name')" --keys=kubeconfig --to=- > $KFILE
+
+        # https://issues.redhat.com/browse/OSD-3443 ==> use 'rh-api' if override exists
+        API_OVERRIDE=$(oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o jsonpath='{.spec.controlPlaneConfig.apiURLOverride}')
+        if [ "$API_OVERRIDE" != "" ];
+        then
+            sed -i "s#\(^[ ]*server: https://\).*#\1$API_OVERRIDE#g" $KFILE
+        fi
     fi
 }
 
