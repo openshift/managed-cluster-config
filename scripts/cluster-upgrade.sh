@@ -17,6 +17,11 @@ PD_MAINT_BASE_INFRA_COUNT=3
 # additional time to upgrade per node beyond the base count
 PD_MAINT_ADDITIONAL_NODE_MIN=8
 
+# minimum number of times the cluster must report consistent version state before proceeding
+CONSISTENT_STATE_REQUIRED_COUNT=5
+# seconds to wait in-between consistent state checks
+CONSISTENT_STATE_WAIT=60
+
 OCP_VERSION_FROM=$1
 OCP_VERSION_TO=$2
 CLUSTER_NAMES=${@:3}
@@ -327,24 +332,30 @@ upgrade() {
         teardown_maintenance_window $OCM_NAME $CD_NAMESPACE $CD_NAME "$PD_MAINT_DESCRIPTION_BASE"
     fi
 
-    # log current state
-    log $OCM_NAME "upgrade" "nodes upgraded: $MACHINE_COUNT_UPGRADED/$MACHINE_COUNT_ALL"
-
-    # make sure all nodes run same kubelet version
-    while [ $MACHINE_COUNT_UPGRADED -lt $MACHINE_COUNT_ALL ];
+    # only consider the upgrade done if we a successful run of consistent state reporting,
+    # indicating that no further node actions are being undertaken
+    CONSISTENT_STATE_COUNTER=0
+    while [ $CONSISTENT_STATE_COUNTER -lt $CONSISTENT_STATE_REQUIRED_COUNT ]; 
     do
-        # sleep at beginning because we've already checked that we are not done.
-        SLEEP_DURATION="$((PD_MAINT_ADDITIONAL_NODE_MIN*60/4))s"
-        sleep "$SLEEP_DURATION"
+
+        if [ $MACHINE_COUNT_UPGRADED -lt $MACHINE_COUNT_ALL ];
+        then
+            # inconsistent state, reset the counter
+            CONSISTENT_STATE_COUNTER=0
+        else
+            CONSISTENT_STATE_COUNTER=$((CONSISTENT_STATE_COUNTER+1))
+        fi
+
+        sleep $CONSISTENT_STATE_WAIT
 
         MACHINE_COUNT_UPGRADED=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get nodes -o json | jq -r ".items[].status | select(.annotations[\"machineconfiguration.openshift.io/currentConfig\"] == .annotations[\"machineconfiguration.openshift.io/desiredConfig\"]) | .conditions[] | select(.type == \"Ready\" and .status == \"True\") | .reason" | wc -l)
 
-        MACHINE_COUNT_PENDING=$((MACHINE_COUNT_ALL-MACHINE_COUNT_UPGRADED))
+        # log current state
+        log $OCM_NAME "upgrade" "nodes upgraded: $MACHINE_COUNT_UPGRADED/$MACHINE_COUNT_ALL (check $CONSISTENT_STATE_COUNTER/$CONSISTENT_STATE_REQUIRED_COUNT)"
 
-        # and log current state
-        log $OCM_NAME "upgrade" "nodes upgraded: $MACHINE_COUNT_UPGRADED/$MACHINE_COUNT_ALL"
     done
 
+    # we got a clean run of consistency checks
     log $OCM_NAME "upgrade" "all nodes on same version"
 
     # 4.3.0 - Delete ingress-operator and cluster-autoscaler-operator Deployments
