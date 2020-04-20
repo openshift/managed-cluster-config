@@ -76,7 +76,7 @@ opts in by opening a ServiceNow ticket, whereupon SRE must add the appropriate
 [label](deploy/efs-csi/sss-config.yaml) to the cluster. The
 SelectorSyncSet:
 
-- Installs a DaemonSet into the `kube-system` namespace, running the CSI driver
+- Installs a DaemonSet into the `openshift-efs-csi` namespace, running the CSI driver
   image on worker nodes.
 - Creates a CSIDriver resource.
 - Creates a StorageClass pointing to the CSIDriver.
