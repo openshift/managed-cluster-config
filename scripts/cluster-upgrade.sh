@@ -427,7 +427,8 @@ prepare_kubeconfig() {
 
     if [ ! -f "${TMP_DIR}/kubeconfig-${CD_NAMESPACE}" ];
     then
-        oc -n $CD_NAMESPACE extract "secret/$(oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r '.spec.clusterMetadata.adminKubeconfigSecretRef.name')" --keys=kubeconfig --to=- > ${TMP_DIR}/kubeconfig-${CD_NAMESPACE}
+        # https://issues.redhat.com/browse/OSD-3443 ==> change 'api' to 'rh-api'
+        oc -n $CD_NAMESPACE extract "secret/$(oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r '.spec.clusterMetadata.adminKubeconfigSecretRef.name')" --keys=kubeconfig --to=- | sed 's#server: https://api\.#server: https://rh-api\.#g' > ${TMP_DIR}/kubeconfig-${CD_NAMESPACE}
     fi
 }
 
