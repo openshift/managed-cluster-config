@@ -4,8 +4,8 @@ kind: DaemonSet
 apiVersion: apps/v1
 metadata:
   name: efs-csi-node
-  # TODO: don't put this in kube-system
-  namespace: kube-system
+  # DELTA: Use a custom namespace rather than kube-system
+  namespace: openshift-efs-csi
 spec:
   selector:
     matchLabels:
@@ -15,12 +15,15 @@ spec:
       labels:
         app: efs-csi-node
     spec:
+      # DELTA: Added
+      serviceAccount: efs-csi-sa
+      # DELTA: Removed
+      # priorityClassName: system-node-critical
       nodeSelector:
         # DELTA: only deploy this on worker nodes
         # NOTE: This will hit infra nodes as well.
         node-role.kubernetes.io/worker: ''
       hostNetwork: true
-      priorityClassName: system-node-critical
       tolerations:
         - operator: Exists
       containers:

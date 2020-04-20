@@ -659,11 +659,58 @@ objects:
         hive.openshift.io/cluster-platform: aws
     resourceApplyMode: Sync
     resources:
+    - kind: Namespace
+      apiVersion: v1
+      metadata:
+        name: openshift-efs-csi
+    - kind: ServiceAccount
+      apiVersion: v1
+      metadata:
+        name: efs-csi-sa
+        namespace: openshift-efs-csi
+    - kind: SecurityContextConstraints
+      apiVersion: security.openshift.io/v1
+      metadata:
+        annotations:
+          kubernetes.io/description: Highly privileged SCC for the EFS CSI driver
+            DaemonSet.
+        name: efs-csi-scc
+      allowHostDirVolumePlugin: true
+      allowHostIPC: true
+      allowHostNetwork: true
+      allowHostPID: true
+      allowHostPorts: true
+      allowPrivilegeEscalation: true
+      allowPrivilegedContainer: true
+      allowedCapabilities:
+      - '*'
+      allowedUnsafeSysctls:
+      - '*'
+      fsGroup:
+        type: RunAsAny
+      groups:
+      - system:cluster-admins
+      - system:nodes
+      - system:masters
+      readOnlyRootFilesystem: false
+      runAsUser:
+        type: RunAsAny
+      seLinuxContext:
+        type: RunAsAny
+      seccompProfiles:
+      - '*'
+      supplementalGroups:
+        type: RunAsAny
+      users:
+      - system:admin
+      - system:serviceaccount:openshift-efs-csi:efs-csi-sa
+      volumes:
+      - '*'
     - kind: DaemonSet
       apiVersion: apps/v1
       metadata:
         name: efs-csi-node
-        namespace: kube-system
+        namespace: openshift-efs-csi
       spec:
         selector:
           matchLabels:
@@ -673,10 +720,10 @@ objects:
             labels:
               app: efs-csi-node
           spec:
+            serviceAccount: efs-csi-sa
             nodeSelector:
               node-role.kubernetes.io/worker: ''
             hostNetwork: true
-            priorityClassName: system-node-critical
             tolerations:
             - operator: Exists
             containers:
