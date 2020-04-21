@@ -318,6 +318,8 @@ upgrade() {
         # wait for all masters to be upgraded
         log $OCM_NAME "upgrade" "master nodes upgraded: $MASTER_MACHINEPOOL_UPDATED_COUNT/$MASTER_MACHINEPOOL_TOTAL_COUNT"
         sleep 60
+
+	MASTER_MACHINEPOOL_UPDATED_COUNT=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get machineconfigpools -o json  | jq -r ".items[] | select(.metadata.name == \"master\" ) | .status.updatedMachineCount")
     done
 
     WORKER_MACHINEPOOL_TOTAL_COUNT=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get machineconfigpools -o json  | jq -r ".items[] | select(.metadata.name == \"worker\" ) | .status.machineCount")
@@ -338,12 +340,12 @@ upgrade() {
 
     while [ $WORKER_MACHINEPOOL_UPDATED_COUNT -lt $WORKER_MACHINEPOOL_TOTAL_COUNT ];
     do
-        WORKER_MACHINEPOOL_UPDATED_COUNT=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get machineconfigpools -o json  | jq -r ".items[] | select(.metadata.name == \"worker\" ) | .status.updatedMachineCount")
-
         # log current state
         log $OCM_NAME "upgrade" "worker nodes upgraded: $WORKER_MACHINEPOOL_UPDATED_COUNT/$WORKER_MACHINEPOOL_TOTAL_COUNT"
 
         sleep 60
+
+        WORKER_MACHINEPOOL_UPDATED_COUNT=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get machineconfigpools -o json  | jq -r ".items[] | select(.metadata.name == \"worker\" ) | .status.updatedMachineCount")
     done
 
     log $OCM_NAME "upgrade" "all nodes on same version"
