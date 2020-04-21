@@ -310,18 +310,26 @@ upgrade() {
     log $OCM_NAME "upgrade" "ClusterVersion on $TO"
     log $OCM_NAME "upgrade" "checking node versions"
 
-    # fun fact!  after clusterversion says it is done, individual nodes could still be updated.
-    MACHINE_COUNT_ALL=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get nodes --no-headers | wc -l)
+    MASTER_MACHINEPOOL_TOTAL_COUNT=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get machineconfigpools -o json  | jq -r ".items[] | select(.metadata.name == \"master\" ) | .status.machineCount")
+    MASTER_MACHINEPOOL_UPDATED_COUNT=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get machineconfigpools -o json  | jq -r ".items[] | select(.metadata.name == \"master\" ) | .status.updatedMachineCount")
 
-    MACHINE_COUNT_UPGRADED=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get nodes -o json | jq -r ".items[].status | select(.annotations[\"machineconfiguration.openshift.io/currentConfig\"] == .annotations[\"machineconfiguration.openshift.io/desiredConfig\"]) | .conditions[] | select(.type == \"Ready\" and .status == \"True\") | .reason" | wc -l)
+    while [ $MASTER_MACHINEPOOL_UPDATED_COUNT -lt $MASTER_MACHINEPOOL_TOTAL_COUNT ];
+    do
+        # wait for all masters to be upgraded
+        log $OCM_NAME "upgrade" "master nodes upgraded: $MASTER_MACHINEPOOL_UPDATED_COUNT/$MASTER_MACHINEPOOL_TOTAL_COUNT"
+        sleep 60
 
-    MACHINE_COUNT_PENDING=$((MACHINE_COUNT_ALL-MACHINE_COUNT_UPGRADED))
+	MASTER_MACHINEPOOL_UPDATED_COUNT=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get machineconfigpools -o json  | jq -r ".items[] | select(.metadata.name == \"master\" ) | .status.updatedMachineCount")
+    done
 
-    # start maintenance only if we need to
-    if [ ! $MACHINE_COUNT_UPGRADED -ge $MACHINE_COUNT_ALL ];
+    WORKER_MACHINEPOOL_TOTAL_COUNT=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get machineconfigpools -o json  | jq -r ".items[] | select(.metadata.name == \"worker\" ) | .status.machineCount")
+    WORKER_MACHINEPOOL_UPDATED_COUNT=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get machineconfigpools -o json  | jq -r ".items[] | select(.metadata.name == \"worker\" ) | .status.updatedMachineCount")
+
+    if [ $WORKER_MACHINEPOOL_UPDATED_COUNT -lt $WORKER_MACHINEPOOL_TOTAL_COUNT ];
     then
         # Create a new maintenance window for the kubelet (non master) upgrades based on the number of nodes.
-        MAINT_WINDOW_MIN=$((MACHINE_COUNT_PENDING*PD_MAINT_ADDITIONAL_NODE_MIN))
+        WORKERS_PENDING=$((WORKER_MACHINEPOOL_TOTAL_COUNT-WORKER_MACHINEPOOL_UPDATED_COUNT))
+        MAINT_WINDOW_MIN=$((WORKERS_PENDING*PD_MAINT_ADDITIONAL_NODE_MIN))
 
         # create worker maintenance window
         setup_maintenance_window $OCM_NAME $CD_NAMESPACE $CD_NAME $MAINT_WINDOW_MIN "$PD_MAINT_DESCRIPTION_WORKERS"
@@ -330,22 +338,14 @@ upgrade() {
         teardown_maintenance_window $OCM_NAME $CD_NAMESPACE $CD_NAME "$PD_MAINT_DESCRIPTION_BASE"
     fi
 
-    # log current state
-    log $OCM_NAME "upgrade" "nodes upgraded: $MACHINE_COUNT_UPGRADED/$MACHINE_COUNT_ALL"
-
-    # make sure all nodes run same kubelet version
-    while [ $MACHINE_COUNT_UPGRADED -lt $MACHINE_COUNT_ALL ];
+    while [ $WORKER_MACHINEPOOL_UPDATED_COUNT -lt $WORKER_MACHINEPOOL_TOTAL_COUNT ];
     do
-        # sleep at beginning because we've already checked that we are not done.
-        SLEEP_DURATION="$((PD_MAINT_ADDITIONAL_NODE_MIN*60/4))s"
-        sleep "$SLEEP_DURATION"
+        # log current state
+        log $OCM_NAME "upgrade" "worker nodes upgraded: $WORKER_MACHINEPOOL_UPDATED_COUNT/$WORKER_MACHINEPOOL_TOTAL_COUNT"
 
-        MACHINE_COUNT_UPGRADED=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get nodes -o json | jq -r ".items[].status | select(.annotations[\"machineconfiguration.openshift.io/currentConfig\"] == .annotations[\"machineconfiguration.openshift.io/desiredConfig\"]) | .conditions[] | select(.type == \"Ready\" and .status == \"True\") | .reason" | wc -l)
+        sleep 60
 
-        MACHINE_COUNT_PENDING=$((MACHINE_COUNT_ALL-MACHINE_COUNT_UPGRADED))
-
-        # and log current state
-        log $OCM_NAME "upgrade" "nodes upgraded: $MACHINE_COUNT_UPGRADED/$MACHINE_COUNT_ALL"
+        WORKER_MACHINEPOOL_UPDATED_COUNT=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get machineconfigpools -o json  | jq -r ".items[] | select(.metadata.name == \"worker\" ) | .status.updatedMachineCount")
     done
 
     log $OCM_NAME "upgrade" "all nodes on same version"
