@@ -232,34 +232,6 @@ upgrade() {
     
     log $OCM_NAME "upgrade" "Checking $OCM_NAME..."
 
-    # do we need to upgrade?
-    OCP_CURRENT_VERSION=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get clusterversion version -o json | jq -r '.status.history[] | select(.state == "Completed") | .version' | grep $FROM)
-    KUBELET_VERSION_COUNT=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get nodes --no-headers -o custom-columns=VERSION:.status.nodeInfo.kubeletVersion | sort -u | wc -l)
-
-    if [ "$OCP_CURRENT_VERSION" == "$TO" ] && [ "$KUBELET_VERSION_COUNT" == "1" ];
-    then
-        log $OCM_NAME "upgrade" "skipping, already on version $TO"
-        teardown $OCM_NAME $CD_NAMESPACE $CD_NAME
-        return
-    fi
-
-    if [ "$OCP_CURRENT_VERSION" != "" ] && [ "$OCP_CURRENT_VERSION" != "$FROM" ] && [ "$KUBELET_VERSION_COUNT" == "1" ];
-    then
-        log $OCM_NAME "upgrade" "skipping, expect version $FROM, found version $OCP_CURRENT_VERSION"
-        return
-    fi
-
-    # is the desired version supported?
-    ALLOWED_UPDATE=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get clusterversion version -o json | jq ".status.availableUpdates[] | select(.force == false and .version == \"$TO\")")
-    if [ "$ALLOWED_UPDATE" == "" ];
-    then
-        VERSION_CANDIDATES=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get clusterversion version -o json | jq ".status.availableUpdates | map(.version) | join(\", \")")
-        log $OCM_NAME $LOG_NAME "Cannot upgrade from $FROM, it is not available in upgrade graph."
-        log $OCM_NAME $LOG_NAME "Candidate versions are: $VERSION_CANDIDATES"
-        teardown $OCM_NAME $CD_NAMESPACE $CD_NAME
-        return
-    fi
-
     # is upgrade already progressing?
     DESIRED_VERSION=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get clusterversion version -o jsonpath='{.spec.desiredUpdate.version}')
 
@@ -267,20 +239,29 @@ upgrade() {
     then
         # desired version isn't set, to setup and patch clusterversion to kick off the upgrade
         setup $OCM_NAME $CD_NAMESPACE $CD_NAME
-
-        log $OCM_NAME "upgrade" "upgrading from $FROM to $TO"
-
         CHANNEL_NAME=$(get_channel $TO)
 
         # https://issues.redhat.com/browse/OSD-3442
         KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc patch clusterversion version --type merge -p "{\"spec\":{\"overrides\": null}}"
+        KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc patch clusterversion version --type merge -p "{\"spec\":{\"channel\": \"$CHANNEL_NAME\"}}"        
 
-        KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc patch clusterversion version --type merge -p "{\"spec\":{\"channel\": \"$CHANNEL_NAME\"}}"
-        KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc patch clusterversion version --type merge -p "{\"spec\":{\"desiredUpdate\": {\"version\": \"$TO\"}}}"
+        # Initiate upgrade using `oc adm upgrade` and capture output if failure or already installed as from CLI inbuilt logic
+        log $OCM_NAME "upgrade" "Checking for upgrade eligibility"
+        UPGRADE_COMMAND_OUTPUT=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc adm upgrade --to=$TO 2>&1)
+        UPGRADE_COMMAND_STATUS=$?
+
+        if echo "$UPGRADE_COMMAND_OUTPUT" | grep -q "Cluster is already at version" || [ $UPGRADE_COMMAND_STATUS -eq 1 ]
+        then
+            log $OCM_NAME "upgrade" "${UPGRADE_COMMAND_OUTPUT}"
+            teardown $OCM_NAME $CD_NAMESPACE $CD_NAME
+            return
+        fi
+
     fi
 
     # 3. wait for upgrade to complete
-    log $OCM_NAME "upgrade" "waiting for cluster version"
+    log $OCM_NAME "upgrade" "Upgrading from $FROM to $TO. Waiting for ClusterVersion to be at $TO"
+
     OCP_CURRENT_VERSION=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get clusterversion version -o json | jq -r '.status.history[] | select(.verified == true and .state == "Completed") | .version' | grep $TO)
     
     while [ "$OCP_CURRENT_VERSION" != "$TO" ];
