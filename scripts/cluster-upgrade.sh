@@ -250,9 +250,10 @@ upgrade() {
         UPGRADE_COMMAND_OUTPUT=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc adm upgrade --to=$TO 2>&1)
         UPGRADE_COMMAND_STATUS=$?
 
+        log $OCM_NAME "upgrade" "${UPGRADE_COMMAND_OUTPUT}"
+
         if echo "$UPGRADE_COMMAND_OUTPUT" | grep -q "Cluster is already at version" || [ $UPGRADE_COMMAND_STATUS -eq 1 ]
         then
-            log $OCM_NAME "upgrade" "${UPGRADE_COMMAND_OUTPUT}"
             teardown $OCM_NAME $CD_NAMESPACE $CD_NAME
             return
         fi
