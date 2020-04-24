@@ -704,36 +704,31 @@ objects:
             DaemonSet.
         name: efs-csi-scc
       allowHostDirVolumePlugin: true
-      allowHostIPC: true
+      allowHostIPC: false
       allowHostNetwork: true
-      allowHostPID: true
+      allowHostPID: false
       allowHostPorts: true
       allowPrivilegeEscalation: true
       allowPrivilegedContainer: true
-      allowedCapabilities:
-      - '*'
-      allowedUnsafeSysctls:
-      - '*'
       fsGroup:
         type: RunAsAny
-      groups:
-      - system:cluster-admins
-      - system:nodes
-      - system:masters
       readOnlyRootFilesystem: false
       runAsUser:
         type: RunAsAny
       seLinuxContext:
         type: RunAsAny
-      seccompProfiles:
-      - '*'
       supplementalGroups:
         type: RunAsAny
       users:
-      - system:admin
       - system:serviceaccount:openshift-efs-csi:efs-csi-sa
       volumes:
-      - '*'
+      - configMap
+      - downwardAPI
+      - emptyDir
+      - hostPath
+      - persistentVolumeClaim
+      - projected
+      - secret
     - kind: DaemonSet
       apiVersion: apps/v1
       metadata:
@@ -749,6 +744,7 @@ objects:
               app: efs-csi-node
           spec:
             serviceAccount: efs-csi-sa
+            priorityClassName: system-node-critical
             nodeSelector:
               node-role.kubernetes.io/worker: ''
             hostNetwork: true
