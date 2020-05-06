@@ -10,12 +10,14 @@ spec:
   groups:
   - name: sre-uptime-sla
     rules:
+    # This alert is used to mark any 5m block of 100% requests failure to api 
+    # or any 5m blocks of missing metrics after cluster creation as a downtime event in SLA calculations.
+    # cluster_version is used to detect the creation time of the cluster
     - alert: SLAUptimeSRE
       annotations:
         message: The API server has had 100 percent request failures for 300 seconds.
       expr: |
-        (sum(rate(apiserver_request_total{job="apiserver", code=~"(400|5..)"}[5m])) / sum(rate(apiserver_request_total{job="apiserver", code=~"([1-5]..)"}[5m])) >= 1)
-      for: 5m
+        (sum(rate(apiserver_request_total{job="apiserver", code=~"(5..|400|410|0)"}[5m])) / sum(rate(apiserver_request_total{job="apiserver"}[5m])) >= bool 1) or (sum_over_time(absent(apiserver_request_total) and (count_over_time((topk(1, time() - min(cluster_version)) > bool 0)[1d:]))[5m:5m])) >= bool 1
       labels:
         severity: warning
         namespace: openshift-monitoring
