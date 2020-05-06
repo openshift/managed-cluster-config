@@ -101,13 +101,13 @@ setup() {
 
     ORIGINAL_REPLICAS=$(oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r '.metadata.labels["managed.openshift.io/original-worker-replicas"] | select(. != null)')
     DESIRED_REPLICAS=$(oc -n $CD_NAMESPACE get machinepool "$CD_NAME-worker" -o json | jq -r '.spec.replicas')
-    ZONE_COUNT=$(oc -n $CD_NAMESPACE get machinepool "$CD_NAME-worker" -o json | jq -r '.spec.platform.aws.zones[]' | wc -l)
+    MACHINESET_COUNT=$(oc -n $CD_NAMESPACE get machinepool "$CD_NAME-worker" -o json | jq -r '.status.machineSets[].replicas' | wc -l)
 
     if [ "$ORIGINAL_REPLICAS" == "" ];
     then
         # nope, need to bump replicas!
         ORIGINAL_REPLICAS=$(oc -n $CD_NAMESPACE get machinepool "$CD_NAME-worker" -o json | jq -r '.spec.replicas')
-        DESIRED_REPLICAS=$(($ORIGINAL_REPLICAS+$ZONE_COUNT))
+        DESIRED_REPLICAS=$(($ORIGINAL_REPLICAS+$MACHINESET_COUNT))
 
         # update replicas
         oc -n $CD_NAMESPACE label clusterdeployment $CD_NAME managed.openshift.io/original-worker-replicas=$ORIGINAL_REPLICAS
@@ -117,7 +117,7 @@ setup() {
     fi
 
     # make sure we are at capacity in cluster
-    MS_REPLICAS=$(($DESIRED_REPLICAS/$ZONE_COUNT))
+    MS_REPLICAS=$(($DESIRED_REPLICAS/$MACHINESET_COUNT))
     for MS_NAME in $(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc -n openshift-machine-api get machineset --no-headers | grep worker | awk '{print $1}');
     do
         AVAILABLE_REPLICAS=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc -n openshift-machine-api get machineset $MS_NAME -o jsonpath='{.status.availableReplicas}')
