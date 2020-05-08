@@ -15,6 +15,7 @@ rules:
   - batch
   resources:
   - jobs
+  - cronjobs
   verbs:
   - delete
   - deletecollection
@@ -89,6 +90,22 @@ rules:
   - apps
   resources:
   - statefulsets
+  verbs:
+  - list
+  - get
+# CS SRE can list/get events
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - list
+  - get
+ # CS SRE can list/get endpoints
+- apiGroups:
+  - ""
+  resources:
+  - endpoints
   verbs:
   - list
   - get
