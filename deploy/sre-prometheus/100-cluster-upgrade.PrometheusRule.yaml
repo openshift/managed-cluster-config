@@ -13,8 +13,7 @@ spec:
     - alert: ClusterUpgradingSRE
       expr: cluster_version{type="updating"} > 0
       labels:
-        severity: warning
+        severity: info
         namespace: openshift-monitoring
       annotations:
-        from_version: "$labels.from_version"
-        to_version: "$labels.version"
+        message: The cluster is attempting to upgrade from {{ $labels.from_version }} to {{ $labels.version }}.
