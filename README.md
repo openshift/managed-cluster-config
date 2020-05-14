@@ -83,8 +83,6 @@ SelectorSyncSet:
 - Sets up a ClusterRoleBinding allowing dedicated-admins to create
   PersistentVolumes.
 
-See [this SOP](https://github.com/openshift/ops-sop/blob/master/v4/howto/enable-efs-csi.asciidoc) for more details.
-
 # Dependencies
 
 pyyaml
