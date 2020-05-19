@@ -19,7 +19,8 @@ LEGALENTITY_IDS_CICD=(1aV37K1VQv2zSStwSkdwBNOUBGI)
 LEGALENTITY_IDS_SD=(1Lug81OKNgrfq8kMX8C5J2Zzndq 1MK6ieFXd0eu1hERdENAPvpbi7x 1MSRrYaelBWudhmVktupE2t7ABy)
 
 # Internal Customer clusters
-LEGALENTITY_IDS_INTERNAL=(1GlYCTDTBmUTij1KYFlUiXFEFQe 1MpZfnmsZeUWjWHg7XRgP15dM9e 1OXqyqko0vmxpV9dmXe9oFypJIw 1PP9KzeLFavv9K3pHGjEgDYfR6V 1Q01Y9f4KNwqGfXJawQU7BQhchI)
+# NOTE: Removed Quay legal entity from Internal list to stop upgrades: 1OXqyqko0vmxpV9dmXe9oFypJIw
+LEGALENTITY_IDS_INTERNAL=(1GlYCTDTBmUTij1KYFlUiXFEFQe 1MpZfnmsZeUWjWHg7XRgP15dM9e 1PP9KzeLFavv9K3pHGjEgDYfR6V 1Q01Y9f4KNwqGfXJawQU7BQhchI)
 
 # External Customer clusters are anything not in the lists above! ^^
 
