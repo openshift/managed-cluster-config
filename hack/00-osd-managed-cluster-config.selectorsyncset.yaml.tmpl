@@ -4874,21 +4874,33 @@ objects:
                 - name: sre-build-test
                   image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
                   imagePullPolicy: Always
+                  env:
+                  - name: JOB_NAME
+                    valueFrom:
+                      fieldRef:
+                        fieldPath: metadata.name
                   command:
-                  - /bin/sh
+                  - /bin/bash
                   - -c
-                  - "export NS=openshift-build-test-$(date +%s);  oc create ns $NS;\
-                    \  oc -n $NS new-build nodejs~https://github.com/openshift/nodejs-ex\
-                    \ --name=sre-build-test;  echo $(date): Waiting for build to complete.;\
-                    \  while :;  do  \n  export ST=$(oc -n $NS get build -o custom-columns=STATUS:.status.phase\
-                    \ --no-headers);\n  echo Checking the state of the build: $ST;\n\
-                    \  if [[ $ST = \"Failed\" ]]\n  then \n  echo \"Build Failed\"\
-                    \ && exit 1\n  elif [[ $ST = \"Cancelled\" ]]\n  then\n  echo\
-                    \ \"Build was Cancelled\" && exit 1\n  elif [[ $ST = \"Complete\"\
-                    \ ]]\n  then\n  echo \"Build Complete\" && break\n  fi \n  echo\
-                    \ $(date): Checking build again in 15 seconds, NS=$NS; \n  sleep\
-                    \ 15; \ndone;  echo $(date): Done, deleting build NS=$NS;  oc\
-                    \ delete ns $NS"
+                  - "# ensure we fail if something exits non-zero\nset -o errexit\n\
+                    set -o nounset\nset -o pipefail\n\n# cleanup traps on exiting,\
+                    \ so these always run\ncleanup () {\n  echo \"$(date): Done, deleting\
+                    \ build NS=$NS\"\n  oc delete ns \"${NS}\"\n}\ntrap \"cleanup\"\
+                    \ EXIT SIGINT\n\n# set NS to include job name, to ease linking\
+                    \ namespace to a specific job\nexport NS=\"openshift-build-test-${JOB_NAME##sre-build-test-}\"\
+                    \noc create ns \"${NS}\"\n\n# run build\noc -n \"${NS}\" new-build\
+                    \ nodejs~https://github.com/openshift/nodejs-ex --name=sre-build-test\n\
+                    echo \"$(date): Waiting for build to complete.\"\nwhile :\ndo\n\
+                    \  export ST=$(oc -n \"${NS}\" get build -o custom-columns=STATUS:.status.phase\
+                    \ --no-headers)\n  case ${ST} in\n    \"\")\n      # if build\
+                    \ status is blank, assume we are still starting the build\n  \
+                    \    ST=\"Starting\"\n      ;;\n    Failed)\n      echo \"$(date):\
+                    \ Build Failed\" >&2\n      exit 1\n      ;;\n    Cancelled)\n\
+                    \      echo \"$(date): Build was Cancelled\" >&2\n      exit 1\n\
+                    \      ;;\n    Complete)\n      echo \"$(date): Build Complete\"\
+                    \n      break\n      ;;\n  esac\n  echo \"$(date): Build is ${ST};\
+                    \ checking build again in 15 seconds, NS=${NS}\"\n  sleep 15\n\
+                    done\nexit 0\n"
     - apiVersion: monitoring.coreos.com/v1
       kind: PrometheusRule
       metadata:
