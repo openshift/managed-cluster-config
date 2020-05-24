@@ -53,7 +53,7 @@ log() {
     MESSAGE=$3
 
     MESSAGE=$(echo $MESSAGE | sed 's/\(.*\),$/\1/g')
-    
+
     echo "$(date "+%Y-%m-%d_%H.%M.%S") - $NAME - $STAGE - $MESSAGE"
 }
 
@@ -83,20 +83,10 @@ setup() {
     # do initial check of state only if not already upgrading
     DESIRED_VERSION=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get clusterversion version -o json | jq -r '.spec.desiredUpdate.version')
 
-    if [ "$DESIRED_VERSION" != "$TO" ];
+    check_cluster_status $OCM_NAME $CD_NAMESPACE $CD_NAME "setup"
+    if [ "$CLUSTER_STATUS" == "0" ];
     then
-        # start with it "bad" to force a check, which will continue until it's good
-        CLUSTER_STATUS=0
-
-        while [ "$CLUSTER_STATUS" != "1" ];
-        do
-            check_cluster_status $OCM_NAME $CD_NAMESPACE $CD_NAME "setup"
-            if [ "$CLUSTER_STATUS" == "0" ];
-            then
-                log $OCM_NAME "setup" "ERROR: cluster state needs fixed, see prior logs (UPGRADE BLOCKED)"
-                sleep 15
-            fi
-        done
+        log $OCM_NAME "setup" "WARNING: cluster has alerts prior to upgrade, see prior logs"
     fi
 
     ORIGINAL_REPLICAS=$(oc -n $CD_NAMESPACE get clusterdeployment $CD_NAME -o json | jq -r '.metadata.labels["managed.openshift.io/original-worker-replicas"] | select(. != null)')
@@ -181,7 +171,7 @@ setup_maintenance_window() {
         if [ "$PD_MAINT_ID" == "null" ];
         then
             # create a maintenance for this cluster
-         
+
             # TODO use a real value.. this would break if nmalik leaves SRE!
             PD_USER_EMAIL=nmalik@redhat.com
 
@@ -229,7 +219,7 @@ upgrade() {
     TO=$5
 
     prepare_kubeconfig $OCM_NAME $CD_NAMESPACE $CD_NAME
-    
+
     log $OCM_NAME "upgrade" "Checking $OCM_NAME..."
 
     # do we need to upgrade?
@@ -282,7 +272,7 @@ upgrade() {
     # 3. wait for upgrade to complete
     log $OCM_NAME "upgrade" "waiting for cluster version"
     OCP_CURRENT_VERSION=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get clusterversion version -o json | jq -r '.status.history[] | select(.verified == true and .state == "Completed") | .version' | grep $TO)
-    
+
     while [ "$OCP_CURRENT_VERSION" != "$TO" ];
     do
         # print current CVO status (else it's very quiet output)
@@ -293,7 +283,7 @@ upgrade() {
 
         CO_COUNT_TO=$(echo "$CO_JSON" | jq -r '.items[].status.versions[] | select(.name == "operator") | .version' | grep $TO | wc -l)
 
-        # do not print status if there's nothing to print (i.e. the get failed for some reason)        
+        # do not print status if there's nothing to print (i.e. the get failed for some reason)
         if [ $CO_COUNT -gt 0 ];
         then
             log $OCM_NAME "upgrade" "ClusterOperators: Progressing: $PROGRESSING_COUNT, Degraded: $DEGRADED_COUNT, Upgraded: $CO_COUNT_TO/$CO_COUNT"
@@ -369,13 +359,13 @@ upgrade() {
         do
             TOTAL_DESIRED=$((TOTAL_DESIRED+DESIRED))
         done
-        
+
         TOTAL_SCHEDULED=0
         for READY in $(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get replicasets --all-namespaces -o json | jq -r '.items[] | select(.metadata.namespace | startswith("default") or startswith("kube") or startswith("openshift")) | select(.status.replicas > 0) | select(.status.replicas == .status.readyReplicas) | select(.status.replicas == .status.availableReplicas) | .status.replicas');
         do
             TOTAL_SCHEDULED=$((TOTAL_SCHEDULED+READY))
         done
-        
+
         # output status
         log $OCM_NAME "upgrade" "ReplicaSets status: $TOTAL_SCHEDULED/$TOTAL_DESIRED"
 
@@ -395,13 +385,13 @@ upgrade() {
         do
             TOTAL_DESIRED=$((TOTAL_DESIRED+DESIRED))
         done
-        
+
         TOTAL_SCHEDULED=0
         for READY in $(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get daemonsets --all-namespaces -o json | jq -r '.items[] | select(.metadata.namespace | startswith("default") or startswith("kube") or startswith("openshift")) | select(.status.desiredNumberScheduled > 0) | select(.status.desiredNumberScheduled == .status.numberReady) | select(.status.desiredNumberScheduled == .status.numberAvailable) | .status.desiredNumberScheduled');
         do
             TOTAL_SCHEDULED=$((TOTAL_SCHEDULED+READY))
         done
-        
+
         # output status
         log $OCM_NAME "upgrade" "DaemonSets status: $TOTAL_SCHEDULED/$TOTAL_DESIRED"
 
@@ -469,7 +459,7 @@ check_cluster_status() {
 
     # get a list of firing critical alerts in core namespaces (these would alert SREP in PD)
     # NOTE exclude ClusterUpgradingSRE, DNSErrors05MinSRE and MetricsClientSendFailingSRE
-    CA=$(curl -G -s -k -H "Authorization: Bearer $(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc -n openshift-monitoring sa get-token prometheus-k8s)" --data-urlencode "query=ALERTS{alertstate=\"firing\",severity=\"critical\",namespace=~\"^openshift.*|^kube.*|^default$\",namespace!=\"openshift-customer-monitoring\",alertname!=\"ClusterUpgradingSRE\",alertname!=\"DNSErrors05MinSRE\",alertname!=\"MetricsClientSendFailingSRE\"}" "https://$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc -n openshift-monitoring get routes prometheus-k8s -o json | jq -r .spec.host)/api/v1/query" | jq -r '.data.result[].metric.alertname' | tr '\n' ',' )    
+    CA=$(curl -G -s -k -H "Authorization: Bearer $(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc -n openshift-monitoring sa get-token prometheus-k8s)" --data-urlencode "query=ALERTS{alertstate=\"firing\",severity=\"critical\",namespace=~\"^openshift.*|^kube.*|^default$\",namespace!=\"openshift-customer-monitoring\",alertname!=\"ClusterUpgradingSRE\",alertname!=\"DNSErrors05MinSRE\",alertname!=\"MetricsClientSendFailingSRE\"}" "https://$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc -n openshift-monitoring get routes prometheus-k8s -o json | jq -r .spec.host)/api/v1/query" | jq -r '.data.result[].metric.alertname' | tr '\n' ',' )
 
     if [ "$CA" != "" ];
     then
@@ -478,7 +468,7 @@ check_cluster_status() {
 
         # degraded operators
         DCO=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get clusteroperator --no-headers | awk '{print $1 "," $5}' | grep -v ",False" | awk -F, '{print $1 ","}' | xargs)
-        
+
         if [ "$DCO" != "" ];
         then
             log $OCM_NAME $LOG_NAME "INFO: Degraded Operators = $DCO"
@@ -599,7 +589,7 @@ get_channel() {
     VERSION=$1
 
     VERSION_MINOR=$(echo "${VERSION}" | sed 's/\([^.]*\.[^.]*\)\..*/\1/g')
-    
+
     CHANNEL_NAME="stable-$VERSION_MINOR"
 
     echo $CHANNEL_NAME
@@ -642,9 +632,9 @@ then
 fi
 
 for CD_NAMESPACE in $(oc get clusterdeployment --all-namespaces | awk '{print $1}' | sort | uniq);
-do  
+do
     for CD_NAME in $(oc -n $CD_NAMESPACE get clusterdeployment -o json | jq -r '.items[] | select(.metadata.labels["api.openshift.com/managed"] == "true") | select(.metadata.deletionTimestamp == null or .metadata.deletionTimestamp == "") | select(.spec.installed == true) | select(.status.clusterVersionStatus.history[0].state == "Completed") | .metadata.name');
-    do  
+    do
         if [ "$CLUSTER_NAMES" != "all" ];
         then
             PROCESS=0
