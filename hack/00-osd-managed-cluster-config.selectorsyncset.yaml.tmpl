@@ -4943,6 +4943,29 @@ objects:
       kind: PrometheusRule
       metadata:
         labels:
+          prometheus: sre-alertmanager-silences-active
+          role: alert-rules
+        name: sre-alertmanager-silences-active
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-alertmanager-silences-active
+          rules:
+          - alert: AlertmanagerSilencesActiveSRE
+            expr: count(alertmanager_silences{state="active"} == 1) > 0 unless (count(cluster_version{type="updating"})
+              > 0)
+            for: 15m
+            labels:
+              severity: warning
+              namespace: openshift-monitoring
+            annotations:
+              message: Active AlertManager silences have been detected on the cluster
+                for the last 15 minutes. As a result, active alerts may potentially
+                not be being reported back.
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
           prometheus: sre-cluster-upgrade-alerts
           role: alert-rules
         name: sre-cluster-upgrade-alerts
