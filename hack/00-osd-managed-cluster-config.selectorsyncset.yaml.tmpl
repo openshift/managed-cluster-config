@@ -3515,12 +3515,29 @@ objects:
     - apiVersion: machine.openshift.io/v1beta1
       kind: MachineHealthCheck
       metadata:
-        name: srep-healthcheck
+        name: srep-infra-healthcheck
         namespace: openshift-machine-api
       spec:
         selector:
           matchLabels:
             machine.openshift.io/cluster-api-machine-role: infra
+        unhealthyConditions:
+        - type: Ready
+          timeout: 480s
+          status: 'False'
+        - type: Ready
+          timeout: 480s
+          status: Unknown
+        maxUnhealthy: 40%
+    - apiVersion: machine.openshift.io/v1beta1
+      kind: MachineHealthCheck
+      metadata:
+        name: srep-worker-healthcheck
+        namespace: openshift-machine-api
+      spec:
+        selector:
+          matchLabels:
+            machine.openshift.io/cluster-api-machine-role: worker
         unhealthyConditions:
         - type: Ready
           timeout: 480s
