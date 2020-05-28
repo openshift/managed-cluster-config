@@ -5035,16 +5035,16 @@ objects:
             record: sre:node_roles:memory_total_bytes
           - expr: count(cluster:nodes_roles{label_node_role_kubernetes_io!~"(master|infra)"})
             record: sre:node_workers:count
-          - expr: ( sre:node_roles:memory_total_bytes{label_node_role_kubernetes_io="master"}
-              < 8*1024*1024*1024 AND sre:node_workers:count > 25 AND sre:node_workers:count
-              <= 100 ) OR ( sre:node_roles:memory_total_bytes{label_node_role_kubernetes_io="master"}
-              < 16*1024*1024*1024 AND sre:node_workers:count > 100 AND sre:node_workers:count
-              <= 250 ) OR ( sre:node_roles:memory_total_bytes{label_node_role_kubernetes_io="master"}
-              < 32*1024*1024*1024 AND sre:node_workers:count > 250 )
+          - expr: ( avg(sre:node_roles:memory_total_bytes{label_node_role_kubernetes_io="master"})
+              < 16*1024*1024*1024 AND sre:node_workers:count > 25 AND sre:node_workers:count
+              <= 100 ) OR ( avg(sre:node_roles:memory_total_bytes{label_node_role_kubernetes_io="master"})
+              < 32*1024*1024*1024 AND sre:node_workers:count > 100 AND sre:node_workers:count
+              <= 250 ) OR ( avg(sre:node_roles:memory_total_bytes{label_node_role_kubernetes_io="master"})
+              < 64*1024*1024*1024 AND sre:node_workers:count > 250 )
             record: sre:node_masters:need_resize
         - name: sre-control-plane-resizing-alerts
           rules:
-          - alert: ControlPlaneNodesNeedResizingSRE
+          - alert: MasetrNodesNeedResizingSRE
             expr: sre:node_masters:need_resize > 0
             for: 15m
             labels:

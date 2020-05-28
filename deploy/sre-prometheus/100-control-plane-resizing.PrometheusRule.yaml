@@ -16,29 +16,29 @@ spec:
         record: sre:node_roles:memory_total_bytes
       - expr: count(cluster:nodes_roles{label_node_role_kubernetes_io!~"(master|infra)"})
         record: sre:node_workers:count
-      # master has less than 8GB RAM, worker count > 25, and worker count <= 100
-      # master has less than 16GB RAM, worker count > 100, and worker count <= 250
-      # master has less than 32GB RAM, worker count > 250
+      # master has less than 16GB RAM, worker count > 25, and worker count <= 100
+      # master has less than 32GB RAM, worker count > 100, and worker count <= 250
+      # master has less than 64GB RAM, worker count > 250
       - expr: (
-                sre:node_roles:memory_total_bytes{label_node_role_kubernetes_io="master"} < 8*1024*1024*1024
+                avg(sre:node_roles:memory_total_bytes{label_node_role_kubernetes_io="master"}) < 16*1024*1024*1024
                 AND sre:node_workers:count > 25 
                 AND sre:node_workers:count <= 100 
               )
               OR 
               (
-                sre:node_roles:memory_total_bytes{label_node_role_kubernetes_io="master"} < 16*1024*1024*1024
+                avg(sre:node_roles:memory_total_bytes{label_node_role_kubernetes_io="master"}) < 32*1024*1024*1024
                 AND sre:node_workers:count > 100
                 AND sre:node_workers:count <= 250 
               )
               OR 
               (
-                sre:node_roles:memory_total_bytes{label_node_role_kubernetes_io="master"} < 32*1024*1024*1024
+                avg(sre:node_roles:memory_total_bytes{label_node_role_kubernetes_io="master"}) < 64*1024*1024*1024
                 AND sre:node_workers:count > 250
               )
         record: sre:node_masters:need_resize
   - name: sre-control-plane-resizing-alerts
     rules:
-      - alert: ControlPlaneNodesNeedResizingSRE
+      - alert: MasetrNodesNeedResizingSRE
         expr: sre:node_masters:need_resize > 0
         for: 15m
         labels:
