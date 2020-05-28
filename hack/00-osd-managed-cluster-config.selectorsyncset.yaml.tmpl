@@ -3505,6 +3505,54 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: osd-machine-api
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: machine.openshift.io/v1beta1
+      kind: MachineHealthCheck
+      metadata:
+        name: srep-infra-healthcheck
+        namespace: openshift-machine-api
+      spec:
+        selector:
+          matchLabels:
+            machine.openshift.io/cluster-api-machine-role: infra
+        unhealthyConditions:
+        - type: Ready
+          timeout: 480s
+          status: 'False'
+        - type: Ready
+          timeout: 480s
+          status: Unknown
+        maxUnhealthy: 40%
+    - apiVersion: machine.openshift.io/v1beta1
+      kind: MachineHealthCheck
+      metadata:
+        name: srep-worker-healthcheck
+        namespace: openshift-machine-api
+      spec:
+        selector:
+          matchLabels:
+            machine.openshift.io/cluster-api-machine-role: worker
+        unhealthyConditions:
+        - type: Ready
+          timeout: 480s
+          status: 'False'
+        - type: Ready
+          timeout: 480s
+          status: Unknown
+        maxUnhealthy: 40%
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: osd-oauth-templates
   spec:
     clusterDeploymentSelector:
