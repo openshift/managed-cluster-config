@@ -586,6 +586,34 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: ccs-dedicated-adminshive.openshift.io/cluster-platform
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        hive.openshift.io/cluster-platform: gcp
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        labels:
+          managed.openshift.io/aggregate-to-dedicated-admins: project
+        name: dedicated-admins-manage-operators
+      rules:
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - '*'
+        verbs:
+        - '*'
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: cluster-monitoring-config
   spec:
     clusterDeploymentSelector:
