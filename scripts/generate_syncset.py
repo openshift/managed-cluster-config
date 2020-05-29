@@ -6,6 +6,7 @@ import os
 import sys
 import argparse
 import copy
+import re
 
 cluster_platform_ann = "hive.openshift.io/cluster-platform"
 sss_config_filename = "sss-config.yaml"
@@ -137,7 +138,7 @@ if __name__ == '__main__':
                 del o["matchLabelsApplyMode"]
 
                 # SSS objects require unique names
-                unique_sss_name = sss_name + key.replace('api.openshift.com/', '-')
+                unique_sss_name = sss_name + '-' + re.sub('^.*?/', '', key)
                 process_yamls(unique_sss_name, dirpath, selectorsyncset_data, o)
         else:
             # Catches anyone with a rouge value
