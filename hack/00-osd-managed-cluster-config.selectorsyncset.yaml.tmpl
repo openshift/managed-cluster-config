@@ -5049,24 +5049,6 @@ objects:
       kind: PrometheusRule
       metadata:
         labels:
-          prometheus: sre-cloud-ingress-operator-offline-alerts
-          role: alert-rules
-        name: sre-cloud-ingress-operator-offline-alerts
-        namespace: openshift-monitoring
-      spec:
-        groups:
-        - name: sre-cloud-ingress-operator-offline-alerts
-          rules:
-          - alert: CloudIngressOperatorOfflineSRE
-            expr: absent(up{service="localmetrics-cloud-ingress-operator", namespace="openshift-cloud-ingress-operator"})
-            for: 15m
-            labels:
-              severity: critical
-              namespace: openshift-monitoring
-    - apiVersion: monitoring.coreos.com/v1
-      kind: PrometheusRule
-      metadata:
-        labels:
           prometheus: sre-cluster-upgrade-alerts
           role: alert-rules
         name: sre-cluster-upgrade-alerts
@@ -5555,6 +5537,24 @@ objects:
         hive.openshift.io/cluster-platform: aws
     resourceApplyMode: Sync
     resources:
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
+          prometheus: sre-cloud-ingress-operator-offline-alerts
+          role: alert-rules
+        name: sre-cloud-ingress-operator-offline-alerts
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-cloud-ingress-operator-offline-alerts
+          rules:
+          - alert: CloudIngressOperatorOfflineSRE
+            expr: absent(up{service="localmetrics-cloud-ingress-operator", namespace="openshift-cloud-ingress-operator"})
+            for: 15m
+            labels:
+              severity: critical
+              namespace: openshift-monitoring
     - apiVersion: monitoring.coreos.com/v1
       kind: PrometheusRule
       metadata:
