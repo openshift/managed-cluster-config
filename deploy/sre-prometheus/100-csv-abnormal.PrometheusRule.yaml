@@ -18,21 +18,21 @@ spec:
   - name: sre-csv-abnormal-alerts
     rules:
     - alert: CsvAbnormalReplacingOver30MinSRE
-      expr: csv_abnormal{phase="Replacing"} > 0
+      expr: csv_abnormal{phase="Replacing",namespace=~"(^openshift.*|^kube.*|^redhat.*|^default$)"}
       for: 30m
       labels:
         severity: warning
-        namespace: openshift-monitoring
+        namespace: "{{ $labels.namespace }}"
       annotations:
-        message: OLM is stuck replacing an older operator(s)
+        message: "CSV {{ $labels.name }} version {{ $labels.version }} is in an abnormal state. Reason: {{ $labels.reason }}"
         link: "https://github.com/openshift/ops-sop/blob/master/v4/alerts/CsvAbnormalSRE.md"
 
     - alert: CsvAbnormalReplacingOver4HrSRE
-      expr: csv_abnormal{phase="Replacing"} > 0
+      expr: csv_abnormal{phase="Replacing",namespace=~"(^openshift.*|^kube.*|^redhat.*|^default$)"}
       for: 4h
       labels:
         severity: critical
-        namespace: openshift-monitoring
+        namespace: "{{ $labels.namespace }}"
       annotations:
-        message: OLM is stuck replacing an older operator(s)
+        message: "CSV {{ $labels.name }} version {{ $labels.version }} is in an abnormal state. Reason: {{ $labels.reason }}"
         link: "https://github.com/openshift/ops-sop/blob/master/v4/alerts/CsvAbnormalSRE.md"
