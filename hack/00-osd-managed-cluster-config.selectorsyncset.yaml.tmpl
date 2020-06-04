@@ -3322,8 +3322,15 @@ objects:
       kind: Group
       metadata:
         name: osd-devaccess
-      users: []
-    - apiVersion: rbac.authorization.k8s.io/v1
+      users: ${{CEE_USERS}}
+    - aggregationRule:
+        clusterRoleSelectors:
+        - matchExpressions:
+          - key: rbac.authorization.k8s.io/aggregate-to-view
+            operator: In
+            values:
+            - 'true'
+      apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
         name: osd-devaccess
