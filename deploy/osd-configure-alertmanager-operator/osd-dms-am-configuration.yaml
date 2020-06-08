@@ -1,0 +1,19 @@
+apiVersion: alertmanager.openshift.com/v1alpha1
+kind: AlertManagerConfiguration
+metadata:
+  name: osd-dms-am-configuration
+  namespace: openshift-monitoring
+spec:
+  route:
+    receiver: osd-watchdog
+    matchers:
+      - name: alertname
+        value: Watchdog
+    repeatInterval: 5m
+  receivers:
+  - name: osd-watchdog
+    webhooks:
+    - sendResolved: true
+      urlSecret:
+        name: dms-secret
+        key: SNITCH_URL

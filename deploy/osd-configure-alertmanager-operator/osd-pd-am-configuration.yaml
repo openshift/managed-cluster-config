@@ -1,0 +1,175 @@
+apiVersion: alertmanager.openshift.com/v1alpha1
+kind: AlertManagerConfiguration
+metadata:
+  name: osd-pd-am-configuration
+  namespace: openshift-monitoring
+spec:
+  route:
+    receiver: osd-pagerduty
+    groupBy:
+    - alertname
+    - severity
+    continue: true
+    routes:
+    - # https://issues.redhat.com/browse/OSD-1966
+      receiver: osd-null
+      matchers:
+      - name: alertname
+        value: KubeQuotaExceeded
+    - # https://issues.redhat.com/browse/OSD-2382
+      receiver: osd-null
+      matchers:
+      - name: alertname
+        value: UsingDeprecatedAPIAppsV1Beta1
+    - # https://issues.redhat.com/browse/OSD-2382
+      receiver: osd-null
+      matchers:
+      - name: alertname
+        value: UsingDeprecatedAPIAppsV1Beta2
+    - # https://issues.redhat.com/browse/OSD-2382
+      receiver: osd-null
+      matchers:
+      - name: alertname
+        value: UsingDeprecatedAPIExtensionsV1Beta1
+    - # https://issues.redhat.com/browse/OSD-2980
+      receiver: osd-null
+      matchers:
+      - name: alertname
+        value: CPUThrottlingHigh
+      - name: container
+        value: registry-server
+    - # https://issues.redhat.com/browse/OSD-3008
+      receiver: osd-null
+      matchers:
+      - name: alertname
+        value: CPUThrottlingHigh
+      - name: container
+        value: configmap-registry-server
+    - # https://issues.redhat.com/browse/OSD-3010
+      receiver: osd-null
+      matchers:
+      - name: alertname
+        value: NodeFilesystemSpaceFillingUp
+      - name: severity
+        value: warning
+    - # https://issues.redhat.com/browse/OSD-2611
+      receiver: osd-null
+      matchers:
+      - name: namespace
+        value: openshift-customer-monitoring
+    - # https://issues.redhat.com/browse/OSD-3569
+      receiver: osd-null
+      matchers:
+      - name: namespace
+        value: openshift-operators
+    - # https://issues.redhat.com/browse/OSD-3220
+      receiver: osd-null
+      matchers:
+      - name: alertname
+        value: SLAUptimeSRE
+    - # https://issues.redhat.com/browse/OSD-3629
+      receiver: osd-null
+      matchers:
+      - name: alertname
+        value: CustomResourceDetected
+    - # https://issues.redhat.com/browse/OSD-3629
+      receiver: osd-null
+      matchers:
+      - name: alertname
+        value: ImagePruningDisabled
+    - # https://issues.redhat.com/browse/OSD-3794
+      receiver: osd-null
+      matchers:
+      - name: severity
+        value: info
+
+    - # https://issues.redhat.com/browse/OSD-1922
+      receiver: osd-make-it-warning
+      matchers:
+      - name: alertname
+        value: KubeAPILatencyHigh
+      - name: severity
+        value: critical
+
+    - # https://issues.redhat.com/browse/OSD-3086
+      receiver: osd-pagerduty
+      matchers:
+      - name: exported_namespace
+        value: "^default$|^kube.*|^openshift.*|^redhat-.*"
+        regex: true
+    - # https://issues.redhat.com/browse/OSD-3086
+      # general: route anything in core namespaces to PD
+      receiver: osd-pagerduty
+      matchers:
+      - name: namespace
+        value: "^default$|^kube.*|^openshift.*|^redhat-.*"
+        regex: true
+      - name: exported_namespace
+        value: ""
+    - # https://issues.redhat.com/browse/OSD-3326
+      # fluentd: route any fluentd alert to PD
+      receiver: osd-pagerduty
+      matchers:
+      - name: job
+        value: fluentd
+    - # https://issues.redhat.com/browse/OSD-3326
+      # fluentd: route any fluentd alert to PD
+      receiver: osd-pagerduty
+      matchers:
+      - name: alertname
+        value: FluentdNodeDown
+    - # https://issues.redhat.com/browse/OSD-3326
+      # elasticsearch: route any ES alert to PD
+      receiver: osd-pagerduty
+      matchers:
+      - name: cluster
+        value: elasticsearch
+
+  receivers:
+  - name: osd-pagerduty
+    pagerdutys:
+    - sendResolved: true
+      routingKey:
+        name: pd-secret
+        key: PAGERDUTY_KEY
+      description: '{{ .CommonLabels.alertname }} {{ .CommonLabels.severity | toUpper }} ({{ len .Alerts }})'
+      details:
+      - key: component
+        value: '{{ .CommonLabels.alertname }}'
+      - key: group
+        value: '{{ .CommonLabels.alertname }}'
+      - key: link
+        value: '{{ if .CommonAnnotations.link }}{{ .CommonAnnotations.link }}{{ else }}https://github.com/openshift/ops-sop/tree/master/v4/alerts/{{ .CommonLabels.alertname}}.md{{ end }}'
+      - key: link2
+        value: '{{ if .CommonAnnotations.runbook }}{{ .CommonAnnotations.runbook }}{{ else }}{{ end }}'
+      - key: num_firing
+        value: '{{ .Alerts.Firing | len }}'
+      - key: num_resolved
+        value: '{{ .Alerts.Resolved | len }}'
+      - key: resolved
+        value: '{{ template "pagerduty.default.instances" .Alerts.Resolved }}'
+      severity: '{{ if .CommonLabels.severity }}{{ .CommonLabels.severity | toLower }}{{ else }}critical{{ end }}'
+  - name: osd-make-it-warning
+    pagerdutys:
+    - sendResolved: true
+      routingKey:
+        name: pd-secret
+        key: PAGERDUTY_KEY
+      description: '{{ .CommonLabels.alertname }} {{ .CommonLabels.severity | toUpper }} ({{ len .Alerts }})'
+      details:
+      - key: component
+        value: '{{ .CommonLabels.alertname }}'
+      - key: group
+        value: '{{ .CommonLabels.alertname }}'
+      - key: link
+        value: '{{ if .CommonAnnotations.link }}{{ .CommonAnnotations.link }}{{ else }}https://github.com/openshift/ops-sop/tree/master/v4/alerts/{{ .CommonLabels.alertname }}.md{{ end }}'
+      - key: link2
+        value: '{{ if .CommonAnnotations.runbook }}{{ .CommonAnnotations.runbook }}{{ else }}{{ end }}'
+      - key: num_firing
+        value: '{{ .Alerts.Firing | len }}'
+      - key: num_resolved
+        value: '{{ .Alerts.Resolved | len }}'
+      - key: resolved
+        value: '{{ template "pagerduty.default.instances" .Alerts.Resolved }}'
+      severity: warning
+  - name: osd-null
