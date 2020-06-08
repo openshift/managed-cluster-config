@@ -1,0 +1,38 @@
+---
+# Currently there is a bug in OLM that prevents some of SRE operators from being upgraded
+# https://bugzilla.redhat.com/show_bug.cgi?id=1843184
+# The CSV will get stuck in a "Replacing" phase
+# The "Replacing" phase will happen during normal operator upgrades. These are accounted for
+# by the waiting 30m before warning.
+# At 4 hrs, SRE should investigate to ensure operators are being properly upgraded by OLM
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: sre-csv-abnormal
+    role: alert-rules
+  name: sre-csv-abnormal
+  namespace: openshift-monitoring
+spec:
+  groups:
+  - name: sre-csv-abnormal-alerts
+    rules:
+    - alert: CsvAbnormalReplacingOver30MinSRE
+      expr: csv_abnormal{phase=~"(^Replacing$|^Failed$|^Unknown$)",namespace=~"(^openshift.*|^kube.*|^redhat.*|^default$)"}
+      for: 30m
+      labels:
+        severity: warning
+        namespace: "{{ $labels.namespace }}"
+      annotations:
+        message: "CSV {{ $labels.name }} version {{ $labels.version }} is in an abnormal state. Reason: {{ $labels.reason }}"
+        link: "https://github.com/openshift/ops-sop/blob/master/v4/alerts/CsvAbnormalSRE.md"
+
+    - alert: CsvAbnormalReplacingOver4HrSRE
+      expr: csv_abnormal{phase=~"(^Replacing$|^Failed$|^Unknown$)",namespace=~"(^openshift.*|^kube.*|^redhat.*|^default$)"}
+      for: 4h
+      labels:
+        severity: critical
+        namespace: "{{ $labels.namespace }}"
+      annotations:
+        message: "CSV {{ $labels.name }} version {{ $labels.version }} is in an abnormal state. Reason: {{ $labels.reason }}"
+        link: "https://github.com/openshift/ops-sop/blob/master/v4/alerts/CsvAbnormalSRE.md"
