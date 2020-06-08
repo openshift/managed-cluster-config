@@ -5096,7 +5096,7 @@ objects:
         - name: sre-csv-abnormal-alerts
           rules:
           - alert: CsvAbnormalReplacingOver30MinSRE
-            expr: csv_abnormal{phase="Replacing",namespace=~"(^openshift.*|^kube.*|^redhat.*|^default$)"}
+            expr: csv_abnormal{phase=~"(^Replacing$|^Failed$|^Unknown$)",namespace=~"(^openshift.*|^kube.*|^redhat.*|^default$)"}
             for: 30m
             labels:
               severity: warning
@@ -5106,7 +5106,7 @@ objects:
                 an abnormal state. Reason: {{ $labels.reason }}'
               link: https://github.com/openshift/ops-sop/blob/master/v4/alerts/CsvAbnormalSRE.md
           - alert: CsvAbnormalReplacingOver4HrSRE
-            expr: csv_abnormal{phase="Replacing",namespace=~"(^openshift.*|^kube.*|^redhat.*|^default$)"}
+            expr: csv_abnormal{phase=~"(^Replacing$|^Failed$|^Unknown$)",namespace=~"(^openshift.*|^kube.*|^redhat.*|^default$)"}
             for: 4h
             labels:
               severity: critical
