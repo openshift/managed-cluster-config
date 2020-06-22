@@ -3172,10 +3172,22 @@ objects:
             operator: In
             values:
             - 'true'
+        - matchExpressions:
+          - key: managed.openshift.io/aggregate-to-devaccess
+            operator: In
+            values:
+            - 'true'
       apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
         name: osd-devaccess
+      rules: []
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: osd-devaccess-aggregate
+        labels:
+          managed.openshift.io/aggregate-to-devaccess: 'true'
       rules:
       - apiGroups:
         - ''
