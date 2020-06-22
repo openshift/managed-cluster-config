@@ -21,7 +21,7 @@ spec:
         time() - clamp_min(velero_backup_last_successful_timestamp{namespace="openshift-velero",schedule="hourly-object-backup"},
         scalar(max(kube_deployment_created{namespace="openshift-velero",deployment="velero"}))) > 3600 + 600
       labels:
-        severity: warning
+        severity: info
         namespace: openshift-monitoring
       annotations:
         message: The hourly Velero backup has not successfully completed
@@ -32,7 +32,7 @@ spec:
         time() - clamp_min(velero_backup_last_successful_timestamp{namespace="openshift-velero",schedule="daily-full-backup"},
         scalar(max(kube_deployment_created{namespace="openshift-velero",deployment="velero"}))) > 86400 + 600
       labels:
-        severity: warning
+        severity: info
         namespace: openshift-monitoring
       annotations:
         message: The daily Velero backup has not successfully completed
@@ -43,7 +43,7 @@ spec:
         time() - clamp_min(velero_backup_last_successful_timestamp{namespace="openshift-velero",schedule="weekly-full-backup"},
         scalar(max(kube_deployment_created{namespace="openshift-velero",deployment="velero"}))) > 604800 + 600
       labels:
-        severity: warning
+        severity: info
         namespace: openshift-monitoring
       annotations:
         message: The weekly Velero backup has not successfully completed
