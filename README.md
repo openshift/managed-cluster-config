@@ -69,20 +69,6 @@ To opt-in to logging, the customer must:
 2. install the `elasticsearch` operator
 3. create `ClusterLogging` CR in `openshift-logging`
 
-## EFS Enablement via CSI
-
-[`efs-csi`](deploy/efs-csi) enables AWS EFS via the CSI driver. Customer
-opts in by opening a ServiceNow ticket, whereupon SRE must add the appropriate
-[label](deploy/efs-csi/sss-config.yaml) to the cluster. The
-SelectorSyncSet:
-
-- Installs a DaemonSet into the `openshift-efs-csi` namespace, running the CSI driver
-  image on worker nodes.
-- Creates a CSIDriver resource.
-- Creates a StorageClass pointing to the CSIDriver.
-- Sets up a ClusterRoleBinding allowing dedicated-admins to create
-  PersistentVolumes.
-
 # Dependencies
 
 pyyaml
