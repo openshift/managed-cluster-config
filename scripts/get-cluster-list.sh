@@ -37,7 +37,7 @@ LEGALENTITY_IDS_INTERNAL=(1GlYCTDTBmUTij1KYFlUiXFEFQe 1MpZfnmsZeUWjWHg7XRgP15dM9
 
 # Grep for first round of external customer clusters, intent to hit non-prod clusters.  This is a GUESS and is OK since we have manual review and have up to now done all clusters at the same time.  This will be replaced w/ customer driven scheduling with the managed-upgrade-operator in the future.
 # Do not include 'grep' command, it will be prepended.  This is so we can use -v to exclude from the 'external' target.
-GREP_NONPROD='-e dev -e test -e "non[-]prod" -e qa -e "[-]st[-]" -e stage -e staging'
+GREP_NONPROD='-e dev -e test -e "non[-]prod" -e qa -e stage -e staging'
 
 # External Customer clusters are anything not in the lists above with the exception of special scheduling.
 # 1OXqyqko0vmxpV9dmXe9oFypJIw is AppSRE, included here to exclude quay clusters
