@@ -1,6 +1,6 @@
 # Overview
 
-We needed in OSD-4230 to patch the `openshift-operator-lifecycle-manager` namespace to add a label that could be used in NetworkPolicy.  We don't do anything else directly with that namespace and may need a way to do similar tweaks in the future.  So this will become a single SSS to patch namespace labels for these use cases.
+We needed in [OSD-4230](https://issues.redhat.com/browse/OSD-4230) to patch the `openshift-operator-lifecycle-manager` namespace to add a label that could be used in NetworkPolicy.  We don't do anything else directly with that namespace and may need a way to do similar tweaks in the future.  So this will become a single SSS to patch namespace labels for these use cases.
 
 # Guideline
 
