@@ -3,11 +3,17 @@
 CLUSTER_GROUP=$1
 
 help() {
-    echo "$0 {sre,sd,internal,external}"
+    echo "$0 {sre,sd,cicd,internal,external,snowflake}"
     exit -1
 }
 
 VALID_CLUSTER_GROUP=0
+
+#####
+# How to get organization ID to populate the arrays below:
+#       CLUSTER_ID=15uq6splkva07rae2hgih6eph4vs3p8m
+#       ocm get $(ocm get /api/clusters_mgmt/v1/clusters/$CLUSTER_ID | jq -r '.subscription.href') | jq -r '.organization_id'
+#####
 
 # SREP clusters
 LEGALENTITY_IDS_SRE=(1HXb66dsiQCFcwk3tN64c55KORn)
@@ -19,10 +25,11 @@ LEGALENTITY_IDS_CICD=(1aV37K1VQv2zSStwSkdwBNOUBGI)
 LEGALENTITY_IDS_SD=(1Lug81OKNgrfq8kMX8C5J2Zzndq 1MK6ieFXd0eu1hERdENAPvpbi7x 1MSRrYaelBWudhmVktupE2t7ABy)
 
 # Internal Customer clusters
-# NOTE: Removed Quay legal entity from Internal list to stop upgrades: 1OXqyqko0vmxpV9dmXe9oFypJIw
 LEGALENTITY_IDS_INTERNAL=(1GlYCTDTBmUTij1KYFlUiXFEFQe 1MpZfnmsZeUWjWHg7XRgP15dM9e 1PP9KzeLFavv9K3pHGjEgDYfR6V 1Q01Y9f4KNwqGfXJawQU7BQhchI)
 
-# External Customer clusters are anything not in the lists above! ^^
+# External Customer clusters are anything not in the lists above with the exception of special scheduling.
+# 1OXqyqko0vmxpV9dmXe9oFypJIw is AppSRE, included here to exclude quay clusters
+LEGALENTITY_IDS_SNOWFLAKE=(1OXqyqko0vmxpV9dmXe9oFypJIw 1W0oKQFsL4GExEUkSJZ71mTmZEc)
 
 # generated "grep" command to find stuff by legal entity ID
 LEGALENTITY_GREP=""
@@ -47,7 +54,11 @@ case $CLUSTER_GROUP in
     ;;
 "external")
     VALID_CLUSTER_GROUP=1
-    LEGALENTITY_GREP="grep -v -e $(echo ${LEGALENTITY_IDS_SRE[@]} | sed 's/ / -e /g') -e $(echo ${LEGALENTITY_IDS_CICD[@]} | sed 's/ / -e /g') -e $(echo ${LEGALENTITY_IDS_SD[@]} | sed 's/ / -e /g') -e $(echo ${LEGALENTITY_IDS_INTERNAL[@]} | sed 's/ / -e /g')"
+    LEGALENTITY_GREP="grep -v -e $(echo ${LEGALENTITY_IDS_SRE[@]} | sed 's/ / -e /g') -e $(echo ${LEGALENTITY_IDS_CICD[@]} | sed 's/ / -e /g') -e $(echo ${LEGALENTITY_IDS_SD[@]} | sed 's/ / -e /g') -e $(echo ${LEGALENTITY_IDS_INTERNAL[@]} | sed 's/ / -e /g') -e $(echo ${LEGALENTITY_IDS_SNOWFLAKE[@]} | sed 's/ / -e /g')"
+    ;;
+"snowflake")
+    VALID_CLUSTER_GROUP=1
+    LEGALENTITY_GREP="grep -e $(echo ${LEGALENTITY_IDS_SNOWFLAKE[@]} | sed 's/ / -e /g')"
     ;;
 esac
 
@@ -67,3 +78,4 @@ NAMESPACE_LIST=$((oc get accountclaim --all-namespaces -o json | jq -r '.items[]
 RAW_DATA=$(oc get clusterdeployment --all-namespaces -o json | jq -rc ".items[] | select(.metadata.namespace | index(\"$(echo $NAMESPACE_LIST | sed 's/ /\",\"/g')\")) | .fqdn = .metadata.name + \".\" + .spec.baseDomain | {id: .metadata.labels[\"api.openshift.com/id\"], externalId: .spec.clusterMetadata.clusterID, shortName: .metadata.name, longName: .metadata.labels[\"api.openshift.com/name\"], namespace: .metadata.namespace, baseDomain: .spec.baseDomain, desiredVersion: .status.clusterVersionStatus.desired.version, fqdn: .fqdn, installed: .spec.installed, deletionTimestamp: .deletionTimestamp}" | xargs | sed 's/{/{"/g' | sed 's/:/":"/g' | sed 's/,/","/g' | sed 's/}/"}/g' | sed 's/ /,/g' | sed 's/"null"/null/g')
 
 echo "{\"items\":[$RAW_DATA]}"
+
