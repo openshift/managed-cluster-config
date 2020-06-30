@@ -281,7 +281,7 @@ upgrade() {
 
     # 3. wait for upgrade to complete
     log $OCM_NAME "upgrade" "waiting for cluster version"
-    OCP_CURRENT_VERSION=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get clusterversion version -o json | jq -r '.status.history[] | select(.verified == true and .state == "Completed") | .version' | grep $TO)
+    OCP_CURRENT_VERSION=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get clusterversion version -o json | jq -r '.status.history[] | select(.state == "Completed") | .version' | grep $TO)
     
     while [ "$OCP_CURRENT_VERSION" != "$TO" ];
     do
@@ -304,7 +304,7 @@ upgrade() {
 
         # wait a (relatively) short time before checking version (and status when we look back through, if we do)
         sleep 60
-        OCP_CURRENT_VERSION=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get clusterversion version -o json | jq -r '.status.history[] | select(.verified == true and .state == "Completed") | .version' | grep $TO)
+        OCP_CURRENT_VERSION=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get clusterversion version -o json | jq -r '.status.history[] | select(.state == "Completed") | .version' | grep $TO)
     done
 
     log $OCM_NAME "upgrade" "ClusterVersion on $TO"
