@@ -14,7 +14,7 @@ and are specific to managed OpenShift.
 |-----------------------------|--------|
 | works on vanilla Kubernetes |        |
 | works on vanilla OCP        |        |
-| works on managed Openshift  |        |
+| works on managed OpenShift  |        |
 
 
 ## Workflow
