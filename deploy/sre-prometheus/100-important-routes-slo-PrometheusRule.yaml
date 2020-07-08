@@ -1,0 +1,26 @@
+
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: sre-important-routes-slo
+    role: alert-rules
+  name: sre-important-routes-slo
+  namespace: openshift-monitoring
+spec:
+  groups:
+  - name: sre-important-routes-slo-alerts
+    rules:
+    - alert: ConsoleRoute-SLO-Breach
+      expr: haproxy_server_response_errors_total{exported_service=~"(oauth-openshift)"} > 0
+      for: 5m
+      labels:
+        severity: info
+        namespace: openshift-monitoring
+
+    - alert: API-Route-SLO-Breach
+      expr: haproxy_server_response_errors_total{exported_service=~"(console)"} > 0
+      for: 5m
+      labels:
+        severity: info
+        namespace: openshift-monitoring
