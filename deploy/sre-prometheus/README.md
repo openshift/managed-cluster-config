@@ -2,7 +2,7 @@
 
 This section contains alerts specifically crafted for managed OpenShift clusters.
 
-Alerts and recording rules have been evaluated not the be suitable to be contibuted to the
+Alerts and recording rules have been evaluated to not be suitable for upstream. 
 [kubernetes-mixin](https://github.com/kubernetes-monitoring/kubernetes-mixin) or to any OCP component.
 
 ## Contributing
