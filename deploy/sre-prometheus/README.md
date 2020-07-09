@@ -18,7 +18,7 @@ and are specific to managed OpenShift.
 
 
 ## Workflow
-* Create and Issue or a Jira ticket that explains your change and the reason
+* Create an Issue or a Jira ticket that explains your change and the reason
 * fork this repository
 * evaluate your alerts with the given matrix above
 * create a PR for your change, following the template
