@@ -30,6 +30,8 @@ parameters:
   required: true
 - name: CEE_USERS
   required: true
+- name: SREP_USERS
+  required: true
 metadata:
   name: selectorsyncset-template
 objects:
@@ -4708,6 +4710,11 @@ objects:
         api.openshift.com/managed: 'true'
     resourceApplyMode: Sync
     resources:
+    - apiVersion: user.openshift.io/v1
+      kind: Group
+      metadata:
+        name: osd-sre-cluster-admins
+      users: []
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRoleBinding
       metadata:
@@ -4722,8 +4729,8 @@ objects:
     - apiVersion: user.openshift.io/v1
       kind: Group
       metadata:
-        name: osd-sre-cluster-admins
-      users: []
+        name: osd-sre-admins
+      users: ${{SREP_USERS}}
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
