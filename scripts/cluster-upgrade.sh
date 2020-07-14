@@ -258,7 +258,7 @@ upgrade() {
     then
         KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc patch clusterversion version --type merge -p "{\"spec\":{\"channel\": \"$DESIRED_CHANNEL\"}}"
 
-        # Wait for CVO to identiofy the update and refresh clusterVersion.status.availableUpdates
+        # Wait for CVO to identify the update and refresh clusterVersion.status.availableUpdates
         sleep 20
     fi
 
