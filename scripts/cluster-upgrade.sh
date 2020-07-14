@@ -249,6 +249,19 @@ upgrade() {
         return
     fi
 
+    # Bump current ClusterVersion Channel in case it's pointing to a previous minor version
+    DESIRED_CHANNEL=$(get_channel $TO)
+    CURRENT_CHANNEL=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get clusterversion version -o json | jq ".spec.channel")
+
+    # If the channel is already set properly, don't do anything
+    if [ "$DESIRED_CHANNEL" != "$CURRENT_CHANNEL" ];
+    then
+        KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc patch clusterversion version --type merge -p "{\"spec\":{\"channel\": \"$DESIRED_CHANNEL\"}}"
+
+        # Wait for CVO to identiofy the update and refresh clusterVersion.status.availableUpdates
+        sleep 20
+    fi
+
     # is the desired version supported?
     ALLOWED_UPDATE=$(KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc get clusterversion version -o json | jq ".status.availableUpdates[] | select(.force == false and .version == \"$TO\")")
     if [ "$ALLOWED_UPDATE" == "" ];
@@ -270,12 +283,8 @@ upgrade() {
 
         log $OCM_NAME "upgrade" "upgrading from $FROM to $TO"
 
-        CHANNEL_NAME=$(get_channel $TO)
-
         # https://issues.redhat.com/browse/OSD-3442
         KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc patch clusterversion version --type merge -p "{\"spec\":{\"overrides\": null}}"
-
-        KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc patch clusterversion version --type merge -p "{\"spec\":{\"channel\": \"$CHANNEL_NAME\"}}"
         KUBECONFIG=$TMP_DIR/kubeconfig-${CD_NAMESPACE} oc patch clusterversion version --type merge -p "{\"spec\":{\"desiredUpdate\": {\"version\": \"$TO\"}}}"
     fi
 
