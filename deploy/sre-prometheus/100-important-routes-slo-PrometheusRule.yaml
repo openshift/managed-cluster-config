@@ -12,15 +12,11 @@ spec:
   - name: sre-important-routes-slo-alerts
     rules:
     - alert: ConsoleRoute-SLO-Breach
-      expr: haproxy_server_response_errors_total{exported_service=~"(oauth-openshift)"} > 0
-      for: 5m
-      labels:
-        severity: info
-        namespace: openshift-monitoring
-
-    - alert: OpenShift-API-Server-Route-SLO-Breach
-      expr: haproxy_server_response_errors_total{exported_service=~"(console)"} > 0
-      for: 5m
+      annotations:
+        message: The console route has had 100 percent request failures for 60 seconds.
+      expr: |
+        (sum(rate(haproxy_backend_http_responses_total{route=~"console",code=~"(5..)"}[1m])) / sum(rate(haproxy_backend_http_responses_total{route=~"console",code=~"([1-5]..)"}[1m])) >= 1)
+      for: 1m
       labels:
         severity: info
         namespace: openshift-monitoring
