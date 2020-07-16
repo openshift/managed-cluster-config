@@ -15,7 +15,7 @@ spec:
       annotations:
         message: The console route has had 100 percent request failures for 60 seconds.
       expr: |
-        (sum(rate(haproxy_backend_http_responses_total{route=~"console",code=~"(5..)"}[1m])) / sum(rate(haproxy_backend_http_responses_total{route=~"console",code=~"([1-5]..)"}[1m])) >= 1)
+        sum(rate(haproxy_backend_http_responses_total{route=~"console",code=~"(5..)"}[1m])) / sum(rate(haproxy_backend_http_responses_total{route=~"console",code=~"([1-5]..)"}[1m])) >= 1
       for: 1m
       labels:
         severity: info
