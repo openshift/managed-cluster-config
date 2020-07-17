@@ -1,4 +1,6 @@
 #!/bin/bash
+set -euo pipefail
+set -x
 
 ENVIRONMENT=$1
 CLUSTER_ID=$2
@@ -30,6 +32,17 @@ aws_cli_setup() {
     info "Using access key '$KEY_ID'."
 
     echo -e "${KEY_ID}\n${SECRET_KEY}\nus-east-1\njson\n" | aws configure --profile $PROFILE_NAME 2>/dev/null >/dev/null
+}
+
+aws_iam_username() {
+    DEFAULT_USER=$1
+    if [[ "${CCS_CLUSTER}" == "1" ]]; then
+        USERNAME_PREFIX="${DEFAULT_USER}-"
+        KEY_USERNAME=$(AWS_PROFILE=$AWS_PROFILE aws iam list-users | jq -r " .Users[] | select (.Tags.clusterClaimLink == \"${CLUSTER_NAME}\")")
+        # KEY_USERNAME=$(AWS_PROFILE=$AWS_PROFILE aws iam list-users | jq -r " .Users[] | select (.Tags.clusterClaimLink == \"${CLUSTER_NAME}\") | .UserName | select(startswith(\"${USERNAME_PREFIX}\"))")
+    else
+        KEY_USERNAME=$DEFAULT_USER
+    fi
 }
 
 iam_user_create_accesskey() {
@@ -91,17 +104,35 @@ update_aws_secret() {
 }
 
 NAMESPACE=$(ssh root@hive-$ENVIRONMENT-master "oc get clusterdeployment --all-namespaces --no-headers | grep \"$CLUSTER_ID \" | awk '{print \$1}'")
+CLUSTER_NAME=$(ssh root@hive-$ENVIRONMENT-master "oc get clusterdeployment --all-namespaces --no-headers | grep \"$CLUSTER_ID \" | awk '{print \$2}'")
 
-ACCESS_KEY_ID=$(ssh root@hive-$ENVIRONMENT-master "oc get secrets -n $NAMESPACE aws -o json | jq -r '.data.aws_access_key_id' | base64 --decode")
-SECRET_ACCESS_KEY=$(ssh root@hive-$ENVIRONMENT-master "oc get secrets -n $NAMESPACE aws -o json | jq -r '.data.aws_secret_access_key' | base64 --decode")
+if [ $(ssh root@hive-production-master "oc get clusterdeployment -n ${NAMESPACE} ${CLUSTER_NAME} -o yaml -o json" | jq -r '.metadata.labels["api.openshift.com/ccs"]') == "true" ]; then
+    CCS_CLUSTER="1"
+else
+    CCS_CLUSTER="0"
+fi
+
+if [[ "${CCS_CLUSTER}" == "0" ]]; then
+    CREDENTIALS_SECRET_NAME="aws"
+else
+    CREDENTIALS_SECRET_NAME="byoc"
+fi
+
+ACCESS_KEY_ID=$(ssh root@hive-$ENVIRONMENT-master "oc get secrets -n $NAMESPACE $CREDENTIALS_SECRET_NAME -o json | jq -r '.data.aws_access_key_id' | base64 --decode")
+SECRET_ACCESS_KEY=$(ssh root@hive-$ENVIRONMENT-master "oc get secrets -n $NAMESPACE $CREDENTIALS_SECRET_NAME -o json | jq -r '.data.aws_secret_access_key' | base64 --decode")
 AWS_PROFILE=$ENVIRONMENT-$CLUSTER_ID
 aws_cli_setup $ACCESS_KEY_ID $SECRET_ACCESS_KEY $AWS_PROFILE
 info "Retrived original AccessKey."
 
+aws_iam_username "osdManagedAdmin"
+
+echo "ManagedAdmin username: ${KEY_USERNAME}"
+exit
+
 ######################################
 ### Create new credentials for osdManagedAdmin
 
-iam_user_create_accesskey "osdManagedAdmin"
+iam_user_create_accesskey $KEY_USERNAME
 
 # switch to new profile so we can delete the old one
 AWS_PROFILE=$ENVIRONMENT-$CLUSTER_ID-new
@@ -116,14 +147,14 @@ update_aws_secret aws-account-operator $SECRET_NAME
 info "Replaced AWS Account Operator Secret."
 
 # Replace aws secret (in cluster's hive namespace)
-update_aws_secret $NAMESPACE aws
+update_aws_secret $NAMESPACE $CREDENTIALS_SECRET_NAME
 
 info "Replaced Hive AWS Secret."
 
 ######################################
 ### Delete old credentials for osdManagedAdmin
 
-iam_user_delete_accesskey "osdManagedAdmin" "$ACCESS_KEY_ID"
+iam_user_delete_accesskey $KEY_USERNAME "$ACCESS_KEY_ID"
 
 ######################################
 ### Changes on the OSD cluster
@@ -198,9 +229,11 @@ ACCESS_KEY_ID=$(ssh root@hive-$ENVIRONMENT-master "oc get secrets -n aws-account
 SECRET_ACCESS_KEY=$(ssh root@hive-$ENVIRONMENT-master "oc get secrets -n aws-account-operator $SECRET_NAME -o json | jq -r '.data.aws_secret_access_key' | base64 --decode")
 AWS_PROFILE=$ENVIRONMENT-$CLUSTER_ID-sre
 aws_cli_setup $ACCESS_KEY_ID $SECRET_ACCESS_KEY $AWS_PROFILE
-iam_user_create_accesskey "osdManagedAdminSRE"
+
+aws_iam_username "osdManagedAdminSRE"
+iam_user_create_accesskey $KEY_USERNAME
 update_aws_secret aws-account-operator $SECRET_NAME 
-iam_user_delete_accesskey "osdManagedAdminSRE" "$OLD_ACCESS_KEY_ID"
+iam_user_delete_accesskey $KEY_USERNAME "$OLD_ACCESS_KEY_ID"
 
 info "Rotated SRE IAM User credentials."
 
