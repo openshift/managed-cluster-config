@@ -1,6 +1,4 @@
 #!/bin/bash
-set -euo pipefail
-set -x
 
 ENVIRONMENT=$1
 CLUSTER_ID=$2
@@ -39,15 +37,15 @@ aws_iam_username() {
     unset KEY_USERNAME
     # AWS states in the cli documentation that list-user returns tags but it does not
     # https://github.com/boto/boto3/issues/1855
+    USERNAME_PREFIX="${DEFAULT_USER}-"
     if [[ "${CCS_CLUSTER}" == "1" ]]; then
         USERNAME_PREFIX="${DEFAULT_USER}-"
-        ALL_USERNAMES=$(AWS_PROFILE=$AWS_PROFILE aws iam list-users | jq -r " .Users[].UserName")
-        while read -r $USERNAME; do
-            CLAIM_LINK=$(AWS_PROFILE=${AWS_PROFILE} aws list-user-tags --username ${USERNAME} | jq -r ".Tags[] | select ( .Name == \"clusterClaimLink\" ) | .Value ")
-            if [[ "${CLAIM_LINK}" == "${CLUSER_NAME}" ]]; then
-                KEY_USERNAME = ${USERNAME}
+        for USERNAME in $(AWS_PROFILE=$AWS_PROFILE aws iam list-users | jq -r " .Users[].UserName | select(startswith(\"${USERNAME_PREFIX}\"))"); do
+            CLAIM_LINK=$(AWS_PROFILE=${AWS_PROFILE} aws iam list-user-tags --user-name ${USERNAME} | jq -r ".Tags[] | select ( .Key == \"clusterClaimLink\" ) | .Value ")
+            if [[ "${CLAIM_LINK}" == "${CLUSTER_NAME}" ]]; then
+                KEY_USERNAME=${USERNAME}
             fi
-        done <<< ${ALL_USERNAMES}
+        done
     else
         KEY_USERNAME=${DEFAULT_USER}
     fi
@@ -138,9 +136,6 @@ aws_cli_setup $ACCESS_KEY_ID $SECRET_ACCESS_KEY $AWS_PROFILE
 info "Retrived original AccessKey."
 
 aws_iam_username "osdManagedAdmin"
-
-echo "ManagedAdmin username: ${KEY_USERNAME}"
-exit
 
 ######################################
 ### Create new credentials for osdManagedAdmin
