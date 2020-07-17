@@ -36,12 +36,25 @@ aws_cli_setup() {
 
 aws_iam_username() {
     DEFAULT_USER=$1
+    unset KEY_USERNAME
+    # AWS states in the cli documentation that list-user returns tags but it does not
+    # https://github.com/boto/boto3/issues/1855
     if [[ "${CCS_CLUSTER}" == "1" ]]; then
         USERNAME_PREFIX="${DEFAULT_USER}-"
-        KEY_USERNAME=$(AWS_PROFILE=$AWS_PROFILE aws iam list-users | jq -r " .Users[] | select (.Tags.clusterClaimLink == \"${CLUSTER_NAME}\")")
-        # KEY_USERNAME=$(AWS_PROFILE=$AWS_PROFILE aws iam list-users | jq -r " .Users[] | select (.Tags.clusterClaimLink == \"${CLUSTER_NAME}\") | .UserName | select(startswith(\"${USERNAME_PREFIX}\"))")
+        ALL_USERNAMES=$(AWS_PROFILE=$AWS_PROFILE aws iam list-users | jq -r " .Users[].UserName")
+        while read -r $USERNAME; do
+            CLAIM_LINK=$(AWS_PROFILE=${AWS_PROFILE} aws list-user-tags --username ${USERNAME} | jq -r ".Tags[] | select ( .Name == \"clusterClaimLink\" ) | .Value ")
+            if [[ "${CLAIM_LINK}" == "${CLUSER_NAME}" ]]; then
+                KEY_USERNAME = ${USERNAME}
+            fi
+        done <<< ${ALL_USERNAMES}
     else
-        KEY_USERNAME=$DEFAULT_USER
+        KEY_USERNAME=${DEFAULT_USER}
+    fi
+
+    if [ -z "${KEY_USERNAME}" ]; then
+        info "Could not find AWS user for ${DEFAULT_USER}"
+        exit 1
     fi
 }
 
