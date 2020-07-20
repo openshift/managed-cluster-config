@@ -4910,6 +4910,91 @@ objects:
       kind: PrometheusRule
       metadata:
         labels:
+          prometheus: sre-managed-upgrade-operator-alerts
+          role: alert-rules
+        name: sre-managed-upgrade-operator-alerts
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-managed-upgrade-operator-alerts
+          rules:
+          - alert: UpgradeConfigValidationFailed
+            expr: 'upgradeoperator_upgradeconfig_validation_failed > 0
+
+              '
+            for: 5m
+            labels:
+              severity: critical
+              namespace: openshift-monitoring
+            annotations:
+              summary: Upgrade config validation failed
+              description: Upgrade config validation failed
+          - alert: ClusterCheckFailed
+            expr: 'upgradeoperator_cluster_check_failed > 0
+
+              '
+            for: 5m
+            labels:
+              severity: critical
+              namespace: openshift-monitoring
+            annotations:
+              summary: cluster check failed
+              description: basic cluster checks failed on either before the upgrade
+                or after the upgrade
+          - alert: NodeScalingFailed
+            expr: 'upgradeoperator_scaling_failed > 0
+
+              '
+            for: 5m
+            labels:
+              severity: critical
+              namespace: openshift-monitoring
+            annotations:
+              summary: node scaling failed
+              description: The extra machine/node was not ready before the upgrade
+                started
+          - alert: ClusterVerificationFailed
+            expr: 'upgradeoperator_cluster_verification_failed > 0
+
+              '
+            for: 5m
+            labels:
+              severity: critical
+              namespace: openshift-monitoring
+            annotations:
+              summary: cluster verification failed
+              description: Some of the infra components which are running on the cluster
+                are not working well after the upgrade
+          - alert: ControlPlaneUpgradeTimeout
+            expr: 'sum(upgradeoperator_cluster_upgrade_started == 1) and (absent(upgradeoperator_controlplane_upgrade_end_timestamp)
+              == 1)
+
+              '
+            for: 100m
+            labels:
+              severity: critical
+              namespace: openshift-monitoring
+            annotations:
+              summary: Controlplane upgrade timeout for {{ $labels.version }}
+              description: controlplane upgrade for {{ $labels.version }} cannot be
+                finished in 100 minutes
+          - alert: NodeUpgradeTimeout
+            expr: 'sum(alertmanager_silences{state="active"} == 0) and sum(upgradeoperator_cluster_upgrade_started
+              == 1) and (absent(upgradeoperator_node_upgrade_end_timestamp) == 1)
+
+              '
+            for: 10m
+            labels:
+              severity: critical
+              namespace: openshift-monitoring
+            annotations:
+              summary: Nodes upgrade timeout for {{ $labels.version }}
+              description: nodes upgrade for {{ $labels.version }} cannot be finished
+                after the silence expired
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
           prometheus: sre-managed-velero-operator-alerts
           role: alert-rules
         name: sre-managed-velero-operator-alerts
