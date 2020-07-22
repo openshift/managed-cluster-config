@@ -4990,6 +4990,32 @@ objects:
       - kind: ServiceAccount
         name: sre-build-test
         namespace: openshift-build-test
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: sre-build-test
+        namespace: openshift-build-test
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: sre-build-test
+      subjects:
+      - kind: ServiceAccount
+        name: sre-build-test
+        namespace: openshift-build-test
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: sre-build-test
+        namespace: openshift-build-test
+      rules:
+      - apiGroups:
+        - batch
+        resources:
+        - jobs
+        verbs:
+        - list
+        - delete
     - apiVersion: batch/v1beta1
       kind: CronJob
       metadata:
@@ -5025,10 +5051,14 @@ objects:
                   image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
                   imagePullPolicy: Always
                   env:
-                  - name: JOB_NAME
+                  - name: POD_NAME
                     valueFrom:
                       fieldRef:
                         fieldPath: metadata.name
+                  - name: POD_NS
+                    valueFrom:
+                      fieldRef:
+                        fieldPath: metadata.namespace
                   command:
                   - /bin/bash
                   - -c
@@ -5037,20 +5067,26 @@ objects:
                     \ so these always run\ncleanup () {\n  echo \"$(date): Done, deleting\
                     \ build NS=$NS\"\n  oc delete ns \"${NS}\"\n}\ntrap \"cleanup\"\
                     \ EXIT SIGINT\n\n# set NS to include job name, to ease linking\
-                    \ namespace to a specific job\nexport NS=\"openshift-build-test-${JOB_NAME##sre-build-test-}\"\
-                    \noc create ns \"${NS}\"\n\n# run build\noc -n \"${NS}\" new-build\
-                    \ nodejs~https://github.com/openshift/nodejs-ex --name=sre-build-test\n\
-                    echo \"$(date): Waiting for build to complete.\"\nwhile :\ndo\n\
-                    \  export ST=$(oc -n \"${NS}\" get build -o custom-columns=STATUS:.status.phase\
-                    \ --no-headers)\n  case ${ST} in\n    \"\")\n      # if build\
-                    \ status is blank, assume we are still starting the build\n  \
-                    \    ST=\"Starting\"\n      ;;\n    Failed)\n      echo \"$(date):\
-                    \ Build Failed\" >&2\n      exit 1\n      ;;\n    Cancelled)\n\
-                    \      echo \"$(date): Build was Cancelled\" >&2\n      exit 1\n\
-                    \      ;;\n    Complete)\n      echo \"$(date): Build Complete\"\
-                    \n      break\n      ;;\n  esac\n  echo \"$(date): Build is ${ST};\
-                    \ checking build again in 15 seconds, NS=${NS}\"\n  sleep 15\n\
-                    done\nexit 0\n"
+                    \ namespace to a specific job\nJOB_PREFIX=sre-build-test\nNS=\"\
+                    ${POD_NS}-${POD_NAME##${JOB_PREFIX}-}\"\nJOB_NAME=$(echo \"${POD_NAME}\"\
+                    \ | rev | cut -d- -f2- | rev)\n\noc create ns \"${NS}\"\n\n# run\
+                    \ build\noc -n \"${NS}\" new-build nodejs~https://github.com/openshift/nodejs-ex\
+                    \ --name=\"${JOB_PREFIX}\"\necho \"$(date): Waiting for build\
+                    \ to complete.\"\nwhile :\ndo\n  ST=$(oc -n \"${NS}\" get build\
+                    \ -o custom-columns=STATUS:.status.phase --no-headers)\n  case\
+                    \ ${ST} in\n    \"\")\n      # if build status is blank, assume\
+                    \ we are still starting the build\n      ST=\"Starting\"\n   \
+                    \   ;;\n    Failed)\n      echo \"$(date): Build Failed\" >&2\n\
+                    \      exit 1\n      ;;\n    Cancelled)\n      echo \"$(date):\
+                    \ Build was Cancelled\" >&2\n      exit 1\n      ;;\n    Complete)\n\
+                    \      echo \"$(date): Build Complete\"\n      # Get all job names\
+                    \ that have exceeded failed retries\n      JOBS_TO_DELETE=$(oc\
+                    \ -n \"${POD_NS}\" get job -o \\\n                         jsonpath='{.items[?(@.status.failed==@.spec.backoffLimit)].metadata.name}'\
+                    \ || true)\n      echo \"$(date): Selected jobs for deletion:\
+                    \ ${JOBS_TO_DELETE}\"\n      echo \"${JOBS_TO_DELETE}\" | xargs\
+                    \ oc -n \"${POD_NS}\" delete job\n      break\n      ;;\n  esac\n\
+                    \  echo \"$(date): Build is ${ST}; checking build again in 15\
+                    \ seconds, NS=${NS}\"\n  sleep 15\ndone\nexit 0\n"
     - apiVersion: monitoring.coreos.com/v1
       kind: PrometheusRule
       metadata:
