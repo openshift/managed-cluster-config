@@ -40,8 +40,9 @@ LEGALENTITY_IDS_INTERNAL=(1GlYCTDTBmUTij1KYFlUiXFEFQe 1MpZfnmsZeUWjWHg7XRgP15dM9
 GREP_NONPROD='-e dev -e test -e "non[-]prod" -e qa -e stage -e staging'
 
 # External Customer clusters are anything not in the lists above with the exception of special scheduling.
+# "Snowflake" clusters in the context of this script are all clusters for a specific organization that are upgraded on a special schedule.
 # 1OXqyqko0vmxpV9dmXe9oFypJIw is AppSRE, included here to exclude quay clusters
-LEGALENTITY_IDS_SNOWFLAKE=(1OXqyqko0vmxpV9dmXe9oFypJIw 1W0oKQFsL4GExEUkSJZ71mTmZEc)
+LEGALENTITY_IDS_SNOWFLAKE=(1OXqyqko0vmxpV9dmXe9oFypJIw 1W0oKQFsL4GExEUkSJZ71mTmZEc 1SNu7qa8dwZUiD9AmJJZiXatnnx)
 
 # generated "grep" command to find stuff by legal entity ID
 LEGALENTITY_GREP=""
