@@ -117,7 +117,7 @@ update_aws_secret() {
 NAMESPACE=$(ssh root@hive-$ENVIRONMENT-master "oc get clusterdeployment --all-namespaces --no-headers | grep \"$CLUSTER_ID \" | awk '{print \$1}'")
 CLUSTER_NAME=$(ssh root@hive-$ENVIRONMENT-master "oc get clusterdeployment --all-namespaces --no-headers | grep \"$CLUSTER_ID \" | awk '{print \$2}'")
 
-if [ $(ssh root@hive-production-master "oc get clusterdeployment -n ${NAMESPACE} ${CLUSTER_NAME} -o yaml -o json" | jq -r '.metadata.labels["api.openshift.com/ccs"]') == "true" ]; then
+if [ $(ssh root@hive-$ENVIRONMENT-master "oc get clusterdeployment -n ${NAMESPACE} ${CLUSTER_NAME} -o yaml -o json" | jq -r '.metadata.labels["api.openshift.com/ccs"]') == "true" ]; then
     CCS_CLUSTER="1"
 else
     CCS_CLUSTER="0"
