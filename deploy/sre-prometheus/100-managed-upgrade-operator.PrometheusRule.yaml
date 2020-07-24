@@ -12,8 +12,7 @@ spec:
     rules:
     - alert: UpgradeConfigValidationFailedSRE
       # Get alert immediately once the upgradeconfig validation failed
-      expr: |
-        upgradeoperator_upgradeconfig_validation_failed > 0
+      expr: upgradeoperator_upgradeconfig_validation_failed > 0
       for: 5m
       labels:
         severity: critical
@@ -23,8 +22,7 @@ spec:
         description: "Upgrade config validation failed"
     - alert: UpgradeClusterCheckFailedSRE
       # Get alert immediately once the cluster check failed
-      expr: |
-        upgradeoperator_cluster_check_failed > 0
+      expr: upgradeoperator_cluster_check_failed > 0
       for: 5m
       labels:
         severity: critical
@@ -34,8 +32,7 @@ spec:
         description: "basic cluster checks failed on either before the upgrade or after the upgrade"
     - alert: UpgradeNodeScalingFailedSRE
       # Get alert once the Node cannot be scaled up
-      expr: |
-        upgradeoperator_scaling_failed > 0
+      expr: upgradeoperator_scaling_failed > 0
       for: 5m
       labels:
         severity: critical
@@ -45,8 +42,7 @@ spec:
         description: "The extra machine/node was not ready before the upgrade started"
     - alert: UpgradeClusterVerificationFailedSRE
       # Get alert if the verification steps failed after the cluster upgraded
-      expr: |
-        upgradeoperator_cluster_verification_failed > 0
+      expr: upgradeoperator_cluster_verification_failed > 0
       for: 5m
       labels:
         severity: critical
@@ -56,8 +52,7 @@ spec:
         description: "Some of the infra components which are running on the cluster are not working well after the upgrade"
     - alert: UpgradeControlPlaneUpgradeTimeoutSRE
       # Get alert if the control plane upgrade cannot be finished in the expected duration
-      expr: |
-        upgradeoperator_controlplane_timeout > 0
+      expr: upgradeoperator_controlplane_timeout > 0
       for: 5m
       labels:
         severity: critical
@@ -67,8 +62,7 @@ spec:
         description: "controlplane upgrade for {{ $labels.version }} cannot be finished in 100 minutes"
     - alert: UpgradeNodeUpgradeTimeoutSRE
       # Get alert if the worker nodes upgrade cannot be finished in the expected duration
-      expr: |
-        upgradeoperator_worker_timeout > 0
+      expr: upgradeoperator_worker_timeout > 0
       for: 5m
       labels:
         severity: critical
@@ -78,8 +72,7 @@ spec:
         description: "nodes upgrade for {{ $labels.version }} cannot be finished after the silence expired"
     - alert: UpgradeWindowBreachedSRE
       # Get alert if the upgrade window breached
-      expr: |
-        upgradeoperator_upgrade_window_breached > 0
+      expr: upgradeoperator_upgrade_window_breached > 0
       for: 5m
       labels:
         severity: critical
