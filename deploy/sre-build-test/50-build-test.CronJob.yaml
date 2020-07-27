@@ -34,10 +34,14 @@ spec:
             image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
             imagePullPolicy: Always
             env:
-              - name: JOB_NAME
+              - name: POD_NAME
                 valueFrom:
                   fieldRef:
                     fieldPath: metadata.name
+              - name: POD_NS
+                valueFrom:
+                  fieldRef:
+                    fieldPath: metadata.namespace
             command:
             - /bin/bash
             - -c
@@ -55,15 +59,18 @@ spec:
               trap "cleanup" EXIT SIGINT
 
               # set NS to include job name, to ease linking namespace to a specific job
-              export NS="openshift-build-test-${JOB_NAME##sre-build-test-}"
+              JOB_PREFIX=sre-build-test
+              NS="${POD_NS}-${POD_NAME##${JOB_PREFIX}-}"
+              JOB_NAME=$(echo "${POD_NAME}" | rev | cut -d- -f2- | rev)
+
               oc create ns "${NS}"
 
               # run build
-              oc -n "${NS}" new-build nodejs~https://github.com/openshift/nodejs-ex --name=sre-build-test
+              oc -n "${NS}" new-build nodejs~https://github.com/openshift/nodejs-ex --name="${JOB_PREFIX}"
               echo "$(date): Waiting for build to complete."
               while :
               do
-                export ST=$(oc -n "${NS}" get build -o custom-columns=STATUS:.status.phase --no-headers)
+                ST=$(oc -n "${NS}" get build -o custom-columns=STATUS:.status.phase --no-headers)
                 case ${ST} in
                   "")
                     # if build status is blank, assume we are still starting the build
@@ -79,6 +86,11 @@ spec:
                     ;;
                   Complete)
                     echo "$(date): Build Complete"
+                    # Get all job names that have exceeded failed retries
+                    JOBS_TO_DELETE=$(oc -n "${POD_NS}" get job -o \
+                                       jsonpath='{.items[?(@.status.failed==@.spec.backoffLimit)].metadata.name}' || true)
+                    echo "$(date): Selected jobs for deletion: ${JOBS_TO_DELETE}"
+                    echo "${JOBS_TO_DELETE}" | xargs oc -n "${POD_NS}" delete job
                     break
                     ;;
                 esac
