@@ -1,16 +1,17 @@
 apiVersion: managed.openshift.io/v1alpha1
 kind: SubjectPermission
 metadata:
-  name: dedicated-admins
+  name: dedicated-admins-customer-monitoring
   namespace: openshift-rbac-permissions
 spec:
   subjectKind: Group
   subjectName: dedicated-admins
-  clusterPermissions:
-    - dedicated-admins-cluster
   permissions:
     - 
       clusterRoleName: dedicated-admins-project
-      namespacesAllowedRegex: ".*"
-      namespacesDeniedRegex: "(^kube.*|^openshift.*|^default$|^redhat-.*)"
+      namespacesAllowedRegex: "^openshift-customer-monitoring$"
+      allowFirst: true
+    - 
+      clusterRoleName: admin 
+      namespacesAllowedRegex: "^openshift-customer-monitoring$"
       allowFirst: true
