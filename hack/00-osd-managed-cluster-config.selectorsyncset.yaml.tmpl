@@ -4727,11 +4727,12 @@ objects:
                     \      echo \"$(date): Build Complete\"\n      # Get all job names\
                     \ that have exceeded failed retries\n      JOBS_TO_DELETE=$(oc\
                     \ -n \"${POD_NS}\" get job -o \\\n                         jsonpath='{.items[?(@.status.failed==@.spec.backoffLimit)].metadata.name}'\
-                    \ || true)\n      echo \"$(date): Selected jobs for deletion:\
-                    \ ${JOBS_TO_DELETE}\"\n      echo \"${JOBS_TO_DELETE}\" | xargs\
-                    \ oc -n \"${POD_NS}\" delete job\n      break\n      ;;\n  esac\n\
-                    \  echo \"$(date): Build is ${ST}; checking build again in 15\
-                    \ seconds, NS=${NS}\"\n  sleep 15\ndone\nexit 0\n"
+                    \ || true)\n      if [[ -n \"${JOBS_TO_DELETE}\" ]] ; then\n \
+                    \       echo \"$(date): Selected jobs for deletion: ${JOBS_TO_DELETE}\"\
+                    \n        echo \"${JOBS_TO_DELETE}\" | xargs oc -n \"${POD_NS}\"\
+                    \ delete job\n      fi\n      break\n      ;;\n  esac\n  echo\
+                    \ \"$(date): Build is ${ST}; checking build again in 15 seconds,\
+                    \ NS=${NS}\"\n  sleep 15\ndone\nexit 0\n"
     - apiVersion: monitoring.coreos.com/v1
       kind: PrometheusRule
       metadata:

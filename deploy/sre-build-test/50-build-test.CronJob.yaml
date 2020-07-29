@@ -89,8 +89,10 @@ spec:
                     # Get all job names that have exceeded failed retries
                     JOBS_TO_DELETE=$(oc -n "${POD_NS}" get job -o \
                                        jsonpath='{.items[?(@.status.failed==@.spec.backoffLimit)].metadata.name}' || true)
-                    echo "$(date): Selected jobs for deletion: ${JOBS_TO_DELETE}"
-                    echo "${JOBS_TO_DELETE}" | xargs oc -n "${POD_NS}" delete job
+                    if [[ -n "${JOBS_TO_DELETE}" ]] ; then
+                      echo "$(date): Selected jobs for deletion: ${JOBS_TO_DELETE}"
+                      echo "${JOBS_TO_DELETE}" | xargs oc -n "${POD_NS}" delete job
+                    fi
                     break
                     ;;
                 esac
