@@ -35,7 +35,7 @@ spec:
                         echo "NAMESPACE=$NS"
                         SUBJECT=$(oc -n $NS get rolebinding admin -o jsonpath='{.subjects[*].name}')
                         oc -n $NS delete rolebinding admin
-                        oc adm policy add-role-to-user admin $SUBJECT --rolebinding-name=admin
+                        oc adm policy add-role-to-user admin $SUBJECT --rolebinding-name=admin -n $NS
                     fi
                 done
                 echo "FINISH"
