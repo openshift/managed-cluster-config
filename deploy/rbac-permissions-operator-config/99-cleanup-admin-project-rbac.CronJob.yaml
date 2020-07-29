@@ -1,0 +1,42 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: dedicated-admins-project-rbac-fixer
+  namespace: openshift-rbac-permissions
+spec:
+  failedJobsHistoryLimit: 5
+  successfulJobsHistoryLimit: 3
+  concurrencyPolicy: Replace
+  schedule: "0 */1 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: rbac-permissions-operator
+          restartPolicy: Never
+          containers:
+          - name: dedicated-admins-project-rbac-fixer
+            image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+            imagePullPolicy: Always
+            args:
+            - /bin/bash
+            - -c
+            - |
+                echo "START"
+                oc get rolebinding --all-namespaces | grep admin-dedicated-admins | awk '{print $1}' | xargs -n 1 -t oc delete rolebinding admin-dedicated-admins --ignore-not-found -n 2>/dev/null
+
+                oc get rolebinding --all-namespaces | grep admin-system:serviceaccounts:dedicated-admin | awk '{print $1}' | xargs -n 1 -t oc delete rolebinding admin-system:serviceaccounts:dedicated-admin --ignore-not-found -n 2>/dev/null
+
+                for NS in $(oc get rolebinding --all-namespaces | grep " admin " | awk '{print $1}' | grep -v -e "^openshift" -e "^default$" -e "^kube" -e "^redhat");
+                do
+                    ROLE_REF=$(oc -n $NS get rolebinding admin -o jsonpath='{.roleRef.name}')
+                    if [ "$ROLE_REF" == "admin" ];
+                    then
+                        echo "NAMESPACE=$NS"
+                        SUBJECT=$(oc -n $NS get rolebinding admin -o jsonpath='{.subjects[*].name}')
+                        oc -n $NS delete rolebinding admin
+                        oc adm policy add-role-to-user admin $SUBJECT --rolebinding-name=admin
+                    fi
+                done
+                echo "FINISH"
+                exit 0

@@ -12,6 +12,21 @@ aggregationRule:
       operator: In
       values:
         - "true"
+    # https://issues.redhat.com/browse/OSD-4660
+    - key: olm.opgroup.permissions/aggregate-to-81852df0cc9f2a7a-admin
+      operator: DoesNotExist
+    # https://issues.redhat.com/browse/OSD-4660
+    - key: olm.opgroup.permissions/aggregate-to-9e5a7a2e55ef37d2-admin
+      operator: DoesNotExist
+    # https://issues.redhat.com/browse/OSD-4660
+    - key: olm.opgroup.permissions/aggregate-to-b86eb585a91e38c9-admin
+      operator: DoesNotExist
+    # https://issues.redhat.com/browse/OSD-4660
+    - key: olm.opgroup.permissions/aggregate-to-d86540dbb89f693d-admin
+      operator: DoesNotExist
+    # exclude "edit" which only has this label on it (for now.. sigh)
+    - key: kubernetes.io/bootstrapping
+      operator: DoesNotExist
   # aggregate all customer installed operator rbac from OLM to dedicated-admins-cluster (pre 4.3.12)
   - matchExpressions:
     - key: olm.opgroup.permissions/aggregate-to-admin
