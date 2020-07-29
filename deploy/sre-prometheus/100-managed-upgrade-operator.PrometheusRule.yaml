@@ -59,7 +59,7 @@ spec:
         namespace: openshift-monitoring
       annotations:
         summary: "Controlplane upgrade timeout for {{ $labels.version }}"
-        description: "controlplane upgrade for {{ $labels.version }} cannot be finished in 100 minutes"
+        description: "controlplane upgrade for {{ $labels.version }} cannot be finished in the given time period"
     - alert: UpgradeNodeUpgradeTimeoutSRE
       # Get alert if the worker nodes upgrade cannot be finished in the expected duration
       expr: upgradeoperator_worker_timeout > 0
@@ -78,5 +78,15 @@ spec:
         severity: critical
         namespace: openshift-monitoring
       annotations:
-        summary: "Cluster upgrade upgrade window breached"
+        summary: "Cluster upgrade window breached"
         description: "A cluster has not commenced upgrading during its scheduled upgrade window."
+    - alert: UpgradeNodeDrainFailedSRE
+      # Get alert if the node drain takes too long during the upgrade
+      expr: upgradeoperator_node_drain_timeout > 0
+      for: 5m
+      labels:
+        severity: critical
+        namespace: openshift-monitoring
+      annotations:
+        summary: "Node drain failed in the given time period which is not caused by the PDB"
+        description: "node drain takes too long and cannot be finished in the given time period during cluster upgrade"

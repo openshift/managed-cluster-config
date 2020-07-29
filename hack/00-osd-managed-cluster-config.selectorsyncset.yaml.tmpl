@@ -4736,26 +4736,6 @@ objects:
       kind: PrometheusRule
       metadata:
         labels:
-          prometheus: sre-cluster-upgrade-alerts
-          role: alert-rules
-        name: sre-cluster-upgrade-alerts
-        namespace: openshift-monitoring
-      spec:
-        groups:
-        - name: sre-cluster-upgrade-alerts
-          rules:
-          - alert: ClusterUpgradingSRE
-            expr: cluster_version{type="updating"} > 0
-            labels:
-              severity: info
-              namespace: openshift-monitoring
-            annotations:
-              message: The cluster is attempting to upgrade from {{ $labels.from_version
-                }} to {{ $labels.version }}.
-    - apiVersion: monitoring.coreos.com/v1
-      kind: PrometheusRule
-      metadata:
-        labels:
           prometheus: sre-configure-alertmanager-operator-offline-alerts
           role: alert-rules
         name: sre-configure-alertmanager-operator-offline-alerts
@@ -4966,7 +4946,7 @@ objects:
             annotations:
               summary: Controlplane upgrade timeout for {{ $labels.version }}
               description: controlplane upgrade for {{ $labels.version }} cannot be
-                finished in 100 minutes
+                finished in the given time period
           - alert: UpgradeNodeUpgradeTimeoutSRE
             expr: upgradeoperator_worker_timeout > 0
             for: 5m
@@ -4984,9 +4964,20 @@ objects:
               severity: critical
               namespace: openshift-monitoring
             annotations:
-              summary: Cluster upgrade upgrade window breached
+              summary: Cluster upgrade window breached
               description: A cluster has not commenced upgrading during its scheduled
                 upgrade window.
+          - alert: UpgradeNodeDrainFailedSRE
+            expr: upgradeoperator_node_drain_timeout > 0
+            for: 5m
+            labels:
+              severity: critical
+              namespace: openshift-monitoring
+            annotations:
+              summary: Node drain failed in the given time period which is not caused
+                by the PDB
+              description: node drain takes too long and cannot be finished in the
+                given time period during cluster upgrade
     - apiVersion: monitoring.coreos.com/v1
       kind: PrometheusRule
       metadata:
