@@ -47,8 +47,7 @@ requests to the API server in the previous four weeks, the API
 availability error budget is 3% (100% – 97%) of 1,000,000: 30,000
 errors.
 
-We will enact the error budget policy (see [\[ADD
-ME\!\!\!\]](https://landing.google.com/sre/workbook/chapters/error-budget-policy/))
+We will enact the error budget policy (see [Document](https://landing.google.com/sre/workbook/chapters/error-budget-policy/))
 when any of our objectives has exhausted its error budget.
 
 ##### **Clarifications and Caveats**
