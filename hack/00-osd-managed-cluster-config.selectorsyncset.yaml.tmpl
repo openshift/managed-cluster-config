@@ -1225,6 +1225,29 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: managed-upgrade-operator
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: managed-upgrade-operator-config
+        namespace: openshift-managed-upgrade-operator
+      data:
+        config.yaml: "maintenance:\n  controlPlaneTime: 90\n  workerNodeTime: 8\n\
+          scale:\n  timeOut: 30\nupgradeWindow:\n  timeOut: 60\nnodeDrain:\n  timeOut:\
+          \ 45\n"
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: managed-velero-operator-rolebinding
   spec:
     clusterDeploymentSelector:
