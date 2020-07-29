@@ -513,6 +513,21 @@ objects:
         - '*'
         verbs:
         - '*'
+    - apiVersion: managed.openshift.io/v1alpha1
+      kind: SubjectPermission
+      metadata:
+        name: dedicated-admins-customer-monitoring
+        namespace: openshift-rbac-permissions
+      spec:
+        subjectKind: Group
+        subjectName: dedicated-admins
+        permissions:
+        - clusterRoleName: dedicated-admins-project
+          namespacesAllowedRegex: ^openshift-customer-monitoring$
+          allowFirst: true
+        - clusterRoleName: admin
+          namespacesAllowedRegex: ^openshift-customer-monitoring$
+          allowFirst: true
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -541,6 +556,21 @@ objects:
         - '*'
         verbs:
         - '*'
+    - apiVersion: managed.openshift.io/v1alpha1
+      kind: SubjectPermission
+      metadata:
+        name: dedicated-admins-customer-monitoring
+        namespace: openshift-rbac-permissions
+      spec:
+        subjectKind: Group
+        subjectName: dedicated-admins
+        permissions:
+        - clusterRoleName: dedicated-admins-project
+          namespacesAllowedRegex: ^openshift-customer-monitoring$
+          allowFirst: true
+        - clusterRoleName: admin
+          namespacesAllowedRegex: ^openshift-customer-monitoring$
+          allowFirst: true
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -569,6 +599,21 @@ objects:
         - '*'
         verbs:
         - '*'
+    - apiVersion: managed.openshift.io/v1alpha1
+      kind: SubjectPermission
+      metadata:
+        name: dedicated-admins-customer-monitoring
+        namespace: openshift-rbac-permissions
+      spec:
+        subjectKind: Group
+        subjectName: dedicated-admins
+        permissions:
+        - clusterRoleName: dedicated-admins-project
+          namespacesAllowedRegex: ^openshift-customer-monitoring$
+          allowFirst: true
+        - clusterRoleName: admin
+          namespacesAllowedRegex: ^openshift-customer-monitoring$
+          allowFirst: true
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -597,6 +642,21 @@ objects:
         - '*'
         verbs:
         - '*'
+    - apiVersion: managed.openshift.io/v1alpha1
+      kind: SubjectPermission
+      metadata:
+        name: dedicated-admins-customer-monitoring
+        namespace: openshift-rbac-permissions
+      spec:
+        subjectKind: Group
+        subjectName: dedicated-admins
+        permissions:
+        - clusterRoleName: dedicated-admins-project
+          namespacesAllowedRegex: ^openshift-customer-monitoring$
+          allowFirst: true
+        - clusterRoleName: admin
+          namespacesAllowedRegex: ^openshift-customer-monitoring$
+          allowFirst: true
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -3580,6 +3640,48 @@ objects:
         name: dedicated-admin
         annotations:
           openshift.io/node-selector: ''
+    - apiVersion: template.openshift.io/v1
+      kind: Template
+      metadata:
+        annotations:
+          description: Switches the ClusterRole for the 'admin' RoleBinding from 'admin'
+            to 'dedicated-admins-project'.
+        name: osd-project-request
+        namespace: openshift-config
+      objects:
+      - apiVersion: project.openshift.io/v1
+        kind: Project
+        metadata:
+          annotations:
+            openshift.io/description: ${PROJECT_DESCRIPTION}
+            openshift.io/display-name: ${PROJECT_DISPLAYNAME}
+            openshift.io/requester: ${PROJECT_REQUESTING_USER}
+          creationTimestamp: null
+          labels:
+            name: ${PROJECT_NAME}
+          name: ${PROJECT_NAME}
+        spec: {}
+        status: {}
+      - apiVersion: rbac.authorization.k8s.io/v1
+        kind: RoleBinding
+        metadata:
+          creationTimestamp: null
+          name: admin
+          namespace: ${PROJECT_NAME}
+        roleRef:
+          apiGroup: rbac.authorization.k8s.io
+          kind: ClusterRole
+          name: dedicated-admins-project
+        subjects:
+        - apiGroup: rbac.authorization.k8s.io
+          kind: User
+          name: ${PROJECT_ADMIN_USER}
+      parameters:
+      - name: PROJECT_NAME
+      - name: PROJECT_DISPLAYNAME
+      - name: PROJECT_DESCRIPTION
+      - name: PROJECT_ADMIN_USER
+      - name: PROJECT_REQUESTING_USER
     - aggregationRule:
         clusterRoleSelectors:
         - matchExpressions:
@@ -3638,6 +3740,16 @@ objects:
             operator: In
             values:
             - 'true'
+          - key: olm.opgroup.permissions/aggregate-to-81852df0cc9f2a7a-admin
+            operator: DoesNotExist
+          - key: olm.opgroup.permissions/aggregate-to-9e5a7a2e55ef37d2-admin
+            operator: DoesNotExist
+          - key: olm.opgroup.permissions/aggregate-to-b86eb585a91e38c9-admin
+            operator: DoesNotExist
+          - key: olm.opgroup.permissions/aggregate-to-d86540dbb89f693d-admin
+            operator: DoesNotExist
+          - key: kubernetes.io/bootstrapping
+            operator: DoesNotExist
         - matchExpressions:
           - key: olm.opgroup.permissions/aggregate-to-admin
             operator: In
@@ -4267,11 +4379,7 @@ objects:
         permissions:
         - clusterRoleName: dedicated-admins-project
           namespacesAllowedRegex: .*
-          namespacesDeniedRegex: (^kube-.*|^openshift.*|^ops-health-monitoring$|^management-infra$|^default$|^logging$|^sre-app-check$|^redhat-.*)
-          allowFirst: true
-        - clusterRoleName: admin
-          namespacesAllowedRegex: .*
-          namespacesDeniedRegex: (^kube-.*|^openshift.*|^ops-health-monitoring$|^management-infra$|^default$|^logging$|^sre-app-check$|^redhat-.*)
+          namespacesDeniedRegex: (^kube.*|^openshift.*|^default$|^redhat-.*)
           allowFirst: true
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
@@ -4286,12 +4394,53 @@ objects:
         permissions:
         - clusterRoleName: dedicated-admins-project
           namespacesAllowedRegex: .*
-          namespacesDeniedRegex: (^kube-.*|^openshift.*|^ops-health-monitoring$|^management-infra$|^default$|^logging$|^sre-app-check$|^redhat-.*)
+          namespacesDeniedRegex: (^kube.*|^openshift.*|^default$|^redhat-.*)
           allowFirst: true
-        - clusterRoleName: admin
-          namespacesAllowedRegex: .*
-          namespacesDeniedRegex: (^kube-.*|^openshift.*|^ops-health-monitoring$|^management-infra$|^default$|^logging$|^sre-app-check$|^redhat-.*)
-          allowFirst: true
+    - apiVersion: batch/v1beta1
+      kind: CronJob
+      metadata:
+        name: dedicated-admins-project-rbac-fixer
+        namespace: openshift-rbac-permissions
+      spec:
+        failedJobsHistoryLimit: 5
+        successfulJobsHistoryLimit: 3
+        concurrencyPolicy: Replace
+        schedule: 0 */1 * * *
+        jobTemplate:
+          spec:
+            template:
+              spec:
+                serviceAccountName: rbac-permissions-operator
+                restartPolicy: Never
+                containers:
+                - name: dedicated-admins-project-rbac-fixer
+                  image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+                  imagePullPolicy: Always
+                  args:
+                  - /bin/bash
+                  - -c
+                  - "echo \"START\"\noc get rolebinding --all-namespaces | grep admin-dedicated-admins\
+                    \ | awk '{print $1}' | xargs -n 1 -t oc delete rolebinding admin-dedicated-admins\
+                    \ --ignore-not-found -n 2>/dev/null\n\noc get rolebinding --all-namespaces\
+                    \ | grep admin-system:serviceaccounts:dedicated-admin | awk '{print\
+                    \ $1}' | xargs -n 1 -t oc delete rolebinding admin-system:serviceaccounts:dedicated-admin\
+                    \ --ignore-not-found -n 2>/dev/null\n\nfor NS in $(oc get rolebinding\
+                    \ --all-namespaces | grep \" admin \" | awk '{print $1}' | grep\
+                    \ -v -e \"^openshift\" -e \"^default$\" -e \"^kube\" -e \"^redhat\"\
+                    );\ndo\n    ROLE_REF=$(oc -n $NS get rolebinding admin -o jsonpath='{.roleRef.name}')\n\
+                    \    if [ \"$ROLE_REF\" == \"admin\" ];\n    then\n        echo\
+                    \ \"NAMESPACE=$NS\"\n        SUBJECT=$(oc -n $NS get rolebinding\
+                    \ admin -o jsonpath='{.subjects[*].name}')\n        oc -n $NS\
+                    \ delete rolebinding admin\n        oc adm policy add-role-to-user\
+                    \ admin $SUBJECT --rolebinding-name=admin\n    fi\ndone\necho\
+                    \ \"FINISH\"\nexit 0\n"
+    patches:
+    - apiVersion: config.openshift.io/v1
+      kind: Project
+      name: cluster
+      applyMode: AlwaysApply
+      patch: '{"spec":{"projectRequestTemplate":{"name":"osd-project-request"}}}'
+      patchType: merge
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
