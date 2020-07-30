@@ -6,7 +6,18 @@ aggregationRule:
       operator: In
       values:
         - "project"
-  # aggregate all "admin" scope rbac from OCP to dedicated-admins-project
+  # aggregate all "edit" scope rbac from base OCP to dedicated-admins-project
+  # note we used to use "admin" but that will aggregate the "edit" clusterrole which includes SRE CRs
+  - matchExpressions:
+    - key: rbac.authorization.k8s.io/aggregate-to-edit
+      operator: In
+      values:
+        - "true"
+    - key:  kubernetes.io/bootstrapping
+      operator: In
+      values:
+        - "rbac-defaults"
+  # aggregate all OLM generated CR to dedicated-admins-project except "admin" and "edit" for SRE CRs
   - matchExpressions:
     - key: rbac.authorization.k8s.io/aggregate-to-admin
       operator: In
@@ -15,14 +26,22 @@ aggregationRule:
     # https://issues.redhat.com/browse/OSD-4660
     - key: olm.opgroup.permissions/aggregate-to-81852df0cc9f2a7a-admin
       operator: DoesNotExist
+    - key: olm.opgroup.permissions/aggregate-to-81852df0cc9f2a7a-edit
+      operator: DoesNotExist
     # https://issues.redhat.com/browse/OSD-4660
     - key: olm.opgroup.permissions/aggregate-to-9e5a7a2e55ef37d2-admin
+      operator: DoesNotExist
+    - key: olm.opgroup.permissions/aggregate-to-9e5a7a2e55ef37d2-edit
       operator: DoesNotExist
     # https://issues.redhat.com/browse/OSD-4660
     - key: olm.opgroup.permissions/aggregate-to-b86eb585a91e38c9-admin
       operator: DoesNotExist
+    - key: olm.opgroup.permissions/aggregate-to-b86eb585a91e38c9-edit
+      operator: DoesNotExist
     # https://issues.redhat.com/browse/OSD-4660
     - key: olm.opgroup.permissions/aggregate-to-d86540dbb89f693d-admin
+      operator: DoesNotExist
+    - key: olm.opgroup.permissions/aggregate-to-d86540dbb89f693d-edit
       operator: DoesNotExist
     # exclude "edit" which only has this label on it (for now.. sigh)
     - key: kubernetes.io/bootstrapping
