@@ -5276,6 +5276,105 @@ objects:
       kind: PrometheusRule
       metadata:
         labels:
+          prometheus: sre-multiwindow-multiburn
+          role: alert-rules
+        name: sre-multiwindow-multiburn
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: slos
+          rules:
+            record: route:error_slo:percent
+            labels:
+              route: console
+            expr: 0.5
+        - name: multiwindow_recording_rules
+          rules:
+          - record: route:haproxy_route_backend_http_errors:ratio_rate5m
+            expr: "  sum by (route)(rate(haproxy_backend_http_responses_total{code=\"\
+              5xx\"}[5m]))\n/\n  sum by (route)(rate(haproxy_backend_http_responses_total[5m]))\n"
+          - record: route:haproxy_route_backend_http_errors:ratio_rate30m
+            expr: "  sum by (route)(rate(haproxy_backend_http_responses_total{code=\"\
+              5xx\"}[30m]))\n/\n  sum by (route)(rate(haproxy_backend_http_responses_total[30m]))\n"
+          - record: route:haproxy_route_backend_http_errors:ratio_rate1h
+            expr: "  sum by (route)(rate(haproxy_backend_http_responses_total{code=\"\
+              5xx\"}[1h]))\n/\n  sum by (route)(rate(haproxy_backend_http_responses_total[1h]))\n"
+          - record: route:haproxy_route_backend_http_errors:ratio_rate2h
+            expr: "  sum by (route)(rate(haproxy_backend_http_responses_total{code=\"\
+              5xx\"}[2h]))\n/\n  sum by (route)(rate(haproxy_backend_http_responses_total[2h]))\n"
+          - record: route:haproxy_route_backend_http_errors:ratio_rate6h
+            expr: "  sum by (route)(rate(haproxy_backend_http_responses_total{code=\"\
+              5xx\"}[6h]))\n/\n  sum by (route)(rate(haproxy_backend_http_responses_total[6h]))\n"
+          - record: route:haproxy_route_backend_http_errors:ratio_rate1d
+            expr: "  sum by (route)(rate(haproxy_backend_http_responses_total{code=\"\
+              5xx\"}[1d]))\n/\n  sum by (route)(rate(haproxy_backend_http_responses_total[1d]))\n"
+          - record: route:haproxy_route_backend_http_errors:ratio_rate3d
+            expr: "   sum by (route)(rate(haproxy_backend_http_responses_total{code=\"\
+              5xx\"}[3d]))\n /\n   sum by (route)(rate(haproxy_backend_http_responses_total[3d]))\n"
+        - name: route_multiwindow_alerts
+          rules:
+          - alert: ErrorBudgetBurn
+            expr: "  (\n    100 * route:haproxy_route_backend_http_errors:ratio_rate1h\n\
+              \  > on (job)\n    14.4 * route:error_slo:percent\n  )\nand\n  (\n \
+              \   100 * route:haproxy_route_backend_http_errors:ratio_rate5m\n  >\
+              \ on (job)\n    14.4 * route:error_slo:percent\n  )\n"
+            for: 2m
+            labels:
+              router: '{{$labels.job}}'
+              severity: critical
+              long_window: 1h
+            annotations:
+              summary: a route burns its error budget very fast
+              description: Route {{$labels.route}} has returned {{ $value | printf
+                `%.2f` }}% errors over the last hour.
+          - alert: ErrorBudgetBurn
+            expr: "  (\n    100 * route:haproxy_route_backend_http_errors:ratio_rate6h\n\
+              \  > on (job)\n    6 * route:error_slo:percent\n  )\nand\n  (\n    100\
+              \ * route:haproxy_route_backend_http_errors:ratio_rate30m\n  > on (job)\n\
+              \    6 * route:error_slo:percent\n  )\n"
+            for: 15m
+            labels:
+              router: '{{$labels.job}}'
+              severity: critical
+              long_window: 6h
+            annotations:
+              summary: a route burns its error budget very fast
+              description: Route {{$labels.route}} has returned {{ $value | printf
+                `%.2f` }}% errors over the 6 hours.
+          - alert: ErrorBudgetBurn
+            expr: "  (\n    100 * route:haproxy_route_backend_http_errors:ratio_rate1d\n\
+              \  > on (job)\n    3 * route:error_slo:percent\n  )\nand\n  (\n    100\
+              \ * route:haproxy_route_backend_http_errors:ratio_rate2h\n  > on (job)\n\
+              \    3 * route:error_slo:percent\n  )\n"
+            for: 1h
+            labels:
+              router: '{{$labels.job}}'
+              severity: warning
+              long_window: 1d
+            annotations:
+              summary: a route burns its error budget very fast
+              description: Route {{$labels.route}} has returned {{ $value | printf
+                `%.2f` }}% errors over the last day.
+          - alert: ErrorBudgetBurn
+            expr: "  (\n    100 * route:haproxy_route_backend_http_errors:ratio_rate3d\n\
+              \  > on (job)\n    1 * route:error_slo:percent\n  )\nand\n  (\n    100\
+              \ * route:haproxy_route_backend_http_errors:ratio_rate6h\n  > on (job)\n\
+              \    1 * route:error_slo:percent\n  )\n"
+            for: 1h
+            labels:
+              router: '{{$labels.job}}'
+              severity: warning
+              long_window: 3d
+              namespace: '{{$labels.exported_namespace}}'
+              exporter_namespace: '{{$labels.exported_namespace}}'
+            annotations:
+              summary: a route burns its error budget very fast
+              description: Route {{$labels.route}} has returned {{ $value | printf
+                `%.2f` }}% errors over the last 3 days.
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
           prometheus: sre-node-unschedulable
           role: alert-rules
         name: sre-node-unschedulable
