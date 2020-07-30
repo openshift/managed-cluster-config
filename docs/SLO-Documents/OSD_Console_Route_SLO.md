@@ -22,7 +22,7 @@ The SLO uses a four-week rolling window.
 
 | Category     | SLI                                                                                                                                                                     | SLO                                                      | Prometheus Query |
 |--------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------|------------------|
-| Availability | The proportion of successful requests, as measured from the <SERVICE\|ROUTER\|ELB> metrics.                                                                             | 99.5% Success (3.36 Hours of error budget)                                              |                  |
+| Availability | The proportion of successful requests, as measured from the Ingress Router  metrics.                                                                             | 99.5% Success (3.36 Hours of error budget)                                              |                  |
 
 Latency SLI and SLO will be addressed, defined and implemented in future revisit of this document.
 
