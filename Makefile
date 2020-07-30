@@ -54,3 +54,7 @@ clean:
 git-commit:
 	git add ${SELECTOR_SYNC_SET_DESTINATION}
 	git commit -m "Updated selectorsynceset template added"
+
+.PHONY: install-pre-commit-hook
+install-pre-push-hook:
+	cp hack/pre-push .git/hooks/
