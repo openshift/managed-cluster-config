@@ -1,0 +1,21 @@
+name: Make Generate
+on: push
+
+jobs: 
+  run:
+    name: Make Generate Template
+    runs-on: ubuntu-latest
+    steps: 
+    - name: Checkout repo
+      uses: actions/checkout@v2
+
+    - name: Make
+      run: make clean generate-syncset
+
+    - name: Commit changes
+      uses: EndBug/add-and-commit@v4
+      with:
+        message: "on push: make generate-syncset"
+        add: "hack/00-osd-managed-cluster-config.selectorsyncset.yaml.tmpl"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
