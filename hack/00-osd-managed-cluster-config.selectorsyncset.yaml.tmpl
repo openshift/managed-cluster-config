@@ -4982,26 +4982,6 @@ objects:
       kind: PrometheusRule
       metadata:
         labels:
-          prometheus: sre-cluster-upgrade-alerts
-          role: alert-rules
-        name: sre-cluster-upgrade-alerts
-        namespace: openshift-monitoring
-      spec:
-        groups:
-        - name: sre-cluster-upgrade-alerts
-          rules:
-          - alert: ClusterUpgradingSRE
-            expr: cluster_version{type="updating"} > 0
-            labels:
-              severity: info
-              namespace: openshift-monitoring
-            annotations:
-              message: The cluster is attempting to upgrade from {{ $labels.from_version
-                }} to {{ $labels.version }}.
-    - apiVersion: monitoring.coreos.com/v1
-      kind: PrometheusRule
-      metadata:
-        labels:
           prometheus: sre-configure-alertmanager-operator-offline-alerts
           role: alert-rules
         name: sre-configure-alertmanager-operator-offline-alerts
@@ -5152,6 +5132,98 @@ objects:
             annotations:
               message: Layered SRE "{{ $labels.user }}" elevated to layered cluster-admin({{
                 $labels.group }}) more than 2 hours.
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
+          prometheus: sre-managed-upgrade-operator-alerts
+          role: alert-rules
+        name: sre-managed-upgrade-operator-alerts
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-managed-upgrade-operator-alerts
+          rules:
+          - alert: UpgradeConfigValidationFailedSRE
+            expr: upgradeoperator_upgradeconfig_validation_failed > 0
+            for: 5m
+            labels:
+              severity: critical
+              namespace: openshift-monitoring
+            annotations:
+              summary: Upgrade config validation failed
+              description: Upgrade config validation failed
+          - alert: UpgradeClusterCheckFailedSRE
+            expr: upgradeoperator_cluster_check_failed > 0
+            for: 5m
+            labels:
+              severity: critical
+              namespace: openshift-monitoring
+            annotations:
+              summary: cluster check failed
+              description: basic cluster checks failed on either before the upgrade
+                or after the upgrade
+          - alert: UpgradeNodeScalingFailedSRE
+            expr: upgradeoperator_scaling_failed > 0
+            for: 5m
+            labels:
+              severity: critical
+              namespace: openshift-monitoring
+            annotations:
+              summary: node scaling failed
+              description: The extra machine/node was not ready before the upgrade
+                started
+          - alert: UpgradeClusterVerificationFailedSRE
+            expr: upgradeoperator_cluster_verification_failed > 0
+            for: 5m
+            labels:
+              severity: critical
+              namespace: openshift-monitoring
+            annotations:
+              summary: cluster verification failed
+              description: Some of the infra components which are running on the cluster
+                are not working well after the upgrade
+          - alert: UpgradeControlPlaneUpgradeTimeoutSRE
+            expr: upgradeoperator_controlplane_timeout > 0
+            for: 5m
+            labels:
+              severity: critical
+              namespace: openshift-monitoring
+            annotations:
+              summary: Controlplane upgrade timeout for {{ $labels.version }}
+              description: controlplane upgrade for {{ $labels.version }} cannot be
+                finished in the given time period
+          - alert: UpgradeNodeUpgradeTimeoutSRE
+            expr: upgradeoperator_worker_timeout > 0
+            for: 5m
+            labels:
+              severity: critical
+              namespace: openshift-monitoring
+            annotations:
+              summary: Nodes upgrade timeout for {{ $labels.version }}
+              description: nodes upgrade for {{ $labels.version }} cannot be finished
+                after the silence expired
+          - alert: UpgradeWindowBreachedSRE
+            expr: upgradeoperator_upgrade_window_breached > 0
+            for: 5m
+            labels:
+              severity: critical
+              namespace: openshift-monitoring
+            annotations:
+              summary: Cluster upgrade window breached
+              description: A cluster has not commenced upgrading during its scheduled
+                upgrade window.
+          - alert: UpgradeNodeDrainFailedSRE
+            expr: upgradeoperator_node_drain_timeout > 0
+            for: 5m
+            labels:
+              severity: critical
+              namespace: openshift-monitoring
+            annotations:
+              summary: Node drain failed in the given time period which is not caused
+                by the PDB
+              description: node drain takes too long and cannot be finished in the
+                given time period during cluster upgrade
     - apiVersion: monitoring.coreos.com/v1
       kind: PrometheusRule
       metadata:
