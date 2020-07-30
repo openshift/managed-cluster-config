@@ -6,6 +6,14 @@ This repo contains static configuration specific to a "managed" OpenShift Dedica
 
 To add a new SelectorSyncSet, add your yaml manifest to the `deploy` dir, then run the `make` command.
 
+# Local Setup
+
+We have a requirement that the template used for deployment is committed in the repo.  Our PR check validates it.  But you can push (by default) without having run `make` to update that template! That's annoying.  If you want to ensure your `git push` will always pass PR checks you can add a `pre-push` hook that will run the PR check locally before pushing, and fails push if the PR check fails.
+
+```bash
+make install-pre-push-hook
+```
+
 # Building
 
 ## Dependencies
