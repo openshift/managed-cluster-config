@@ -8,23 +8,28 @@ import os
 import re
 import subprocess
 import sys
-import ruamel.yaml as yaml
-from ruamel.yaml.scalarstring import DoubleQuotedScalarString as dq
-
-CS = yaml.comments.CommentedSeq
-CM = yaml.comments.CommentedMap
+import yaml
 
 # Script to generate the cluster list
+# Source: https://github.com/openshift/managed-cluster-config.git
 CLUSTER_LIST_EXEC = 'get-cluster-list.sh'
+
 # SyncSet CR constants
-SS_API_VERSION = 'hive.openshift.io/v1'
-SS_NAME = 'osd-upgrade-config'
+SYNCSET_API_VERSION = 'hive.openshift.io/v1'
+SYNCSET_NAME = 'osd-upgrade-config'
+
 # UpgradeConfig CR constants
-UC_NAME = 'osd-upgrade-config'
-UC_NAMESPACE = 'openshift-managed-upgrade-operator'
-UC_API_VERSION = 'upgrade.managed.openshift.io/v1alpha1'
-UC_PDB_DRAIN_TIMEOUT = 60
-UC_FORCE = False
+# The name of the UpgradeConfig CR distributed by the SyncSet
+UPGRADECONFIG_NAME = 'osd-upgrade-config'
+# The namespace the UpgradeConfig CR will be distributed to
+UPGRADECONFIG_NAMESPACE = 'openshift-managed-upgrade-operator'
+# API version of the UpgradeConfig CR
+UPGRADECONFIG_API_VERSION = 'upgrade.managed.openshift.io/v1alpha1'
+# PodDisruptionBudget timeout default (minutes) for the UpgradeConfig
+UPGRADECONFIG_PODDISRUPTIONBUDGET_TIMEOUT_DEFAULT = 60
+# UpgradeConfig force flag - TBD in future managed-upgrade-operator release.
+UPGRADECONFIG_FORCE_DEFAULT = False
+
 
 def get_cluster_info(cluster_ids, groups, subgroup, environment):
     """
@@ -36,40 +41,37 @@ def get_cluster_info(cluster_ids, groups, subgroup, environment):
 
     cluster_id_to_name = dict()
 
-    if cluster_ids is not None:
-        for cluster_id in cluster_ids:
-            try:
-                cluster_name = get_cluster_name_for_id(cluster_id, environment)
-                cluster_id_to_name[cluster_id] = cluster_name
-            except Exception as err:
-                logging.error('Unable to determine cluster name for cluster ID \'{}\': {}'.format(cluster_id, str(err)))
+    for cluster_id in cluster_ids or ():
+        try:
+            cluster_name = get_cluster_name_for_id(cluster_id, environment)
+            cluster_id_to_name[cluster_id] = cluster_name
+        except Exception as err:
+            logging.error("Unable to determine cluster name for cluster ID '{}': {}".format(cluster_id, str(err)))
+            sys.exit(1)
+
+    for g in groups or ():
+        try:
+            pout = subprocess.check_output([CLUSTER_LIST_EXEC, g, subgroup]).decode('utf-8')
+            output_as_dict = json.loads(pout)
+
+            if 'items' not in output_as_dict:
+                logging.error('Unexpected cluster info returned, unable to determine id/name')
                 sys.exit(1)
 
-    if groups is not None:
-        for g in groups:
-            try:
-                # pout = subprocess.check_output(['cat', '/home/mbargenq/scratch/' + g + '.txt']).decode('utf-8')
-                pout = subprocess.check_output([CLUSTER_LIST_EXEC, g, subgroup]).decode('utf-8')
-                output_as_dict = json.loads(pout)
+            cluster_items = output_as_dict['items']
+            for cluster in cluster_items:
+                cluster_id_to_name[cluster['id']] = cluster['longName']
 
-                if 'items' not in output_as_dict:
-                    logging.error('Unexpected cluster info returned, unable to determine id/name')
-                    sys.exit(1)
-
-                cluster_items = output_as_dict['items']
-                for cluster in cluster_items:
-                    cluster_id_to_name[cluster['id']] = cluster['longName']
-
-            except OSError as err:
-                logging.info('Command \'{}\' failed with error: {}'.format(CLUSTER_LIST_EXEC, str(err)))
-                sys.exit(1)
-            except subprocess.CalledProcessError as err:
-                logging.info('Command \'{}\' failed with error: {}'.format(CLUSTER_LIST_EXEC, str(err)))
-                sys.exit(1)
-            except ValueError as err:
-                logging.info(
-                    'Output of command \'{}\' failed to parse with error: {}'.format(CLUSTER_LIST_EXEC, str(err)))
-                sys.exit(1)
+        except OSError as err:
+            logging.info('Command \'{}\' failed with error: {}'.format(CLUSTER_LIST_EXEC, str(err)))
+            sys.exit(1)
+        except subprocess.CalledProcessError as err:
+            logging.info('Command \'{}\' failed with error: {}'.format(CLUSTER_LIST_EXEC, str(err)))
+            sys.exit(1)
+        except ValueError as err:
+            logging.info(
+                'Output of command \'{}\' failed to parse with error: {}'.format(CLUSTER_LIST_EXEC, str(err)))
+            sys.exit(1)
 
     return cluster_id_to_name
 
@@ -82,8 +84,6 @@ def get_cluster_name_for_id(cluster_id, environment):
     """
     cluster_ns = 'uhc-{}-{}'.format(environment, cluster_id)
     try:
-        # pout = subprocess.check_output(['cat', '/home/mbargenq/scratch/cluster.txt']).decode(
-        #     'utf-8')
         pout = subprocess.check_output(['oc', 'get', 'clusterdeployment', '-n', cluster_ns, '-o', 'json']).decode(
             'utf-8')
         output_as_dict = json.loads(pout)
@@ -103,116 +103,80 @@ def get_cluster_name_for_id(cluster_id, environment):
 def generate_upgradeconfig(start_time, version, channel):
     """
     Generates the UpgradeConfig CR in python dict form
+    :param start_time: time the upgrade should commence
     :param version: version to upgrade to
     :param channel: channel for upgrade
-    :param force: force upgrade
-    :return: dict representation of upgradeconfig CR
     """
     uc = {
-        'apiVersion': UC_API_VERSION,
+        'apiVersion': UPGRADECONFIG_API_VERSION,
         'kind': 'UpgradeConfig',
         'metadata': {
-            'name': UC_NAME,
-            'namespace': UC_NAMESPACE,
+            'name': UPGRADECONFIG_NAME,
+            'namespace': UPGRADECONFIG_NAMESPACE,
         },
         'spec': {
-            'type': dq('OSD'),
-            'upgradeAt': dq(start_time),
+            'type': 'OSD',
+            'upgradeAt': start_time,
             'proceed': True,
-            'PDBForceDrainTimeout': UC_PDB_DRAIN_TIMEOUT,
+            'PDBForceDrainTimeout': UPGRADECONFIG_PODDISRUPTIONBUDGET_TIMEOUT_DEFAULT,
             'desired': {
-                'version': dq(version),
-                'channel': dq(channel),
-                'force': UC_FORCE,
+                'version': version,
+                'channel': channel,
+                'force': UPGRADECONFIG_FORCE_DEFAULT,
             }
         }
     }
     return uc
 
 
-def generate_syncset(upgradeconfig, cluster_id, cluster_name='', environment='production'):
-    """
-    Generates the SelectorSyncSet
-    :param upgradeconfig: UpgradeConfig CR as dict
-    :param cluster_id: Cluster ID to target
-    :param cluster_name: Cluster name to target
-    :return: SelectorSyncSet as dict
-    """
-
-    # generate the namespace for the SyncSet in hive format
-    # uhc-<environment>-<clusterID>
-    ss_namespace = 'uhc-{}-{}'.format(environment, cluster_id)
-
-    data = CM()
-    data['apiVersion'] = SS_API_VERSION
-    data['kind'] = 'SyncSet'
-    data['metadata'] = {
-        'labels': {
-            'api.openshift.com/id': cluster_id,
-            'api.openshift.com/name': cluster_name,
-        },
-        'name': SS_NAME,
-        'namespace': ss_namespace,
-    }
-
-    data['spec'] = {
-        'clusterDeploymentRefs': [
-            {
-                'name': dq(cluster_name),
-            }
-        ],
-        'resourceApplyMode': 'Upsert',
-        'resources': [
-            upgradeconfig
-        ],
-    }
-
-    yaml.preserve_quotes = True
-    yaml.dump(data, sys.stdout, Dumper=yaml.RoundTripDumper)
-
-
 def init_logging():
     logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s:%(name)s:%(message)s')
 
 
-def generate_syncsets(clusters, start_time, version, channel, environment='production'):
-    outer = CM()
-    outer['apiVersion'] = 'v1'
-    outer['kind'] = 'List'
+def output_syncset_bundle(clusters, start_time, version, channel, environment='production'):
+    """
+    Generates and outputs the SyncSet bundle to STDOUT
+    :param clusters: Clusters to generate SyncSet for
+    :param start_time: UpgradeConfig start time
+    :param version: UpgradeConfig target version
+    :param channel: UpgradeConfig target channel
+    :param environment: Hive environment
+    """
 
-    items = CS()
+    syncset_bundle = {
+        'apiVersion': 'v1',
+        'kind': 'List'
+    }
+
+    cluster_syncsets = []
     for cluster_id, cluster_name in clusters.items():
         uc = generate_upgradeconfig(start_time, version, channel)
         ss_namespace = 'uhc-{}-{}'.format(environment, cluster_id)
-        data = CM()
-        data['apiVersion'] = SS_API_VERSION
-        data['kind'] = 'SyncSet'
-        data['metadata'] = {
-            'labels': {
-                'api.openshift.com/id': cluster_id,
-                'api.openshift.com/name': cluster_name,
+        cluster_syncset = {
+            'apiVersion': SYNCSET_API_VERSION,
+            'kind': 'SyncSet',
+            'metadata': {
+                'labels': {
+                    'api.openshift.com/id': cluster_id,
+                    'api.openshift.com/name': cluster_name,
+                },
+                'name': SYNCSET_NAME,
+                'namespace': ss_namespace,
             },
-            'name': SS_NAME,
-            'namespace': ss_namespace,
+            'spec': {
+                'clusterDeploymentRefs': [{
+                    'name': cluster_name,
+                }],
+                'resourceApplyMode': 'Upsert',
+                'resources': [uc],
+            }
         }
+        cluster_syncsets.append(cluster_syncset)
 
-        data['spec'] = {
-            'clusterDeploymentRefs': [
-                {
-                    'name': dq(cluster_name),
-                }
-            ],
-            'resourceApplyMode': 'Upsert',
-            'resources': [
-                uc
-            ],
-        }
-        items.append(data)
-
-    outer['items'] = items
+    syncset_bundle['items'] = cluster_syncsets
 
     yaml.preserve_quotes = True
-    yaml.dump(outer, sys.stdout, Dumper=yaml.RoundTripDumper)
+    yaml.safe_dump(syncset_bundle, sys.stdout, encoding='utf-8', allow_unicode=True, default_flow_style=False)
 
 
 def init_argparse():
@@ -220,8 +184,7 @@ def init_argparse():
     Initialises the command-line argument parser
     :return: parser instance
     """
-    parser = argparse.ArgumentParser(description='UpgradeConfig SelectorSyncSet generator',
-                                     usage='%(prog)s [options]')
+    parser = argparse.ArgumentParser(description='UpgradeConfig SyncSet-bundle generator')
 
     parser.add_argument('--subgroup', required=False, choices=['all', 'prod', 'nonprod'], default='all',
                         help='Sub-cluster-group to target (default=all)')
@@ -290,7 +253,7 @@ if __name__ == '__main__':
     parser = init_argparse()
     args = parser.parse_args()
 
-    # # validate the dependent program(s) is valid
+    # validate the dependent program(s) is valid
     if not check_environment():
         sys.exit(1)
 
@@ -298,4 +261,5 @@ if __name__ == '__main__':
     clusters = get_cluster_info(args.cluster_id, args.group, args.subgroup, args.environment)
 
     upgrade_config = generate_upgradeconfig(args.start_time, args.version, args.channel)
-    generate_syncsets(clusters, args.start_time, args.version, args.channel, args.environment)
+    output_syncset_bundle(clusters, args.start_time, args.version, args.channel, args.environment)
+
