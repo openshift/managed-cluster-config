@@ -63,6 +63,24 @@ spec:
               NS="${POD_NS}-${POD_NAME##${JOB_PREFIX}-}"
               JOB_NAME=$(echo "${POD_NAME}" | rev | cut -d- -f2- | rev)
 
+              GET_FAILED_JOBS=$(cat <<END
+              import json,sys
+              r = json.load(sys.stdin)
+              # create a list of jobs
+              jobs = [ job['metadata']['name'] for job in r['items'] if
+                # no jobs are currently running 
+                ( not 'active' in job['status']) and
+                # if '.status.failed' exists on job
+                'failed' in job['status'] and
+                # if job failed count is bigger than backoffLimit
+                #
+                # this check is because the failed tries can be one less than limit
+                # see code in https://github.com/kubernetes/kubernetes/blob/master/pkg/controller/job/job_controller.go#L509
+                # if this changes we should consider using an easier implementation
+                job['spec']['backoffLimit'] - 1 <= job['status']['failed']]
+              print(" ".join(jobs))
+              END
+              )
               oc create ns "${NS}"
 
               # run build
@@ -87,8 +105,9 @@ spec:
                   Complete)
                     echo "$(date): Build Complete"
                     # Get all job names that have exceeded failed retries
-                    JOBS_TO_DELETE=$(oc -n "${POD_NS}" get job -o \
-                                       jsonpath='{.items[?(@.status.failed==@.spec.backoffLimit)].metadata.name}' || true)
+                    JOBS=$(oc -n "${POD_NS}" get job -o json)
+                    JOBS_TO_DELETE=$(echo "${JOBS}" | python -c "$GET_FAILED_JOBS")
+
                     if [[ -n "${JOBS_TO_DELETE}" ]] ; then
                       echo "$(date): Selected jobs for deletion: ${JOBS_TO_DELETE}"
                       echo "${JOBS_TO_DELETE}" | xargs oc -n "${POD_NS}" delete job
