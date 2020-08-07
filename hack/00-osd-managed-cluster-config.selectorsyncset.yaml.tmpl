@@ -1299,8 +1299,11 @@ objects:
         namespace: openshift-managed-upgrade-operator
       data:
         config.yaml: "maintenance:\n  controlPlaneTime: 90\n  workerNodeTime: 8\n\
-          scale:\n  timeOut: 30\nupgradeWindow:\n  timeOut: 60\nnodeDrain:\n  timeOut:\
-          \ 45\n"
+          \  ignoredAlerts:\n    controlPlaneCriticals:\n    - etcdMembersDown\n \
+          \   - KubeDeploymentReplicasMismatch\n    - ClusterOperatorDown\nscale:\n\
+          \  timeOut: 30\nupgradeWindow:\n  timeOut: 60\nnodeDrain:\n  timeOut: 45\n\
+          healthCheck:\n  ignoredCriticals:\n  - DNSErrors05MinSRE\n  - MetricsClientSendFailingSRE\n\
+          \  - UpgradeNodeScalingFailedSRE\n"
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:

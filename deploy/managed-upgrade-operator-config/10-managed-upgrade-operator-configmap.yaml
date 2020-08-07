@@ -8,9 +8,19 @@ data:
     maintenance:
       controlPlaneTime: 90
       workerNodeTime: 8
+      ignoredAlerts:
+        controlPlaneCriticals:
+        - etcdMembersDown
+        - KubeDeploymentReplicasMismatch
+        - ClusterOperatorDown
     scale:
       timeOut: 30
     upgradeWindow:
       timeOut: 60
     nodeDrain:
       timeOut: 45
+    healthCheck:
+      ignoredCriticals:
+      - DNSErrors05MinSRE
+      - MetricsClientSendFailingSRE
+      - UpgradeNodeScalingFailedSRE
