@@ -3707,7 +3707,7 @@ objects:
         roleRef:
           apiGroup: rbac.authorization.k8s.io
           kind: ClusterRole
-          name: dedicated-admins-project
+          name: admin
         subjects:
         - apiGroup: rbac.authorization.k8s.io
           kind: User
@@ -3772,37 +3772,10 @@ objects:
             values:
             - project
         - matchExpressions:
-          - key: rbac.authorization.k8s.io/aggregate-to-edit
-            operator: In
-            values:
-            - 'true'
-          - key: kubernetes.io/bootstrapping
-            operator: In
-            values:
-            - rbac-defaults
-        - matchExpressions:
           - key: rbac.authorization.k8s.io/aggregate-to-admin
             operator: In
             values:
             - 'true'
-          - key: olm.opgroup.permissions/aggregate-to-81852df0cc9f2a7a-admin
-            operator: DoesNotExist
-          - key: olm.opgroup.permissions/aggregate-to-81852df0cc9f2a7a-edit
-            operator: DoesNotExist
-          - key: olm.opgroup.permissions/aggregate-to-9e5a7a2e55ef37d2-admin
-            operator: DoesNotExist
-          - key: olm.opgroup.permissions/aggregate-to-9e5a7a2e55ef37d2-edit
-            operator: DoesNotExist
-          - key: olm.opgroup.permissions/aggregate-to-b86eb585a91e38c9-admin
-            operator: DoesNotExist
-          - key: olm.opgroup.permissions/aggregate-to-b86eb585a91e38c9-edit
-            operator: DoesNotExist
-          - key: olm.opgroup.permissions/aggregate-to-d86540dbb89f693d-admin
-            operator: DoesNotExist
-          - key: olm.opgroup.permissions/aggregate-to-d86540dbb89f693d-edit
-            operator: DoesNotExist
-          - key: kubernetes.io/bootstrapping
-            operator: DoesNotExist
         - matchExpressions:
           - key: olm.opgroup.permissions/aggregate-to-admin
             operator: In
@@ -4432,7 +4405,11 @@ objects:
         permissions:
         - clusterRoleName: dedicated-admins-project
           namespacesAllowedRegex: .*
-          namespacesDeniedRegex: (^kube.*|^openshift.*|^default$|^redhat-.*)
+          namespacesDeniedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
+          allowFirst: true
+        - clusterRoleName: admin
+          namespacesAllowedRegex: .*
+          namespacesDeniedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
           allowFirst: true
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
@@ -4447,7 +4424,11 @@ objects:
         permissions:
         - clusterRoleName: dedicated-admins-project
           namespacesAllowedRegex: .*
-          namespacesDeniedRegex: (^kube.*|^openshift.*|^default$|^redhat-.*)
+          namespacesDeniedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
+          allowFirst: true
+        - clusterRoleName: admin
+          namespacesAllowedRegex: .*
+          namespacesDeniedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
           allowFirst: true
     patches:
     - apiVersion: config.openshift.io/v1
