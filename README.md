@@ -12,12 +12,61 @@ To add a new SelectorSyncSet, add your yaml manifest to the `deploy` dir, then r
 
 - oyaml: `pip install oyaml`
 
-# Selector Sync Set Configuration
-There is a limited configuration available at this time.  The file `sss-config.yaml` contains configurations that apply to the current directory only and it supports the following features:
+# Configuation
 
-* matchLabels (default: `{}`) - adds additional `matchLabels` conditions to the `clusterDeploymentSelector`
-* resourceApplyMode (default: `"Sync"`) - sets the `resourceApplyMode`
-* matchLabelsApplyMode (optional, default: not set) - When set as `"OR"` generates a separate SSS per `matchLabels` conditions. Default behavior creates a single SSS with all `matchLabels` conditions.  This is to tackle a situation where we want to apply configuration for one of many label conditions.
+All resources in `deploy/` are bundled into a template that is used by config management to apply to target "hive" clusters.  The configuration for this supports two options for deployment.  They can be deployed in the template so they are:
+
+1. deployed directly to the "hive" cluster
+2. deployed to the "hive" cluster inside a SelectorSyncSet
+
+Direct deployment (#1) supports resources that are not synced down to OSD clusters.  SelectorSyncSet deployment (#2) supports resoures that _are_ synced down to OSD clusters.  Each are explained in detail here.  The general configuration is managed in a `config.yaml` file in each deploy directory.  Key things of note:
+
+* This file is **optional**!  If not present it's assumed `deploymentMode` is `"SelectorSyncSet"` with no additional configuration.
+* Configuration is _not_ inherited by sub-directories!  Every (EVERY) directory in the `deploy/` hierarchy must define a `config.yaml` file.
+
+You must specify a `deploymentMode` property in `config.yaml`.
+
+* `deploymentMode` (optional, default = `"SelectorSyncSet"`) - either "Direct" or "SelectorSyncSet".
+
+## Direct Deployment
+
+You must specify the `environments` where the resource is deployed.  There is no default set of environments.  It is a child of the top level `direct` property.
+
+* `environments` (required, no default) - manages what environments the resources are deployed into.  Valid values are any of `"integration"`, `"stage"`, and `"production"`.
+
+Example to deploy only to all environments:
+```yaml
+deploymentMode: "Direct"
+direct:
+    environments: ["integration", "stage", "production"]
+```
+
+Example to deploy only to integration and stage:
+```yaml
+deploymentMode: "Direct"
+direct:
+    environments: ["integration", "stage"]
+```
+
+## SelectorSyncSet Deployment
+
+In the `config.yaml` file you define a top level property `selectorSyncSet`.  Within this configuration is supported for `matchLaels`, `matchExpressions`, `matchLabelsApplyMode`, and `resourceApplyMode`.
+
+* `matchLabels` (optional, default: `{}`) - adds additional `matchLabels` conditions to the SelectorSyncSet's `clusterDeploymentSelector`
+* `matchExpressions` (optional, default: `[]`) - adds `matchExpressions` conditions to the SelectoSyncSet's `clusterDeploymentSelector`
+* 1resourceApplyMode1 (optional, default: `"Sync"`) - sets the SelectorSyncSet's `resourceApplyMode`
+* `matchLabelsApplyMode` (optional, default: `"AND"`) - When set as `"OR"` generates a separate SSS per `matchLabels` conditions. Default behavior creates a single SSS with all `matchLabels` conditions.  This is to tackle a situation where we want to apply configuration for one of many label conditions.
+
+Example to apply a directory for any of a set of label conditions using Upsert:
+```yaml
+deploymentMode: "SelectorSyncSet"
+selectorSyncSet:
+    matchLabels:
+        myAwesomeLabel: "some value"
+        someOtherLabel: "something else"
+    resourceApplyMode: "Upsert"
+    matchLabelsApplyMode: "OR"
+```
 
 # Selector Sync Sets included in this repo
 
