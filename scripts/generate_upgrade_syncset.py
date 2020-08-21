@@ -1,5 +1,7 @@
 #!/bin/env python
 
+import csv
+import uuid
 import argparse
 import datetime
 import json
@@ -7,12 +9,6 @@ import logging
 import os
 import re
 import subprocess
-import sys
-import yaml
-
-# Script to generate the cluster list
-# Source: https://github.com/openshift/managed-cluster-config.git
-CLUSTER_LIST_EXEC = 'get-cluster-list.sh'
 
 # SyncSet CR constants
 SYNCSET_API_VERSION = 'hive.openshift.io/v1'
@@ -27,77 +23,69 @@ UPGRADECONFIG_NAMESPACE = 'openshift-managed-upgrade-operator'
 UPGRADECONFIG_API_VERSION = 'upgrade.managed.openshift.io/v1alpha1'
 # PodDisruptionBudget timeout default (minutes) for the UpgradeConfig
 UPGRADECONFIG_PODDISRUPTIONBUDGET_TIMEOUT_DEFAULT = 60
-# UpgradeConfig force flag - TBD in future managed-upgrade-operator release.
-UPGRADECONFIG_FORCE_DEFAULT = False
+
+# Leading identifier of the 'catch-all' group of clusters as recorded in the spreadsheet
+CATCHALL_CLUSTER_ID = 'everybody'
+
+# Cluster naming conventions we will ignore entirely
+CLUSTER_IGNORE_PREFIXES = ['osde2e-']
+
+def init_logging():
+    logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)s:%(name)s:%(message)s')
 
 
-def get_cluster_info(cluster_ids, groups, subgroup, environment):
+def init_argparse():
     """
-    Returns a list of clusters matching the supplied group and subgroup
-    :param group: Cluster group
-    :param subgroup: Cluster subgroup
-    :return: list of tuple pairs of cluster ID and cluster name
+    Initialises the command-line argument parser
+    :return: parser instance
     """
+    parser = argparse.ArgumentParser(description='UpgradeConfig SyncSet-bundle generator')
+    parser.add_argument('--schedule_file', '-f', required=True, type=valid_file,
+                        help='Exported schedule CSV file [required]')
+    parser.add_argument('--output_file', '-o', required=True,
+                        help='Output syncset bundle file [required]')
 
-    cluster_id_to_name = dict()
+    cluster_group = parser.add_argument_group()
+    cluster_group.add_argument('--cluster-id', '-c', required=False, action='append', help='Cluster ID to filter')
 
-    for cluster_id in cluster_ids or ():
-        try:
-            cluster_name = get_cluster_name_for_id(cluster_id, environment)
-            cluster_id_to_name[cluster_id] = cluster_name
-        except Exception as err:
-            logging.error("Unable to determine cluster name for cluster ID '{}': {}".format(cluster_id, str(err)))
-            sys.exit(1)
-
-    for g in groups or ():
-        try:
-            pout = subprocess.check_output([CLUSTER_LIST_EXEC, g, subgroup]).decode('utf-8')
-            output_as_dict = json.loads(pout)
-
-            if 'items' not in output_as_dict:
-                logging.error('Unexpected cluster info returned, unable to determine id/name')
-                sys.exit(1)
-
-            cluster_items = output_as_dict['items']
-            for cluster in cluster_items:
-                cluster_id_to_name[cluster['id']] = cluster['longName']
-
-        except OSError as err:
-            logging.info('Command \'{}\' failed with error: {}'.format(CLUSTER_LIST_EXEC, str(err)))
-            sys.exit(1)
-        except subprocess.CalledProcessError as err:
-            logging.info('Command \'{}\' failed with error: {}'.format(CLUSTER_LIST_EXEC, str(err)))
-            sys.exit(1)
-        except ValueError as err:
-            logging.info(
-                'Output of command \'{}\' failed to parse with error: {}'.format(CLUSTER_LIST_EXEC, str(err)))
-            sys.exit(1)
-
-    return cluster_id_to_name
+    return parser
 
 
-def get_cluster_name_for_id(cluster_id, environment):
+def valid_version(v):
     """
-    Determines the clusterdeployment name associated with the supplied clusterid
-    :param cluster_id: cluster-id of cluster
-    :return: clusterdeployment name associated with cluster ID
+    Verify the supplied version adheres to formatting conventions
+    :param v: version to verify
+    :return: true if version is valid, false otherwise
     """
-    cluster_ns = 'uhc-{}-{}'.format(environment, cluster_id)
+    p = re.compile('^4\\.[0-9]+\\.[0-9]+')
+    result = p.match(v)
+    if not result:
+        return False
+    return True
+
+
+def valid_date(d):
+    """
+    Verify the supplied timestamp adheres to formatting conventions
+    :param d: timestamp to verify
+    :return: true if timestamp is valid
+    """
     try:
-        pout = subprocess.check_output(['oc', 'get', 'clusterdeployment', '-n', cluster_ns, '-o', 'json']).decode(
-            'utf-8')
-        output_as_dict = json.loads(pout)
-        if 'items' not in output_as_dict:
-            raise Exception('fetching clusterdeployment returned invalid response')
+        datetime.datetime.strptime(d, '%Y-%m-%dT%H:%M:%SZ')
+    except ValueError:
+        return False
+    return True
 
-        cd = output_as_dict['items']
-        if len(cd) == 0:
-            raise Exception('clusterdeployment not found')
 
-        return cd[0]['metadata']['name']
-
-    except Exception as err:
-        raise err
+def valid_file(f):
+    """
+    Verify that the supplied file exists
+    :param f:
+    :return:
+    """
+    if not os.path.isfile(f):
+        raise argparse.ArgumentError('File does not exist.')
+    return f
 
 
 def generate_upgradeconfig(start_time, version, channel):
@@ -117,41 +105,121 @@ def generate_upgradeconfig(start_time, version, channel):
         'spec': {
             'type': 'OSD',
             'upgradeAt': start_time,
-            'proceed': True,
             'PDBForceDrainTimeout': UPGRADECONFIG_PODDISRUPTIONBUDGET_TIMEOUT_DEFAULT,
             'desired': {
                 'version': version,
                 'channel': channel,
-                'force': UPGRADECONFIG_FORCE_DEFAULT,
             }
         }
     }
     return uc
 
 
-def init_logging():
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s:%(name)s:%(message)s')
-
-
-def output_syncset_bundle(clusters, start_time, version, channel, environment='production'):
+def get_all_clusterdeployments():
     """
-    Generates and outputs the SyncSet bundle to STDOUT
-    :param clusters: Clusters to generate SyncSet for
-    :param start_time: UpgradeConfig start time
-    :param version: UpgradeConfig target version
-    :param channel: UpgradeConfig target channel
-    :param environment: Hive environment
+    Returns the clusterdeployments running on the currently-connected Hive
+    :return: clusterdeployment json blob
     """
+    try:
+        pout = subprocess.check_output(['oc', 'get', 'clusterdeployments', '--all-namespaces', '-o', 'json']).decode(
+            'utf-8')
+        output_as_dict = json.loads(pout)
+        if 'items' not in output_as_dict:
+            raise Exception('fetching clusterdeployments returned invalid response')
 
+        cd = output_as_dict['items']
+        if len(cd) == 0:
+            raise Exception('no clusterdeployments found')
+
+        return cd
+
+    except Exception as err:
+        raise err
+
+
+def parse_schedule_file(f):
+    """
+    Parses the cluster upgrade schedules out of the schedule CSV
+    :param f: path to the schedule CSV file
+    :return:
+    """
+    clusters = {}
+    with open(f, mode='r') as csvf:
+        csv_reader = csv.reader(csvf, delimiter=',', quotechar='"')
+        lineno = 0
+        for row in csv_reader:
+            lineno += 1
+
+            cluster_ext_id = row[2]
+
+            if row[0].lower().startswith(CATCHALL_CLUSTER_ID):
+                # Special case of 'everybody' line
+                cluster_ext_id = CATCHALL_CLUSTER_ID
+            else:
+                # just validate this looks like a proper cluster line
+                try:
+                    uuid.UUID(cluster_ext_id)
+                except ValueError as err:
+                    logging.warn('Ignoring schedule line {}, unable to detect external ID.'.format(lineno))
+                    continue
+
+            # perform some other data sanitation checks
+            if not valid_date(row[10]):
+                logging.warn('Invalid schedule date on line {}, this row will be ignored.'.format(lineno))
+                continue
+            if not valid_version(row[9]):
+                logging.warn('Invalid schedule upgrade version on line {}, this row will be ignored.'.format(lineno))
+                continue
+
+            cluster_schedule = {
+                'cluster_id': row[1],
+                'external_id': row[2],
+                'name': row[3],
+                'channel': row[8],
+                'version': row[9],
+                'upgrade_at': row[10]
+            }
+            clusters[cluster_ext_id] = cluster_schedule
+
+    # if we didn't find a 'catch all' schedule, notify:
+    if CATCHALL_CLUSTER_ID not in clusters:
+        logging.warn('No "everybody else" schedule found - some clusters may be ignored.')
+
+    return clusters
+
+
+def generate_syncset_bundle(cluster_deployments, cluster_schedules, cluster_ids):
     syncset_bundle = {
         'apiVersion': 'v1',
         'kind': 'List'
     }
 
     cluster_syncsets = []
-    for cluster_id, cluster_name in clusters.items():
-        uc = generate_upgradeconfig(start_time, version, channel)
-        ss_namespace = 'uhc-{}-{}'.format(environment, cluster_id)
+
+    # look through all clusterdeployments
+    for cd in cluster_deployments:
+        namespace = cd['metadata']['namespace']
+        cluster_id = cd['metadata']['labels']['api.openshift.com/id']
+        external_id = cd['spec']['clusterMetadata']['clusterID']
+        cluster_name = cd['metadata']['labels']['api.openshift.com/name']
+        managed = cd['metadata']['labels']['api.openshift.com/managed']
+
+        # is this a cluster-id in the allow-list?
+        if cluster_ids and cluster_id not in cluster_ids:
+            logging.info("Skipping cluster '{}' ({}) as it is not in the allow-list".format(cluster_name, cluster_id))
+            continue
+
+        # is this cluster in the ignore list?
+        if cluster_name.startswith(tuple(CLUSTER_IGNORE_PREFIXES)):
+            logging.info("Skipping cluster '{}' ({}) as it is in the ignore list.".format(cluster_name, cluster_id))
+            continue
+
+        # is this a cluster we manage?
+        if managed != "true":
+            logging.warn("Ignoring cluster '{}' ({}) as it is not set as managed".format(cluster_name, cluster_id))
+            continue
+
+        # build the syncset base
         cluster_syncset = {
             'apiVersion': SYNCSET_API_VERSION,
             'kind': 'SyncSet',
@@ -161,90 +229,44 @@ def output_syncset_bundle(clusters, start_time, version, channel, environment='p
                     'api.openshift.com/name': cluster_name,
                 },
                 'name': SYNCSET_NAME,
-                'namespace': ss_namespace,
+                'namespace': namespace,
             },
             'spec': {
                 'clusterDeploymentRefs': [{
                     'name': cluster_name,
                 }],
                 'resourceApplyMode': 'Upsert',
-                'resources': [uc],
             }
         }
+
+        # do we have a schedule for this cluster?
+        if external_id not in cluster_schedules and CATCHALL_CLUSTER_ID not in cluster_schedules:
+            # no, and
+            logging.warn(
+                "Ignoring cluster '{}' as it has no schedule and no default schedule is set.".format(cluster_name))
+            continue
+
+        schedule_id = external_id if external_id in cluster_schedules else CATCHALL_CLUSTER_ID
+        uc = generate_upgradeconfig(cluster_schedules[schedule_id]['upgrade_at'],
+                                    cluster_schedules[schedule_id]['version'],
+                                    cluster_schedules[schedule_id]['channel'])
+        cluster_syncset['spec']['resources'] = [uc]
         cluster_syncsets.append(cluster_syncset)
 
     syncset_bundle['items'] = cluster_syncsets
 
-    yaml.preserve_quotes = True
-    yaml.safe_dump(syncset_bundle, sys.stdout, encoding='utf-8', allow_unicode=True, default_flow_style=False)
+    return syncset_bundle
 
 
-def init_argparse():
+def output_syncset_bundle(syncsets, file):
     """
-    Initialises the command-line argument parser
-    :return: parser instance
+    Outputs the supplied syncset bundle dictionary to a JSON-formatted file
+    :param syncsets: syncset bundle in dict form
+    :param file: file to write to
     """
-    parser = argparse.ArgumentParser(description='UpgradeConfig SyncSet-bundle generator')
-
-    parser.add_argument('--subgroup', required=False, choices=['all', 'prod', 'nonprod'], default='all',
-                        help='Sub-cluster-group to target (default=all)')
-    parser.add_argument('--start-time', required=False, type=valid_date,
-                        help='Timestamp at which upgrade should commence (eg. 2020-01-25T00:00:00Z)')
-    parser.add_argument('--version', required=True, type=valid_version, help='Target upgrade version [required]')
-    parser.add_argument('--channel', required=True, help='Target upgrade channel [required]')
-    parser.add_argument('--force', '-f', required=False, default=False, help='Force upgrade [optional, default false]')
-    parser.add_argument('--environment', '-e', required=False, choices=['production', 'staging', 'integration'],
-                        default='production', help='Hive environment [optional, default production]')
-
-    cluster_group = parser.add_argument_group()
-    cluster_group.add_argument('--cluster-id', '-c', required=False, action='append', help='Cluster ID to target')
-    cluster_group.add_argument('--group', '-g', required=False, action='append',
-                               choices=['sd', 'sre', 'cicd', 'internal', 'snowflake', 'external'],
-                               help='Cluster group to target')
-
-    return parser
-
-
-def valid_version(v):
-    """
-    Verify the supplied version adheres to formatting conventions
-    :param v: version to verify
-    :return: the unmodified version if it parses successfully
-    :raises ArgumentError if version is invalid
-    """
-    p = re.compile('^4\\.[0-9]+\\.[0-9]+')
-    result = p.match(v)
-    if not result:
-        raise argparse.ArgumentError('Version must be in format 4.X.Y, eg. 4.3.25')
-    return v
-
-
-def valid_date(d):
-    """
-    Verify the supplied timestamp adheres to formatting conventions
-    :param d: timestamp to verify
-    :return: the unmodified timestamp if it parses successfully
-    :raises ArgumentError if timestamp is invalid
-    """
-    try:
-        datetime.datetime.strptime(d, '%Y-%m-%dT%H:%M:%SZ')
-    except ValueError:
-        raise argparse.ArgumentError('Time must be in format YYYY-MM-DDTHH:MM:SSZ, eg. 2020-01-25T00:00:00Z')
-    return d
-
-
-def check_environment():
-    """
-    Checks the system environment for the presence of the cluster-list fetcher
-    :return: bool indicating success
-    """
-    for path in os.environ["PATH"].split(os.pathsep):
-        exe_file = os.path.join(path, CLUSTER_LIST_EXEC)
-        if os.path.isfile(exe_file) and os.access(exe_file, os.X_OK):
-            return True
-
-    logging.info("Missing required executable {}, ensure it is in PATH.".format(CLUSTER_LIST_EXEC))
-    return False
+    with open(file, "w") as syncset_file:
+        json.dump(syncsets, syncset_file, indent=4)
+    logging.info('Wrote output file: {}'.format(file))
 
 
 if __name__ == '__main__':
@@ -253,13 +275,15 @@ if __name__ == '__main__':
     parser = init_argparse()
     args = parser.parse_args()
 
-    # validate the dependent program(s) is valid
-    if not check_environment():
-        sys.exit(1)
-
     # fetch the list of candidate clusters
-    clusters = get_cluster_info(args.cluster_id, args.group, args.subgroup, args.environment)
+    cluster_schedules = parse_schedule_file(args.schedule_file)
 
-    upgrade_config = generate_upgradeconfig(args.start_time, args.version, args.channel)
-    output_syncset_bundle(clusters, args.start_time, args.version, args.channel, args.environment)
+    # fetch the list of cluster deployments on the cluster
+    cluster_deployments = get_all_clusterdeployments()
+
+    # generate the syncset bundle
+    syncset_bundle = generate_syncset_bundle(cluster_deployments, cluster_schedules, args.cluster_id)
+
+    # write it out to file
+    output_syncset_bundle(syncset_bundle, args.output_file)
 
