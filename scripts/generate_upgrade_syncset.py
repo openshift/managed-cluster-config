@@ -30,6 +30,7 @@ CATCHALL_CLUSTER_ID = 'everybody'
 # Cluster naming conventions we will ignore entirely
 CLUSTER_IGNORE_PREFIXES = ['osde2e-']
 
+
 def init_logging():
     logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)s:%(name)s:%(message)s')
 
@@ -163,14 +164,6 @@ def parse_schedule_file(f):
                     logging.warn('Ignoring schedule line {}, unable to detect external ID.'.format(lineno))
                     continue
 
-            # perform some other data sanitation checks
-            if not valid_date(row[10]):
-                logging.warn('Invalid schedule date on line {}, this row will be ignored.'.format(lineno))
-                continue
-            if not valid_version(row[9]):
-                logging.warn('Invalid schedule upgrade version on line {}, this row will be ignored.'.format(lineno))
-                continue
-
             cluster_schedule = {
                 'cluster_id': row[1],
                 'external_id': row[2],
@@ -241,12 +234,24 @@ def generate_syncset_bundle(cluster_deployments, cluster_schedules, cluster_ids)
 
         # do we have a schedule for this cluster?
         if external_id not in cluster_schedules and CATCHALL_CLUSTER_ID not in cluster_schedules:
-            # no, and
             logging.warn(
                 "Ignoring cluster '{}' as it has no schedule and no default schedule is set.".format(cluster_name))
             continue
 
         schedule_id = external_id if external_id in cluster_schedules else CATCHALL_CLUSTER_ID
+
+        # perform final data sanitation checks
+        if not valid_date(cluster_schedules[schedule_id]['upgrade_at']):
+            logging.warn('Invalid schedule date for cluster {}, this row will be ignored.'.format(cluster_name))
+            continue
+        if not valid_version(cluster_schedules[schedule_id]['version']):
+            logging.warn(
+                'Invalid schedule upgrade version for cluster {}, this row will be ignored.'.format(cluster_name))
+            continue
+        if not (cluster_schedules[schedule_id]['channel']).startswith(('stable', 'fast')):
+            logging.warn('Invalid channel for cluster {}, this row will be ignored.'.format(cluster_name))
+            continue
+
         uc = generate_upgradeconfig(cluster_schedules[schedule_id]['upgrade_at'],
                                     cluster_schedules[schedule_id]['version'],
                                     cluster_schedules[schedule_id]['channel'])
