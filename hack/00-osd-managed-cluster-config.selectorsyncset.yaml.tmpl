@@ -2117,6 +2117,10 @@ objects:
         operator: NotIn
         values:
         - gcp
+      - key: api.openshift.com/cluster-admin
+        operator: NotIn
+        values:
+        - 'true'
     resourceApplyMode: Sync
     resources:
     - apiVersion: config.openshift.io/v1
@@ -2251,6 +2255,29 @@ objects:
       matchLabels:
         api.openshift.com/managed: 'true'
         hive.openshift.io/cluster-platform: gcp
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: config.openshift.io/v1
+      kind: OperatorHub
+      metadata:
+        name: cluster
+        annotations:
+          release.openshift.io/create-only: 'true'
+      spec:
+        disableAllDefaultSources: false
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-curated-operatorsources-revert-cluster-admin
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/cluster-admin: 'true'
     resourceApplyMode: Sync
     resources:
     - apiVersion: config.openshift.io/v1
