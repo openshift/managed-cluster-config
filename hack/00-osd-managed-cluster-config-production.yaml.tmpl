@@ -1300,10 +1300,11 @@ objects:
       data:
         config.yaml: "maintenance:\n  controlPlaneTime: 90\n  workerNodeTime: 8\n\
           \  ignoredAlerts:\n    controlPlaneCriticals:\n    - etcdMembersDown\n \
-          \   - KubeDeploymentReplicasMismatch\n    - ClusterOperatorDown\nscale:\n\
-          \  timeOut: 30\nupgradeWindow:\n  timeOut: 60\nnodeDrain:\n  timeOut: 45\n\
-          healthCheck:\n  ignoredCriticals:\n  - DNSErrors05MinSRE\n  - MetricsClientSendFailingSRE\n\
-          \  - UpgradeNodeScalingFailedSRE\n"
+          \   - KubeDeploymentReplicasMismatch\n    - ClusterOperatorDown\n    - MachineWithNoRunningPhase\n\
+          \    - ClusterOperatorDegraded\nscale:\n  timeOut: 30\nupgradeWindow:\n\
+          \  timeOut: 60\nnodeDrain:\n  timeOut: 45\nhealthCheck:\n  ignoredCriticals:\n\
+          \  - DNSErrors05MinSRE\n  - MetricsClientSendFailingSRE\n  - UpgradeNodeScalingFailedSRE\n\
+          \  - UpgradeClusterCheckFailedSRE\n"
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -4081,6 +4082,15 @@ objects:
         - get
         - list
         - watch
+      - apiGroups:
+        - security.openshift.io
+        resourceNames:
+        - anyuid
+        - nonroot
+        resources:
+        - securitycontextconstraints
+        verbs:
+        - use
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
