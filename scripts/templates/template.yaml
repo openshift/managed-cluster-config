@@ -45,16 +45,16 @@ objects:
       matchExpressions:
       - key: api.openshift.com/managed
         operator: In
-        values: 
+        values:
         - "true"
       - key: api.openshift.com/storage-quota-gib
         operator: DoesNotExist
       - key: api.openshift.com/ccs
         operator: NotIn
-        values: 
+        values:
         - "true"
     resourceApplyMode: Sync
-    resources: 
+    resources:
     - kind: ClusterResourceQuota
       apiVersion: quota.openshift.io/v1
       metadata:
@@ -81,10 +81,10 @@ objects:
       matchExpressions:
       - key: api.openshift.com/ccs
         operator: NotIn
-        values: 
+        values:
         - "true"
     resourceApplyMode: Sync
-    resources: 
+    resources:
     - kind: ClusterResourceQuota
       apiVersion: quota.openshift.io/v1
       metadata:
@@ -111,10 +111,10 @@ objects:
       matchExpressions:
       - key: api.openshift.com/ccs
         operator: NotIn
-        values: 
+        values:
         - "true"
     resourceApplyMode: Sync
-    resources: 
+    resources:
     - kind: ClusterResourceQuota
       apiVersion: quota.openshift.io/v1
       metadata:
@@ -141,10 +141,10 @@ objects:
       matchExpressions:
       - key: api.openshift.com/ccs
         operator: NotIn
-        values: 
+        values:
         - "true"
     resourceApplyMode: Sync
-    resources: 
+    resources:
     - kind: ClusterResourceQuota
       apiVersion: quota.openshift.io/v1
       metadata:
@@ -171,10 +171,10 @@ objects:
       matchExpressions:
       - key: api.openshift.com/ccs
         operator: NotIn
-        values: 
+        values:
         - "true"
     resourceApplyMode: Sync
-    resources: 
+    resources:
     - kind: ClusterResourceQuota
       apiVersion: quota.openshift.io/v1
       metadata:
@@ -201,10 +201,10 @@ objects:
       matchExpressions:
       - key: api.openshift.com/ccs
         operator: NotIn
-        values: 
+        values:
         - "true"
     resourceApplyMode: Sync
-    resources: 
+    resources:
     - kind: ClusterResourceQuota
       apiVersion: quota.openshift.io/v1
       metadata:
@@ -222,19 +222,139 @@ objects:
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
+    name: resource-quota-storage-2600gb
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/storage-quota-gib: '2600'
+      matchExpressions:
+      - key: api.openshift.com/ccs
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: persistent-volume-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/storage-pv-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            requests.storage: 2600Gi
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    name: resource-quota-storage-3100gb
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/storage-quota-gib: '3100'
+      matchExpressions:
+      - key: api.openshift.com/ccs
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: persistent-volume-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/storage-pv-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            requests.storage: 3100Gi
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    name: resource-quota-storage-3600gb
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/storage-quota-gib: '3600'
+      matchExpressions:
+      - key: api.openshift.com/ccs
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: persistent-volume-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/storage-pv-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            requests.storage: 3600Gi
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    name: resource-quota-storage-4100gb
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/storage-quota-gib: '4100'
+      matchExpressions:
+      - key: api.openshift.com/ccs
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: persistent-volume-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/storage-pv-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            requests.storage: 4100Gi
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
     name: resource-quota-service-lb-default
   spec:
     clusterDeploymentSelector:
       matchExpressions:
       - key: api.openshift.com/managed
         operator: In
-        values: 
+        values:
         - "true"
       - key: api.openshift.com/service-lb-quota
         operator: DoesNotExist
       - key: api.openshift.com/ccs
         operator: NotIn
-        values: 
+        values:
         - "true"
     resourceApplyMode: Sync
     resources:
@@ -264,7 +384,7 @@ objects:
       matchExpressions:
       - key: api.openshift.com/ccs
         operator: NotIn
-        values: 
+        values:
         - "true"
     resourceApplyMode: Sync
     resources:
@@ -294,7 +414,7 @@ objects:
       matchExpressions:
       - key: api.openshift.com/ccs
         operator: NotIn
-        values: 
+        values:
         - "true"
     resourceApplyMode: Sync
     resources:
@@ -324,7 +444,7 @@ objects:
       matchExpressions:
       - key: api.openshift.com/ccs
         operator: NotIn
-        values: 
+        values:
         - "true"
     resourceApplyMode: Sync
     resources:
@@ -354,7 +474,7 @@ objects:
       matchExpressions:
       - key: api.openshift.com/ccs
         operator: NotIn
-        values: 
+        values:
         - "true"
     resourceApplyMode: Sync
     resources:
@@ -384,7 +504,7 @@ objects:
       matchExpressions:
       - key: api.openshift.com/ccs
         operator: NotIn
-        values: 
+        values:
         - "true"
     resourceApplyMode: Sync
     resources:
@@ -414,7 +534,7 @@ objects:
       matchExpressions:
       - key: api.openshift.com/ccs
         operator: NotIn
-        values: 
+        values:
         - "true"
     resourceApplyMode: Sync
     resources:
