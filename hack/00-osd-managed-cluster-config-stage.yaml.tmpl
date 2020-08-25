@@ -2118,6 +2118,10 @@ objects:
         operator: NotIn
         values:
         - gcp
+      - key: api.openshift.com/cluster-admin
+        operator: NotIn
+        values:
+        - 'true'
     resourceApplyMode: Sync
     resources:
     - apiVersion: config.openshift.io/v1
@@ -2193,6 +2197,87 @@ objects:
           release.openshift.io/create-only: 'true'
       spec:
         disableAllDefaultSources: false
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: osd-patch-subscription-source
+        namespace: openshift-marketplace
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: osd-patch-subscription-source
+      rules:
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - subscriptions
+        verbs:
+        - patch
+        - get
+        - list
+    - kind: ClusterRoleBinding
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        name: osd-patch-subscription-source
+      subjects:
+      - kind: ServiceAccount
+        name: osd-patch-subscription-source
+        namespace: openshift-marketplace
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: osd-patch-subscription-source
+    - apiVersion: batch/v1beta1
+      kind: CronJob
+      metadata:
+        name: osd-patch-subscription-source
+        namespace: openshift-marketplace
+      spec:
+        failedJobsHistoryLimit: 5
+        successfulJobsHistoryLimit: 3
+        concurrencyPolicy: Replace
+        schedule: 0 */1 * * *
+        jobTemplate:
+          spec:
+            template:
+              spec:
+                serviceAccountName: osd-patch-subscription-source
+                restartPolicy: Never
+                containers:
+                - name: osd-patch-subscription-source
+                  image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+                  imagePullPolicy: Always
+                  args:
+                  - /bin/bash
+                  - -c
+                  - "# Script run as an idempotent cronjob to fix existing subscriptions\
+                    \ when disabling OSD operator curation.\n\n# for each type of\
+                    \ source (redhat, certified, communit)\n# AND for each namespace\
+                    \ having a subscription with a curated community source\n# AND\
+                    \ for each subscription having a curated source\n# patch the source\n\
+                    # NOTE there are loops for each source to keep the jsonpath simple\
+                    \ and the logic easy to read\n\necho START\nfor NS in $(oc get\
+                    \ subscription -A -o jsonpath='{.items[?(@.spec.source==\"osd-curated-redhat-operators\"\
+                    )].metadata.namespace}');\ndo\n  for SUB in $(oc -n $NS get subscription\
+                    \ -o jsonpath='{.items[?(@.spec.source==\"osd-curated-redhat-operators\"\
+                    )].metadata.name}');\n  do\n    echo \"Patching subscription '$SUB'\
+                    \ in namespace '$NS'\"\n    oc -n $NS patch subscription $SUB\
+                    \ --patch '{\"spec\":{\"source\":\"redhat-operators\"}}' --type\
+                    \ merge\n  done\ndone\n\nfor NS in $(oc get subscription -A -o\
+                    \ jsonpath='{.items[?(@.spec.source==\"osd-curated-certified-operators\"\
+                    )].metadata.namespace}');\ndo\n  for SUB in $(oc -n $NS get subscription\
+                    \ -o jsonpath='{.items[?(@.spec.source==\"osd-curated-certified-operators\"\
+                    )].metadata.name}');\n  do\n    echo \"Patching subscription '$SUB'\
+                    \ in namespace '$NS'\"\n    oc -n $NS patch subscription $SUB\
+                    \ --patch '{\"spec\":{\"source\":\"certified-operators\"}}' --type\
+                    \ merge\n  done\ndone\n\nfor NS in $(oc get subscription -A -o\
+                    \ jsonpath='{.items[?(@.spec.source==\"osd-curated-community-operators\"\
+                    )].metadata.namespace}');\ndo\n  for SUB in $(oc -n $NS get subscription\
+                    \ -o jsonpath='{.items[?(@.spec.source==\"osd-curated-community-operators\"\
+                    )].metadata.name}');\n  do\n    echo \"Patching subscription '$SUB'\
+                    \ in namespace '$NS'\"\n    oc -n $NS patch subscription $SUB\
+                    \ --patch '{\"spec\":{\"source\":\"community-operators\"}}' --type\
+                    \ merge\n  done\ndone\necho FINISH\n"
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -2216,6 +2301,87 @@ objects:
           release.openshift.io/create-only: 'true'
       spec:
         disableAllDefaultSources: false
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: osd-patch-subscription-source
+        namespace: openshift-marketplace
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: osd-patch-subscription-source
+      rules:
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - subscriptions
+        verbs:
+        - patch
+        - get
+        - list
+    - kind: ClusterRoleBinding
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        name: osd-patch-subscription-source
+      subjects:
+      - kind: ServiceAccount
+        name: osd-patch-subscription-source
+        namespace: openshift-marketplace
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: osd-patch-subscription-source
+    - apiVersion: batch/v1beta1
+      kind: CronJob
+      metadata:
+        name: osd-patch-subscription-source
+        namespace: openshift-marketplace
+      spec:
+        failedJobsHistoryLimit: 5
+        successfulJobsHistoryLimit: 3
+        concurrencyPolicy: Replace
+        schedule: 0 */1 * * *
+        jobTemplate:
+          spec:
+            template:
+              spec:
+                serviceAccountName: osd-patch-subscription-source
+                restartPolicy: Never
+                containers:
+                - name: osd-patch-subscription-source
+                  image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+                  imagePullPolicy: Always
+                  args:
+                  - /bin/bash
+                  - -c
+                  - "# Script run as an idempotent cronjob to fix existing subscriptions\
+                    \ when disabling OSD operator curation.\n\n# for each type of\
+                    \ source (redhat, certified, communit)\n# AND for each namespace\
+                    \ having a subscription with a curated community source\n# AND\
+                    \ for each subscription having a curated source\n# patch the source\n\
+                    # NOTE there are loops for each source to keep the jsonpath simple\
+                    \ and the logic easy to read\n\necho START\nfor NS in $(oc get\
+                    \ subscription -A -o jsonpath='{.items[?(@.spec.source==\"osd-curated-redhat-operators\"\
+                    )].metadata.namespace}');\ndo\n  for SUB in $(oc -n $NS get subscription\
+                    \ -o jsonpath='{.items[?(@.spec.source==\"osd-curated-redhat-operators\"\
+                    )].metadata.name}');\n  do\n    echo \"Patching subscription '$SUB'\
+                    \ in namespace '$NS'\"\n    oc -n $NS patch subscription $SUB\
+                    \ --patch '{\"spec\":{\"source\":\"redhat-operators\"}}' --type\
+                    \ merge\n  done\ndone\n\nfor NS in $(oc get subscription -A -o\
+                    \ jsonpath='{.items[?(@.spec.source==\"osd-curated-certified-operators\"\
+                    )].metadata.namespace}');\ndo\n  for SUB in $(oc -n $NS get subscription\
+                    \ -o jsonpath='{.items[?(@.spec.source==\"osd-curated-certified-operators\"\
+                    )].metadata.name}');\n  do\n    echo \"Patching subscription '$SUB'\
+                    \ in namespace '$NS'\"\n    oc -n $NS patch subscription $SUB\
+                    \ --patch '{\"spec\":{\"source\":\"certified-operators\"}}' --type\
+                    \ merge\n  done\ndone\n\nfor NS in $(oc get subscription -A -o\
+                    \ jsonpath='{.items[?(@.spec.source==\"osd-curated-community-operators\"\
+                    )].metadata.namespace}');\ndo\n  for SUB in $(oc -n $NS get subscription\
+                    \ -o jsonpath='{.items[?(@.spec.source==\"osd-curated-community-operators\"\
+                    )].metadata.name}');\n  do\n    echo \"Patching subscription '$SUB'\
+                    \ in namespace '$NS'\"\n    oc -n $NS patch subscription $SUB\
+                    \ --patch '{\"spec\":{\"source\":\"community-operators\"}}' --type\
+                    \ merge\n  done\ndone\necho FINISH\n"
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -2239,6 +2405,87 @@ objects:
           release.openshift.io/create-only: 'true'
       spec:
         disableAllDefaultSources: false
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: osd-patch-subscription-source
+        namespace: openshift-marketplace
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: osd-patch-subscription-source
+      rules:
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - subscriptions
+        verbs:
+        - patch
+        - get
+        - list
+    - kind: ClusterRoleBinding
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        name: osd-patch-subscription-source
+      subjects:
+      - kind: ServiceAccount
+        name: osd-patch-subscription-source
+        namespace: openshift-marketplace
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: osd-patch-subscription-source
+    - apiVersion: batch/v1beta1
+      kind: CronJob
+      metadata:
+        name: osd-patch-subscription-source
+        namespace: openshift-marketplace
+      spec:
+        failedJobsHistoryLimit: 5
+        successfulJobsHistoryLimit: 3
+        concurrencyPolicy: Replace
+        schedule: 0 */1 * * *
+        jobTemplate:
+          spec:
+            template:
+              spec:
+                serviceAccountName: osd-patch-subscription-source
+                restartPolicy: Never
+                containers:
+                - name: osd-patch-subscription-source
+                  image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+                  imagePullPolicy: Always
+                  args:
+                  - /bin/bash
+                  - -c
+                  - "# Script run as an idempotent cronjob to fix existing subscriptions\
+                    \ when disabling OSD operator curation.\n\n# for each type of\
+                    \ source (redhat, certified, communit)\n# AND for each namespace\
+                    \ having a subscription with a curated community source\n# AND\
+                    \ for each subscription having a curated source\n# patch the source\n\
+                    # NOTE there are loops for each source to keep the jsonpath simple\
+                    \ and the logic easy to read\n\necho START\nfor NS in $(oc get\
+                    \ subscription -A -o jsonpath='{.items[?(@.spec.source==\"osd-curated-redhat-operators\"\
+                    )].metadata.namespace}');\ndo\n  for SUB in $(oc -n $NS get subscription\
+                    \ -o jsonpath='{.items[?(@.spec.source==\"osd-curated-redhat-operators\"\
+                    )].metadata.name}');\n  do\n    echo \"Patching subscription '$SUB'\
+                    \ in namespace '$NS'\"\n    oc -n $NS patch subscription $SUB\
+                    \ --patch '{\"spec\":{\"source\":\"redhat-operators\"}}' --type\
+                    \ merge\n  done\ndone\n\nfor NS in $(oc get subscription -A -o\
+                    \ jsonpath='{.items[?(@.spec.source==\"osd-curated-certified-operators\"\
+                    )].metadata.namespace}');\ndo\n  for SUB in $(oc -n $NS get subscription\
+                    \ -o jsonpath='{.items[?(@.spec.source==\"osd-curated-certified-operators\"\
+                    )].metadata.name}');\n  do\n    echo \"Patching subscription '$SUB'\
+                    \ in namespace '$NS'\"\n    oc -n $NS patch subscription $SUB\
+                    \ --patch '{\"spec\":{\"source\":\"certified-operators\"}}' --type\
+                    \ merge\n  done\ndone\n\nfor NS in $(oc get subscription -A -o\
+                    \ jsonpath='{.items[?(@.spec.source==\"osd-curated-community-operators\"\
+                    )].metadata.namespace}');\ndo\n  for SUB in $(oc -n $NS get subscription\
+                    \ -o jsonpath='{.items[?(@.spec.source==\"osd-curated-community-operators\"\
+                    )].metadata.name}');\n  do\n    echo \"Patching subscription '$SUB'\
+                    \ in namespace '$NS'\"\n    oc -n $NS patch subscription $SUB\
+                    \ --patch '{\"spec\":{\"source\":\"community-operators\"}}' --type\
+                    \ merge\n  done\ndone\necho FINISH\n"
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -2262,6 +2509,191 @@ objects:
           release.openshift.io/create-only: 'true'
       spec:
         disableAllDefaultSources: false
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: osd-patch-subscription-source
+        namespace: openshift-marketplace
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: osd-patch-subscription-source
+      rules:
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - subscriptions
+        verbs:
+        - patch
+        - get
+        - list
+    - kind: ClusterRoleBinding
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        name: osd-patch-subscription-source
+      subjects:
+      - kind: ServiceAccount
+        name: osd-patch-subscription-source
+        namespace: openshift-marketplace
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: osd-patch-subscription-source
+    - apiVersion: batch/v1beta1
+      kind: CronJob
+      metadata:
+        name: osd-patch-subscription-source
+        namespace: openshift-marketplace
+      spec:
+        failedJobsHistoryLimit: 5
+        successfulJobsHistoryLimit: 3
+        concurrencyPolicy: Replace
+        schedule: 0 */1 * * *
+        jobTemplate:
+          spec:
+            template:
+              spec:
+                serviceAccountName: osd-patch-subscription-source
+                restartPolicy: Never
+                containers:
+                - name: osd-patch-subscription-source
+                  image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+                  imagePullPolicy: Always
+                  args:
+                  - /bin/bash
+                  - -c
+                  - "# Script run as an idempotent cronjob to fix existing subscriptions\
+                    \ when disabling OSD operator curation.\n\n# for each type of\
+                    \ source (redhat, certified, communit)\n# AND for each namespace\
+                    \ having a subscription with a curated community source\n# AND\
+                    \ for each subscription having a curated source\n# patch the source\n\
+                    # NOTE there are loops for each source to keep the jsonpath simple\
+                    \ and the logic easy to read\n\necho START\nfor NS in $(oc get\
+                    \ subscription -A -o jsonpath='{.items[?(@.spec.source==\"osd-curated-redhat-operators\"\
+                    )].metadata.namespace}');\ndo\n  for SUB in $(oc -n $NS get subscription\
+                    \ -o jsonpath='{.items[?(@.spec.source==\"osd-curated-redhat-operators\"\
+                    )].metadata.name}');\n  do\n    echo \"Patching subscription '$SUB'\
+                    \ in namespace '$NS'\"\n    oc -n $NS patch subscription $SUB\
+                    \ --patch '{\"spec\":{\"source\":\"redhat-operators\"}}' --type\
+                    \ merge\n  done\ndone\n\nfor NS in $(oc get subscription -A -o\
+                    \ jsonpath='{.items[?(@.spec.source==\"osd-curated-certified-operators\"\
+                    )].metadata.namespace}');\ndo\n  for SUB in $(oc -n $NS get subscription\
+                    \ -o jsonpath='{.items[?(@.spec.source==\"osd-curated-certified-operators\"\
+                    )].metadata.name}');\n  do\n    echo \"Patching subscription '$SUB'\
+                    \ in namespace '$NS'\"\n    oc -n $NS patch subscription $SUB\
+                    \ --patch '{\"spec\":{\"source\":\"certified-operators\"}}' --type\
+                    \ merge\n  done\ndone\n\nfor NS in $(oc get subscription -A -o\
+                    \ jsonpath='{.items[?(@.spec.source==\"osd-curated-community-operators\"\
+                    )].metadata.namespace}');\ndo\n  for SUB in $(oc -n $NS get subscription\
+                    \ -o jsonpath='{.items[?(@.spec.source==\"osd-curated-community-operators\"\
+                    )].metadata.name}');\n  do\n    echo \"Patching subscription '$SUB'\
+                    \ in namespace '$NS'\"\n    oc -n $NS patch subscription $SUB\
+                    \ --patch '{\"spec\":{\"source\":\"community-operators\"}}' --type\
+                    \ merge\n  done\ndone\necho FINISH\n"
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-curated-operatorsources-revert-cluster-admin
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/cluster-admin: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: config.openshift.io/v1
+      kind: OperatorHub
+      metadata:
+        name: cluster
+        annotations:
+          release.openshift.io/create-only: 'true'
+      spec:
+        disableAllDefaultSources: false
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: osd-patch-subscription-source
+        namespace: openshift-marketplace
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: osd-patch-subscription-source
+      rules:
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - subscriptions
+        verbs:
+        - patch
+        - get
+        - list
+    - kind: ClusterRoleBinding
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        name: osd-patch-subscription-source
+      subjects:
+      - kind: ServiceAccount
+        name: osd-patch-subscription-source
+        namespace: openshift-marketplace
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: osd-patch-subscription-source
+    - apiVersion: batch/v1beta1
+      kind: CronJob
+      metadata:
+        name: osd-patch-subscription-source
+        namespace: openshift-marketplace
+      spec:
+        failedJobsHistoryLimit: 5
+        successfulJobsHistoryLimit: 3
+        concurrencyPolicy: Replace
+        schedule: 0 */1 * * *
+        jobTemplate:
+          spec:
+            template:
+              spec:
+                serviceAccountName: osd-patch-subscription-source
+                restartPolicy: Never
+                containers:
+                - name: osd-patch-subscription-source
+                  image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+                  imagePullPolicy: Always
+                  args:
+                  - /bin/bash
+                  - -c
+                  - "# Script run as an idempotent cronjob to fix existing subscriptions\
+                    \ when disabling OSD operator curation.\n\n# for each type of\
+                    \ source (redhat, certified, communit)\n# AND for each namespace\
+                    \ having a subscription with a curated community source\n# AND\
+                    \ for each subscription having a curated source\n# patch the source\n\
+                    # NOTE there are loops for each source to keep the jsonpath simple\
+                    \ and the logic easy to read\n\necho START\nfor NS in $(oc get\
+                    \ subscription -A -o jsonpath='{.items[?(@.spec.source==\"osd-curated-redhat-operators\"\
+                    )].metadata.namespace}');\ndo\n  for SUB in $(oc -n $NS get subscription\
+                    \ -o jsonpath='{.items[?(@.spec.source==\"osd-curated-redhat-operators\"\
+                    )].metadata.name}');\n  do\n    echo \"Patching subscription '$SUB'\
+                    \ in namespace '$NS'\"\n    oc -n $NS patch subscription $SUB\
+                    \ --patch '{\"spec\":{\"source\":\"redhat-operators\"}}' --type\
+                    \ merge\n  done\ndone\n\nfor NS in $(oc get subscription -A -o\
+                    \ jsonpath='{.items[?(@.spec.source==\"osd-curated-certified-operators\"\
+                    )].metadata.namespace}');\ndo\n  for SUB in $(oc -n $NS get subscription\
+                    \ -o jsonpath='{.items[?(@.spec.source==\"osd-curated-certified-operators\"\
+                    )].metadata.name}');\n  do\n    echo \"Patching subscription '$SUB'\
+                    \ in namespace '$NS'\"\n    oc -n $NS patch subscription $SUB\
+                    \ --patch '{\"spec\":{\"source\":\"certified-operators\"}}' --type\
+                    \ merge\n  done\ndone\n\nfor NS in $(oc get subscription -A -o\
+                    \ jsonpath='{.items[?(@.spec.source==\"osd-curated-community-operators\"\
+                    )].metadata.namespace}');\ndo\n  for SUB in $(oc -n $NS get subscription\
+                    \ -o jsonpath='{.items[?(@.spec.source==\"osd-curated-community-operators\"\
+                    )].metadata.name}');\n  do\n    echo \"Patching subscription '$SUB'\
+                    \ in namespace '$NS'\"\n    oc -n $NS patch subscription $SUB\
+                    \ --patch '{\"spec\":{\"source\":\"community-operators\"}}' --type\
+                    \ merge\n  done\ndone\necho FINISH\n"
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
