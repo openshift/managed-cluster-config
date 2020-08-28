@@ -2,9 +2,9 @@
 set -euo pipefail
 
 ENVIRONMENT=${1:-}
-CLUSTER_NAME=${2:-}
-if [[ ${ENVIRONMENT} == "" || ${CLUSTER_NAME} == "" ]]; then
-    echo "Usage: $0 <environment> <cluster name> "
+CLUSTER_ID=${2:-}
+if [[ ${ENVIRONMENT} == "" || ${CLUSTER_ID} == "" ]]; then
+    echo "Usage: $0 <environment> <cluster id> "
     exit 1
 fi
 
