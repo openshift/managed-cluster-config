@@ -8,7 +8,7 @@ if [[ ${ENVIRONMENT} == "" || ${CLUSTER_NAME} == "" ]]; then
     exit 1
 fi
 
-CLUSTER_ID=$(ocm list clusters | grep "${CLUSTER_NAME}" | awk '{print $1}')
+CLUSTER_ID=$(ocm list clusters --managed --columns id,external_id | grep "${CLUSTER_ID}" | awk '{print $1}')
 if [[ "${CLUSTER_ID}" == "" ]]; then
     echo "Cluster ID for ${CLUSTER_NAME} could not be found"
     exit 1
