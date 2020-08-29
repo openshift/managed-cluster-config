@@ -1,0 +1,44 @@
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: osde2e-noalerts
+  # pipelines will force NS to this, so just going to set here so it's not confusing to debug.
+  namespace: cluster-scope
+spec:
+  failedJobsHistoryLimit: 3
+  successfulJobsHistoryLimit: 3
+  concurrencyPolicy: Replace
+  schedule: "*/15 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: osde2e-noalerts
+          restartPolicy: Never
+          containers:
+          - name: osde2e-noalerts
+            image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+            imagePullPolicy: Always
+            args:
+            - /bin/bash
+            - -c
+            - |
+              # All CD's that are not "installed"
+              # https://github.com/openshift/ops-sop/blob/master/v4/howto/noalerts.md#hive-stage
+              
+              NAMESPACES=()
+
+              NAMESPACES+=($(oc get cd --all-namespaces -o jsonpath='{.items[?(@.spec.installed!=true)].metadata.namespace}'))
+              
+              # Label each unlabeled CD in each NS:
+              for NS in ${NAMESPACES[@]};
+              do
+                  for CD in $(oc -n $NS get cd -o jsonpath="{range .items[*]}{.metadata.name},{.metadata.labels},{'\n'} {end}" | grep -v "ext-managed.openshift.io/noalerts:true" | awk -F, '{print $1}')
+                  do
+                      echo "Adding 'ext-managed.openshift.io/noalerts' label to ClusterDeployment '$CD' in Namespace '$NS'"
+                      oc -n $NS label clusterdeployment $CD ext-managed.openshift.io/noalerts="true" --overwrite=true
+                      echo "Adding legacy 'api.openshift.com/noalerts' label to ClusterDeployment '$CD' in Namespace '$NS'"
+                      oc -n $NS label clusterdeployment $CD api.openshift.com/noalerts="true" --overwrite=true
+                  done
+              done
