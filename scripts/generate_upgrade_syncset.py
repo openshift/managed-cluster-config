@@ -194,22 +194,23 @@ def generate_syncset_bundle(cluster_deployments, cluster_schedules, cluster_ids)
         namespace = cd['metadata']['namespace']
         cluster_id = cd['metadata']['labels']['api.openshift.com/id']
         external_id = cd['spec']['clusterMetadata']['clusterID']
-        cluster_name = cd['metadata']['labels']['api.openshift.com/name']
+        full_cluster_name = cd['metadata']['labels']['api.openshift.com/name']
+        trunc_cluster_name = cd['spec']['clusterName']
         managed = cd['metadata']['labels']['api.openshift.com/managed']
 
         # is this a cluster-id in the allow-list?
         if cluster_ids and cluster_id not in cluster_ids:
-            logging.info("Skipping cluster '{}' ({}) as it is not in the allow-list".format(cluster_name, cluster_id))
+            logging.info("Skipping cluster '{}' ({}) as it is not in the allow-list".format(full_cluster_name, cluster_id))
             continue
 
         # is this cluster in the ignore list?
-        if cluster_name.startswith(tuple(CLUSTER_IGNORE_PREFIXES)):
-            logging.info("Skipping cluster '{}' ({}) as it is in the ignore list.".format(cluster_name, cluster_id))
+        if full_cluster_name.startswith(tuple(CLUSTER_IGNORE_PREFIXES)):
+            logging.info("Skipping cluster '{}' ({}) as it is in the ignore list.".format(full_cluster_name, cluster_id))
             continue
 
         # is this a cluster we manage?
         if managed != "true":
-            logging.warn("Ignoring cluster '{}' ({}) as it is not set as managed".format(cluster_name, cluster_id))
+            logging.warn("Ignoring cluster '{}' ({}) as it is not set as managed".format(full_cluster_name, cluster_id))
             continue
 
         # build the syncset base
@@ -219,14 +220,14 @@ def generate_syncset_bundle(cluster_deployments, cluster_schedules, cluster_ids)
             'metadata': {
                 'labels': {
                     'api.openshift.com/id': cluster_id,
-                    'api.openshift.com/name': cluster_name,
+                    'api.openshift.com/name': full_cluster_name,
                 },
                 'name': SYNCSET_NAME,
                 'namespace': namespace,
             },
             'spec': {
                 'clusterDeploymentRefs': [{
-                    'name': cluster_name,
+                    'name': trunc_cluster_name,
                 }],
                 'resourceApplyMode': 'Upsert',
             }
@@ -235,21 +236,21 @@ def generate_syncset_bundle(cluster_deployments, cluster_schedules, cluster_ids)
         # do we have a schedule for this cluster?
         if external_id not in cluster_schedules and CATCHALL_CLUSTER_ID not in cluster_schedules:
             logging.warn(
-                "Ignoring cluster '{}' as it has no schedule and no default schedule is set.".format(cluster_name))
+                "Ignoring cluster '{}' as it has no schedule and no default schedule is set.".format(full_cluster_name))
             continue
 
         schedule_id = external_id if external_id in cluster_schedules else CATCHALL_CLUSTER_ID
 
         # perform final data sanitation checks
         if not valid_date(cluster_schedules[schedule_id]['upgrade_at']):
-            logging.warn('Invalid schedule date for cluster {}, this row will be ignored.'.format(cluster_name))
+            logging.warn('Invalid schedule date for cluster {}, this row will be ignored.'.format(full_cluster_name))
             continue
         if not valid_version(cluster_schedules[schedule_id]['version']):
             logging.warn(
-                'Invalid schedule upgrade version for cluster {}, this row will be ignored.'.format(cluster_name))
+                'Invalid schedule upgrade version for cluster {}, this row will be ignored.'.format(full_cluster_name))
             continue
         if not (cluster_schedules[schedule_id]['channel']).startswith(('stable', 'fast')):
-            logging.warn('Invalid channel for cluster {}, this row will be ignored.'.format(cluster_name))
+            logging.warn('Invalid channel for cluster {}, this row will be ignored.'.format(full_cluster_name))
             continue
 
         uc = generate_upgradeconfig(cluster_schedules[schedule_id]['upgrade_at'],
