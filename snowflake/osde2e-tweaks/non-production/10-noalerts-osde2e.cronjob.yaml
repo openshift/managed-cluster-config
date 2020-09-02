@@ -34,7 +34,8 @@ spec:
               # Label each unlabeled CD in each NS:
               for NS in ${NAMESPACES[@]};
               do
-                  for CD in $(oc -n $NS get cd -o jsonpath="{range .items[*]}{.metadata.name},{.metadata.labels},{'\n'} {end}" | grep -v "ext-managed.openshift.io/noalerts:true" | awk -F, '{print $1}')
+                  # check if it is moa.  if so, skip! we want to hit PD for testing.  also, jsonpath can't do OR so it's in a separate query.
+                  for CD in $(oc -n $NS get cd -o jsonpath="{range .items[*]}{.metadata.name},{.metadata.labels},{'\n'} {end}" | grep -v "api.openshift.com/product:moa" | grep -v "ext-managed.openshift.io/noalerts:true" | awk -F, '{print $1}')
                   do
                       echo "Adding 'ext-managed.openshift.io/noalerts' label to ClusterDeployment '$CD' in Namespace '$NS'"
                       oc -n $NS label clusterdeployment $CD ext-managed.openshift.io/noalerts="true" --overwrite=true
