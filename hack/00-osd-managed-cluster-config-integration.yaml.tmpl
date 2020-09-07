@@ -5927,12 +5927,12 @@ objects:
         - name: sre-kubequotaexceeded
           rules:
           - alert: KubeQuotaExceededSRE
-            expr: 'kube_resourcequota{namespace=~"(openshift-.*|kube-.*|default|logging)",job="kube-state-metrics",
+            expr: 'kube_resourcequota{namespace=~"(^kube$|^kube-.*|^openshift$|^openshift-.*|^default$)",job="kube-state-metrics",
               type="used"}
 
               / ignoring(instance, job, type)
 
-              (kube_resourcequota{namespace=~"(openshift-.*|kube-.*|default|logging)",job="kube-state-metrics",
+              (kube_resourcequota{namespace=~"(^kube$|^kube-.*|^openshift$|^openshift-.*|^default$)",job="kube-state-metrics",
               type="hard"} > 0)
 
               > 1
