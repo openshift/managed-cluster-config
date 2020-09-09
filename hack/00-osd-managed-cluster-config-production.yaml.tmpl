@@ -3945,16 +3945,6 @@ objects:
         - create
       - apiGroups:
         - ''
-        attributeRestrictions: null
-        resources:
-        - nodes
-        - persistentvolumes
-        verbs:
-        - get
-        - list
-        - watch
-      - apiGroups:
-        - ''
         - security.openshift.io
         attributeRestrictions: null
         resources:
@@ -3963,25 +3953,6 @@ objects:
         - get
         - list
         - watch
-      - apiGroups:
-        - ''
-        - quota.openshift.io
-        attributeRestrictions: null
-        resources:
-        - clusterresourcequotas
-        verbs:
-        - get
-        - list
-        - watch
-      - apiGroups:
-        - ''
-        - authorization.openshift.io
-        attributeRestrictions: null
-        resources:
-        - clusterpolicybindings
-        verbs:
-        - get
-        - list
       - apiGroups:
         - ''
         - network.openshift.io
@@ -4103,14 +4074,6 @@ objects:
         verbs:
         - '*'
       - apiGroups:
-        - config.openshift.io
-        resources:
-        - clusterversions
-        verbs:
-        - list
-        - get
-        - watch
-      - apiGroups:
         - user.openshift.io
         resources:
         - groups
@@ -4136,27 +4099,12 @@ objects:
         - update
         - watch
       - apiGroups:
-        - metrics.k8s.io
-        resources:
-        - nodes
-        - pods
-        verbs:
-        - list
-      - apiGroups:
         - ''
         - image.openshift.io
         attributeRestrictions: null
         resources:
         - images
         - imagestreamtags
-        verbs:
-        - get
-        - list
-        - watch
-      - apiGroups:
-        - config.openshift.io
-        resources:
-        - infrastructures
         verbs:
         - get
         - list
@@ -4170,12 +4118,6 @@ objects:
         - securitycontextconstraints
         verbs:
         - use
-      - apiGroups:
-        - coordination.k8s.io
-        resources:
-        - leases
-        verbs:
-        - get
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
@@ -4341,6 +4283,11 @@ objects:
             operator: In
             values:
             - 'true'
+        - matchExpressions:
+          - key: managed.openshift.io/aggregate-to-dedicated-readers
+            operator: In
+            values:
+            - 'true'
       apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
@@ -4348,6 +4295,72 @@ objects:
           managed.openshift.io/aggregate-to-dedicated-admins: cluster
         name: dedicated-readers
       rules: []
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata: null
+      labels:
+        managed.openshift.io/aggregate-to-dedicated-readers: 'true'
+        managed.openshift.io/aggregate-to-devaccess: 'true'
+      name: osd-readers
+      rules:
+      - apiGroups:
+        - ''
+        attributeRestrictions: null
+        resources:
+        - nodes
+        - persistentvolumes
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        - quota.openshift.io
+        attributeRestrictions: null
+        resources:
+        - clusterresourcequotas
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        - authorization.openshift.io
+        attributeRestrictions: null
+        resources:
+        - clusterpolicybindings
+        verbs:
+        - get
+        - list
+      - apiGroups:
+        - config.openshift.io
+        resources:
+        - clusterversions
+        verbs:
+        - list
+        - get
+        - watch
+      - apiGroups:
+        - metrics.k8s.io
+        resources:
+        - nodes
+        - pods
+        verbs:
+        - list
+      - apiGroups:
+        - config.openshift.io
+        resources:
+        - infrastructures
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - coordination.k8s.io
+        resources:
+        - leases
+        verbs:
+        - get
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRoleBinding
       metadata:
