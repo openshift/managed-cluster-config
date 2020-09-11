@@ -5775,6 +5775,14 @@ objects:
         - customresourcedefinitions
         verbs:
         - delete
+      - apiGroups:
+        - batch
+        resources:
+        - jobs
+        verbs:
+        - get
+        - list
+        - delete
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRoleBinding
       metadata:
@@ -5923,6 +5931,31 @@ objects:
                     --certificate-authority=/var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt
                     --keep-younger-than=24h --keep-tag-revisions=5 --ignore-invalid-refs=true
                     --confirm
+    - apiVersion: batch/v1beta1
+      kind: CronJob
+      metadata:
+        name: crd-pruner
+        namespace: openshift-sre-pruning
+      spec:
+        failedJobsHistoryLimit: 0
+        successfulJobsHistoryLimit: 0
+        concurrencyPolicy: Replace
+        schedule: 0/5 * * * *
+        jobTemplate:
+          spec:
+            template:
+              spec:
+                serviceAccountName: sre-pruner-sa
+                restartPolicy: Never
+                containers:
+                - name: crd-pruner
+                  image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+                  imagePullPolicy: Always
+                  args:
+                  - /bin/bash
+                  - -c
+                  - oc get job -n openshift-sre-pruning --ignore-not-found -o name
+                    | grep csv-pruner | xargs oc delete -n openshift-sre-pruning --ignore-not-found
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
