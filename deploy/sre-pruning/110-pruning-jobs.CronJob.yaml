@@ -2,7 +2,7 @@
 apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
-  name: crd-pruner
+  name: jobs-pruner
   namespace: openshift-sre-pruning
 spec:
   failedJobsHistoryLimit: 0
@@ -16,11 +16,11 @@ spec:
           serviceAccountName: sre-pruner-sa
           restartPolicy: Never
           containers:
-          - name: crd-pruner
+          - name: jobs-pruner
             image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
             imagePullPolicy: Always
             args:
             - /bin/bash
             - -c
             - >-
-              oc get job -n openshift-sre-pruning --ignore-not-found -o name | grep csv-pruner | xargs oc delete -n openshift-sre-pruning --ignore-not-found
+              oc get job -n openshift-sre-pruning --ignore-not-found -o name | grep -v jobs-pruner | xargs oc delete -n openshift-sre-pruning --ignore-not-found job.batch/csv-pruner
