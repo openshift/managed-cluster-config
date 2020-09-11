@@ -11,8 +11,10 @@ spec:
   - name: sre-telemeter-client
     rules:
     - alert: MetricsClientSendFailingSRE
-      expr: absent(rate(metricsclient_request_send{status_code="200"}[5m]) > 0) or rate(metricsclient_request_send{status_code!="200"}[5m]) > 0
-      for: 15m
+      expr: 100 * rate(metricsclient_request_send{status_code="5xx"}[5m]) / rate(metricsclient_request_send[5m]) > 14.4 * 0.1 and 100 * rate(metricsclient_request_send{status_code="5xx"}[1h]) / rate(metricsclient_request_send[1h]) > 14.4 * 0.1
+      for: 5m
       labels:
         severity: critical
         namespace: openshift-monitoring
+      annotations:
+        description: "Telemeter client is experiencing a high error rate over the past hour"
