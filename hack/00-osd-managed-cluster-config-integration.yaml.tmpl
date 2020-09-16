@@ -32,8 +32,6 @@ parameters:
   required: true
 - name: SREP_USERS
   required: true
-- name: OCM_BASE_URL
-  required: true
 metadata:
   name: selectorsyncset-template
 objects:
@@ -1420,13 +1418,13 @@ objects:
         name: managed-upgrade-operator-config
         namespace: openshift-managed-upgrade-operator
       data:
-        config.yaml: "ocmBaseUrl: \"${{OCM_BASE_URL}}\"\nmaintenance:\n  controlPlaneTime:\
-          \ 90\n  workerNodeTime: 8\n  ignoredAlerts:\n    controlPlaneCriticals:\n\
-          \    - etcdMembersDown\n    - KubeDeploymentReplicasMismatch\n    - ClusterOperatorDown\n\
-          \    - MachineWithNoRunningPhase\n    - ClusterOperatorDegraded\nscale:\n\
-          \  timeOut: 30\nupgradeWindow:\n  timeOut: 60\nnodeDrain:\n  timeOut: 45\n\
-          healthCheck:\n  ignoredCriticals:\n  - DNSErrors05MinSRE\n  - MetricsClientSendFailingSRE\n\
-          \  - UpgradeNodeScalingFailedSRE\n  - UpgradeClusterCheckFailedSRE\n"
+        config.yaml: "maintenance:\n  controlPlaneTime: 90\n  workerNodeTime: 8\n\
+          \  ignoredAlerts:\n    controlPlaneCriticals:\n    - etcdMembersDown\n \
+          \   - KubeDeploymentReplicasMismatch\n    - ClusterOperatorDown\n    - MachineWithNoRunningPhase\n\
+          \    - ClusterOperatorDegraded\nscale:\n  timeOut: 30\nupgradeWindow:\n\
+          \  timeOut: 60\nnodeDrain:\n  timeOut: 45\nhealthCheck:\n  ignoredCriticals:\n\
+          \  - DNSErrors05MinSRE\n  - MetricsClientSendFailingSRE\n  - UpgradeNodeScalingFailedSRE\n\
+          \  - UpgradeClusterCheckFailedSRE\n"
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
