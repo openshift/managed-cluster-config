@@ -1,0 +1,14 @@
+apiVersion: managed.openshift.io/v1alpha1
+kind: SubjectPermission
+metadata:
+  name: layered-cs-sre-admin
+  namespace: openshift-rbac-permissions
+spec:
+  clusterPermissions:
+  - cs-sre-admin-cluster
+  permissions:
+  - allowFirst: true
+    clusterRoleName: backplane-cs-sre-read-all
+    namespacesAllowedRegex: .*
+  subjectKind: Group
+  subjectName: system:serviceaccounts:openshift-backplane-cee
