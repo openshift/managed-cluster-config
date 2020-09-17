@@ -57,16 +57,6 @@ rules:
   - create
 - apiGroups:
   - ""
-  attributeRestrictions: null
-  resources:
-  - nodes
-  - persistentvolumes
-  verbs:
-  - get
-  - list
-  - watch
-- apiGroups:
-  - ""
   - security.openshift.io
   attributeRestrictions: null
   resources:
@@ -75,25 +65,6 @@ rules:
   - get
   - list
   - watch
-- apiGroups:
-  - ""
-  - quota.openshift.io
-  attributeRestrictions: null
-  resources:
-  - clusterresourcequotas
-  verbs:
-  - get
-  - list
-  - watch
-- apiGroups:
-  - ""
-  - authorization.openshift.io
-  attributeRestrictions: null
-  resources:
-  - clusterpolicybindings
-  verbs:
-  - get
-  - list
 - apiGroups:
   - ""
   - network.openshift.io
@@ -236,16 +207,6 @@ rules:
   verbs:
   - '*'
 ### END
-### START - view ClusterVersion
-- apiGroups:
-  - config.openshift.io
-  resources:
-  - clusterversions
-  verbs:
-  - list
-  - get
-  - watch
-### END
 ### START - Update groups
 - apiGroups:
   - user.openshift.io
@@ -261,6 +222,15 @@ rules:
   - create
   - delete
 ### END
+### Start - allow manage UserIdentityMappings
+# https://issues.redhat.com/browse/OSD-5078
+- apiGroups:
+  - user.openshift.io
+  resources:
+  - useridentitymappings
+  verbs:
+  - "*"
+### END
 ### START - DNS Forwarder
 - apiGroups:
   - operator.openshift.io
@@ -275,15 +245,6 @@ rules:
   - update
   - watch
 ### END
-### START - run `oc adm top pod` or `oc adm top node`
-- apiGroups:
-  - metrics.k8s.io
-  resources:
-  - nodes
-  - pods
-  verbs:
-  - list
-### END
 ### START - Read permissions of imagestreams
 - apiGroups:
   - ""
@@ -292,17 +253,6 @@ rules:
   resources:
   - images
   - imagestreamtags
-  verbs:
-  - get
-  - list
-  - watch
-### END
-### Start - Allow viewing platform and other infra data in console
-# https://issues.redhat.com/browse/OSD-4298
-- apiGroups:
-  - config.openshift.io
-  resources:
-  - infrastructures
   verbs:
   - get
   - list
@@ -319,13 +269,4 @@ rules:
   - securitycontextconstraints
   verbs:
   - use
-### END
-### Start - fix `oc describe nodes`
-# https://issues.redhat.com/browse/OHSS-1105
-- apiGroups:
-  - coordination.k8s.io
-  resources:
-  - leases
-  verbs:
-  - get
 ### END

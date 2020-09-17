@@ -116,6 +116,7 @@ rules:
   - prometheusrules
   - servicemonitors
   - podmonitors
+  - thanosrulers
   verbs:
   - "*"
 - apiGroups:
@@ -150,10 +151,20 @@ rules:
   - events
   verbs:
   - create
-# Grant '*' on 'reports/export' until this is resolved: https://issues.redhat.com/browse/MC-832
+### Start - Grant '*' on 'reports/export' until this is resolved: https://issues.redhat.com/browse/MC-832
 - apiGroups:
   - metering.openshift.io
   resources:
   - reports/export
   verbs:
   - "*"
+### END
+### Start - Customer can manage leases in Projects
+# https://issues.redhat.com/browse/OSD-5131
+- apiGroups:
+  - coordination.k8s.io
+  resources:
+  - leases
+  verbs:
+  - '*'
+### END

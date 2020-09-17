@@ -1,0 +1,77 @@
+# a general "reader" / "view" clusterrole that adds a few things we want to grant to any reader on the cluster such as devaccess and dedicated-readers (see labels used for aggregation)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    managed.openshift.io/aggregate-to-dedicated-readers: "true"
+    managed.openshift.io/aggregate-to-devaccess: "true"
+  name: osd-readers-aggregate
+rules:
+- apiGroups:
+  - ""
+  attributeRestrictions: null
+  resources:
+  - nodes
+  - persistentvolumes
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  - quota.openshift.io
+  attributeRestrictions: null
+  resources:
+  - clusterresourcequotas
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  - authorization.openshift.io
+  attributeRestrictions: null
+  resources:
+  - clusterpolicybindings
+  verbs:
+  - get
+  - list
+### START - view ClusterVersion
+- apiGroups:
+  - config.openshift.io
+  resources:
+  - clusterversions
+  verbs:
+  - list
+  - get
+  - watch
+### END
+### START - run `oc adm top pod` or `oc adm top node`
+- apiGroups:
+  - metrics.k8s.io
+  resources:
+  - nodes
+  - pods
+  verbs:
+  - list
+### END
+### Start - Allow viewing platform and other infra data in console
+# https://issues.redhat.com/browse/OSD-4298
+- apiGroups:
+  - config.openshift.io
+  resources:
+  - infrastructures
+  verbs:
+  - get
+  - list
+  - watch
+### END
+### Start - fix `oc describe nodes`
+# https://issues.redhat.com/browse/OHSS-1105
+- apiGroups:
+  - coordination.k8s.io
+  resources:
+  - leases
+  verbs:
+  - get
+### END
