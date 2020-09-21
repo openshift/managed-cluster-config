@@ -1,14 +1,15 @@
 apiVersion: managed.openshift.io/v1alpha1
 kind: SubjectPermission
 metadata:
-  name: layered-cs-sre-admin
+  name: backplane-cssre
   namespace: openshift-rbac-permissions
 spec:
   clusterPermissions:
-  - cs-sre-admin-cluster
+  - backplane-cssre-read-all
+  - backplane-cssre-admin-cluster
   permissions:
   - allowFirst: true
-    clusterRoleName: backplane-cs-sre-read-all
-    namespacesAllowedRegex: .*
+    clusterRoleName: backplane-cssre-admin-project
+    namespacesAllowedRegex: (^redhat-rhmi-*)
   subjectKind: Group
-  subjectName: system:serviceaccounts:openshift-backplane-cee
+  subjectName: system:serviceaccounts:openshift-backplane-cssre

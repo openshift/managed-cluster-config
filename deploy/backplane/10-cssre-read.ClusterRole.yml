@@ -1,13 +1,18 @@
 apiVersion: rbac.authorization.k8s.io/v1
+aggregationRule:
+  clusterRoleSelectors:
+    # aggregate all "view" scope rbac
+    - matchExpressions:
+        - key: rbac.authorization.k8s.io/aggregate-to-view
+          operator: In
+          values:
+            - "true"
+    - matchExpressions:
+        - key: managed.openshift.io/aggregate-to-backplane
+          operator: In
+          values:
+            - "true"
 kind: ClusterRole
 metadata:
-  name: backplane-cs-sre-read-all
-rules:
-- apiGroups:
-  - ""
-  resources:
-  - '*'
-  verbs:
-  - get
-  - list
-  - watch
+  name: backplane-cssre-read-all
+rules: []
