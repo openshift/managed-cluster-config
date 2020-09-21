@@ -791,7 +791,12 @@ objects:
     clusterDeploymentSelector:
       matchLabels:
         api.openshift.com/managed: 'true'
-    resourceApplyMode: Sync
+      matchExpressions:
+      - key: managed.openshift.io/skip-cluster-monitoring-config
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Upsert
     resources:
     - apiVersion: v1
       kind: ConfigMap
