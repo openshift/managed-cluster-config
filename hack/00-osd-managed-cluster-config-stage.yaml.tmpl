@@ -635,23 +635,27 @@ objects:
       kind: Namespace
       metadata:
         name: openshift-backplane-srep
-    - apiVersion: rbac.authorization.k8s.io/v1
+    - aggregationRule:
+        clusterRoleSelectors:
+        - matchExpressions:
+          - key: rbac.authorization.k8s.io/aggregate-to-view
+            operator: In
+            values:
+            - 'true'
+        - matchExpressions:
+          - key: managed.openshift.io/aggregate-to-backplane
+            operator: In
+            values:
+            - 'true'
+      apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
         name: backplane-cee-read-all
-      rules:
-      - apiGroups:
-        - ''
-        resources:
-        - '*'
-        verbs:
-        - get
-        - list
-        - watch
+      rules: []
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-cs-sre-admin-cluster
+        name: backplane-cssre-admin-cluster
       rules:
       - apiGroups:
         - config.openshift.io
@@ -730,44 +734,144 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-cs-sre-read-all
+        name: backplane-cssre-admin-project
       rules:
       - apiGroups:
         - ''
         resources:
-        - '*'
+        - pods/exec
+        verbs:
+        - create
+      - apiGroups:
+        - batch
+        resources:
+        - jobs
+        - cronjobs
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - build.openshift.io
+        resources:
+        - builds
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        - pods/attach
+        verbs:
+        - create
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        - pods/log
         verbs:
         - get
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - delete
+      - apiGroups:
+        - integreatly.org
+        resources:
+        - '*'
+        verbs:
+        - create
+        - get
         - list
+        - patch
+        - update
         - watch
+      - apiGroups:
+        - ''
+        resources:
+        - secrets
+        - configmaps
+        - persistentvolumeclaims
+        verbs:
+        - '*'
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - installplans
+        verbs:
+        - patch
+      - apiGroups:
+        - policy
+        resources:
+        - poddisruptionbudgets
+        verbs:
+        - list
+        - get
+      - apiGroups:
+        - apps
+        resources:
+        - statefulsets
+        verbs:
+        - list
+        - get
+      - apiGroups:
+        - ''
+        resources:
+        - events
+        verbs:
+        - list
+        - get
+      - apiGroups:
+        - ''
+        resources:
+        - endpoints
+        verbs:
+        - list
+        - get
+    - apiVersion: rbac.authorization.k8s.io/v1
+      aggregationRule:
+        clusterRoleSelectors:
+        - matchExpressions:
+          - key: rbac.authorization.k8s.io/aggregate-to-view
+            operator: In
+            values:
+            - 'true'
+        - matchExpressions:
+          - key: managed.openshift.io/aggregate-to-backplane
+            operator: In
+            values:
+            - 'true'
+      kind: ClusterRole
+      metadata:
+        name: backplane-cssre-read-all
+      rules: []
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
-        name: layered-cs-sre-admin
+        name: backplane-cee
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
         - backplane-cee-read-all
-        permissions:
-        - allowFirst: true
-          clusterRoleName: backplane-cee-read-all
-          namespacesAllowedRegex: .*
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-cee
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
-        name: layered-cs-sre-admin
+        name: backplane-cssre
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - cs-sre-admin-cluster
+        - backplane-cssre-read-all
+        - backplane-cssre-admin-cluster
         permissions:
         - allowFirst: true
-          clusterRoleName: backplane-cs-sre-read-all
-          namespacesAllowedRegex: .*
+          clusterRoleName: backplane-cssre-admin-project
+          namespacesAllowedRegex: (^redhat-rhmi-*)
         subjectKind: Group
-        subjectName: system:serviceaccounts:openshift-backplane-cee
+        subjectName: system:serviceaccounts:openshift-backplane-cssre
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -4478,6 +4582,7 @@ objects:
         labels:
           managed.openshift.io/aggregate-to-dedicated-readers: 'true'
           managed.openshift.io/aggregate-to-devaccess: 'true'
+          managed.openshift.io/aggregate-to-backplane: 'true'
         name: osd-readers-aggregate
       rules:
       - apiGroups:
