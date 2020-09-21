@@ -38,7 +38,7 @@ generate-oauth-templates:
 .PHONY: generate-hive-templates
 generate-hive-templates: generate-oauth-templates
 	if [ -z ${IN_CONTAINER} ]; then \
-			$(CONTAINER_ENGINE) run --rm -v `pwd -P`:`pwd -P`:z python:2.7.15 /bin/sh -c "cd `pwd -P`; pip install oyaml; ${GEN_TEMPLATE}"; \
+			$(CONTAINER_ENGINE) run --rm -v `pwd -P`:`pwd -P`:z quay.io/app-sre/python:3.4.2 /bin/sh -c "cd `pwd -P`; pip install oyaml; ${GEN_TEMPLATE}"; \
 	else \
 		${GEN_TEMPLATE}; \
 	fi
