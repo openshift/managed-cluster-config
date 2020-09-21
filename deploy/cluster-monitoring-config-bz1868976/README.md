@@ -12,20 +12,20 @@ CLUSTER_ID=1234asdf
 
 cat << EOF | ocm post /api/clusters_mgmt/v1/clusters/$CLUSTER_ID/external_configuration/labels
 {
-    "id": "ext-managed.openshift.io-cluster-monitoring-config-BZ1868976",
+    "id": "ext-managed.openshift.io-cluster-monitoring-config-bz1868976",
     "value": "true"
 }
 EOF
 
 sleep 1
 
-ocm delete /api/clusters_mgmt/v1/clusters/$CLUSTER_ID/external_configuration/labels/ext-managed.openshift.io-cluster-monitoring-config-BZ1868976
+ocm delete /api/clusters_mgmt/v1/clusters/$CLUSTER_ID/external_configuration/labels/ext-managed.openshift.io-cluster-monitoring-config-bz1868976
 
 sleep 1
 
 cat << EOF | ocm post /api/clusters_mgmt/v1/clusters/$CLUSTER_ID/external_configuration/labels
 {
-    "id": "ext-managed.openshift.io-cluster-monitoring-config-BZ1868976",
+    "id": "ext-managed.openshift.io-cluster-monitoring-config-bz1868976",
     "value": "true"
 }
 EOF
@@ -38,6 +38,6 @@ When we can turn this off simply delete the label and then we can delete this in
 ```bash
 for CLUSTER_ID in $(ocm list clusters --managed --columns id | grep -v ^ID);
 do
-    ocm delete /api/clusters_mgmt/v1/clusters/$CLUSTER_ID/external_configuration/labels/ext-managed.openshift.io-cluster-monitoring-config-BZ1868976 || true
+    ocm delete /api/clusters_mgmt/v1/clusters/$CLUSTER_ID/external_configuration/labels/ext-managed.openshift.io-cluster-monitoring-config-bz1868976 || true
 done
 ```
