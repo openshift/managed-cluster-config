@@ -38,17 +38,21 @@ Rolling window / burn rate = days until budget burned
 
 Practice:
 
+```
 30d / 1		= 30d
 30d / 2		= 15d
 30d / 10	= 3d
 30d / 14,4	= 2,083~d
+```
 
 Multiplying the result, by 24 gets us the hours until budget burned
 
+```
 30d	* 24 = 720h
 15d	* 24 = 360h
 3d	* 24 = 72h
 2,083d	* 24 = 50h
+```
 
 We know:
 * Rolling window
@@ -56,18 +60,25 @@ We know:
 * desired time frame
 
 Assuming 2% in 1h
+
 2% in 1h adding up to 100%
+
+```
 100 / 2 = 50
 1h * 50 = 50h
 50 / 24 = 2,083~d
+```
 
 Calculating the burn rate
+
+```
 x = burn rate
 
 30d / x	= 2,083
 30 	= 2,083 * X
 30 / 2,0833333333 = x
 **14,4 = x**
+```
 
 Now we have the burn rate we can start creating our alert.
 We care about the error rate. `requests with errors / all requests` gives us that.
