@@ -5,11 +5,14 @@ metadata:
   namespace: openshift-rbac-permissions
 spec:
   clusterPermissions:
-  - backplane-cssre-read-all
-  - backplane-cssre-admin-cluster
+  - backplane-cssre-cluster
   permissions:
   - allowFirst: true
-    clusterRoleName: backplane-cssre-admin-project
-    namespacesAllowedRegex: (^redhat-rhmi-*)
+    clusterRoleName: backplane-cssre-project
+    namespacesAllowedRegex: .*
+    namespacesDeniedRegex: (^openshift-.*|^kube-.*|^ops-health-monitoring$|^management-infra$|^default$|^logging$|^sre-app-check$)
+  - allowFirst: true
+    clusterRoleName: backplane-cssre-read-all
+    namespacesAllowedRegex: .*
   subjectKind: Group
   subjectName: system:serviceaccounts:openshift-backplane-cssre
