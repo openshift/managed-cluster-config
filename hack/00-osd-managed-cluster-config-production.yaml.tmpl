@@ -643,14 +643,14 @@ objects:
             values:
             - 'true'
         - matchExpressions:
-          - key: managed.openshift.io/aggregate-to-backplane
+          - key: managed.openshift.io/aggregate-to-backplane-cee
             operator: In
             values:
             - 'true'
       apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-cee-read-all
+        name: backplane-cee
       rules: []
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
@@ -734,7 +734,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-cssre-admin-project
+        name: backplane-cssre-project
       rules:
       - apiGroups:
         - ''
@@ -839,7 +839,7 @@ objects:
             values:
             - 'true'
         - matchExpressions:
-          - key: managed.openshift.io/aggregate-to-backplane
+          - key: managed.openshift.io/aggregate-to-backplane-cssre
             operator: In
             values:
             - 'true'
@@ -853,8 +853,10 @@ objects:
         name: backplane-cee
         namespace: openshift-rbac-permissions
       spec:
-        clusterPermissions:
-        - backplane-cee-read-all
+        permissions:
+        - allowFirst: true
+          clusterRoleName: backplane-cee
+          namespacesAllowedRegex: .*
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-cee
     - apiVersion: managed.openshift.io/v1alpha1
@@ -864,12 +866,15 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-cssre-read-all
-        - backplane-cssre-admin-cluster
+        - backplane-cssre-cluster
         permissions:
         - allowFirst: true
-          clusterRoleName: backplane-cssre-admin-project
-          namespacesAllowedRegex: (^redhat-rhmi-*)
+          clusterRoleName: backplane-cssre-project
+          namespacesAllowedRegex: .*
+          namespacesDeniedRegex: (^openshift-.*|^kube-.*|^ops-health-monitoring$|^management-infra$|^default$|^logging$|^sre-app-check$)
+        - allowFirst: true
+          clusterRoleName: backplane-cssre-read-all
+          namespacesAllowedRegex: .*
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-cssre
 - apiVersion: hive.openshift.io/v1
@@ -4582,7 +4587,8 @@ objects:
         labels:
           managed.openshift.io/aggregate-to-dedicated-readers: 'true'
           managed.openshift.io/aggregate-to-devaccess: 'true'
-          managed.openshift.io/aggregate-to-backplane: 'true'
+          managed.openshift.io/aggregate-to-backplane-cee: 'true'
+          managed.openshift.io/aggregate-to-backplane-cssre: 'true'
         name: osd-readers-aggregate
       rules:
       - apiGroups:
