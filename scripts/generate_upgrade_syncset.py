@@ -107,6 +107,7 @@ def generate_upgradeconfig(start_time, version, channel):
             'type': 'OSD',
             'upgradeAt': start_time,
             'PDBForceDrainTimeout': UPGRADECONFIG_PODDISRUPTIONBUDGET_TIMEOUT_DEFAULT,
+            'pdbForceDrainTimeout': UPGRADECONFIG_PODDISRUPTIONBUDGET_TIMEOUT_DEFAULT,
             'desired': {
                 'version': version,
                 'channel': channel,
