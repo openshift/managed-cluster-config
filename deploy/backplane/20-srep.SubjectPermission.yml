@@ -1,0 +1,17 @@
+apiVersion: managed.openshift.io/v1alpha1
+kind: SubjectPermission
+metadata:
+  name: backplane-srep
+  namespace: openshift-rbac-permissions
+spec:
+  clusterPermissions:
+  - backplane-srep-cluster
+  permissions:
+  - allowFirst: true
+    clusterRoleName: backplane-srep-project
+    namespacesAllowedRegex: (^openshift-.*|^kube-.*|^ops-health-monitoring$|^management-infra$|^default$|^logging$|^sre-app-check$)
+  - allowFirst: true
+    clusterRoleName: backplane-srep-read
+    namespacesAllowedRegex: .*
+  subjectKind: Group
+  subjectName: system:serviceaccounts:openshift-backplane-srep
