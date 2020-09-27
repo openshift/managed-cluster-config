@@ -5658,15 +5658,18 @@ objects:
         groups:
         - name: sre-ebs-iops-burstbalance
           rules:
-          - alert: EbsVolumeBurstBalanceLT40PctSRE
-            expr: avg(ebs_iops_credits) < 40
+          - alert: EbsVolumeBurstBalanceLowSRE
+            expr: 100 - min_over_time(ebs_iops_credits[30m:5m]) > 80
             for: 60m
             labels:
               severity: warning
               namespace: openshift-monitoring
-          - alert: EbsVolumeBurstBalanceLT20PctSRE
-            expr: avg(ebs_iops_credits) < 20
-            for: 60m
+          - alert: EbsVolumeBurstBalanceEmptySRE
+            expr: 100 - min_over_time(ebs_iops_credits[3h:15m]) == 100
+            annotations:
+              message: The EBS volume {{ $labels.vol_id }} has exhausted its IOPs
+                burst credit for over 2 hours
+            for: 120m
             labels:
               severity: critical
               namespace: openshift-monitoring
