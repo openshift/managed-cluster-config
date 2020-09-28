@@ -622,11 +622,11 @@ objects:
     - apiVersion: v1
       kind: Namespace
       metadata:
-        name: openshift-backplane-cluster-admin
+        name: openshift-backplane-cee
     - apiVersion: v1
       kind: Namespace
       metadata:
-        name: openshift-backplane-cee
+        name: openshift-backplane-cluster-admin
     - apiVersion: v1
       kind: Namespace
       metadata:
@@ -1007,18 +1007,6 @@ objects:
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
-        name: backplane-cee
-        namespace: openshift-rbac-permissions
-      spec:
-        permissions:
-        - allowFirst: true
-          clusterRoleName: backplane-cee
-          namespacesAllowedRegex: .*
-        subjectKind: Group
-        subjectName: system:serviceaccounts:openshift-backplane-cee
-    - apiVersion: managed.openshift.io/v1alpha1
-      kind: SubjectPermission
-      metadata:
         name: backplane-cssre
         namespace: openshift-rbac-permissions
       spec:
@@ -1050,6 +1038,17 @@ objects:
           namespacesAllowedRegex: (^openshift-.*|^kube-.*|^ops-health-monitoring$|^management-infra$|^default$|^logging$|^sre-app-check$)
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-srep
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: backplane-cee-readers
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: backplane-cee-readers-cluster
+      subjects:
+      - kind: Group
+        name: system:serviceaccounts:openshift-backplane-cee
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRoleBinding
       metadata:
