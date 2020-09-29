@@ -5298,18 +5298,18 @@ objects:
         groups:
         - name: sre-managed-velero-operator-alerts
           rules:
-          - alert: VeleroHourlyObjectBackupMissed
+          - alert: VeleroHourlyObjectBackupsMissedConsecutively
             expr: 'time() - clamp_min(velero_backup_last_successful_timestamp{namespace="openshift-velero",schedule="hourly-object-backup"},
 
               scalar(max(kube_deployment_created{namespace="openshift-velero",deployment="velero"})))
-              > 3600 + 600
+              > 10800 + 600
 
               '
             labels:
               severity: warning
               namespace: openshift-monitoring
             annotations:
-              message: The hourly Velero backup has not successfully completed
+              message: Consecutive hourly Velero backups have not successfully completed
           - alert: VeleroDailyFullBackupMissed
             expr: 'time() - clamp_min(velero_backup_last_successful_timestamp{namespace="openshift-velero",schedule="daily-full-backup"},
 

@@ -14,17 +14,18 @@ spec:
     # alerts measure the time since the last successful backup finished (or
     # the deployment's creation time if there's been no backup yet), plus a
     # small static buffer to account for some variation.
-    - alert: VeleroHourlyObjectBackupMissed
-      # Hourly backup should complete about 3600 seconds (1 hour) after the
+    - alert: VeleroHourlyObjectBackupsMissedConsecutively
+      # Hourly backup can fail twice before alerting. 
+      # should complete about 10800 seconds (3 hours) after the
       # last successful backup, with a 600 second (10 minute) buffer.
       expr: |
         time() - clamp_min(velero_backup_last_successful_timestamp{namespace="openshift-velero",schedule="hourly-object-backup"},
-        scalar(max(kube_deployment_created{namespace="openshift-velero",deployment="velero"}))) > 3600 + 600
+        scalar(max(kube_deployment_created{namespace="openshift-velero",deployment="velero"}))) > 10800 + 600
       labels:
         severity: warning
         namespace: openshift-monitoring
       annotations:
-        message: The hourly Velero backup has not successfully completed
+        message: Consecutive hourly Velero backups have not successfully completed
     - alert: VeleroDailyFullBackupMissed
       # Daily backup should complete about 86,400 seconds (1 day) after the
       # last successful backup, with a 600 second (10 minute) buffer.
