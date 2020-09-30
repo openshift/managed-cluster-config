@@ -1,0 +1,97 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: backplane-srep-admins-project
+rules:
+# SRE can get, list, and watch all resources
+- apiGroups:
+  - '*'
+  resources:
+  - '*'
+  verbs:
+  - get
+  - list
+  - watch
+# SRE can evict pods
+- apiGroups:
+  - ""
+  resources:
+  - pods/eviction
+  verbs:
+  - create
+  # SRE can run commands in pods
+- apiGroups:
+  - ""
+  resources:
+  - pods/exec
+  verbs:
+  - create
+# SRE can delete jobs and builds
+- apiGroups:
+  - batch
+  resources:
+  - jobs
+  verbs:
+  - delete
+  - deletecollection
+- apiGroups:
+  - build.openshift.io
+  resources:
+  - builds
+  verbs:
+  - delete
+  - deletecollection
+
+# SRE can use oc debug
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - pods/attach
+  verbs:
+  - create
+# SRE can delete pods
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - delete
+# SRE can review pod security policies
+- apiGroups:
+  - security.openshift.io
+  resources:
+  - podsecuritypolicyreviews
+  - podsecuritypolicyselfsubjectreviews
+  - podsecuritypolicysubjectreviews
+  verbs:
+  - create
+# SRE can review RBAC policies (i.e. oc adm policy who-can ...)
+- apiGroups:
+  - authorization.openshift.io
+  resources:
+  - localresourceaccessreviews
+  verbs:
+  - create
+# SRE can manage Logging (ClusterLogging and ElasticSearch CRs)
+- apiGroups:
+  - logging.openshift.io
+  resources:
+  - '*'
+  verbs:
+  - '*'
+# SRE can download backups, review logs, and create backup
+- apiGroups:
+  - velero.io
+  resources:
+  - backups
+  verbs:
+  - create
+- apiGroups:
+  - velero.io
+  resources:
+  - deletebackuprequests
+  - downloadrequests
+  - serverstatusrequests
+  verbs:
+  - '*'

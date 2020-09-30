@@ -1,0 +1,61 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: backplane-srep-admins-cluster
+rules:
+# SRE can manage nodes
+- apiGroups:
+  - ""
+  resources:
+  - nodes
+  verbs:
+  - patch
+# SRE can manage projects
+- apiGroups:
+  - config.openshift.io
+  resources:
+  - projects
+  verbs:
+  - '*'
+- apiGroups:
+  - project.openshift.io
+  resources:
+  - projects
+  verbs:
+  - '*'
+# SRE can manage namespaces
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  - namespaces/finalize
+  verbs:
+  - '*'
+# SRE can update existing groups
+- apiGroups:
+  - user.openshift.io
+  resources:
+  - groups
+  verbs:
+  - patch
+  - update
+# SRE can upgrade the cluster
+- apiGroups:
+  - config.openshift.io
+  resources:
+  - clusterversions
+  verbs:
+  - patch
+  - update
+# SRE can approve Certificate Signing Requests (CSR)
+- apiGroups:
+  - certificates.k8s.io
+  resources:
+  - certificatesigningrequests/approval
+  verbs:
+  - update
+# SRE can get and post to all endpoints
+- nonResourceURLs:
+  - '*'
+  verbs:
+  - '*'
