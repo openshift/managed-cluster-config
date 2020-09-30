@@ -12,7 +12,7 @@ To add a new SelectorSyncSet, add your yaml manifest to the `deploy` dir, then r
 
 - oyaml: `pip install oyaml`
 
-# Configuation
+# Configuration
 
 All resources in `deploy/` are bundled into a template that is used by config management to apply to target "hive" clusters.  The configuration for this supports two options for deployment.  They can be deployed in the template so they are:
 
