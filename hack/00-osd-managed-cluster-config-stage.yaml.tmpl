@@ -619,6 +619,11 @@ objects:
     clusterDeploymentSelector:
       matchLabels:
         api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/environment
+        operator: NotIn
+        values:
+        - production
     resourceApplyMode: Sync
     resources:
     - apiVersion: v1
@@ -1113,31 +1118,6 @@ objects:
       applyMode: AlwaysApply
       patch: '{"spec":{"priorityLevelConfiguration":{"name":"workload-low"}}}'
       patchType: merge
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    labels:
-      managed.openshift.io/gitHash: ${IMAGE_TAG}
-      managed.openshift.io/gitRepoName: ${REPO_NAME}
-      managed.openshift.io/osd: 'true'
-    name: bz1883589-kubeapiserver-revert-nonprod
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-      matchExpressions:
-      - key: api.openshift.com/environment
-        operator: NotIn
-        values:
-        - production
-    resourceApplyMode: Sync
-    patches:
-    - apiVersion: operator.openshift.io/v1
-      kind: KubeAPIServer
-      name: cluster
-      applyMode: AlwaysApply
-      patch: '[{ "op": "remove", "path": "/spec/unsupportedConfigOverrides" }]'
-      patchType: json
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
