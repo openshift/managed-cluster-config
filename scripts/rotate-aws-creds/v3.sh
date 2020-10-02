@@ -37,14 +37,8 @@ else
     CCS_CLUSTER="0"
 fi
 
-if [[ "${CCS_CLUSTER}" == "0" ]]; then
-    CREDENTIALS_SECRET_NAME="aws"
-else
-    CREDENTIALS_SECRET_NAME="byoc"
-fi
-
-ACCESS_KEY_ID=$(ssh "root@hive-${ENVIRONMENT}-master" "oc get secrets -n ${NAMESPACE} ${CREDENTIALS_SECRET_NAME} -o json | jq -r '.data.aws_access_key_id' | base64 -d")
-SECRET_ACCESS_KEY=$(ssh "root@hive-${ENVIRONMENT}-master" "oc get secrets -n ${NAMESPACE} ${CREDENTIALS_SECRET_NAME} -o json | jq -r '.data.aws_secret_access_key' | base64 -d")
+ACCESS_KEY_ID=$(ssh "root@hive-${ENVIRONMENT}-master" "oc get secrets -n ${NAMESPACE} aws -o json | jq -r '.data.aws_access_key_id' | base64 -d")
+SECRET_ACCESS_KEY=$(ssh "root@hive-${ENVIRONMENT}-master" "oc get secrets -n ${NAMESPACE} aws -o json | jq -r '.data.aws_secret_access_key' | base64 -d")
 AWS_PROFILE=${ENVIRONMENT}-${CLUSTER_ID}
 aws_cli_setup "${ACCESS_KEY_ID}" "${SECRET_ACCESS_KEY}" "${AWS_PROFILE}"
 info "Retrived original AccessKey."
@@ -69,7 +63,12 @@ update_aws_secret aws-account-operator "${SECRET_NAME}"
 info "Replaced AWS Account Operator Secret."
 
 # Replace aws secret (in cluster's hive namespace)
-update_aws_secret "${NAMESPACE}" "${CREDENTIALS_SECRET_NAME}"
+update_aws_secret "${NAMESPACE}" aws 
+
+# If CCS cluster also update the "byoc" secret
+if [[ "$CCS_CLUSTER" == "1" ]]; then 
+    update_aws_secret "$NAMESPACE" "byoc"
+fi
 
 info "Replaced Hive AWS Secret."
 

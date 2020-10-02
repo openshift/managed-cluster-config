@@ -10,7 +10,7 @@ fi
 
 CLUSTER_ID=$(ocm list clusters --managed --columns id,external_id | grep "${CLUSTER_ID}" | awk '{print $1}')
 if [[ "${CLUSTER_ID}" == "" ]]; then
-    echo "Cluster ID for ${CLUSTER_NAME} could not be found"
+    echo "Cluster ID ${CLUSTER_ID} could not be found"
     exit 1
 fi
 

@@ -25,14 +25,14 @@ update_aws_secret() {
     KUBECONFIG=${KUBECONFIG} ${OC_CMD} get secret -n "${SECRET_NAMESPACE}" "${SECRET_NAME}" -o json | jq -r ".data.aws_access_key_id = \"${ENCODED_ACCESS_KEY_ID}\" | .data.aws_secret_access_key = \"${ENCODED_SECRET_ACCESS_KEY}\"" | KUBECONFIG=${KUBECONFIG} ${OC_CMD} replace -f -
 }
 
-CLUSTER_NAME=${1:-}
+CLUSTER_ID=${1:-}
 SHARD_NAME=${2:-}
-if [[ ${CLUSTER_NAME} == "" || ${SHARD_NAME} == "" ]]; then
-    echo "Usage: $0 CLUSTER_NAME SHARD_NAME"
+if [[ ${CLUSTER_ID} == "" || ${SHARD_NAME} == "" ]]; then
+    echo "Usage: $0 <CLUSTER_ID> <SHARD_NAME>"
     exit 1
 fi
 
-CLUSTER_ID=$(ocm list clusters | grep "${CLUSTER_NAME}" | awk '{print $1}')
+read -r CLUSTER_NAME CLUSTER_ID <<< "$(ocm list clusters --managed --columns name,id| grep "${CLUSTER_ID}")"
 
 SHARD_KUBECONFIG=$(mktemp /tmp/kubeconfig.XXXXXXX)
 CLUSTER_KUBECONFIG=$(mktemp /tmp/kubeconfig.XXXXXXX)
@@ -52,14 +52,12 @@ fixup_kubeconfig "${CLUSTER_KUBECONFIG}"
 CCS_ANNOTATION=$(KUBECONFIG="${SHARD_KUBECONFIG}" ${OC_CMD} get clusterdeployment -n "${CLUSTER_NAMESPACE}" "${CLUSTER_NAME}" -o json | jq -r '.metadata.labels["api.openshift.com/ccs"]')
 if [[ "${CCS_ANNOTATION}" == "true" ]]; then
     CCS_CLUSTER="1"
-    CREDENTIALS_SECRET_NAME="byoc"
 else
     CCS_CLUSTER="0"
-    CREDENTIALS_SECRET_NAME="aws"
 fi
 
-ACCESS_KEY_ID=$(KUBECONFIG="${SHARD_KUBECONFIG}" ${OC_CMD} get secrets -n "${CLUSTER_NAMESPACE}" ${CREDENTIALS_SECRET_NAME} -o json | jq -r '.data.aws_access_key_id' | base64 -d)
-SECRET_ACCESS_KEY=$(KUBECONFIG="${SHARD_KUBECONFIG}" ${OC_CMD} get secrets -n "${CLUSTER_NAMESPACE}" ${CREDENTIALS_SECRET_NAME} -o json | jq -r '.data.aws_secret_access_key' | base64 -d)
+ACCESS_KEY_ID=$(KUBECONFIG="${SHARD_KUBECONFIG}" ${OC_CMD} get secrets -n "${CLUSTER_NAMESPACE}" aws -o json | jq -r '.data.aws_access_key_id' | base64 -d)
+SECRET_ACCESS_KEY=$(KUBECONFIG="${SHARD_KUBECONFIG}" ${OC_CMD} get secrets -n "${CLUSTER_NAMESPACE}" aws -o json | jq -r '.data.aws_secret_access_key' | base64 -d)
 AWS_PROFILE=${CLUSTER_ID}
 aws_cli_setup "${ACCESS_KEY_ID}" "${SECRET_ACCESS_KEY}" "${AWS_PROFILE}"
 info "Retrived original AccessKey."
@@ -84,7 +82,12 @@ update_aws_secret "${SHARD_KUBECONFIG}" aws-account-operator "${SECRET_NAME}"
 info "Replaced AWS Account Operator Secret."
 
 # Replace aws secret (in cluster's hive namespace)
-update_aws_secret "${SHARD_KUBECONFIG}" "${CLUSTER_NAMESPACE}" ${CREDENTIALS_SECRET_NAME}
+update_aws_secret "${SHARD_KUBECONFIG}" "${CLUSTER_NAMESPACE}" "aws"
+
+# If CCS cluster then also update the "byoc" secret
+if [[ "$CCS_CLUSTER" == "1" ]]; then
+    update_aws_secret "$SHARD_KUBECONFIG" "$CLUSTER_NAMESPACE" "byoc"
+fi
 
 info "Replaced Hive AWS Secret."
 

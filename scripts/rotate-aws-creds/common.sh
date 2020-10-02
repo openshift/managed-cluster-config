@@ -1,5 +1,9 @@
 #!/bin/bash
 
+info() {
+    echo "INFO: $1"
+}
+
 aws_cli_setup() {
     local KEY_ID=$1
     local SECRET_KEY=$2
