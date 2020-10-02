@@ -1083,10 +1083,10 @@ objects:
     resourceApplyMode: Sync
     patches:
     - apiVersion: operator.openshift.io/v1
-      kind: KubeAPIServer
-      name: cluster
+      kind: FlowSchema
+      name: service-accounts
       applyMode: AlwaysApply
-      patch: '{"spec":{"unsupportedConfigOverrides":{"apiServerArguments":{"feature-gates":["APIPriorityAndFairness=false"]}}}}'
+      patch: '{"spec":{"priorityLevelConfiguration":{"name":"global-default"}}}'
       patchType: merge
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
@@ -1108,11 +1108,11 @@ objects:
     resourceApplyMode: Sync
     patches:
     - apiVersion: operator.openshift.io/v1
-      kind: KubeAPIServer
-      name: cluster
+      kind: FlowSchema
+      name: service-accounts
       applyMode: AlwaysApply
-      patch: '[{ "op": "remove", "path": "/spec/unsupportedConfigOverrides" }]'
-      patchType: json
+      patch: '{"spec":{"priorityLevelConfiguration":{"name":"workload-low"}}}'
+      patchType: merge
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
