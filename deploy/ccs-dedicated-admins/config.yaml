@@ -1,8 +1,6 @@
 deploymentMode: "SelectorSyncSet"
 selectorSyncSet:
-  matchLabels:
-      api.openshift.com/ccs: "true"
-      api.openshift.com/extended-dedicated-admin: "true"
-      api.openshift.com/environment: "staging"
-      hive.openshift.io/cluster-platform: "gcp"
-  matchLabelsApplyMode: "OR"
+  matchExpressions:
+  - key: api.openshift.com/extended-dedicated-admin
+    operator: NotIn
+    values: ["false"]
