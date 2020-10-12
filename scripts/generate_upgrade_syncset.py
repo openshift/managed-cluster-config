@@ -250,7 +250,7 @@ def generate_syncset_bundle(cluster_deployments, cluster_schedules, cluster_ids)
             logging.warn(
                 'Invalid schedule upgrade version for cluster {}, this row will be ignored.'.format(full_cluster_name))
             continue
-        if not (cluster_schedules[schedule_id]['channel']).startswith(('stable', 'fast')):
+        if not (cluster_schedules[schedule_id]['channel']).startswith(('stable', 'fast', 'candidate')):
             logging.warn('Invalid channel for cluster {}, this row will be ignored.'.format(full_cluster_name))
             continue
 
