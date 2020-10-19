@@ -1,0 +1,26 @@
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: csv-pruner
+  namespace: openshift-sre-pruning
+spec:
+  failedJobsHistoryLimit: 5
+  successfulJobsHistoryLimit: 3
+  concurrencyPolicy: Replace
+  schedule: "*/10 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: sre-pruner-sa
+          restartPolicy: Never
+          containers:
+          - name: csv-pruner
+            image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+            imagePullPolicy: Always
+            args:
+            - /bin/bash
+            - -c
+            - >-
+              oc -n openshift-monitoring delete csv --wait=0 --ignore-not-found configure-alertmanager-operator.v0.1.215-c370d4a configure-alertmanager-operator.v0.1.227-d68866b configure-alertmanager-operator.v0.1.229-42a4dc6
