@@ -4525,6 +4525,12 @@ objects:
         - securitycontextconstraints
         verbs:
         - use
+      - apiGroups:
+        - config.openshift.io
+        resources:
+        - project
+        verbs:
+        - '*'
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
@@ -4936,13 +4942,6 @@ objects:
           namespacesAllowedRegex: .*
           namespacesDeniedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
           allowFirst: true
-    patches:
-    - apiVersion: config.openshift.io/v1
-      kind: Project
-      name: cluster
-      applyMode: AlwaysApply
-      patch: '{"spec":{"projectRequestTemplate":{"name":"osd-project-request"}}}'
-      patchType: merge
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
