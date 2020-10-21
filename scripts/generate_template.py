@@ -54,6 +54,9 @@ def add_sss_for(name, directory, config):
     if 'resourceApplyMode' in config:
         o['spec']['resourceApplyMode'] = config['resourceApplyMode']
 
+    if 'applyBehavior' in config:
+        o['spec']['applyBehavior'] = config['applyBehavior']
+
     # Merge matchLabels criteria
     for key in config['matchLabels']:
         if 'matchLabels' not in o['spec']['clusterDeploymentSelector']:
@@ -136,6 +139,7 @@ if __name__ == '__main__':
                 config["selectorSyncSet"]["matchLabels"] = {}
             if "resourceApplyMode" not in config["selectorSyncSet"]:
                 config["selectorSyncSet"]["resourceApplyMode"] = "Sync"
+            # NOTE we do not set applyBehavior if not provided, we fall back on hive defaults
 
             sss_name = dirpath.replace('/','-')
             if sss_name == arguments.yaml_directory:
