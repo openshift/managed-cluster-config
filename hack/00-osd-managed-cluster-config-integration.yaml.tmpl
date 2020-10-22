@@ -3952,6 +3952,35 @@ objects:
     resourceApplyMode: Sync
     resources:
     - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: dedicated-admins-project-config
+      rules:
+      - apiGroups:
+        - config.openshift.io
+        resources:
+        - projects
+        verbs:
+        - get
+        - patch
+        - update
+        - watch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: dedicated-admins-project-config
+        namespace: openshift-config
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: dedicated-admins-project-config
+      subjects:
+      - apiGroup: rbac.authorization.k8s.io
+        kind: Group
+        name: dedicated-admins
+      - kind: Group
+        name: system:serviceaccounts:dedicated-admin
+    - apiVersion: rbac.authorization.k8s.io/v1
       kind: Role
       metadata:
         name: dedicated-admins-project-request
@@ -4131,6 +4160,48 @@ objects:
         name: dedicated-admin
         annotations:
           openshift.io/node-selector: ''
+    - apiVersion: template.openshift.io/v1
+      kind: Template
+      metadata:
+        annotations:
+          description: Switches the ClusterRole for the 'admin' RoleBinding from 'admin'
+            to 'dedicated-admins-project'.
+        name: osd-project-request
+        namespace: openshift-config
+      objects:
+      - apiVersion: project.openshift.io/v1
+        kind: Project
+        metadata:
+          annotations:
+            openshift.io/description: ${PROJECT_DESCRIPTION}
+            openshift.io/display-name: ${PROJECT_DISPLAYNAME}
+            openshift.io/requester: ${PROJECT_REQUESTING_USER}
+          creationTimestamp: null
+          labels:
+            name: ${PROJECT_NAME}
+          name: ${PROJECT_NAME}
+        spec: {}
+        status: {}
+      - apiVersion: rbac.authorization.k8s.io/v1
+        kind: RoleBinding
+        metadata:
+          creationTimestamp: null
+          name: admin
+          namespace: ${PROJECT_NAME}
+        roleRef:
+          apiGroup: rbac.authorization.k8s.io
+          kind: ClusterRole
+          name: admin
+        subjects:
+        - apiGroup: rbac.authorization.k8s.io
+          kind: User
+          name: ${PROJECT_ADMIN_USER}
+      parameters:
+      - name: PROJECT_NAME
+      - name: PROJECT_DISPLAYNAME
+      - name: PROJECT_DESCRIPTION
+      - name: PROJECT_ADMIN_USER
+      - name: PROJECT_REQUESTING_USER
     - aggregationRule:
         clusterRoleSelectors:
         - matchExpressions:
@@ -4454,16 +4525,6 @@ objects:
         - securitycontextconstraints
         verbs:
         - use
-      - apiGroups:
-        - config.openshift.io
-        resources:
-        - projects
-        verbs:
-        - get
-        - list
-        - patch
-        - update
-        - watch
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
@@ -4875,6 +4936,13 @@ objects:
           namespacesAllowedRegex: .*
           namespacesDeniedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
           allowFirst: true
+    patches:
+    - apiVersion: config.openshift.io/v1
+      kind: Project
+      name: cluster
+      applyMode: AlwaysApply
+      patch: '{"spec":{"projectRequestTemplate":{"name":"osd-project-request"}}}'
+      patchType: merge
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
