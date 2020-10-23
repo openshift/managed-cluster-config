@@ -39,16 +39,6 @@ rules:
   verbs:
   - get
   - list
-### START - view ClusterVersion
-- apiGroups:
-  - config.openshift.io
-  resources:
-  - clusterversions
-  verbs:
-  - list
-  - get
-  - watch
-### END
 ### START - run `oc adm top pod` or `oc adm top node`
 - apiGroups:
   - metrics.k8s.io
@@ -57,17 +47,6 @@ rules:
   - pods
   verbs:
   - list
-### END
-### Start - Allow viewing platform and other infra data in console
-# https://issues.redhat.com/browse/OSD-4298
-- apiGroups:
-  - config.openshift.io
-  resources:
-  - infrastructures
-  verbs:
-  - get
-  - list
-  - watch
 ### END
 ### Start - fix `oc describe nodes`
 # https://issues.redhat.com/browse/OHSS-1105
@@ -78,12 +57,359 @@ rules:
   verbs:
   - get
 ### END
-### Start - Allow viewing of oauths
-# https://issues.redhat.com/browse/OSD-5261
+### Start - Allow read permissions to more resources
+# https://issues.redhat.com/browse/OSD-5537
 - apiGroups:
-  - config.openshift.io
+  - admissionregistration.k8s.io
   resources:
-  - oauths
+  - '*'
   verbs:
   - get
   - list
+  - watch
+- apiGroups:
+  - apiextensions.k8s.io
+  resources:
+  - customresourcedefinitions
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - apiregistration.k8s.io
+  resources:
+  - apiservices
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - authentication.k8s.io
+  resources:
+  - tokenreviews
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - authorization.k8s.io
+  resources:
+  - selfsubjectaccessreviews
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - authorization.k8s.io
+  resources:
+  - selfsubjectrulesreviews
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - authorization.k8s.io
+  resources:
+  - subjectaccessreviews
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - authorization.openshift.io
+  resources:
+  - clusterrolebindings
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - authorization.openshift.io
+  resources:
+  - clusterroles
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - authorization.openshift.io
+  resources:
+  - resourceaccessreviews
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - authorization.openshift.io
+  resources:
+  - subjectaccessreviews
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - autoscaling.openshift.io
+  resources:
+  - clusterautoscalers
+  verbs:
+  - get
+  - list
+  - watch
+# access resources like oauth, clusterversion,clusteroperators
+- apiGroups:
+  - config.openshift.io
+  resources:
+  - '*'
+  verbs:
+  - get
+  - list
+  - watch
+# access resources like consolelinks, consolenotifications
+- apiGroups:
+  - console.openshift.io
+  resources:
+  - '*'
+  verbs:
+  - get
+  - list
+  - watch
+# access resources flowschemas and prioritylevelconfigurations
+- apiGroups:
+  - flowcontrol.apiserver.k8s.io
+  resources:
+  - '*'
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - image.openshift.io
+  resources:
+  - images
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - image.openshift.io
+  resources:
+  - imagesignatures
+  verbs:
+  - get
+  - list
+  - watch
+# access configs and imagepruners
+- apiGroups:
+  - imageregistry.operator.openshift.io
+  resources:
+  - '*'
+  verbs:
+  - get
+  - list
+  - watch
+# access resources like machineconfigs, machineconfigpods, kubeletconfigs
+- apiGroups:
+  - machineconfiguration.openshift.io
+  resources:
+  - '*'
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - metal3.io
+  resources:
+  - provisionings
+  verbs:
+  - get
+  - list
+  - watch
+# access to storagestates and storageversionmigrations
+- apiGroups:
+  - migration.k8s.io
+  resources:
+  - '*'
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - network.openshift.io
+  resources:
+  - clusternetworks
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - network.openshift.io
+  resources:
+  - hostsubnets
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - network.openshift.io
+  resources:
+  - netnamespaces
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - networking.k8s.io
+  resources:
+  - ingressclasses
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - node.k8s.io
+  resources:
+  - runtimeclasses
+  verbs:
+  - get
+  - list
+  - watch
+# Access to resources like oauthaccesstokens, oauthauthorizetokens, oauthclients etc
+- apiGroups:
+  - oauth.openshift.io
+  resources:
+  - '*'
+  verbs:
+  - get
+  - list
+  - watch
+# Access to resources like etcds, networks, openshiftapiservers, kubeapiservers etc
+- apiGroups:
+  - operator.openshift.io
+  resources:
+  - '*'
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - policy
+  resources:
+  - podsecuritypolicies
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - project.openshift.io
+  resources:
+  - projectrequests
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - clusterroles
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - clusterrolebindings
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - samples.operator.openshift.io
+  resources:
+  - configs
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - scheduling.k8s.io
+  resources:
+  - priorityclasses
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - security.openshift.io
+  resources:
+  - securitycontextconstraints
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - security.openshift.io
+  resources:
+  - rangeallocations
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - snapshot.storage.k8s.io
+  resources:
+  - volumesnapshotcontents
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - snapshot.storage.k8s.io
+  resources:
+  - volumesnapshotclasses
+  verbs:
+  - get
+  - list
+  - watch
+# Access to resources like csinodes, csidrivers, volumeattachments etc
+- apiGroups:
+  - storage.k8s.io
+  resources:
+  - volumesnapshotclasses
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - template.openshift.io
+  resources:
+  - brokertemplateinstances
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - user.openshift.io
+  resources:
+  - groups
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - user.openshift.io
+  resources:
+  - identities
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - user.openshift.io
+  resources:
+  - users
+  verbs:
+  - get
+  - list
+  - watch
+### End
