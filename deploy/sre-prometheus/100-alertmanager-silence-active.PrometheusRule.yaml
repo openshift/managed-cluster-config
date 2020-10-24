@@ -11,9 +11,11 @@ spec:
   - name: sre-alertmanager-silences-active
     rules:
     - alert: AlertmanagerSilencesActiveSRE
-      # Ignore alerting on silences if the cluster is upgrading, as the 
+      # Ignore alerting on silences if the cluster is upgrading, as the
       # upgrade process will generate a silence itself. (OSD-3426)
-      expr: count(alertmanager_silences{state="active"} == 1) > 0 unless (count(cluster_version{type="updating"}) > 0)
+      # Use an average as without instance,pod, so that all AM pods are taken
+      # into consideration
+      expr: avg without (instance,pod)(alertmanager_silences{state="active"}) > 0 unless (count(cluster_version{type="updating"}) > 0)
       for: 15m
       labels:
         severity: warning
