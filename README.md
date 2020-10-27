@@ -50,12 +50,13 @@ direct:
 
 ## SelectorSyncSet Deployment
 
-In the `config.yaml` file you define a top level property `selectorSyncSet`.  Within this configuration is supported for `matchLaels`, `matchExpressions`, `matchLabelsApplyMode`, and `resourceApplyMode`.
+In the `config.yaml` file you define a top level property `selectorSyncSet`.  Within this configuration is supported for `matchLaels`, `matchExpressions`, `matchLabelsApplyMode`, `resourceApplyMode`, and `applyBehavior`.
 
 * `matchLabels` (optional, default: `{}`) - adds additional `matchLabels` conditions to the SelectorSyncSet's `clusterDeploymentSelector`
 * `matchExpressions` (optional, default: `[]`) - adds `matchExpressions` conditions to the SelectoSyncSet's `clusterDeploymentSelector`
-* 1resourceApplyMode1 (optional, default: `"Sync"`) - sets the SelectorSyncSet's `resourceApplyMode`
+* `resourceApplyMode` (optional, default: `"Sync"`) - sets the SelectorSyncSet's `resourceApplyMode`
 * `matchLabelsApplyMode` (optional, default: `"AND"`) - When set as `"OR"` generates a separate SSS per `matchLabels` conditions. Default behavior creates a single SSS with all `matchLabels` conditions.  This is to tackle a situation where we want to apply configuration for one of many label conditions.
+* `applyBehavior` (optional, default: None, [see hive default](https://github.com/openshift/hive/blob/master/config/crds/hive.openshift.io_selectorsyncsets.yaml)) - sets the SelectorSyncSet's `applyBehavior`
 
 Example to apply a directory for any of a set of label conditions using Upsert:
 ```yaml
