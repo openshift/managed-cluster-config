@@ -1052,8 +1052,7 @@ objects:
         permissions:
         - allowFirst: true
           clusterRoleName: backplane-cssre-admins-project
-          namespacesAllowedRegex: .*
-          namespacesDeniedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$)
+          namespacesAllowedRegex: (^redhat-rhmi-.*|^redhat-rhoam-.*)
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-cssre
     - apiVersion: managed.openshift.io/v1alpha1
@@ -6585,6 +6584,31 @@ objects:
   metadata:
     name: hive-environment
     namespace: openshift-config
+- apiVersion: rbac.authorization.k8s.io/v1
+  kind: ClusterRole
+  metadata:
+    name: velero-schedule-admins-cluster
+  rules:
+  - apiGroups:
+    - velero.io
+    attributeRestrictions: null
+    resources:
+    - schedules
+    verbs:
+    - '*'
+- apiVersion: rbac.authorization.k8s.io/v1
+  kind: ClusterRoleBinding
+  metadata:
+    name: velero-schedule-admins-cluster
+  subjects:
+  - kind: Group
+    name: dedicated-admins
+  - kind: Group
+    name: system:serviceaccounts:dedicated-admin
+  roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: ClusterRole
+    name: velero-schedule-admins-cluster
 - apiVersion: velero.io/v1
   kind: Schedule
   metadata:
