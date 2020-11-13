@@ -43,7 +43,7 @@ metadata:
 spec:
   failedJobsHistoryLimit: 3
   successfulJobsHistoryLimit: 3
-  concurrencyPolicy: Forbid
+  concurrencyPolicy: Replace
   schedule: "*/30 * * * *"
   jobTemplate:
     spec:
@@ -58,6 +58,4 @@ spec:
             args:
             - /bin/bash
             - -c
-            - |
-              POD=$(oc -n openshift-monitoring get pods -l app.kubernetes.io/name=prometheus-operator -o name)
-              oc -n openshift-monitoring delete $POD
+            - oc -n openshift-monitoring delete pods -l app.kubernetes.io/name=prometheus-operator
