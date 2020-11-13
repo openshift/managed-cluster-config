@@ -1206,7 +1206,7 @@ objects:
       spec:
         failedJobsHistoryLimit: 3
         successfulJobsHistoryLimit: 3
-        concurrencyPolicy: Forbid
+        concurrencyPolicy: Replace
         schedule: '*/30 * * * *'
         jobTemplate:
           spec:
@@ -1221,10 +1221,7 @@ objects:
                   args:
                   - /bin/bash
                   - -c
-                  - 'POD=$(oc -n openshift-monitoring get pods -l app.kubernetes.io/name=prometheus-operator
-                    -o name)
-
-                    oc -n openshift-monitoring delete $POD'
+                  - oc -n openshift-monitoring delete pods -l app.kubernetes.io/name=prometheus-operator
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
