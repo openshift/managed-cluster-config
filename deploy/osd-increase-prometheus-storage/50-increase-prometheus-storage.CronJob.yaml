@@ -41,7 +41,7 @@ spec:
               NS=openshift-monitoring
               PVC_LIST=$(oc get pvc -n ${NS} -oname -lapp=prometheus)
               for pvc in ${PVC_LIST}; do
-                oc -n ${NS} patch ${pvc} -p '{"spec":{"resources":{"requests":{"storage":"100G"}}}}' --type merge
+                oc -n ${NS} patch ${pvc} -p '{"spec":{"resources":{"requests":{"storage":"100Gi"}}}}' --type merge
               done
               # print all of the pvc's to see if the size has changed
               oc get pvc -n ${NS} -oyaml -lapp=prometheus
