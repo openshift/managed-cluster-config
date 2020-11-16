@@ -3696,6 +3696,93 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: osd-increase-prometheus-storage
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: increase-prometheus-storage
+        namespace: openshift-monitoring
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: increase-prometheus-storage
+        namespace: openshift-monitoring
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: increase-prometheus-storage
+      subjects:
+      - kind: ServiceAccount
+        name: increase-prometheus-storage
+        namespace: openshift-monitoring
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: increase-prometheus-storage
+        namespace: openshift-monitoring
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - persistentvolumeclaims
+        verbs:
+        - get
+        - list
+        - patch
+        - update
+    - apiVersion: batch/v1beta1
+      kind: CronJob
+      metadata:
+        name: increase-prometheus-storage
+        namespace: openshift-monitoring
+      spec:
+        failedJobsHistoryLimit: 5
+        successfulJobsHistoryLimit: 3
+        concurrencyPolicy: Forbid
+        schedule: 11 * * * *
+        jobTemplate:
+          spec:
+            template:
+              spec:
+                serviceAccountName: increase-prometheus-storage
+                restartPolicy: Never
+                containers:
+                - name: sre-build-test
+                  image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+                  imagePullPolicy: Always
+                  env:
+                  - name: POD_NAME
+                    valueFrom:
+                      fieldRef:
+                        fieldPath: metadata.name
+                  - name: POD_NS
+                    valueFrom:
+                      fieldRef:
+                        fieldPath: metadata.namespace
+                  command:
+                  - /bin/bash
+                  - -c
+                  - "# ensure we fail if something exits non-zero\nset -o errexit\n\
+                    set -o nounset\nset -o pipefail\n\n# update all pvc's which are\
+                    \ handled by prometheus to new size\nNS=openshift-monitoring\n\
+                    PVC_LIST=$(oc get pvc -n ${NS} -oname -lapp=prometheus)\nfor pvc\
+                    \ in ${PVC_LIST}; do\n  oc -n ${NS} patch ${pvc} -p '{\"spec\"\
+                    :{\"resources\":{\"requests\":{\"storage\":\"100Gi\"}}}}' --type\
+                    \ merge\ndone\n# print all of the pvc's to see if the size has\
+                    \ changed\noc get pvc -n ${NS} -oyaml -lapp=prometheus\n"
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: osd-ingress
   spec:
     clusterDeploymentSelector:
