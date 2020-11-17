@@ -7,16 +7,23 @@ rules:
 - apiGroups:
   - ""
   resources:
+  - events
   - namespaces
+  - persistentvolumeclaims
+  - persistentvolumes
   - pods
   - pods/log
-  - events
-  - persistentvolumes
-  - persistentvolumeclaims
   verbs:
   - list
   - get
   - watch
+# allowing this for secrets allows working with the log-forwarding feature
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - "*"
 - apiGroups:
   - logging.openshift.io
   resources:
