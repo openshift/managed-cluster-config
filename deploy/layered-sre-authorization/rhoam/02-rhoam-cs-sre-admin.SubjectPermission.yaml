@@ -1,0 +1,16 @@
+apiVersion: managed.openshift.io/v1alpha1
+kind: SubjectPermission
+metadata:
+  name: rhoam-cs-sre-admin
+  namespace: openshift-rbac-permissions
+spec:
+  clusterPermissions:
+  - dedicated-admins-cluster
+  - layered-cs-sre-admin-cluster
+  permissions:
+  - allowFirst: true
+    clusterRoleName: rhoam-cs-sre-admin-project
+    namespacesAllowedRegex: (^redhat-rhoam$|^redhat-rhoam-.*)
+    namespacesDeniedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^redhat$|^redhat-.*|^default$)
+  subjectKind: Group
+  subjectName: rhoam-cs-sre-admins  
