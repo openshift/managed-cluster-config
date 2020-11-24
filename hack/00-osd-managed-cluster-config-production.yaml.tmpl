@@ -6570,6 +6570,12 @@ objects:
         - customresourcedefinitions
         verbs:
         - delete
+      - apiGroups:
+        - batch/v1beta1
+        resources:
+        - cronjob
+        verbs:
+        - delete
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRoleBinding
       metadata:
@@ -6661,6 +6667,31 @@ objects:
                   - -c
                   - oc delete customresourcedefinition.apiextensions.k8s.io/machinedisruptionbudgets.healthchecking.openshift.io
                     customresourcedefinition.apiextensions.k8s.io/machinehealthchecks.healthchecking.openshift.io
+                    --ignore-not-found
+    - apiVersion: batch/v1beta1
+      kind: CronJob
+      metadata:
+        name: cronjob-pruner
+        namespace: openshift-sre-pruning
+      spec:
+        failedJobsHistoryLimit: 5
+        successfulJobsHistoryLimit: 3
+        concurrencyPolicy: Replace
+        schedule: 0 */1 * * *
+        jobTemplate:
+          spec:
+            template:
+              spec:
+                serviceAccountName: sre-pruner-sa
+                restartPolicy: Never
+                containers:
+                - name: alert-pruner
+                  image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+                  imagePullPolicy: Always
+                  args:
+                  - /bin/bash
+                  - -c
+                  - oc delete cronjob.batch/increase-prometheus-storage --namespace=openshift-monitoring
                     --ignore-not-found
     - apiVersion: batch/v1beta1
       kind: CronJob
