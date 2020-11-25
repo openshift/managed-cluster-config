@@ -40,7 +40,10 @@ def get_all_yaml_files(path):
 def get_all_yaml_obj(file_paths):
     yaml_objs = []
     for file in file_paths:
-        objects = get_yaml_all(file)
+        raw_objects = get_yaml_all(file)
+        # remove None results (happens if a yaml has '---' at the end)
+        objects = [o for o in raw_objects if o] 
+
         for obj in objects:
             yaml_objs.append(obj)
     return yaml_objs
