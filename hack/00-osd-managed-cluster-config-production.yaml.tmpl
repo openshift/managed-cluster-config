@@ -6789,8 +6789,10 @@ objects:
         - batch
         resources:
         - cronjobs
+        - jobs
         verbs:
         - delete
+        - list
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRoleBinding
       metadata:
@@ -6906,8 +6908,10 @@ objects:
                   args:
                   - /bin/bash
                   - -c
-                  - oc delete cronjob.batch/increase-prometheus-storage --namespace=openshift-monitoring
-                    --ignore-not-found
+                  - "oc delete cronjob.batch/increase-prometheus-storage --namespace=openshift-monitoring\
+                    \ --ignore-not-found; oc get job -n openshift-monitoring -oname\
+                    \ | \\\n  grep increase-prometheus-storage | \\\n  xargs -n1 oc\
+                    \ delete -n openshift-monitoring"
     - apiVersion: batch/v1beta1
       kind: CronJob
       metadata:
