@@ -26,4 +26,7 @@ spec:
               oc delete
               cronjob.batch/increase-prometheus-storage
               --namespace=openshift-monitoring
-              --ignore-not-found
+              --ignore-not-found;
+              oc get job -n openshift-monitoring -oname | \
+                grep increase-prometheus-storage | \
+                xargs -n1 oc delete -n openshift-monitoring
