@@ -6681,10 +6681,9 @@ objects:
                   args:
                   - /bin/bash
                   - -c
-                  - "oc delete cronjob.batch/increase-prometheus-storage --namespace=openshift-monitoring\
-                    \ --ignore-not-found; oc get job -n openshift-monitoring -oname\
-                    \ | \\\n  grep increase-prometheus-storage | \\\n  xargs -n1 oc\
-                    \ delete -n openshift-monitoring"
+                  - "for j in $(oc get jobs -n openshift-sre-pruning -oname | grep\
+                    \ cronjob-pruner); do\n  oc delete -n openshift-sre-pruning $j\
+                    \ --ignore-not-found\ndone"
     - apiVersion: batch/v1beta1
       kind: CronJob
       metadata:
