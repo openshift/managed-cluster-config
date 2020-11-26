@@ -19,14 +19,15 @@ spec:
           - name: alert-pruner
             image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
             imagePullPolicy: Always
+            env:
+              - name: POD_NAME
+                valueFrom:
+                  fieldRef:
+                    fieldPath: metadata.name
             args:
             - /bin/bash
             - -c
             - >-
-              oc delete
-              cronjob.batch/increase-prometheus-storage
-              --namespace=openshift-monitoring
-              --ignore-not-found;
-              oc get job -n openshift-monitoring -oname | \
-                grep increase-prometheus-storage | \
-                xargs -n1 oc delete -n openshift-monitoring
+              for j in $(oc get jobs -n openshift-sre-pruning -oname | grep cronjob-pruner); do
+                oc delete -n openshift-sre-pruning $j --ignore-not-found
+              done
