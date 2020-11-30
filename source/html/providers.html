@@ -27,16 +27,18 @@
               <h1 class="pf-c-title pf-m-3xl">Log in with&hellip;</h1>
               <ul>
                 {{ range $provider := .Providers }}
-                  <li class="idp">
-                    <a href="{{$provider.URL}}" class="pf-c-button pf-m-secondary pf-m-block" title="Log in with {{$provider.Name}}">{{$provider.Name}}</a>
-                  </li>
+                  {{ if ne $provider.Name "kube:admin" }}
+                    <li class="idp">
+                      <a href="{{$provider.URL}}" class="pf-c-button pf-m-secondary pf-m-block" title="Log in with {{$provider.Name}}">{{$provider.Name}}</a>
+                    </li>
+                  {{ end }}
                 {{ end }}
               </ul>
             {{ end }}
           </div>
         </main>
         <footer class="pf-c-login__footer">
-          
+
         </footer>
       </div>
     </div>
