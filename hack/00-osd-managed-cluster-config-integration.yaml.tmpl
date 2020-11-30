@@ -1932,7 +1932,7 @@ objects:
     clusterDeploymentSelector:
       matchLabels:
         api.openshift.com/managed: 'true'
-        api.openshift.com/addon-rhoam-operator: 'true'
+        api.openshift.com/addon-managed-api-service: 'true'
     resourceApplyMode: Sync
     resources:
     - apiVersion: rbac.authorization.k8s.io/v1
@@ -6190,28 +6190,6 @@ objects:
       kind: PrometheusRule
       metadata:
         labels:
-          prometheus: layered-sre-cluster-admins
-          role: alert-rules
-        name: layered-sre-cluster-admins
-        namespace: openshift-monitoring
-      spec:
-        groups:
-        - name: layered-sre-cluster-admins
-          rules:
-          - alert: ElevatingClusterAdminLayeredSRE
-            expr: openshift_group_user_account{group="layered-sre-cluster-admins"}
-              == 1
-            for: 130m
-            labels:
-              severity: warning
-              namespace: redhat-layered
-            annotations:
-              message: Layered SRE "{{ $labels.user }}" elevated to layered cluster-admin({{
-                $labels.group }}) more than 2 hours.
-    - apiVersion: monitoring.coreos.com/v1
-      kind: PrometheusRule
-      metadata:
-        labels:
           prometheus: sre-managed-upgrade-operator-alerts
           role: alert-rules
         name: sre-managed-upgrade-operator-alerts
@@ -6370,6 +6348,50 @@ objects:
               message: The node {{ $labels.node }} has been unscedulable for more
                 than an hour.
               link: https://github.com/openshift/ops-sop/blob/master/v3/alerts/openshift_node_not_schedulable.asciidoc
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
+          prometheus: rhmi-sre-cluster-admins
+          role: alert-rules
+        name: rhmi-sre-cluster-admins
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: rhmi-sre-cluster-admins
+          rules:
+          - alert: ElevatingClusterAdminRHMISRE
+            expr: openshift_group_user_account{group="layered-sre-cluster-admins"}
+              == 1
+            for: 130m
+            labels:
+              severity: warning
+              namespace: redhat-rhmi
+            annotations:
+              message: RHMI SRE "{{ $labels.user }}" elevated to cluster-admin({{
+                $labels.group }}) more than 2 hours.
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
+          prometheus: rhoam-sre-cluster-admins
+          role: alert-rules
+        name: rhoam-sre-cluster-admins
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: rhoam-sre-cluster-admins
+          rules:
+          - alert: ElevatingClusterAdminRHOAMSRE
+            expr: openshift_group_user_account{group="rhoam-sre-cluster-admins"} ==
+              1
+            for: 130m
+            labels:
+              severity: warning
+              namespace: redhat-rhoam
+            annotations:
+              message: RHOAM SRE "{{ $labels.user }}" elevated to cluster-admin({{
+                $labels.group }}) more than 2 hours.
     - apiVersion: monitoring.coreos.com/v1
       kind: PrometheusRule
       metadata:
