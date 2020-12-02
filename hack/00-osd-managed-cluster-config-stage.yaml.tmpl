@@ -1467,7 +1467,7 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: layered-sre-authorization-rhmi-addon-rhmi-operator
+    name: layered-sre-authorization-addon-rhmi-operator
   spec:
     clusterDeploymentSelector:
       matchLabels:
@@ -1475,6 +1475,44 @@ objects:
         api.openshift.com/addon-rhmi-operator: 'true'
     resourceApplyMode: Sync
     resources:
+    - apiVersion: user.openshift.io/v1
+      kind: Group
+      metadata:
+        name: layered-cs-sre-admins
+      users: ${{CS_SRE_USERS}}
+    - aggregationRule:
+        clusterRoleSelectors:
+        - matchExpressions:
+          - key: managed.openshift.io/aggregate-to-layered-cs-sre-admins
+            operator: In
+            values:
+            - cluster
+        - matchExpressions:
+          - key: managed.openshift.io/aggregate-to-dedicated-admins
+            operator: In
+            values:
+            - cluster
+      apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: layered-cs-sre-admin-cluster
+      rules: []
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: layered-cs-sre-admins
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: layered-cs-sre-admins-cluster
+      subjects:
+      - kind: Group
+        name: layered-cs-sre-admins
+    - apiVersion: user.openshift.io/v1
+      kind: Group
+      metadata:
+        name: layered-sre-cluster-admins
+      users: []
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRoleBinding
       metadata:
@@ -1486,15 +1524,155 @@ objects:
       subjects:
       - kind: Group
         name: layered-sre-cluster-admins
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: layered-sre-authorization-addon-rhmi-operator-internal
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/addon-rhmi-operator-internal: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: user.openshift.io/v1
+      kind: Group
+      metadata:
+        name: layered-cs-sre-admins
+      users: ${{CS_SRE_USERS}}
+    - aggregationRule:
+        clusterRoleSelectors:
+        - matchExpressions:
+          - key: managed.openshift.io/aggregate-to-layered-cs-sre-admins
+            operator: In
+            values:
+            - cluster
+        - matchExpressions:
+          - key: managed.openshift.io/aggregate-to-dedicated-admins
+            operator: In
+            values:
+            - cluster
+      apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: layered-cs-sre-admin-cluster
+      rules: []
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: layered-cs-sre-admins
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: layered-cs-sre-admins-cluster
+      subjects:
+      - kind: Group
+        name: layered-cs-sre-admins
     - apiVersion: user.openshift.io/v1
       kind: Group
       metadata:
         name: layered-sre-cluster-admins
       users: []
     - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: layered-sre-cluster-admins
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: cluster-admin
+      subjects:
+      - kind: Group
+        name: layered-sre-cluster-admins
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: layered-sre-authorization-addon-managed-api-service
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/addon-managed-api-service: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: user.openshift.io/v1
+      kind: Group
+      metadata:
+        name: layered-cs-sre-admins
+      users: ${{CS_SRE_USERS}}
+    - aggregationRule:
+        clusterRoleSelectors:
+        - matchExpressions:
+          - key: managed.openshift.io/aggregate-to-layered-cs-sre-admins
+            operator: In
+            values:
+            - cluster
+        - matchExpressions:
+          - key: managed.openshift.io/aggregate-to-dedicated-admins
+            operator: In
+            values:
+            - cluster
+      apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
         name: layered-cs-sre-admin-cluster
+      rules: []
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: layered-cs-sre-admins
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: layered-cs-sre-admins-cluster
+      subjects:
+      - kind: Group
+        name: layered-cs-sre-admins
+    - apiVersion: user.openshift.io/v1
+      kind: Group
+      metadata:
+        name: layered-sre-cluster-admins
+      users: []
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: layered-sre-cluster-admins
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: cluster-admin
+      subjects:
+      - kind: Group
+        name: layered-sre-cluster-admins
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: layered-sre-authorization-rhmi-addon-rhmi-operator
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/addon-rhmi-operator: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: layered-cs-sre-admin-cluster-aggregate
+        labels:
+          managed.openshift.io/aggregate-to-layered-cs-sre-admins: cluster
       rules:
       - apiGroups:
         - config.openshift.io
@@ -1669,20 +1847,12 @@ objects:
         verbs:
         - list
         - get
-    - apiVersion: user.openshift.io/v1
-      kind: Group
-      metadata:
-        name: layered-cs-sre-admins
-      users: ${{CS_SRE_USERS}}
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
         name: layered-cs-sre-admin
         namespace: openshift-rbac-permissions
       spec:
-        clusterPermissions:
-        - dedicated-admins-cluster
-        - layered-cs-sre-admin-cluster
         permissions:
         - allowFirst: true
           clusterRoleName: layered-cs-sre-admin-project
@@ -1706,25 +1876,11 @@ objects:
     resourceApplyMode: Sync
     resources:
     - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRoleBinding
-      metadata:
-        name: layered-sre-cluster-admins
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: ClusterRole
-        name: cluster-admin
-      subjects:
-      - kind: Group
-        name: layered-sre-cluster-admins
-    - apiVersion: user.openshift.io/v1
-      kind: Group
-      metadata:
-        name: layered-sre-cluster-admins
-      users: []
-    - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: layered-cs-sre-admin-cluster
+        name: layered-cs-sre-admin-cluster-aggregate
+        labels:
+          managed.openshift.io/aggregate-to-layered-cs-sre-admins: cluster
       rules:
       - apiGroups:
         - config.openshift.io
@@ -1899,20 +2055,12 @@ objects:
         verbs:
         - list
         - get
-    - apiVersion: user.openshift.io/v1
-      kind: Group
-      metadata:
-        name: layered-cs-sre-admins
-      users: ${{CS_SRE_USERS}}
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
         name: layered-cs-sre-admin
         namespace: openshift-rbac-permissions
       spec:
-        clusterPermissions:
-        - dedicated-admins-cluster
-        - layered-cs-sre-admin-cluster
         permissions:
         - allowFirst: true
           clusterRoleName: layered-cs-sre-admin-project
@@ -1936,25 +2084,11 @@ objects:
     resourceApplyMode: Sync
     resources:
     - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRoleBinding
-      metadata:
-        name: rhoam-sre-cluster-admins
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: ClusterRole
-        name: cluster-admin
-      subjects:
-      - kind: Group
-        name: rhoam-sre-cluster-admins
-    - apiVersion: user.openshift.io/v1
-      kind: Group
-      metadata:
-        name: rhoam-sre-cluster-admins
-      users: []
-    - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: rhoam-cs-sre-admin-cluster
+        name: rhoam-cs-sre-admin-aggregate-cluster
+        labels:
+          managed.openshift.io/aggregate-to-layered-cs-sre-admins: cluster
       rules:
       - apiGroups:
         - config.openshift.io
@@ -2115,26 +2249,18 @@ objects:
         verbs:
         - list
         - get
-    - apiVersion: user.openshift.io/v1
-      kind: Group
-      metadata:
-        name: rhoam-cs-sre-admins
-      users: ${{CS_SRE_USERS}}
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
         name: rhoam-cs-sre-admin
         namespace: openshift-rbac-permissions
       spec:
-        clusterPermissions:
-        - dedicated-admins-cluster
-        - layered-cs-sre-admin-cluster
         permissions:
         - allowFirst: true
           clusterRoleName: rhoam-cs-sre-admin-project
           namespacesAllowedRegex: (^redhat-rhoam$|^redhat-rhoam-.*)
         subjectKind: Group
-        subjectName: rhoam-cs-sre-admins
+        subjectName: layered-cs-sre-admins
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
