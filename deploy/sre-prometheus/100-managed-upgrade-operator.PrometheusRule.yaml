@@ -70,16 +70,6 @@ spec:
       annotations:
         summary: "Nodes upgrade timeout for {{ $labels.version }}"
         description: "nodes upgrade for {{ $labels.version }} cannot be finished after the silence expired"
-    - alert: UpgradeWindowBreachedSRE
-      # Get alert if the upgrade window breached
-      expr: upgradeoperator_upgrade_window_breached > 0
-      for: 5m
-      labels:
-        severity: critical
-        namespace: openshift-monitoring
-      annotations:
-        summary: "Cluster upgrade window breached"
-        description: "A cluster has not commenced upgrading during its scheduled upgrade window."
     - alert: UpgradeNodeDrainFailedSRE
       # Get alert if the node drain takes too long during the upgrade
       expr: upgradeoperator_node_drain_timeout > 0
