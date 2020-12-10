@@ -61,7 +61,7 @@ spec:
             - /bin/bash
             - -c
             - |
-              for object in clusterrole/elasticsearch-metrics clusterrole/elasticsearch-proxy clusterrolebinding/elaticsearch-metrics clusterrolebinding/elasticsearch-proxy; do
+              for object in clusterrole/elasticsearch-metrics clusterrole/elasticsearch-proxy clusterrolebinding/elasticsearch-metrics clusterrolebinding/elasticsearch-proxy; do
                 if [[ $(oc get $object --ignore-not-found -o jsonpath='{.metadata.ownerReferences[0].name}') == "elasticsearch" ]]; then
                   oc patch $object --type=json -p '[{"op":"remove","path":"/metadata/ownerReferences"}]'
                 fi
