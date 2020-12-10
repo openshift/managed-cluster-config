@@ -1,12 +1,13 @@
 apiVersion: managed.openshift.io/v1alpha1
 kind: SubjectPermission
 metadata:
-  name: backplane-rhoam-cs-sre-admin
+  name: backplane-rhmi-cssre-admins
   namespace: openshift-rbac-permissions
 spec:
   permissions:
   - allowFirst: true
-    clusterRoleName: backplane-rhoam-cs-sre-admin-project
-    namespacesAllowedRegex: (^redhat-rhoam$|^redhat-rhoam-.*)
+    clusterRoleName: backplane-rhmi-cssre-admins-project
+    namespacesAllowedRegex: .*
+    namespacesDeniedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$)
   subjectKind: Group
   subjectName: system:serviceaccounts:openshift-backplane-cssre
