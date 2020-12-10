@@ -1256,10 +1256,7 @@ objects:
         - elasticsearch-metrics
         - elasticsearch-proxy
         verbs:
-        - get
-        - list
-        - patch
-        - update
+        - '*'
     - kind: ClusterRoleBinding
       apiVersion: rbac.authorization.k8s.io/v1
       metadata:
@@ -1296,7 +1293,7 @@ objects:
                   - /bin/bash
                   - -c
                   - "for object in clusterrole/elasticsearch-metrics clusterrole/elasticsearch-proxy\
-                    \ clusterrolebinding/elaticsearch-metrics clusterrolebinding/elasticsearch-proxy;\
+                    \ clusterrolebinding/elasticsearch-metrics clusterrolebinding/elasticsearch-proxy;\
                     \ do\n  if [[ $(oc get $object --ignore-not-found -o jsonpath='{.metadata.ownerReferences[0].name}')\
                     \ == \"elasticsearch\" ]]; then\n    oc patch $object --type=json\
                     \ -p '[{\"op\":\"remove\",\"path\":\"/metadata/ownerReferences\"\
