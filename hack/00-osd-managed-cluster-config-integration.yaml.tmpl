@@ -1313,6 +1313,53 @@ objects:
         api.openshift.com/managed: 'true'
       matchExpressions:
       - key: hive.openshift.io/version-major-minor
+        operator: NotIn
+        values:
+        - '4.6'
+        - '4.7'
+        - '4.8'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: cluster-monitoring-config
+        namespace: openshift-monitoring
+      data:
+        config.yaml: "prometheusK8s:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
+          \ \"\"\n  tolerations: \n    - effect: NoSchedule\n      key: node-role.kubernetes.io/infra\n\
+          \      operator: Exists\n  retention: 15d\n  volumeClaimTemplate:\n    metadata:\n\
+          \      name: prometheus-data\n    spec:\n      resources:\n        requests:\n\
+          \          storage: 100Gi\nalertmanagerMain:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
+          \ \"\"\n  tolerations: \n    - effect: NoSchedule\n      key: node-role.kubernetes.io/infra\n\
+          \      operator: Exists\n  volumeClaimTemplate:\n    metadata:\n      name:\
+          \ alertmanager-data\n    spec:\n      resources:\n        requests:\n  \
+          \        storage: 10Gi\ntelemeterClient:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
+          \ \"\"\n  tolerations: \n    - effect: NoSchedule\n      key: node-role.kubernetes.io/infra\n\
+          \      operator: Exists\n  telemeterServerURL: ${TELEMETER_SERVER_URL}\n\
+          prometheusOperator:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
+          \ \"\"\n  tolerations: \n    - effect: NoSchedule\n      key: node-role.kubernetes.io/infra\n\
+          \      operator: Exists\ngrafana:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
+          \ \"\"\n  tolerations: \n    - effect: NoSchedule\n      key: node-role.kubernetes.io/infra\n\
+          \      operator: Exists\nk8sPrometheusAdapter:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
+          \ \"\"\n  tolerations: \n    - effect: NoSchedule\n      key: node-role.kubernetes.io/infra\n\
+          \      operator: Exists\nkubeStateMetrics:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
+          \ \"\"\n  tolerations: \n    - effect: NoSchedule\n      key: node-role.kubernetes.io/infra\n\
+          \      operator: Exists\n"
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: cluster-monitoring-config-uwm
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/version-major-minor
         operator: In
         values:
         - '4.6'
