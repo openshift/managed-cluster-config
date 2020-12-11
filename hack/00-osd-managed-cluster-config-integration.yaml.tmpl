@@ -4768,6 +4768,129 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: osd-serviceaccounts
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+    resourceApplyMode: Upsert
+    resources:
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: cloud-ingress-operator
+        namespace: openshift-cloud-ingress-operator
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: custom-domains-operator
+        namespace: openshift-custom-domains-operator
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: managed-upgrade-operator
+        namespace: openshift-managed-upgrade-operator
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: configure-alertmanager-operator
+        namespace: openshift-monitoring
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: rbac-permissions-operator
+        namespace: openshift-rbac-permissions
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: splunk-forwarder-operator
+        namespace: openshift-splunk-forwarder-operator
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: managed-velero-operator
+        namespace: openshift-velero
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-serviceaccounts-cronjob
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: osd-delete-ownerrefs-serviceaccounts
+        namespace: openshift-backplane-srep
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: osd-delete-ownerrefs-serviceaccounts
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - serviceaccounts
+        verbs:
+        - '*'
+    - kind: ClusterRoleBinding
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        name: osd-delete-ownerrefs-serviceaccounts
+      subjects:
+      - kind: ServiceAccount
+        name: osd-delete-ownerrefs-serviceaccounts
+        namespace: openshift-backplane-srep
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: osd-delete-ownerrefs-serviceaccounts
+    - apiVersion: batch/v1beta1
+      kind: CronJob
+      metadata:
+        name: osd-delete-ownerrefs-serviceaccounts
+        namespace: openshift-backplane-srep
+      spec:
+        failedJobsHistoryLimit: 3
+        successfulJobsHistoryLimit: 3
+        concurrencyPolicy: Replace
+        schedule: 7,37 * * * *
+        jobTemplate:
+          spec:
+            template:
+              spec:
+                serviceAccountName: osd-delete-ownerrefs-serviceaccounts
+                restartPolicy: Never
+                containers:
+                - name: osd-delete-ownerrefs-serviceaccounts
+                  image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+                  imagePullPolicy: Always
+                  args:
+                  - /bin/bash
+                  - -c
+                  - "for NS in openshift-cloud-ingress-operator openshift-custom-domains-operator\
+                    \ openshift-managed-upgrade-operator openshift-monitoring openshift-rbac-permissions\
+                    \ openshift-splunk-forwarder-operator openshift-velero;\ndo\n\
+                    \  for SA in $(oc -n $NS get serviceaccount --ignore-not-found\
+                    \ -o jsonpath='{.items[?(@.metadata.ownerReferences[0].kind==\"\
+                    ClusterServiceVersion\")].metadata.name}');\n  do\n    echo \"\
+                    Removing owner ref from SA '$SA' in NS '$NS'\"\n    oc -n $NS\
+                    \ patch serviceaccount $SA --type=json -p '[{\"op\":\"remove\"\
+                    ,\"path\":\"/metadata/ownerReferences\"}]'\n  done\ndone\n"
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: osd-strimzi-operator
   spec:
     clusterDeploymentSelector:
