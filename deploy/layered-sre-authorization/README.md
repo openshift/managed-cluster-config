@@ -28,6 +28,6 @@ To avoid duplication, The following files are symlinked from the corresponding f
 | rhmi/config.yaml  |  ../../backplane/cssre/rhmi/config.yaml |
 |  rhoam/01-rhoam-cssre-admins-aggregate-cluster.ClusterRole.yaml | ../../backplane/cssre/rhoam/01-rhoam-cssre-admins-aggregate-cluster.ClusterRole.yaml  |
 | rhoam/01-rhoam-cssre-admins-project.ClusterRole.yaml | ../../backplane/cssre/rhoam/01-rhoam-cssre-admins-project.ClusterRole.yaml  |
-| rhoam/config.yaml  |  config.yaml |
+| rhoam/config.yaml  |  ../../backplane/cssre/rhoam/config.yaml |
 
 Please edit the source files if you would like to make changes to any of the files listed above
