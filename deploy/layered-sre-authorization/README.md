@@ -21,13 +21,10 @@ To avoid duplication, The following files are symlinked from the corresponding f
 
 | File  | Relative Symbolic Link   |
 |---    |                       ---|
-| config.yaml  |  ../backplane/cssre/config.yaml |
 | 01-layered-cssre-admins-cluster.ClusterRole.yaml  | ../backplane/cssre/01-cssre-admins-cluster.ClusterRole.yaml  |
 | rhmi/01-rhmi-cssre-admins-aggregate-cluster.ClusterRole.yaml | ../../backplane/cssre/rhmi/01-rhmi-cssre-admins-aggregate-cluster.ClusterRole.yaml  |
 |  rhmi/ 01-rhmi-cssre-admins-project.ClusterRole.yaml| ../../backplane/cssre/rhmi/01-rhmi-cssre-admins-project.ClusterRole.yaml  |
-| rhmi/config.yaml  |  ../../backplane/cssre/rhmi/config.yaml |
 |  rhoam/01-rhoam-cssre-admins-aggregate-cluster.ClusterRole.yaml | ../../backplane/cssre/rhoam/01-rhoam-cssre-admins-aggregate-cluster.ClusterRole.yaml  |
 | rhoam/01-rhoam-cssre-admins-project.ClusterRole.yaml | ../../backplane/cssre/rhoam/01-rhoam-cssre-admins-project.ClusterRole.yaml  |
-| rhoam/config.yaml  |  ../../backplane/cssre/rhoam/config.yaml |
 
 Please edit the source files if you would like to make changes to any of the files listed above
