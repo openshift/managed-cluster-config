@@ -6629,6 +6629,28 @@ objects:
       kind: PrometheusRule
       metadata:
         labels:
+          prometheus: sre-haproxy-reload-fail
+          role: alert-rules
+        name: sre-haproxy-reload-fail
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-haproxy-reload-fails
+          rules:
+          - alert: HAProxyReloadFailSRE
+            expr: increase(template_router_reload_fails[5m])
+            for: 10m
+            labels:
+              severity: critical
+              namespace: '{{ $labels.namespace }}'
+            annotations:
+              message: HAProxy reloads have failed on {{ $labels.pod }}. Router is
+                not respecting recently created or modified routes
+              link: https://github.com/openshift/ops-sop/blob/master/v4/alerts/HAProxyReloadFailSRE.md
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
           prometheus: sre-managed-upgrade-operator-alerts
           role: alert-rules
         name: sre-managed-upgrade-operator-alerts
