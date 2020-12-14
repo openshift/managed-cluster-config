@@ -8,6 +8,7 @@
 # 4.7: https://bugzilla.redhat.com/show_bug.cgi?id=1892338 (in qa)
 # 4.6 backport: https://bugzilla.redhat.com/show_bug.cgi?id=1896167  (assigned)
 # 4.5 backport: https://bugzilla.redhat.com/show_bug.cgi?id=1896168 (assigned)
+# TODO: remove HAProxyReloadFailSRE after HAProxyReloadFailSRE is available (Bugzilla-1892338)
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
@@ -21,7 +22,7 @@ spec:
   - name: sre-haproxy-reload-fails
     rules:
     - alert: HAProxyReloadFailSRE
-      expr: increase(template_router_reload_fails[5m])
+      expr: increase(template_router_reload_fails[5m]) > 0
       for: 10m
       labels:
         severity: critical
