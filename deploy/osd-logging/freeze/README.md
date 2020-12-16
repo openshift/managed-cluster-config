@@ -22,6 +22,12 @@ popd
 
 And look for any output lines starting with "FAILURE".
 
+## No Subscriptions
+
+1. no logging subscriptions
+2. freeze=true does nothing
+3. freeze=false does nothing
+
 ## Start Automatic
 
 1. customer installs logging subscriptions, automatic
