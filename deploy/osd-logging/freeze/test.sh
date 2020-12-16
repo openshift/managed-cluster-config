@@ -133,6 +133,28 @@ function test_execute_unfreeze {
     oc -n openshift-logging logs $(oc -n openshift-logging get pod -l job-name=osd-logging-unfreeze-test -o name) -f
 }
 
+function test0 {
+    echo "=========== No Subscriptions ============"
+
+    echo -n "INFO: Testing freeze.."
+    test_execute_freeze 1>&2
+    echo "done"
+
+    test_verify "freeze" "" ""
+
+    echo -n "INFO: Testing unfreeze.."
+    test_execute_unfreeze 1>&2
+    echo "done"
+
+    test_verify "unfreeze" "" ""
+
+    echo -n "INFO: Cleaning up after test..."
+    test_clean >/dev/null 2>/dev/null
+    echo "done"
+
+    echo "========================================"
+}
+
 function test1 {
     echo "=========== Start Automatic ============"
 
@@ -224,6 +246,8 @@ function test3 {
 echo -n "INFO: Cleaning up prior test state..."
 test_clean >/dev/null 2>/dev/null
 echo "done"
+
+test0
 
 test1
 
