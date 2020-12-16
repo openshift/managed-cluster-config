@@ -1,0 +1,119 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: osd-logging-freeze
+  namespace: openshift-logging
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: osd-logging-freeze
+  namespace: openshift-logging
+rules:
+- apiGroups:
+  - operators.coreos.com
+  resources:
+  - subscriptions
+  verbs:
+  - patch
+  - get
+  - list
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - get
+  - list
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: osd-logging-freeze
+  namespace: openshift-logging
+subjects:
+- kind: ServiceAccount
+  name: osd-logging-freeze
+  namespace: openshift-logging
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: osd-logging-freeze
+  namespace: openshift-logging
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: osd-logging-freeze
+  namespace: openshift-logging
+spec:
+  failedJobsHistoryLimit: 3
+  successfulJobsHistoryLimit: 3
+  concurrencyPolicy: Replace
+  schedule: "14,44 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: osd-logging-freeze
+          restartPolicy: Never
+          containers:
+          - name: osd-logging-freeze
+            image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+            imagePullPolicy: Always
+            args:
+            - /bin/bash
+            - -c
+            - |
+              # Script run as an idempotent cronjob to manage freezing upgrades of logging operators.
+              # RISK customer could set the approval after this is applied.  we'll use an annotation to indicate we tried to manage it so we don't fight customer CICD.
+
+              NS=openshift-logging
+              CM=osd-logging-freeze
+
+              ANNOTATION_NAME=$(oc -n $NS get cm $CM -o jsonpath='{.data.annotation}')
+              FREEZE=$(oc -n $NS get cm $CM -o jsonpath='{.data.freeze}')
+
+              for SUBSCRIPTION in $(oc -n $NS get subscriptions -o name);
+              do
+                OLD_APPROVAL=$(oc -n $NS get $SUBSCRIPTION -o jsonpath="{.metadata.annotations.$ANNOTATION_NAME}")
+                CURR_APPROVAL=$(oc -n $NS get $SUBSCRIPTION -o jsonpath={'.spec.installPlanApproval'})
+
+                if [ "$FREEZE" == "true" ] && [ "$OLD_APPROVAL" == "" ] && [ "$CURR_APPROVAL" == "Automatic" ];
+                then
+                  # subscription is automatic, we are in a freeze, and haven't tried to make it manual yet
+
+                  echo "Moving $SUBSCRIPTION in $NS to installPlanApproval='Manual'"
+                  
+                  # also add annotation first for undoing this later
+                  oc -n $NS annotate $SUBSCRIPTION $ANNOTATION_NAME=$CURR_APPROVAL
+                  
+                  oc -n $NS patch $SUBSCRIPTION --type='json' -p="[{'op': 'replace', 'path': '/spec/installPlanApproval', 'value': 'Manual'}]"
+                
+                elif [ "$FREEZE" != "true" ] && [ "$OLD_APPROVAL" != "" ];
+                then
+                  # old approval annotation is set and we are NOT in a freeze
+
+                  # only patch if the old value != current value
+                  # (remember, customer could have changed the value!)
+                  if [ "$OLD_APPROVAL" != "$CURR_APPROVAL" ];
+                  then
+                    echo "Moving $SUBSCRIPTION in $NS to installPlanApproval='$OLD_APPROVAL'"
+                    oc -n $NS patch $SUBSCRIPTION --type='json' -p="[{'op': 'replace', 'path': '/spec/installPlanApproval', 'value': '$OLD_APPROVAL'}]"
+
+                    # get the current value again so we can be sure it was actually set
+                    CURR_APPROVAL=$(oc -n $NS get $SUBSCRIPTION -o jsonpath={'.spec.installPlanApproval'})
+                  fi
+
+                  if [ "$OLD_APPROVAL" == "$CURR_APPROVAL" ];
+                  then
+                    # approval was updated, remove the annotation
+                    oc -n $NS annotate $SUBSCRIPTION ${ANNOTATION_NAME}-
+                  else
+                    echo "FAILURE: old approval value is not current approval value, leaving annotation"
+                    # TODO should this exit with a non-zero value?
+                  fi
+
+                fi
+              done
