@@ -5462,18 +5462,13 @@ objects:
     clusterDeploymentSelector:
       matchLabels:
         api.openshift.com/managed: 'true'
-    resourceApplyMode: Upsert
+    resourceApplyMode: Sync
     resources:
     - apiVersion: v1
       kind: ServiceAccount
       metadata:
         name: cloud-ingress-operator
         namespace: openshift-cloud-ingress-operator
-    - apiVersion: v1
-      kind: ServiceAccount
-      metadata:
-        name: custom-domains-operator
-        namespace: openshift-custom-domains-operator
     - apiVersion: v1
       kind: ServiceAccount
       metadata:
@@ -5503,6 +5498,26 @@ objects:
       kind: Namespace
       metadata:
         name: openshift-backplane-srep
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-serviceaccounts-aws
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        hive.openshift.io/cluster-platform: aws
+    resourceApplyMode: Upsert
+    resources:
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: custom-domains-operator
+        namespace: openshift-custom-domains-operator
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
