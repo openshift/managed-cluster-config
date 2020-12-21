@@ -18,14 +18,11 @@ spec:
               requiredDuringSchedulingIgnoredDuringExecution:
                 nodeSelectorTerms:
                 - matchExpressions:
-                  - key: "node-role.kubernetes.io"
-                    operator: In
-                    values:
-                      - infra
+                  - key: "node-role.kubernetes.io/infra"
+                    operator: Exists
           tolerations:
-          - operator: Equal
-            key: node-role.kubernetes.io
-            value: infra
+          - operator: Exists
+            key: node-role.kubernetes.io/infra
             effect: NoSchedule
           serviceAccountName: sre-build-test
           restartPolicy: Never
