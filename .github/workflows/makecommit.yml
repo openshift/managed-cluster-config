@@ -1,21 +1,21 @@
 name: Make Generate
 on: push
 
-jobs: 
+jobs:
   run:
     name: Make Generate Template
     runs-on: ubuntu-latest
-    steps: 
+    steps:
     - name: Checkout repo
       uses: actions/checkout@v2
 
     - name: Make
-      run: make clean generate-hive-templates
+      run: make
 
     - name: Commit changes
       uses: EndBug/add-and-commit@v4
       with:
-        message: "on push: make generate-hive-templates"
+        message: "on push: make"
         add: "hack/00-osd-managed-cluster-config*.yaml.tmpl"
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

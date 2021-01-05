@@ -24,7 +24,7 @@ endif
 CONTAINER_ENGINE?=docker
 
 .PHONY: default
-default: clean generate-hive-templates
+default: generate-oauth-templates generate-hive-templates
 
 .PHONY: generate-oauth-templates
 generate-oauth-templates:
@@ -38,16 +38,8 @@ generate-oauth-templates:
 .PHONY: generate-hive-templates
 generate-hive-templates: generate-oauth-templates
 	if [ -z ${IN_CONTAINER} ]; then \
-			$(CONTAINER_ENGINE) run --rm -v `pwd -P`:`pwd -P`:z quay.io/app-sre/python:3.4.2 /bin/sh -c "cd `pwd -P`; pip install oyaml; ${GEN_TEMPLATE}"; \
+		$(CONTAINER_ENGINE) pull quay.io/app-sre/python:3 && $(CONTAINER_ENGINE) tag quay.io/app-sre/python:3 python:3 || true; \
+		$(CONTAINER_ENGINE) run --rm -v `pwd -P`:`pwd -P`:z python:3 /bin/sh -c "cd `pwd -P`; pip install oyaml; ${GEN_TEMPLATE}"; \
 	else \
 		${GEN_TEMPLATE}; \
 	fi
-
-.PHONY: clean
-clean:
-	rm -rf ${SELECTOR_SYNC_SET_DESTINATION}
-
-.PHONY: git-commit
-git-commit:
-	git add ${SELECTOR_SYNC_SET_DESTINATION}
-	git commit -m "Updated selectorsynceset template added"
