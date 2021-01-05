@@ -24,7 +24,7 @@ endif
 CONTAINER_ENGINE?=docker
 
 .PHONY: default
-default: clean generate-hive-templates
+default: generate-oauth-templates generate-hive-templates
 
 .PHONY: generate-oauth-templates
 generate-oauth-templates:
@@ -43,12 +43,3 @@ generate-hive-templates: generate-oauth-templates
 	else \
 		${GEN_TEMPLATE}; \
 	fi
-
-.PHONY: clean
-clean:
-	rm -rf ${SELECTOR_SYNC_SET_DESTINATION}
-
-.PHONY: git-commit
-git-commit:
-	git add ${SELECTOR_SYNC_SET_DESTINATION}
-	git commit -m "Updated selectorsynceset template added"
