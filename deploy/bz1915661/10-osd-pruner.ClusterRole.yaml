@@ -1,0 +1,41 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: osd-pruner-bz1915661
+rules:
+  - apiGroups:
+    - batch
+    resources:
+    - jobs
+    verbs:
+    - get
+    - list
+  - apiGroups:
+    - batch
+    resources:
+    - cronjobs
+    verbs:
+    - get
+    - list
+  - apiGroups:
+    - apps
+    - extensions
+    resources:
+    - statefulsets
+    verbs:
+    - get
+    - list
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: osd-pruner-bz1915661
+subjects:
+- kind: ServiceAccount
+  name: pruner
+  namespace: openshift-image-registry
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: osd-pruner-bz1915661
