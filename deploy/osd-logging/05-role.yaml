@@ -1,3 +1,4 @@
+---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
@@ -65,4 +66,51 @@ rules:
   - list
   - patch
   - update
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: dedicated-admins-openshift-operators-redhat
+  namespace: openshift-operators-redhat
+rules:
+- apiGroups:
+  - operators.coreos.com
+  resources:
+  - installplans
+  verbs:
+  - update
+- apiGroups:
+  - logging.openshift.io
+  resources:
+  - elasticsearch
+  - kibana
+  verbs:
+  - create
+  - delete
+  - deletecollection
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - operators.coreos.com
+  resources:
+  - subscriptions
+  - clusterserviceversions
+  verbs:
+  - "*"
+- apiGroups:
+  - ""
+  resources:
+  - events
+  - namespaces
+  - persistentvolumeclaims
+  - persistentvolumes
+  - pods
+  - pods/log
+  verbs:
+  - list
+  - get
   - watch
