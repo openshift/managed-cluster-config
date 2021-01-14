@@ -39,5 +39,27 @@ do
     diff sorted-before-${env}.yaml.tmpl sorted-after-${env}.yaml.tmpl || (echo "Running 'make' caused changes.  Run 'make' and commit changes to the PR to try again." && exit 1)
 done
 
+#DEBUG
+ls -la
+git remote -v
+git branch
+git diff origin/master
+
+# check if roleref.name has been modified in a clusterrolebinding as a part of this change
+for fl in $( git diff --name-only --diff-filter=M  origin/master deploy )
+do
+  if cat ${fl} | grep -i "ClusterRoleBinding" | grep -q "kind:" ; then
+    echo Yes ${fl}
+    ROLE_NAME_MASTER=$(git show origin/master:${fl} | python -c 'import json, sys, yaml ; y=yaml.safe_load(sys.stdin.read()) ; print(json.dumps(y))' | jq -r '.roleRef.name' )
+    echo "master role name $ROLE_NAME_MASTER"
+    ROLE_NAME_PR=$(cat ${fl} | python -c 'import json, sys, yaml ; y=yaml.safe_load(sys.stdin.read()) ; print(json.dumps(y))' | jq -r '.roleRef.name' )
+    echo "PR role name ${ROLE_NAME_PR}"
+    if [ ${ROLE_NAME_MASTER} != ${ROLE_NAME_PR} ]; then
+      echo "roleref modification is not supported. Please create a new ClusterRoleBinding instead."
+      echo "exit 1"
+    fi
+  fi
+done
+
 # script needs to pass for app-sre workflow 
 exit 0
