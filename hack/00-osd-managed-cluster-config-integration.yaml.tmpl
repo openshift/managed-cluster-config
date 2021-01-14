@@ -610,6 +610,25 @@ objects:
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
+    name: osd-observatorium-credentials-secret
+  spec:
+    clusterDeploymentSelector:
+      matchExpressions:
+      - key: api.openshift.com/managed
+        operator: In
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    secretMappings:
+    - sourceRef:
+        name: observatorium-credentials
+        namespace: observatorium-tenant
+      targetRef:
+        name: observatorium-credentials
+        namespace: openshift-monitoring
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
     labels:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
@@ -5864,6 +5883,114 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: dedicated-admins-openshift-strimzi
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-token-refresher
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/environment
+        operator: NotIn
+        values:
+        - production
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        labels:
+          app.kubernetes.io/component: authentication-proxy
+          app.kubernetes.io/name: token-refresher
+          app.kubernetes.io/version: master-2020-12-04-5504078
+        name: token-refresher
+        namespace: openshift-monitoring
+      spec:
+        replicas: 1
+        selector:
+          matchLabels:
+            app.kubernetes.io/component: authentication-proxy
+            app.kubernetes.io/name: token-refresher
+        template:
+          metadata:
+            labels:
+              app.kubernetes.io/component: authentication-proxy
+              app.kubernetes.io/name: token-refresher
+              app.kubernetes.io/version: master-2020-12-04-5504078
+          spec:
+            containers:
+            - args:
+              - --oidc.audience=observatorium-telemeter
+              - --oidc.client-id string=\$\(CLIENT_ID\)
+              - --oidc.client-secret=\$\(CLIENT_SECRET\)
+              - --oidc.issuer-url=\$\(ISSUER_URL\)
+              - --url=\$\(RECEIVER_URL\)
+              env:
+              - name: CLIENT_ID
+                valueFrom:
+                  secretKeyRef:
+                    name: observatorium-credentials
+                    key: client-id
+              - name: CLIENT_SECRET
+                valueFrom:
+                  secretKeyRef:
+                    name: observatorium-credentials
+                    key: client-secret
+              - name: RECEIVER_URL
+                valueFrom:
+                  secretKeyRef:
+                    name: observatorium-credentials
+                    key: receiver-url
+              - name: ISSUER_URL
+                value: https://sso.redhat.com/auth/realms/redhat-external
+              image: quay.io/observatorium/token-refresher:master-2020-12-04-5504078
+              name: token-refresher
+              ports:
+              - containerPort: 8080
+                name: http
+    - apiVersion: v1
+      kind: Service
+      metadata:
+        labels:
+          app.kubernetes.io/component: authentication-proxy
+          app.kubernetes.io/name: token-refresher
+          app.kubernetes.io/version: master-2020-12-04-5504078
+        name: token-refresher
+        namespace: openshift-monitoring
+      spec:
+        ports:
+        - name: http
+          port: 80
+          targetPort: 8080
+        selector:
+          app.kubernetes.io/component: authentication-proxy
+          app.kubernetes.io/name: token-refresher
+    - apiVersion: networking.k8s.io/v1
+      kind: NetworkPolicy
+      metadata:
+        labels:
+          app.kubernetes.io/component: authentication-proxy
+          app.kubernetes.io/name: token-refresher
+        name: token-refresher
+        namespace: openshift-monitoring
+      spec:
+        podSelector:
+          matchLabels:
+            app.kubernetes.io/component: authentication-proxy
+            app.kubernetes.io/name: token-refresher
+        policyTypes:
+        - Ingress
+        ingress:
+        - from:
+          - podSelector:
+              matchLabels:
+                prometheus: k8s
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
