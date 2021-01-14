@@ -5012,6 +5012,14 @@ objects:
           managed.openshift.io/storage-pv-quota-exempt: 'true'
           openshift.io/cluster-logging: 'true'
           openshift.io/cluster-monitoring: 'true'
+    - apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: openshift-operators-redhat
+        annotations:
+          openshift.io/node-selector: ''
+        labels:
+          openshift.io/cluster-monitoring: 'true'
     - apiVersion: operators.coreos.com/v1
       kind: OperatorGroup
       metadata:
@@ -5025,6 +5033,13 @@ objects:
             creationTimestamp: null
         targetNamespaces:
         - openshift-logging
+    - apiVersion: operators.coreos.com/v1
+      kind: OperatorGroup
+      metadata:
+        annotations:
+          olm.providedAPIs: Kibana.v1.logging.openshift.io
+        name: elasticsearch
+        namespace: openshift-operators-redhat
     - apiVersion: v1
       data:
         actions.yaml: '# ---
@@ -5196,6 +5211,52 @@ objects:
         - update
         - watch
     - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: dedicated-admins-openshift-operators-redhat
+        namespace: openshift-operators-redhat
+      rules:
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - installplans
+        verbs:
+        - update
+      - apiGroups:
+        - logging.openshift.io
+        resources:
+        - elasticsearch
+        - kibana
+        verbs:
+        - create
+        - delete
+        - deletecollection
+        - get
+        - list
+        - patch
+        - update
+        - watch
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - subscriptions
+        - clusterserviceversions
+        verbs:
+        - '*'
+      - apiGroups:
+        - ''
+        resources:
+        - events
+        - namespaces
+        - persistentvolumeclaims
+        - persistentvolumes
+        - pods
+        - pods/log
+        verbs:
+        - list
+        - get
+        - watch
+    - apiVersion: rbac.authorization.k8s.io/v1
       kind: RoleBinding
       metadata:
         name: dedicated-admins-openshift-logging
@@ -5211,6 +5272,22 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: dedicated-admins-openshift-logging
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: dedicated-admins-openshift-operators-redhat
+        namespace: openshift-operators-redhat
+      subjects:
+      - apiGroup: rbac.authorization.k8s.io
+        kind: Group
+        name: dedicated-admins
+      - apiGroup: rbac.authorization.k8s.io
+        kind: Group
+        name: system:serviceaccounts:dedicated-admin
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: dedicated-admins-openshif-operators-redhat
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
