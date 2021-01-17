@@ -47,7 +47,7 @@ do
     ROLEREF_PR=$(cat ${fl} | python -c 'import json, sys, yaml ; y=yaml.safe_load(sys.stdin.read()) ; print(json.dumps(y))' | jq -r '.roleRef' )
     # see if roleref has changed compared to master
     if ! jq -ne --argjson a "$ROLEREF_MASTER" --argjson b "$ROLEREF_PR" '$a == $b'; then
-      echo "roleref modification is not supported. Please create a new ClusterRoleBinding/RoleBinding instead."
+      echo "roleref modification is not supported. Please create a new ClusterRoleBinding/RoleBinding instead. See https://github.com/openshift/ops-sop/blob/master/v4/knowledge_base/mcc-modify-roleref.md"
       exit 1
     fi
   fi
