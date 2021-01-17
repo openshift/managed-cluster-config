@@ -39,5 +39,19 @@ do
     diff sorted-before-${env}.yaml.tmpl sorted-after-${env}.yaml.tmpl || (echo "Running 'make' caused changes.  Run 'make' and commit changes to the PR to try again." && exit 1)
 done
 
+# check if roleref has been modified in a clusterrolebinding/rolebinding as a part of this change
+for fl in $( git diff --name-only --diff-filter=M  origin/master deploy )
+do
+  if cat ${fl} | grep -i "RoleBinding" | grep -q "kind:" ; then
+    ROLEREF_MASTER=$(git show origin/master:${fl} | python -c 'import json, sys, yaml ; y=yaml.safe_load(sys.stdin.read()) ; print(json.dumps(y))' | jq -r '.roleRef' )
+    ROLEREF_PR=$(cat ${fl} | python -c 'import json, sys, yaml ; y=yaml.safe_load(sys.stdin.read()) ; print(json.dumps(y))' | jq -r '.roleRef' )
+    # see if roleref has changed compared to master
+    if ! jq -ne --argjson a "$ROLEREF_MASTER" --argjson b "$ROLEREF_PR" '$a == $b'; then
+      echo "roleref modification is not supported. Please create a new ClusterRoleBinding/RoleBinding instead. See https://github.com/openshift/ops-sop/blob/master/v4/knowledge_base/mcc-modify-roleref.md"
+      exit 1
+    fi
+  fi
+done
+
 # script needs to pass for app-sre workflow 
 exit 0
