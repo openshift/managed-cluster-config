@@ -6,6 +6,10 @@ This repo contains static configuration specific to a "managed" OpenShift Dedica
 
 To add a new SelectorSyncSet, add your yaml manifest to the `deploy` dir, then run the `make` command.
 
+Alternatively you can enable GitHub Actions on your fork and `make` will be ran automatically. Additionally,
+the action will create a new commit with the generated files.
+
+
 # Building
 
 ## Dependencies
