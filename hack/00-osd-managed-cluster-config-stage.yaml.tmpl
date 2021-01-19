@@ -5589,9 +5589,9 @@ objects:
         - name: sre-telemeter-client
           rules:
           - alert: MetricsClientSendFailingSRE
-            expr: 100 * sum by (job) (rate(metricsclient_request_send{status_code="5xx"}[5m]))
+            expr: 100 * sum by (job) (rate(metricsclient_request_send{status_code!="200"}[5m]))
               / sum by (job) (rate(metricsclient_request_send[5m])) > 14.4 * 10 and
-              100 * sum by (job) (rate(metricsclient_request_send{status_code="5xx"}[1h]))
+              100 * sum by (job) (rate(metricsclient_request_send{status_code!="200"}[1h]))
               / sum by (job) (rate(metricsclient_request_send[1h])) > 14.4 * 10
             for: 5m
             labels:
