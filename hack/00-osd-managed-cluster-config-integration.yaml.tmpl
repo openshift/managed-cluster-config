@@ -3838,6 +3838,81 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: osd-cluster-ready
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/environment
+        operator: In
+        values:
+        - staging
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: osd-cluster-ready
+        namespace: openshift-monitoring
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: osd-cluster-ready
+        namespace: openshift-monitoring
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - get
+        - list
+      - apiGroups:
+        - ''
+        resources:
+        - pods/exec
+        verbs:
+        - create
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: osd-cluster-ready
+        namespace: openshift-monitoring
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: osd-cluster-ready
+      subjects:
+      - kind: ServiceAccount
+        name: osd-cluster-ready
+        namespace: openshift-monitoring
+    - apiVersion: batch/v1
+      kind: Job
+      metadata:
+        name: osd-cluster-ready
+        namespace: openshift-monitoring
+      spec:
+        activeDeadlineSeconds: 3900
+        backoffLimit: 0
+        template:
+          metadata:
+            name: osd-cluster-ready
+          spec:
+            containers:
+            - name: osd-cluster-ready
+              image: quay.io/kbater/openshift-cli
+              command:
+              - /root/main
+            restartPolicy: Never
+            serviceAccountName: osd-cluster-ready
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: osd-codeready-workspaces
   spec:
     clusterDeploymentSelector:
@@ -7362,8 +7437,10 @@ objects:
         - name: sre-alertmanager-silences-active
           rules:
           - alert: AlertmanagerSilencesActiveSRE
-            expr: avg without (instance,pod)(alertmanager_silences{state="active"})
-              > 0 unless (count(cluster_version{type="updating"}) > 0)
+            expr: avg without (instance,pod,endpoint,job,service,state,container)(alertmanager_silences{state="active"})
+              > 0 unless (count(cluster_version{type="updating"}) > 0 or sum by(namespace)
+              (time() - kube_pod_created{namespace="openshift-monitoring",pod=~"osd-cluster-ready.*"}
+              < 4500))
             for: 15m
             labels:
               severity: warning
