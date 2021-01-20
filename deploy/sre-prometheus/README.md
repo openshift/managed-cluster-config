@@ -51,7 +51,7 @@ Multiplying the result, by 24 gets us the hours until budget burned
 30d	* 24 = 720h
 15d	* 24 = 360h
 3d	* 24 = 72h
-2,083d	* 24 = 50h
+2.083d	* 24 = 50h
 ```
 
 We know:
