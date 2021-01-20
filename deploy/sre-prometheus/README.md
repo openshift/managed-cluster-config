@@ -42,7 +42,7 @@ Practice:
 30d / 1		= 30d
 30d / 2		= 15d
 30d / 10	= 3d
-30d / 14,4	= 2,083~d
+30d / 14,4	= 2.083~d
 ```
 
 Multiplying the result, by 24 gets us the hours until budget burned
