@@ -610,3 +610,23 @@ objects:
       mappingMethod: claim
       name: OpenShift_SRE
       type: Google
+# SelectorSyncSet for observatorium token refresher credentials Secret
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    name: osd-observatorium-credentials-secret
+  spec:
+    clusterDeploymentSelector:
+      matchExpressions:
+      - key: api.openshift.com/managed
+        operator: In
+        values:
+        - "true"
+    resourceApplyMode: Sync
+    secretMappings:
+    - sourceRef:
+        name: observatorium-credentials
+        namespace: observatorium-tenant
+      targetRef:
+        name: observatorium-credentials
+        namespace: openshift-monitoring
