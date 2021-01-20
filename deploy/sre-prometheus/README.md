@@ -74,10 +74,10 @@ Calculating the burn rate
 ```
 x = burn rate
 
-30d / x	= 2,083
-30 	= 2,083 * X
-30 / 2,0833333333 = x
-**14,4 = x**
+30d / x	= 2.083
+30 	= 2.083 * X
+30 / 2.0833333333 = x
+**14.4 = x**
 ```
 
 Now we have the burn rate we can start creating our alert.
