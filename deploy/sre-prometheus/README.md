@@ -66,7 +66,7 @@ Assuming 2% in 1h
 ```
 100 / 2 = 50
 1h * 50 = 50h
-50 / 24 = 2,083~d
+50 / 24 = 2.083~d
 ```
 
 Calculating the burn rate
