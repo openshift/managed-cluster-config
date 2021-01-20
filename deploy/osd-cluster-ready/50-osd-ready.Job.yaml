@@ -1,0 +1,18 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+    name: osd-cluster-ready
+    namespace: openshift-monitoring
+spec:
+    activeDeadlineSeconds: 3900 # 1 hour for the silence, 5 minutes for processing/data completion
+    backoffLimit: 0
+    template:
+        metadata:
+            name: osd-cluster-ready
+        spec:
+            containers:
+            - name: osd-cluster-ready
+              image: quay.io/kbater/openshift-cli
+              command: ["/root/main"]
+            restartPolicy: Never
+            serviceAccountName: osd-cluster-ready

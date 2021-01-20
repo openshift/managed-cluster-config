@@ -15,7 +15,7 @@ spec:
       # upgrade process will generate a silence itself. (OSD-3426)
       # Use an average as without instance,pod, so that all AM pods are taken
       # into consideration
-      expr: avg without (instance,pod)(alertmanager_silences{state="active"}) > 0 unless (count(cluster_version{type="updating"}) > 0)
+      expr: avg without (instance,pod,endpoint,job,service,state,container)(alertmanager_silences{state="active"}) > 0 unless (count(cluster_version{type="updating"}) > 0 or sum by(namespace) (time() - kube_pod_created{namespace="openshift-monitoring",pod=~"osd-cluster-ready.*"} < 4500))
       for: 15m
       labels:
         severity: warning
