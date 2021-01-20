@@ -101,9 +101,9 @@ Bringing it home:
 Now add the conditions together to cover both the short and long windows that allow for fast recovery and fast alerting
 
 ```
-rate(metricsclient_request_send{status_code="5xx"}[5m]) / rate(metricsclient_request_send[5m]) > 14.4 * 0.1
+rate(metricsclient_request_send{status_code!="200"}[5m]) / rate(metricsclient_request_send[5m]) > 14.4 * 0.1
 and
-rate(metricsclient_request_send{status_code="5xx"}[1h]) / rate(metricsclient_request_send[1h]) > 14.4 * 0.1
+rate(metricsclient_request_send{status_code!="200"}[1h]) / rate(metricsclient_request_send[1h]) > 14.4 * 0.1
 ```
 
 You may notice how the results differ in the equasion, we need to compare the same on both sides;
