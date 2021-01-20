@@ -92,7 +92,7 @@ This rate needs to be bigger than the burn rate we allow ourselves in order to f
 
 However we don't have 100% of all requests we can burn but only a subset based on our SLO.
 Assuming an SLO of 90% success that leaves for an error budget of 10%
-`14.4 * 0,1`
+`14.4 * 0.1`
 
 Bringing it home:
 
