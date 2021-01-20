@@ -98,7 +98,7 @@ Bringing it home:
 
 `rate(metricsclient_request_send{status_code!="200"}[5m]) / rate(metricsclient_request_send[5m]) > 14.4 * 0,1` 
 
-Now add the condition tht we have to have this condition for 5m AND 1h
+Now add the conditions together to cover both the short and long windows that allow for fast recovery and fast alerting
 
 ```
 rate(metricsclient_request_send{status_code="5xx"}[5m]) / rate(metricsclient_request_send[5m]) > 14.4 * 0.1
