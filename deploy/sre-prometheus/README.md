@@ -83,7 +83,7 @@ x = burn rate
 Now we have the burn rate we can start creating our alert.
 We care about the error rate. `requests with errors / all requests` gives us that.
 For example 20 errors of 100 requests total:
-`20 / 100 = 0,2` so a 20% error rate.
+`20 / 100 = 0.2` so a 20% error rate.
 Adding the 5m time window in a real world metric:
 `rate(metricsclient_request_send{status_code="5xx"}[5m]) / rate(metricsclient_request_send[5m])`
 
