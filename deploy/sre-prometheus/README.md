@@ -85,7 +85,7 @@ We care about the error rate. `requests with errors / all requests` gives us tha
 For example 20 errors of 100 requests total:
 `20 / 100 = 0.2` so a 20% error rate.
 Adding the 5m time window in a real world metric:
-`rate(metricsclient_request_send{status_code="5xx"}[5m]) / rate(metricsclient_request_send[5m])`
+`rate(metricsclient_request_send{status_code!="200"}[5m]) / rate(metricsclient_request_send[5m])`
 
 This rate needs to be bigger than the burn rate we allow ourselves in order to fire:
 `> 14.4`
