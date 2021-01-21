@@ -709,6 +709,18 @@ objects:
         name: backplane-cssre-admins-cluster
       rules: []
     - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: backplane-cssre
+        namespace: openshift-monitoring
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods/portforward
+        verbs:
+        - create
+    - apiVersion: rbac.authorization.k8s.io/v1
       aggregationRule:
         clusterRoleSelectors:
         - matchExpressions:
@@ -736,6 +748,20 @@ objects:
       subjects:
       - kind: Group
         name: system:serviceaccounts:openshift-backplane-cssre
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: backplane-cssre
+        namespace: openshift-monitoring
+      subjects:
+      - apiGroup: rbac.authorization.k8s.io
+        kind: Group
+        name: system:serviceaccounts:openshift-backplane-cssre
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: backplane-cssre
+        namespace: openshift-monitoring
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRoleBinding
       metadata:
@@ -784,6 +810,18 @@ objects:
         name: backplane-cssre-admins-cluster
       rules: []
     - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: backplane-cssre
+        namespace: openshift-monitoring
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods/portforward
+        verbs:
+        - create
+    - apiVersion: rbac.authorization.k8s.io/v1
       aggregationRule:
         clusterRoleSelectors:
         - matchExpressions:
@@ -811,6 +849,20 @@ objects:
       subjects:
       - kind: Group
         name: system:serviceaccounts:openshift-backplane-cssre
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: backplane-cssre
+        namespace: openshift-monitoring
+      subjects:
+      - apiGroup: rbac.authorization.k8s.io
+        kind: Group
+        name: system:serviceaccounts:openshift-backplane-cssre
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: backplane-cssre
+        namespace: openshift-monitoring
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRoleBinding
       metadata:
@@ -859,6 +911,18 @@ objects:
         name: backplane-cssre-admins-cluster
       rules: []
     - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: backplane-cssre
+        namespace: openshift-monitoring
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods/portforward
+        verbs:
+        - create
+    - apiVersion: rbac.authorization.k8s.io/v1
       aggregationRule:
         clusterRoleSelectors:
         - matchExpressions:
@@ -886,6 +950,20 @@ objects:
       subjects:
       - kind: Group
         name: system:serviceaccounts:openshift-backplane-cssre
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: backplane-cssre
+        namespace: openshift-monitoring
+      subjects:
+      - apiGroup: rbac.authorization.k8s.io
+        kind: Group
+        name: system:serviceaccounts:openshift-backplane-cssre
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: backplane-cssre
+        namespace: openshift-monitoring
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRoleBinding
       metadata:
@@ -1677,6 +1755,12 @@ objects:
         - ''
         resources:
         - pods/eviction
+        verbs:
+        - create
+      - apiGroups:
+        - ''
+        resources:
+        - pods/portforward
         verbs:
         - create
       - apiGroups:
