@@ -2075,6 +2075,27 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: bz1915081
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+    resourceApplyMode: Sync
+    patches:
+    - apiVersion: apps/v1
+      kind: DaemonSet
+      name: node-ca
+      namespace: openshift-image-registry
+      applyMode: AlwaysApply
+      patch: '{"spec":{"template":{"spec":{"tolerations":[{"operator":"Exists"}]}}}}'
+      patchType: merge
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: bz1915661
   spec:
     clusterDeploymentSelector:
