@@ -1,3 +1,9 @@
-deploymentMode: "Direct"
-direct:
-  environments: ["integration"]
+deploymentMode: "SelectorSyncSet"
+selectorSyncSet:
+  matchExpressions:
+  - key: environment
+    operator: In
+    values: ["integration"]
+  - key: ext-managed.openshift.io/hive-shard
+    operator: In
+    values: ["true"]

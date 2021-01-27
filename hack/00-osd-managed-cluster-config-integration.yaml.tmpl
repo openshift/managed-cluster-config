@@ -6220,6 +6220,37 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: osd-oauth-templates-ohss-2561
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: environment
+        operator: In
+        values:
+        - integration
+      - key: ext-managed.openshift.io/hive-shard
+        operator: In
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    patches:
+    - apiVersion: config.openshift.io/v1
+      applyMode: AlwaysApply
+      kind: OAuth
+      name: cluster
+      namespace: default
+      patch: '{"spec":{"tokenConfig":{"accessTokenMaxAgeSeconds":604800, "accessTokenInactivityTimeout":
+        "168h"}}}'
+      patchType: merge
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: osd-project-request-template
   spec:
     clusterDeploymentSelector:
@@ -9376,11 +9407,3 @@ objects:
   metadata:
     name: hive-environment
     namespace: openshift-config
-- apiVersion: config.openshift.io/v1
-  applyMode: AlwaysApply
-  kind: OAuth
-  name: cluster
-  namespace: default
-  patch: '{"spec":{"tokenConfig":{"accessTokenMaxAgeSeconds":604800, "accessTokenInactivityTimeout":
-    "168h"}}}'
-  patchType: merge
