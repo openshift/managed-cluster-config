@@ -10,9 +10,7 @@ If CD indicates it is in the fast or candidate channel we use the major.minor la
 
 On a minor upgrade (i.e. 4.5.z to 4.6.z) it is possible that hive will reset the channel before we get updated version information.  This is OK as the upgrade is already initiated or done and the channel is only used when assessing if an upgrade can be _started_.  Once the upgrade is complete the version is sent to telemter and ultimately is reflected in the ClusterDeployment.  This in-turn will trigger the appropriate patch from SSS created in the configuration here.
 
-NOTE that if OCP moves to a version agnostiic channel strategy that we do not need as many of these SSS and can patch just to the channel `candidate` or `fast`.
-
-NOTE we do not need to patch to `stable` channels, as this is the default for OCP.
+NOTE that if OCP moves to a version agnostic channel strategy that we do not need as many of these SSS and can patch just to the channel `candidate`, `fast`, or `stable`.
 
 
 # Use Cases
