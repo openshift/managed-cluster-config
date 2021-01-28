@@ -2075,6 +2075,27 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: bz1915081
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+    resourceApplyMode: Sync
+    patches:
+    - apiVersion: apps/v1
+      kind: DaemonSet
+      name: node-ca
+      namespace: openshift-image-registry
+      applyMode: AlwaysApply
+      patch: '{"spec":{"template":{"spec":{"tolerations":[{"operator":"Exists"}]}}}}'
+      patchType: merge
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: bz1915661
   spec:
     clusterDeploymentSelector:
@@ -2287,7 +2308,7 @@ objects:
           \ \"\"\n  tolerations: \n    - effect: NoSchedule\n      key: node-role.kubernetes.io/infra\n\
           \      operator: Exists\n# https://access.redhat.com/solutions/5685771\n\
           # https://bugzilla.redhat.com/show_bug.cgi?id=1906496\nthanosQuerier:\n\
-          \  resources:\n    limits:\n      cpu: 250m\n      memory: 2048Mi\n    requests:\n\
+          \  resources:\n    limits:\n      cpu: 500m\n      memory: 2048Mi\n    requests:\n\
           \      cpu: 5m\n      memory: 125Mi\n"
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
@@ -2337,7 +2358,7 @@ objects:
           \ \"\"\n  tolerations: \n    - effect: NoSchedule\n      key: node-role.kubernetes.io/infra\n\
           \      operator: Exists\n# https://access.redhat.com/solutions/5685771\n\
           # https://bugzilla.redhat.com/show_bug.cgi?id=1906496\nthanosQuerier:\n\
-          \  resources:\n    limits:\n      cpu: 250m\n      memory: 2048Mi\n    requests:\n\
+          \  resources:\n    limits:\n      cpu: 500m\n      memory: 2048Mi\n    requests:\n\
           \      cpu: 5m\n      memory: 125Mi\n"
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
@@ -3306,10 +3327,11 @@ objects:
           \    - CloudCredentialOperatorDown\nscale:\n  timeOut: 30\nupgradeWindow:\n\
           \  delayTrigger: 30\n  timeOut: 120\nnodeDrain:\n  timeOut: 45\n  expectedNodeDrainTime:\
           \ 8\nhealthCheck:\n  ignoredCriticals:\n  - DNSErrors05MinSRE\n  - MetricsClientSendFailingSRE\n\
-          \  - UpgradeNodeScalingFailedSRE\n  - UpgradeClusterCheckFailedSRE\nextDependencyAvailabilityChecks:\n\
-          \  http:\n    timeout: 10\n    urls:\n      - https://quay.io/health\n \
-          \     - ${OCM_BASE_URL}\nverification:\n  ignoredNamespaces:\n  - openshift-logging\n\
-          \  namespacePrefixesToCheck:\n  - openshift\n  - kube\n  - default\n"
+          \  - UpgradeNodeScalingFailedSRE\n  - UpgradeClusterCheckFailedSRE\n  -\
+          \ PrometheusRuleFailures\nextDependencyAvailabilityChecks:\n  http:\n  \
+          \  timeout: 10\n    urls:\n      - https://quay.io/health\n      - ${OCM_BASE_URL}\n\
+          verification:\n  ignoredNamespaces:\n  - openshift-logging\n  namespacePrefixesToCheck:\n\
+          \  - openshift\n  - kube\n  - default\n"
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -3944,6 +3966,451 @@ objects:
       - kind: ServiceAccount
         name: aqua-sa
         namespace: openshift-aqua
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-channel-patch-candidate-4.5
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.5'
+      - key: api.openshift.com/channel-group
+        operator: In
+        values:
+        - candidate
+    resourceApplyMode: Sync
+    patches:
+    - apiVersion: config.openshift.io/v1
+      kind: ClusterVersion
+      name: version
+      applyMode: AlwaysApply
+      patch: '{"spec":{"channel":"candidate-4.5"}}'
+      patchType: merge
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-channel-patch-candidate-4.6
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.6'
+      - key: api.openshift.com/channel-group
+        operator: In
+        values:
+        - candidate
+    resourceApplyMode: Sync
+    patches:
+    - apiVersion: config.openshift.io/v1
+      kind: ClusterVersion
+      name: version
+      applyMode: AlwaysApply
+      patch: '{"spec":{"channel":"candidate-4.6"}}'
+      patchType: merge
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-channel-patch-candidate-4.7
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.7'
+      - key: api.openshift.com/channel-group
+        operator: In
+        values:
+        - candidate
+    resourceApplyMode: Sync
+    patches:
+    - apiVersion: config.openshift.io/v1
+      kind: ClusterVersion
+      name: version
+      applyMode: AlwaysApply
+      patch: '{"spec":{"channel":"candidate-4.7"}}'
+      patchType: merge
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-channel-patch-candidate-4.8
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.8'
+      - key: api.openshift.com/channel-group
+        operator: In
+        values:
+        - candidate
+    resourceApplyMode: Sync
+    patches:
+    - apiVersion: config.openshift.io/v1
+      kind: ClusterVersion
+      name: version
+      applyMode: AlwaysApply
+      patch: '{"spec":{"channel":"candidate-4.8"}}'
+      patchType: merge
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-channel-patch-candidate-4.9
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.9'
+      - key: api.openshift.com/channel-group
+        operator: In
+        values:
+        - candidate
+    resourceApplyMode: Sync
+    patches:
+    - apiVersion: config.openshift.io/v1
+      kind: ClusterVersion
+      name: version
+      applyMode: AlwaysApply
+      patch: '{"spec":{"channel":"candidate-4.9"}}'
+      patchType: merge
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-channel-patch-fast-4.5
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.5'
+      - key: api.openshift.com/channel-group
+        operator: In
+        values:
+        - fast
+    resourceApplyMode: Sync
+    patches:
+    - apiVersion: config.openshift.io/v1
+      kind: ClusterVersion
+      name: version
+      applyMode: AlwaysApply
+      patch: '{"spec":{"channel":"fast-4.5"}}'
+      patchType: merge
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-channel-patch-fast-4.6
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.6'
+      - key: api.openshift.com/channel-group
+        operator: In
+        values:
+        - fast
+    resourceApplyMode: Sync
+    patches:
+    - apiVersion: config.openshift.io/v1
+      kind: ClusterVersion
+      name: version
+      applyMode: AlwaysApply
+      patch: '{"spec":{"channel":"fast-4.6"}}'
+      patchType: merge
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-channel-patch-fast-4.7
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.7'
+      - key: api.openshift.com/channel-group
+        operator: In
+        values:
+        - fast
+    resourceApplyMode: Sync
+    patches:
+    - apiVersion: config.openshift.io/v1
+      kind: ClusterVersion
+      name: version
+      applyMode: AlwaysApply
+      patch: '{"spec":{"channel":"fast-4.7"}}'
+      patchType: merge
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-channel-patch-fast-4.8
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.8'
+      - key: api.openshift.com/channel-group
+        operator: In
+        values:
+        - fast
+    resourceApplyMode: Sync
+    patches:
+    - apiVersion: config.openshift.io/v1
+      kind: ClusterVersion
+      name: version
+      applyMode: AlwaysApply
+      patch: '{"spec":{"channel":"fast-4.8"}}'
+      patchType: merge
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-channel-patch-fast-4.9
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.9'
+      - key: api.openshift.com/channel-group
+        operator: In
+        values:
+        - fast
+    resourceApplyMode: Sync
+    patches:
+    - apiVersion: config.openshift.io/v1
+      kind: ClusterVersion
+      name: version
+      applyMode: AlwaysApply
+      patch: '{"spec":{"channel":"fast-4.9"}}'
+      patchType: merge
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-channel-patch-stable-4.5
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.5'
+      - key: api.openshift.com/channel-group
+        operator: NotIn
+        values:
+        - nightly
+        - candidate
+        - fast
+    resourceApplyMode: Sync
+    patches:
+    - apiVersion: config.openshift.io/v1
+      kind: ClusterVersion
+      name: version
+      applyMode: AlwaysApply
+      patch: '{"spec":{"channel":"stable-4.5"}}'
+      patchType: merge
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-channel-patch-stable-4.6
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.6'
+      - key: api.openshift.com/channel-group
+        operator: NotIn
+        values:
+        - nightly
+        - candidate
+        - fast
+    resourceApplyMode: Sync
+    patches:
+    - apiVersion: config.openshift.io/v1
+      kind: ClusterVersion
+      name: version
+      applyMode: AlwaysApply
+      patch: '{"spec":{"channel":"stable-4.6"}}'
+      patchType: merge
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-channel-patch-stable-4.7
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.7'
+      - key: api.openshift.com/channel-group
+        operator: NotIn
+        values:
+        - nightly
+        - candidate
+        - fast
+    resourceApplyMode: Sync
+    patches:
+    - apiVersion: config.openshift.io/v1
+      kind: ClusterVersion
+      name: version
+      applyMode: AlwaysApply
+      patch: '{"spec":{"channel":"stable-4.7"}}'
+      patchType: merge
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-channel-patch-stable-4.8
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.8'
+      - key: api.openshift.com/channel-group
+        operator: NotIn
+        values:
+        - nightly
+        - candidate
+        - fast
+    resourceApplyMode: Sync
+    patches:
+    - apiVersion: config.openshift.io/v1
+      kind: ClusterVersion
+      name: version
+      applyMode: AlwaysApply
+      patch: '{"spec":{"channel":"stable-4.8"}}'
+      patchType: merge
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-channel-patch-stable-4.9
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.9'
+      - key: api.openshift.com/channel-group
+        operator: NotIn
+        values:
+        - nightly
+        - candidate
+        - fast
+    resourceApplyMode: Sync
+    patches:
+    - apiVersion: config.openshift.io/v1
+      kind: ClusterVersion
+      name: version
+      applyMode: AlwaysApply
+      patch: '{"spec":{"channel":"stable-4.9"}}'
+      patchType: merge
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -5768,6 +6235,37 @@ objects:
         creationTimestamp: null
         name: osd-oauth-templates-providers
         namespace: openshift-config
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-oauth-templates-ohss-2561
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: environment
+        operator: In
+        values:
+        - integration
+      - key: ext-managed.openshift.io/hive-shard
+        operator: In
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    patches:
+    - apiVersion: config.openshift.io/v1
+      applyMode: AlwaysApply
+      kind: OAuth
+      name: cluster
+      namespace: default
+      patch: '{"spec":{"tokenConfig":{"accessTokenMaxAgeSeconds":604800, "accessTokenInactivityTimeout":
+        "168h"}}}'
+      patchType: merge
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
