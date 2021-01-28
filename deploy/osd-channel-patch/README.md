@@ -10,9 +10,7 @@ If CD indicates it is in the fast or candidate channel we use the major.minor la
 
 On a minor upgrade (i.e. 4.5.z to 4.6.z) it is possible that hive will reset the channel before we get updated version information.  This is OK as the upgrade is already initiated or done and the channel is only used when assessing if an upgrade can be _started_.  Once the upgrade is complete the version is sent to telemter and ultimately is reflected in the ClusterDeployment.  This in-turn will trigger the appropriate patch from SSS created in the configuration here.
 
-NOTE that if OCP moves to a version agnostiic channel strategy that we do not need as many of these SSS and can patch just to the channel `candidate` or `fast`.
-
-NOTE we do not need to patch to `stable` channels, as this is the default for OCP.
+NOTE that if OCP moves to a version agnostic channel strategy that we do not need as many of these SSS and can patch just to the channel `candidate`, `fast`, or `stable`.
 
 
 # Use Cases
@@ -21,48 +19,85 @@ Because there are 2 systems that are managing the in-cluster channel I wanted to
 
 NOTE managed-upgrade-operator (MUO) is used in cluster to perform channel updates and initiate upgrade.
 
-**Assumptions**
+**Key Constraints**
 
 * OCM sets channel label on CD at provision time.
-* OCM sets channel label on CD whenever it's changed via OCM.
+* OCM does not set channel label on CD whenever it's changed via OCM.
+* MUO sets channel on scheduled upgrade.
 
 
-## Install stable, upgrade to stable
+## Install stable, z-stream upgrade to stable
 
 1. Install to stable channel.
-2. OCM set CD to stable.
-5. Hive sync stable-major.minor to cluster channel.
-4. Customer sets upgrade schedule.
-5. MUO sets channel to stable-major.minor. (noop)
-6. Upgrade started.
+3. Hive sync stable-major.minor to cluster channel.
+4. Customer sets upgrade schedule
+5. MUO sets channel to stable-major.minor
+6. Hive sync stable-major.minor to cluster channel.
+10. Upgrade started.
+11. Hive sync stable-major.minor to cluster channel.
+12. Upgrade completed.
+13. Telemeter updated with cluster version and channel.
+14. OCM updates CD with cluster version and channel group.
+15. Hive sync stable-major.minor to cluster channel.
 
 This path works.
+
+## Install stable, minor upgrade to stable
+
+1. Install to stable channel.
+3. Hive sync stable-major.minor to cluster channel.
+4. Customer sets upgrade schedule
+5. MUO sets channel to stable-major.minor**+1**
+6. Hive sync stable-major.minor to cluster channel.
+7. MUO or OCP fails to find upgrade edge.
+8. MUO retries upgrade.
+9. MUO sets channel to stable-major.minor**+1**
+10. Upgrade started.
+11. Hive sync stable-major.minor to cluster channel.
+12. Upgrade completed.
+13. Telemeter updated with cluster version and channel.
+14. OCM updates CD with cluster version and channel group.
+15. Hive sync stable-major.minor**+1** to cluster channel.
+
+This path works with a retry at worst case.
 
 ## Install stable, z-stream upgrade to candidate
 
 1. Install to stable channel.
-2. OCM set CD to candidate. (part of upgrade)
-3. Hive sync candidate-major.minor to cluster channel.
-4. Customer sets upgrade schedule.
-5. MUO sets channel to candidate-major.minor. (noop)
-6. Upgrade started.
+2. OCM set CD to stable. (part of provision)
+3. Hive sync stable-major.minor to cluster channel.
+4. Customer sets upgrade schedule
+5. MUO sets channel to candidate-major.minor
+6. Hive sync stable-major.minor to cluster channel.
+7. MUO or OCP fails to find upgrade edge.
+8. MUO retries upgrade.
+9. MUO sets channel to candidate-major.minor
+10. Upgrade started.
+11. Hive sync stable-major.minor to cluster channel.
+12. Upgrade completed.
+13. Telemeter updated with cluster version and channel.
+14. OCM updates CD with cluster version and channel group.
+15. Hive sync candidate-major.minor to cluster channel.
 
-This path works.
+This path works with a retry at worst case.
 
 ## Install stable, minor upgrade to candidate
 
-Worst case, hive syncs old channel in the middle of things.
-
 1. Install to stable channel.
-2. OCM set CD to candidate. (part of upgrade)
-3. Hive sync candidate-major.minor to cluster channel.
-4. Customer sets upgrade schedule
-5. MUO sets channel to candidate-major.minor**+1**
-7. Hive sync candidate-major.minor to cluster channel.
-8. MUO or OCP fails to find upgrade edge.
-9. MUO retries upgrade.
-10. MUO sets channel to candidate-major.minor**+1**
-11. Upgrade started.
+12. OCM set CD to stable. (part of provision)
+13. Hive sync stable-major.minor to cluster channel.
+14. Customer sets upgrade schedule
+15. MUO sets channel to candidate-major.minor**+1**
+16. Hive sync stable-major.minor to cluster channel.
+17. MUO or OCP fails to find upgrade edge.
+18. MUO retries upgrade.
+19. MUO sets channel to candidate-major.minor**+1**
+20. Upgrade started.
+21. Hive sync stable-major.minor to cluster channel.
+22. Upgrade completed.
+23. Telemeter updated with cluster version and channel.
+24. OCM updates CD with cluster version and channel group.
+25. Hive sync candidate-major.minor**+1** to cluster channel.
 
 This path works with a retry at worst case.
 
@@ -71,64 +106,74 @@ This path works with a retry at worst case.
 1. Install to stable channel.
 2. OCM set CD to candidate. (part of provisioning)
 3. Hive sync candidate-major.minor to cluster channel.
-4. Customer sets upgrade schedule.
-5. MUO sets channel to candidate-major.minor. (noop)
-6. Upgrade started.
+4. Customer sets upgrade schedule
+5. MUO sets channel to candidate-major.minor
+6. Hive sync candidate-major.minor to cluster channel.
+10. Upgrade started.
+11. Hive sync candidate-major.minor to cluster channel.
+12. Upgrade completed.
+13. Telemeter updated with cluster version and channel.
+14. OCM updates CD with cluster version and channel group.
+15. Hive sync candidate-major.minor to cluster channel.
 
 This path works.
 
-## Install stable, minor upgrade to candidate
-
-Worst case, hive syncs old channel in the middle of things.
+## Install candidate, minor upgrade to candidate
 
 1. Install to stable channel.
-2. OCM set CD to candidate. (prior to upgrade)
+2. OCM set CD to candidate. (part of provision)
 3. Hive sync candidate-major.minor to cluster channel.
 4. Customer sets upgrade schedule
 5. MUO sets channel to candidate-major.minor**+1**
 6. Hive sync candidate-major.minor to cluster channel.
 7. MUO or OCP fails to find upgrade edge.
 8. MUO retries upgrade.
-9.  MUO sets channel to candidate-major.minor**+1**
+9. MUO sets channel to candidate-major.minor**+1**
 10. Upgrade started.
+11. Hive sync candidate-major.minor to cluster channel.
+12. Upgrade completed.
+13. Telemeter updated with cluster version and channel.
+14. OCM updates CD with cluster version and channel group.
+15. Hive sync candidate-major.minor**+1** to cluster channel.
 
 This path works with a retry at worst case.
 
 ## Install candidate, z-stream upgrade to stable
 
-Worst case, hive syncs old channel in the middle of things.
-
 1. Install to stable channel.
 2. OCM set CD to candidate. (part of provision)
 3. Hive sync candidate-major.minor to cluster channel.
-4. OCM set CD to stable. (prior to upgrade)
-5. Hive sync stable-major.minor to cluster channel.
-6. Customer sets upgrade schedule
-7. Upgrade started.
+4. Customer sets upgrade schedule
+5. MUO sets channel to stable-major.minor
+6. Hive sync candidate-major.minor to cluster channel.
+7. MUO or OCP fails to find upgrade edge.
+8. MUO retries upgrade.
+9. MUO sets channel to stable-major.minor
+10. Upgrade started.
+11. Hive sync candidate-major.minor to cluster channel.
+12. Upgrade completed.
+13. Telemeter updated with cluster version and channel.
+14. OCM updates CD with cluster version and channel group.
+15. Hive sync stable-major.minor to cluster channel.
 
 This path works with a retry at worst case.
 
 ## Install candidate, minor upgrade to stable
 
-Worst case, hive syncs old channel in the middle of things.
-
 1. Install to stable channel.
 2. OCM set CD to candidate. (part of provision)
 3. Hive sync candidate-major.minor to cluster channel.
-4. OCM set CD to stable. (prior to upgrade)
-5. Hive sync stable-major.minor to cluster channel.
-6. Customer sets upgrade schedule
-7. OCM set CD to stable.
-8. MUO sets channel to stable-major.minor**+1**
-9. Hive sync stable-major.minor to cluster channel.
-10. MUO or OCP fails to find upgrade edge.
-11. MUO retries upgrade.
-12. MUO sets channel to stable-major.minor**+1**
-13. Upgrade started.
-14. Hive sync stable-major.minor to cluster channel.
-15. Upgrade completed.
-16. Telemeter updated with cluster version.
-17. OCM updates CD with cluster version.
-18. Hive sync stable-major.minor**+1** to cluster channel.
+4. Customer sets upgrade schedule
+5. MUO sets channel to stable-major.minor**+1**
+6. Hive sync candidate-major.minor to cluster channel.
+7. MUO or OCP fails to find upgrade edge.
+8. MUO retries upgrade.
+9. MUO sets channel to stable-major.minor**+1**
+10. Upgrade started.
+11. Hive sync candidate-major.minor to cluster channel.
+12. Upgrade completed.
+13. Telemeter updated with cluster version and channel.
+14. OCM updates CD with cluster version and channel group.
+15. Hive sync stable-major.minor**+1** to cluster channel.
 
 This path works with a retry at worst case.
