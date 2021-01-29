@@ -2329,6 +2329,10 @@ objects:
         - '4.6'
         - '4.7'
         - '4.8'
+      - key: hive.openshift.io/uwm-disabled
+        operator: NotIn
+        values:
+        - 'true'
     resourceApplyMode: Sync
     resources:
     - apiVersion: v1
@@ -2337,10 +2341,11 @@ objects:
         name: cluster-monitoring-config
         namespace: openshift-monitoring
       data:
-        config.yaml: "prometheusK8s:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
-          \ \"\"\n  tolerations: \n    - effect: NoSchedule\n      key: node-role.kubernetes.io/infra\n\
-          \      operator: Exists\n  retention: 15d\n  volumeClaimTemplate:\n    metadata:\n\
-          \      name: prometheus-data\n    spec:\n      resources:\n        requests:\n\
+        config.yaml: "enableUserWorkload: true \nprometheusK8s:\n  nodeSelector:\n\
+          \    node-role.kubernetes.io/infra: \"\"\n  tolerations: \n    - effect:\
+          \ NoSchedule\n      key: node-role.kubernetes.io/infra\n      operator:\
+          \ Exists\n  retention: 15d\n  volumeClaimTemplate:\n    metadata:\n    \
+          \  name: prometheus-data\n    spec:\n      resources:\n        requests:\n\
           \          storage: 100Gi\nalertmanagerMain:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
           \ \"\"\n  tolerations: \n    - effect: NoSchedule\n      key: node-role.kubernetes.io/infra\n\
           \      operator: Exists\n  volumeClaimTemplate:\n    metadata:\n      name:\
