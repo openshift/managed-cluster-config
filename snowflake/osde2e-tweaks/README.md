@@ -1,2 +1,0 @@
-This is a temporary thing while we wait for https://issues.redhat.com/browse/OSD-4817 to land.
-The `namespace` is set to `cluster-scope` because of how CI works.  Instead of fighting to get into a namespace we prefer we'll just land in `cluster-scope` given the short lived nature of this work.
