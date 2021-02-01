@@ -5682,20 +5682,19 @@ objects:
     clusterDeploymentSelector:
       matchLabels:
         api.openshift.com/managed: 'true'
-      matchExpressions:
-      - key: api.openshift.com/product
-        operator: NotIn
-        values:
-        - rosa
-      - key: hive.openshift.io/version-major-minor
-        operator: In
-        values:
-        - '4.4'
-        - '4.5'
-        - '4.6'
-        - '4.7'
     resourceApplyMode: Sync
     resources:
+    - apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: openshift-logging
+        annotations:
+          openshift.io/node-selector: ''
+        labels:
+          managed.openshift.io/service-lb-quota-exempt: 'true'
+          managed.openshift.io/storage-pv-quota-exempt: 'true'
+          openshift.io/cluster-logging: 'true'
+          openshift.io/cluster-monitoring: 'true'
     - apiVersion: operators.coreos.com/v1
       kind: OperatorGroup
       metadata:
@@ -6023,75 +6022,6 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: osd-logging-with-alerts
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-      matchExpressions:
-      - key: api.openshift.com/product
-        operator: NotIn
-        values:
-        - rosa
-      - key: hive.openshift.io/version-major-minor
-        operator: In
-        values:
-        - '4.4'
-        - '4.5'
-        - '4.6'
-    resourceApplyMode: Sync
-    resources:
-    - apiVersion: v1
-      kind: Namespace
-      metadata:
-        name: openshift-logging
-        annotations:
-          openshift.io/node-selector: ''
-        labels:
-          managed.openshift.io/service-lb-quota-exempt: 'true'
-          managed.openshift.io/storage-pv-quota-exempt: 'true'
-          openshift.io/cluster-logging: 'true'
-          openshift.io/cluster-monitoring: 'true'
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    labels:
-      managed.openshift.io/gitHash: ${IMAGE_TAG}
-      managed.openshift.io/gitRepoName: ${REPO_NAME}
-      managed.openshift.io/osd: 'true'
-    name: osd-logging-without-alerts
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-      matchExpressions:
-      - key: api.openshift.com/product
-        operator: NotIn
-        values:
-        - rosa
-      - key: hive.openshift.io/version-major-minor
-        operator: In
-        values:
-        - '4.7'
-    resourceApplyMode: Sync
-    resources:
-    - apiVersion: v1
-      kind: Namespace
-      metadata:
-        name: openshift-logging
-        annotations:
-          openshift.io/node-selector: ''
-        labels:
-          managed.openshift.io/service-lb-quota-exempt: 'true'
-          managed.openshift.io/storage-pv-quota-exempt: 'true'
-          openshift.io/cluster-logging: 'true'
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    labels:
-      managed.openshift.io/gitHash: ${IMAGE_TAG}
-      managed.openshift.io/gitRepoName: ${REPO_NAME}
-      managed.openshift.io/osd: 'true'
     name: osd-machine-api
   spec:
     clusterDeploymentSelector:
@@ -6336,76 +6266,6 @@ objects:
       patch: '{"spec":{"tokenConfig":{"accessTokenMaxAgeSeconds":604800, "accessTokenInactivityTimeout":
         "168h"}}}'
       patchType: merge
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    labels:
-      managed.openshift.io/gitHash: ${IMAGE_TAG}
-      managed.openshift.io/gitRepoName: ${REPO_NAME}
-      managed.openshift.io/osd: 'true'
-    name: osd-openshift-operators-redhat
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-    resourceApplyMode: Sync
-    resources:
-    - apiVersion: v1
-      kind: Namespace
-      metadata:
-        name: openshift-operators-redhat
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: RoleBinding
-      metadata:
-        name: admin-dedicated-admins
-        namespace: openshift-operators-redhat
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: ClusterRole
-        name: admin
-      subjects:
-      - apiGroup: rbac.authorization.k8s.io
-        kind: Group
-        name: dedicated-admins
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: RoleBinding
-      metadata:
-        name: admin-system:serviceaccounts:dedicated-admin
-        namespace: openshift-operators-redhat
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: ClusterRole
-        name: admin
-      subjects:
-      - apiGroup: rbac.authorization.k8s.io
-        kind: Group
-        name: system:serviceaccounts:dedicated-admin
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: RoleBinding
-      metadata:
-        name: openshift-operators-redhat-dedicated-admins
-        namespace: openshift-operators-redhat
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: ClusterRole
-        name: dedicated-admins-project
-      subjects:
-      - apiGroup: rbac.authorization.k8s.io
-        kind: Group
-        name: dedicated-admins
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: RoleBinding
-      metadata:
-        name: openshift-operators-redhat:serviceaccounts:dedicated-admin
-        namespace: openshift-operators-redhat
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: ClusterRole
-        name: dedicated-admins-project
-      subjects:
-      - apiGroup: rbac.authorization.k8s.io
-        kind: Group
-        name: system:serviceaccounts:dedicated-admin
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
