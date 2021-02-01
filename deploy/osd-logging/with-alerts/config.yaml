@@ -1,0 +1,12 @@
+deploymentMode: "SelectorSyncSet"
+selectorSyncSet:
+  matchExpressions:
+  - key: api.openshift.com/product
+    operator: NotIn
+    values: ["rosa"]
+
+  # Disable routing in-cluster logging alerts to SRE PD for OCP 4.7+
+  # https://issues.redhat.com/browse/OSD-6324
+  - key: hive.openshift.io/version-major-minor
+    operator: In
+    values: ["4.4","4.5","4.6"]
