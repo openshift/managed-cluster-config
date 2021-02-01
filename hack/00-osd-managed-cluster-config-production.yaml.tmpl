@@ -5696,17 +5696,6 @@ objects:
         - '4.7'
     resourceApplyMode: Sync
     resources:
-    - apiVersion: v1
-      kind: Namespace
-      metadata:
-        name: openshift-logging
-        annotations:
-          openshift.io/node-selector: ''
-        labels:
-          managed.openshift.io/service-lb-quota-exempt: 'true'
-          managed.openshift.io/storage-pv-quota-exempt: 'true'
-          openshift.io/cluster-logging: 'true'
-          openshift.io/cluster-monitoring: 'true'
     - apiVersion: operators.coreos.com/v1
       kind: OperatorGroup
       metadata:
@@ -6027,6 +6016,75 @@ objects:
                     \     echo \"FAILURE: old approval value is not current approval\
                     \ value, leaving annotation\"\n      # TODO should this exit with\
                     \ a non-zero value?\n    fi\n\n  fi\ndone\n"
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-logging-with-alerts
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/product
+        operator: NotIn
+        values:
+        - rosa
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.4'
+        - '4.5'
+        - '4.6'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: openshift-logging
+        annotations:
+          openshift.io/node-selector: ''
+        labels:
+          managed.openshift.io/service-lb-quota-exempt: 'true'
+          managed.openshift.io/storage-pv-quota-exempt: 'true'
+          openshift.io/cluster-logging: 'true'
+          openshift.io/cluster-monitoring: 'true'
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-logging-without-alerts
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/product
+        operator: NotIn
+        values:
+        - rosa
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.7'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: openshift-logging
+        annotations:
+          openshift.io/node-selector: ''
+        labels:
+          managed.openshift.io/service-lb-quota-exempt: 'true'
+          managed.openshift.io/storage-pv-quota-exempt: 'true'
+          openshift.io/cluster-logging: 'true'
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
