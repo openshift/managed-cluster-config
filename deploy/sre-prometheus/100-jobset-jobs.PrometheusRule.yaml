@@ -1,0 +1,22 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: sre-curator-jobs
+    role: alert-rules
+  name: sre-curator-jobs
+  namespace: openshift-monitoring
+spec:
+  groups:
+  - name: sre-curator-jobs
+    rules:
+    # https://issues.redhat.com/browse/OSD-6348
+    - alert: JobSetFailedSRE
+      # For any job that has had multiple jobs fail (job_set) over the last 3 hours.
+      expr: count(label_replace(count_over_time(kube_job_failed{job="kube-state-metrics",namespace=~"(openshift-.*|kube-.*|default|logging)",condition="true"}[3h:60m]) > 0, "job_set", "$1", "job_name", "(.*)-.*")) by (job_set, namespace) > 1
+      labels:
+        severity: warning
+        namespace: '{{ $labels.namespace }}'
+      annotations:
+        message: Job set {{ $labels.job_set }} has failed consecutively over the last 3 hours in {{ $labels.namespace }}.
+        link: "https://github.com/openshift/ops-sop/blob/master/v4/alerts/JobSetFailedSRE.md"
