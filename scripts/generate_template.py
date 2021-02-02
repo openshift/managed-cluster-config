@@ -163,7 +163,7 @@ if __name__ == '__main__':
                         o = copy.deepcopy(config)
                         o["selectorSyncSet"]['matchLabels'].clear()
                         if 'matchExpressions' in o["selectorSyncSet"]:
-                            o["selectorSyncSet"]['matchExpressions'].clear()
+                            del o["selectorSyncSet"]['matchExpressions'][:]
                         o["selectorSyncSet"]['matchLabels'].update({key:value})
                         del o["selectorSyncSet"]["matchLabelsApplyMode"]
 
@@ -178,7 +178,7 @@ if __name__ == '__main__':
                         o = copy.deepcopy(config)
                         if 'matchLabels' in o["selectorSyncSet"]:
                             o["selectorSyncSet"]['matchLabels'].clear()
-                        o["selectorSyncSet"]['matchExpressions'].clear()
+                        del o["selectorSyncSet"]['matchExpressions'][:]
                         o["selectorSyncSet"]['matchExpressions'].append(expression)
                         del o["selectorSyncSet"]["matchLabelsApplyMode"]
 
