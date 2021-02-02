@@ -4588,7 +4588,10 @@ objects:
             name: osd-cluster-ready
           spec:
             containers:
-            - name: osd-cluster-ready
+            - env:
+              - name: MAX_CLUSTER_AGE_MINUTES
+                value: '240'
+              name: osd-cluster-ready
               image: quay.io/openshift-sre/osd-cluster-ready
               command:
               - /root/main
