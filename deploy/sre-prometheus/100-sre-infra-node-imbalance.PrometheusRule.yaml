@@ -11,7 +11,7 @@ spec:
   - name: sre-infra-node-imbalance
     rules:
     - alert: KubeInfraNodeImbalanceSRE
-      expr: count(count by (node) (kube_pod_info{namespace="openshift-monitoring",pod=~"prometheus-k8s-.*"})) != count(cluster:infra_nodes)
+      expr: count(count by (node) (kube_pod_info{namespace="openshift-monitoring",pod=~"prometheus-k8s-.*"})) < 2
       for: 1h
       labels:
         severity: warning
