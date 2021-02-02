@@ -158,16 +158,33 @@ if __name__ == '__main__':
             # If no matchLabelsApplyMode, process as nornmal
             if "matchLabelsApplyMode" in config["selectorSyncSet"] and config["selectorSyncSet"]["matchLabelsApplyMode"] == "OR":
                 # generate new SSS per matchLabels line
-                for key, value in config["selectorSyncSet"]['matchLabels'].items():
+                if 'matchLabels' in config["selectorSyncSet"]:
+                    for key, value in config["selectorSyncSet"]['matchLabels'].items():
+                        o = copy.deepcopy(config)
+                        o["selectorSyncSet"]['matchLabels'].clear()
+                        if 'matchExpressions' in o["selectorSyncSet"]:
+                            del o["selectorSyncSet"]['matchExpressions'][:]
+                        o["selectorSyncSet"]['matchLabels'].update({key:value})
+                        del o["selectorSyncSet"]["matchLabelsApplyMode"]
 
-                    o = copy.deepcopy(config)
-                    o["selectorSyncSet"]['matchLabels'].clear()
-                    o["selectorSyncSet"]['matchLabels'].update({key:value})
-                    del o["selectorSyncSet"]["matchLabelsApplyMode"]
+                        # SSS objects require unique names
+                        unique_sss_name = sss_name + '-' + re.sub('^.*?/', '', key)
+                        add_sss_for(unique_sss_name, dirpath, o["selectorSyncSet"])
 
-                    # SSS objects require unique names
-                    unique_sss_name = sss_name + '-' + re.sub('^.*?/', '', key)
-                    add_sss_for(unique_sss_name, dirpath, o["selectorSyncSet"])
+                # generate new SSS per matchExpression
+                if 'matchExpressions' in config["selectorSyncSet"]:
+                    for expression in config["selectorSyncSet"]['matchExpressions']:
+                        key = expression['key']
+                        o = copy.deepcopy(config)
+                        if 'matchLabels' in o["selectorSyncSet"]:
+                            o["selectorSyncSet"]['matchLabels'].clear()
+                        del o["selectorSyncSet"]['matchExpressions'][:]
+                        o["selectorSyncSet"]['matchExpressions'].append(expression)
+                        del o["selectorSyncSet"]["matchLabelsApplyMode"]
+
+                        # SSS objects require unique names
+                        unique_sss_name = sss_name + '-' + re.sub('^.*?/', '', key)
+                        add_sss_for(unique_sss_name, dirpath, o["selectorSyncSet"])
             else:
                 # Catches anyone with a rouge value
                 add_sss_for(sss_name, dirpath, config["selectorSyncSet"])
