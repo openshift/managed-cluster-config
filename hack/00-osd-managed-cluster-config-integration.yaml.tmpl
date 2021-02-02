@@ -4586,8 +4586,6 @@ objects:
         name: osd-cluster-ready
         namespace: openshift-monitoring
       spec:
-        activeDeadlineSeconds: 3900
-        backoffLimit: 0
         template:
           metadata:
             name: osd-cluster-ready
@@ -4600,7 +4598,7 @@ objects:
               image: quay.io/openshift-sre/osd-cluster-ready
               command:
               - /root/main
-            restartPolicy: Never
+            restartPolicy: OnFailure
             serviceAccountName: osd-cluster-ready
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
