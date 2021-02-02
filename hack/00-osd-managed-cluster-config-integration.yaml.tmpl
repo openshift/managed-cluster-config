@@ -4489,6 +4489,92 @@ objects:
       - kind: ServiceAccount
         name: osd-cluster-ready
         namespace: openshift-monitoring
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: osd-cluster-ready
+        namespace: openshift-machine-api
+      rules:
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machines
+        verbs:
+        - list
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: osd-cluster-ready
+        namespace: openshift-machine-api
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: osd-cluster-ready
+      subjects:
+      - kind: ServiceAccount
+        name: osd-cluster-ready
+        namespace: openshift-monitoring
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: osd-cluster-ready
+        namespace: openshift-config
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - secrets
+        verbs:
+        - list
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: osd-cluster-ready
+        namespace: openshift-config
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: osd-cluster-ready
+      subjects:
+      - kind: ServiceAccount
+        name: osd-cluster-ready
+        namespace: openshift-monitoring
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: osd-cluster-ready
+      rules:
+      - apiGroups:
+        - config.openshift.io
+        resources:
+        - clusterversions
+        verbs:
+        - get
+      - apiGroups:
+        - ''
+        resources:
+        - nodes
+        - pods
+        verbs:
+        - list
+      - apiGroups:
+        - config.openshift.io
+        resources:
+        - clusteroperators
+        verbs:
+        - list
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: osd-cluster-ready
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: osd-cluster-ready
+      subjects:
+      - kind: ServiceAccount
+        name: osd-cluster-ready
+        namespace: openshift-monitoring
     - apiVersion: batch/v1
       kind: Job
       metadata:
