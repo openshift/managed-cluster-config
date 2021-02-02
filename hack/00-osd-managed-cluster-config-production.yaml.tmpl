@@ -5682,6 +5682,17 @@ objects:
     clusterDeploymentSelector:
       matchLabels:
         api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/product
+        operator: NotIn
+        values:
+        - rosa
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.4'
+        - '4.5'
+        - '4.6'
     resourceApplyMode: Upsert
     resources:
     - apiVersion: v1
@@ -5802,98 +5813,6 @@ objects:
       metadata:
         name: curator
         namespace: openshift-logging
-    - apiVersion: v1
-      kind: ResourceQuota
-      metadata:
-        name: logging-storage-quota
-        namespace: openshift-logging
-      spec:
-        hard:
-          requests.storage: 1500Gi
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: Role
-      metadata:
-        name: dedicated-admins-openshift-logging
-        namespace: openshift-logging
-      rules:
-      - apiGroups:
-        - ''
-        resources:
-        - events
-        - namespaces
-        - persistentvolumeclaims
-        - persistentvolumes
-        - pods
-        - pods/log
-        verbs:
-        - list
-        - get
-        - watch
-      - apiGroups:
-        - ''
-        resources:
-        - secrets
-        verbs:
-        - '*'
-      - apiGroups:
-        - logging.openshift.io
-        resources:
-        - clusterloggings
-        verbs:
-        - create
-        - delete
-        - deletecollection
-        - get
-        - list
-        - patch
-        - update
-        - watch
-      - apiGroups:
-        - operators.coreos.com
-        resources:
-        - subscriptions
-        - clusterserviceversions
-        verbs:
-        - '*'
-      - apiGroups:
-        - operators.coreos.com
-        resources:
-        - installplans
-        verbs:
-        - update
-      - apiGroups:
-        - ''
-        resources:
-        - persistentvolumeclaims
-        verbs:
-        - '*'
-      - apiGroups:
-        - apps
-        - extensions
-        resources:
-        - daemonsets
-        verbs:
-        - get
-        - list
-        - patch
-        - update
-        - watch
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: RoleBinding
-      metadata:
-        name: dedicated-admins-openshift-logging
-        namespace: openshift-logging
-      subjects:
-      - apiGroup: rbac.authorization.k8s.io
-        kind: Group
-        name: dedicated-admins
-      - apiGroup: rbac.authorization.k8s.io
-        kind: Group
-        name: system:serviceaccounts:dedicated-admin
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: Role
-        name: dedicated-admins-openshift-logging
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -5906,6 +5825,17 @@ objects:
     clusterDeploymentSelector:
       matchLabels:
         api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/product
+        operator: NotIn
+        values:
+        - rosa
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.4'
+        - '4.5'
+        - '4.6'
     resourceApplyMode: Sync
     resources:
     - apiVersion: v1
@@ -6015,6 +5945,123 @@ objects:
                     \     echo \"FAILURE: old approval value is not current approval\
                     \ value, leaving annotation\"\n      # TODO should this exit with\
                     \ a non-zero value?\n    fi\n\n  fi\ndone\n"
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-logging-supported
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/product
+        operator: NotIn
+        values:
+        - rosa
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.4'
+        - '4.5'
+        - '4.6'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: ResourceQuota
+      metadata:
+        name: logging-storage-quota
+        namespace: openshift-logging
+      spec:
+        hard:
+          requests.storage: 1500Gi
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: dedicated-admins-openshift-logging
+        namespace: openshift-logging
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - events
+        - namespaces
+        - persistentvolumeclaims
+        - persistentvolumes
+        - pods
+        - pods/log
+        verbs:
+        - list
+        - get
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - secrets
+        verbs:
+        - '*'
+      - apiGroups:
+        - logging.openshift.io
+        resources:
+        - clusterloggings
+        verbs:
+        - create
+        - delete
+        - deletecollection
+        - get
+        - list
+        - patch
+        - update
+        - watch
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - subscriptions
+        - clusterserviceversions
+        verbs:
+        - '*'
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - installplans
+        verbs:
+        - update
+      - apiGroups:
+        - ''
+        resources:
+        - persistentvolumeclaims
+        verbs:
+        - '*'
+      - apiGroups:
+        - apps
+        - extensions
+        resources:
+        - daemonsets
+        verbs:
+        - get
+        - list
+        - patch
+        - update
+        - watch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: dedicated-admins-openshift-logging
+        namespace: openshift-logging
+      subjects:
+      - apiGroup: rbac.authorization.k8s.io
+        kind: Group
+        name: dedicated-admins
+      - apiGroup: rbac.authorization.k8s.io
+        kind: Group
+        name: system:serviceaccounts:dedicated-admin
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: dedicated-admins-openshift-logging
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
