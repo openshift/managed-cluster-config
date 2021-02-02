@@ -6,6 +6,7 @@ To pause logging operator automatic updates set configmap `osd-logging-freeze` d
 
 To unpause logging operator automatic updates set configmap `osd-logging-freeze` data `freeze` to `"false"`.
 
+Only applies for clusters that do have in-cluster logging support from SRE. Therefore [config.yaml](config.yaml) must match the [osd-logging/supported config.yaml](../supported/config.yaml).
 
 # Testing
 
