@@ -9190,8 +9190,8 @@ objects:
         - name: sre-infra-node-imbalance
           rules:
           - alert: KubeInfraNodeImbalanceSRE
-            expr: count(count by (node) (kube_pod_info{namespace="openshift-monitoring",pod=~"prometheus-k8s-.*"}))
-              != count(cluster:infra_nodes)
+            expr: count by (node) (kube_pod_info{namespace="openshift-monitoring",pod=~"prometheus-k8s-.*"})
+              > 1
             for: 1h
             labels:
               severity: warning
@@ -9199,7 +9199,6 @@ objects:
             annotations:
               message: The infra node prometheus scheduling has been imbalanced for
                 more than an hour.
-              link: https://github.com/openshift/ops-sop/blob/master/v4/alerts/KubeInfraNodeImbalanceSRE.md
     - apiVersion: monitoring.coreos.com/v1
       kind: PrometheusRule
       metadata:
