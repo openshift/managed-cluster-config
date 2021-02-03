@@ -5589,11 +5589,11 @@ objects:
         - name: sre-telemeter-client
           rules:
           - alert: MetricsClientSendFailingSRE
-            expr: sum by (job) (rate(metricsclient_request_send{status_code!="200"}[5m]))
-              / sum by (job) (rate(metricsclient_request_send[5m])) > (6 - (1-0.90000)
-              and sum by (job) (rate(metricsclient_request_send{status_code!="200"}[1h]))
-              / sum by (job) (rate(metricsclient_request_send[1h])) > (6 - (1-0.90000)
-            for: 5m
+            expr: sum by (job) (rate(metricsclient_request_send{status_code!="200"}[10m]))
+              / sum by (job) (rate(metricsclient_request_send[10m])) > (16.12 - (1-0.90000))
+              and sum by (job) (rate(metricsclient_request_send{status_code!="200"}[2h]))
+              / sum by (job) (rate(metricsclient_request_send[2h])) > (16.12 - (1-0.90000))
+            for: 10m
             labels:
               severity: critical
               namespace: openshift-monitoring
