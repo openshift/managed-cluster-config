@@ -5957,6 +5957,33 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: osd-logging-infra-node-taint
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/environment
+        operator: NotIn
+        values:
+        - production
+    resourceApplyMode: Sync
+    patches:
+    - apiVersion: logging.openshift.io/v1
+      applyMode: AlwaysApply
+      kind: ClusterLogging
+      name: instance
+      namespace: openshift-logging
+      patch: '{"spec":{"collection":{"logs":{"fluentd":{"tolerations":[{"operator":
+        "Exists"}]}}}}}'
+      patchType: merge
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: osd-logging-supported
   spec:
     clusterDeploymentSelector:
