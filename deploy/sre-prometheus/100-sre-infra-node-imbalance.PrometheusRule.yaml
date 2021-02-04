@@ -12,9 +12,9 @@ spec:
     rules:
     - alert: KubeInfraNodeImbalanceSRE
       expr: count by (node) (kube_pod_info{namespace="openshift-monitoring",pod=~"prometheus-k8s-.*"}) > 1
-      for: 1h
+      for: 4h
       labels:
         severity: warning
         namespace: openshift-monitoring
       annotations:
-        message: "The infra node prometheus scheduling has been imbalanced for more than an hour."
+        message: "The infra node prometheus scheduling has been imbalanced for more than 4 hours."
