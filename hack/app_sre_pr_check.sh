@@ -26,17 +26,17 @@ fi
 
 # if running `make` changes anything, fail the build
 # order is inconsistent across systems, sort the template file.. it's not perfect but it's better than nothing
-for environment in interation stage production;
+for environment in integration stage production;
 do
-    cat hack/00-osd-managed-cluster-config-${env}.yaml.tmpl | sort > sorted-before-${env}.yaml.tmpl
+    cat hack/00-osd-managed-cluster-config-${environment}.yaml.tmpl | sort > sorted-before-${environment}.yaml.tmpl
 done
 
 make
 
-for environment in interation stage production;
+for environment in integration stage production;
 do
-    cat hack/00-osd-managed-cluster-config-${env}.yaml.tmpl | sort > sorted-after-${env}.yaml.tmpl
-    diff sorted-before-${env}.yaml.tmpl sorted-after-${env}.yaml.tmpl || (echo "Running 'make' caused changes.  Run 'make' and commit changes to the PR to try again." && exit 1)
+    cat hack/00-osd-managed-cluster-config-${environment}.yaml.tmpl | sort > sorted-after-${environment}.yaml.tmpl
+    diff sorted-before-${environment}.yaml.tmpl sorted-after-${environment}.yaml.tmpl || (echo "Running 'make' caused changes.  Run 'make' and commit changes to the PR to try again." && exit 1)
 done
 
 # check if roleref has been modified in a clusterrolebinding/rolebinding as a part of this change
