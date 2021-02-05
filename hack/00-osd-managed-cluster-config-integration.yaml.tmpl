@@ -6890,6 +6890,12 @@ objects:
       name: cluster
       patch: '{"spec":{"defaultRoute":true,"nodeSelector":{"node-role.kubernetes.io/infra":""},"affinity":{"nodeAffinity":{"preferredDuringSchedulingIgnoredDuringExecution":[{"preference":{"matchExpressions":[{"key":"node-role.kubernetes.io/infra","operator":"Exists"}]},"weight":1}]}},"tolerations":[{"effect":"NoSchedule","key":"node-role.kubernetes.io/infra","operator":"Exists"}]}}'
       patchType: merge
+    - apiVersion: imageregistry.operator.openshift.io/v1
+      applyMode: AlwaysApply
+      kind: Config
+      name: cluster
+      patch: '[{"op":"remove","path":"/spec/nodeSelector"}]'
+      patchType: json
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
