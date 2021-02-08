@@ -8,6 +8,11 @@ spec:
         metadata:
             name: osd-cluster-ready
         spec:
+            # NOTE: We're making this ridiculously high to ensure that
+            # we exceed MAX_CLUSTER_AGE_MINUTES even in the fastest
+            # case. We rely on the logic in the job to exit cleanly when
+            # that max age is reached.
+            backoffLimit: 500
             containers:
             # TODO: Remove this override once
             # https://bugzilla.redhat.com/show_bug.cgi?id=1921413
