@@ -8977,6 +8977,28 @@ objects:
       kind: PrometheusRule
       metadata:
         labels:
+          prometheus: sre-curator-jobs
+          role: alert-rules
+        name: sre-curator-jobs
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-curator-jobs
+          rules:
+          - alert: CuratorJobFailedSRE
+            expr: kube_job_failed{job="kube-state-metrics",namespace="openshift-logging",job_name=~"^curator-.*"}
+              > 1
+            for: 120m
+            labels:
+              severity: warning
+              namespace: '{{ $labels.namespace }}'
+            annotations:
+              message: Curator job {{ $labels.job_name }} has failed 2 or more times
+                in the last two hours in namespace {{ $labels.namespace }}.
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
           prometheus: sre-dns-alerts
           role: alert-rules
         name: sre-dns-alerts
