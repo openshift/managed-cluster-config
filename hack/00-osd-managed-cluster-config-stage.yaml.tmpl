@@ -2392,8 +2392,11 @@ objects:
         name: cluster-monitoring-config
         namespace: openshift-monitoring
       data:
-        config.yaml: "prometheusK8s:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
-          \ \"\"\n  tolerations: \n    - effect: NoSchedule\n      key: node-role.kubernetes.io/infra\n\
+        config.yaml: "prometheusK8s:\n  remoteWrite:\n    - url: http://token-refresher.openshift-monitoring.svc.cluster.local\n\
+          \      writeRelabelConfigs:\n        - action: keep\n          sourceLabels:\
+          \ [__name__]\n          regex: '(cluster_admin_enabled|identity_provider)'\n\
+          \  nodeSelector:\n    node-role.kubernetes.io/infra: \"\"\n  tolerations:\
+          \ \n    - effect: NoSchedule\n      key: node-role.kubernetes.io/infra\n\
           \      operator: Exists\n  retention: 15d\n  volumeClaimTemplate:\n    metadata:\n\
           \      name: prometheus-data\n    spec:\n      resources:\n        requests:\n\
           \          storage: 100Gi\nalertmanagerMain:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
@@ -2440,8 +2443,11 @@ objects:
         name: cluster-monitoring-config
         namespace: openshift-monitoring
       data:
-        config.yaml: "prometheusK8s:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
-          \ \"\"\n  tolerations: \n    - effect: NoSchedule\n      key: node-role.kubernetes.io/infra\n\
+        config.yaml: "prometheusK8s:\n  remoteWrite:\n    - url: http://token-refresher.openshift-monitoring.svc.cluster.local\n\
+          \      writeRelabelConfigs:\n        - action: keep\n          sourceLabels:\
+          \ [__name__]\n          regex: '(cluster_admin_enabled|identity_provider)'\n\
+          \  nodeSelector:\n    node-role.kubernetes.io/infra: \"\"\n  tolerations:\
+          \ \n    - effect: NoSchedule\n      key: node-role.kubernetes.io/infra\n\
           \      operator: Exists\n  retention: 15d\n  volumeClaimTemplate:\n    metadata:\n\
           \      name: prometheus-data\n    spec:\n      resources:\n        requests:\n\
           \          storage: 100Gi\nalertmanagerMain:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\

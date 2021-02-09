@@ -6,6 +6,12 @@ metadata:
 data:
   config.yaml: |
     prometheusK8s:
+      remoteWrite:
+        - url: http://token-refresher.openshift-monitoring.svc.cluster.local
+          writeRelabelConfigs:
+            - action: keep
+              sourceLabels: [__name__]
+              regex: '(cluster_admin_enabled|identity_provider)'
       nodeSelector:
         node-role.kubernetes.io/infra: ""
       tolerations: 
