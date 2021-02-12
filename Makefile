@@ -21,7 +21,7 @@ ifndef GEN_TEMPLATE
 $(error GEN_TEMPLATE is not set; check project.mk file)
 endif
 
-CONTAINER_ENGINE?=docker
+CONTAINER_ENGINE=$(shell command -v podman 2>/dev/null || command -v docker 2>/dev/null)
 
 .PHONY: default
 default: generate-oauth-templates generate-hive-templates
