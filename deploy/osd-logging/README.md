@@ -17,3 +17,4 @@ osd-logging/supported/
 osd-logging/unsupported/
 - resources for unsupported logging, they do not get deleted if sss no longer applies
 
+Short term, the OperatorGroup will be created in `osd-logging/unsupported/` because of https://issues.redhat.com/browse/OSD-6324.  It will be resolved as a part of https://issues.redhat.com/browse/LOG-1091

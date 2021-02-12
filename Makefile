@@ -21,7 +21,7 @@ ifndef GEN_TEMPLATE
 $(error GEN_TEMPLATE is not set; check project.mk file)
 endif
 
-CONTAINER_ENGINE?=docker
+CONTAINER_ENGINE=$(shell command -v podman 2>/dev/null || command -v docker 2>/dev/null)
 
 .PHONY: default
 default: generate-oauth-templates generate-hive-templates
@@ -32,7 +32,7 @@ generate-oauth-templates:
 	# Each SSS must not be too big as well.  each sub-dir of deploy/ becomes a SSS.  therefore each of the html
 	# becomes a separate dir.  This is a k8s limitation for annotation value size.
 	for TYPE in login providers errors; do \
-		oc --config=.kubeconfig create secret generic osd-oauth-templates-$$TYPE -n openshift-config --from-file=$$TYPE.html=source/html/$$TYPE.html --dry-run -o yaml > deploy/osd-oauth-templates-$$TYPE/osd-oauth-templates-$$TYPE.secret.yaml; \
+		oc --kubeconfig=.kubeconfig create secret generic osd-oauth-templates-$$TYPE -n openshift-config --from-file=$$TYPE.html=source/html/$$TYPE.html --dry-run -o yaml > deploy/osd-oauth-templates-$$TYPE/osd-oauth-templates-$$TYPE.secret.yaml; \
 	done
 
 .PHONY: generate-hive-templates

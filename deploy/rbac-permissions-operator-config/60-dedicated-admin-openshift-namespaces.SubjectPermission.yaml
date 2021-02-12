@@ -1,0 +1,17 @@
+apiVersion: managed.openshift.io/v1alpha1
+kind: SubjectPermission
+metadata:
+  name: dedicated-admins-core-ns
+  namespace: openshift-rbac-permissions
+spec:
+  subjectKind: Group
+  subjectName: dedicated-admins
+  permissions:
+    -
+      clusterRoleName: dedicated-admins-project
+      namespacesAllowedRegex: "(^openshift-operators$|^openshift-operators-redhat$)"
+      allowFirst: true
+    -
+      clusterRoleName: admin
+      namespacesAllowedRegex: "(^openshift-operators$|^openshift-operators-redhat$)"
+      allowFirst: true
