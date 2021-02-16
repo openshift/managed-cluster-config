@@ -28,6 +28,7 @@ rules:
   - project.openshift.io
   resources:
   - projects
+  - projectrequests
   verbs:
   - '*'
 # SRE can manage namespaces
@@ -60,27 +61,36 @@ rules:
   - '*'
 #### Start - more perms for srep
 # https://issues.redhat.com/browse/OSD-5537
+# SRE can create authz/n reviews
 - apiGroups:
   - authentication.k8s.io
   resources:
   - tokenreviews
-  - selfsubjectaccessreviews
-  - selfsubjectrulesreviews
   verbs:
-  - '*'
+  - create
+- apiGroups:
+  - authorization.k8s.io
+  resources:
+  - subjectaccessreviews
+  verbs:
+  - create
 - apiGroups:
   - authorization.openshift.io
   resources:
   - resourceaccessreviews
   - subjectaccessreviews
+  - subjectrulesreviews
   verbs:
-  - '*'
+  - create
+# SRE can delete users and identities
 - apiGroups:
   - user.openshift.io
   resources:
   - users
+  - identities
   verbs:
   - delete
+  - deletecollection
 # SREP can view machineconfigs, machineconfigpools, kubeletconfigs,
 #    controllerconfigs
 - apiGroups:
@@ -91,4 +101,18 @@ rules:
   - get
   - list
   - watch
+# SRE can delete machines
+- apiGroups:
+  - machine.openshift.io
+  resources:
+  - machines
+  verbs:
+  - delete
+# SRE can delete crds
+- apiGroups:
+  - apiextensions.k8s.io
+  resources:
+  - customresourcedefinitions
+  verbs:
+  - delete
 ### End
