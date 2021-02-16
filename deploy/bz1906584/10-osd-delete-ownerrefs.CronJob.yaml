@@ -1,0 +1,65 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: osd-delete-ownerrefs-bz1906584
+  namespace: openshift-logging
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: osd-delete-ownerrefs-bz1906584
+rules:
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - clusterrolebindings
+  - clusterroles
+  resourceNames:
+  - elasticsearch-metrics
+  - elasticsearch-proxy
+  verbs:
+  - "*"
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: osd-delete-ownerrefs-bz1906584
+subjects:
+- kind: ServiceAccount
+  name: osd-delete-ownerrefs-bz1906584
+  namespace: openshift-logging
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: osd-delete-ownerrefs-bz1906584
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: osd-delete-ownerrefs-bz1906584
+  namespace: openshift-logging
+spec:
+  failedJobsHistoryLimit: 3
+  successfulJobsHistoryLimit: 3
+  concurrencyPolicy: Replace
+  schedule: "7,37 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: osd-delete-ownerrefs-bz1906584
+          restartPolicy: Never
+          containers:
+          - name: osd-delete-ownerrefs-bz1906584
+            image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+            imagePullPolicy: Always
+            args:
+            - /bin/bash
+            - -c
+            - |
+              for object in clusterrole/elasticsearch-metrics clusterrole/elasticsearch-proxy clusterrolebinding/elasticsearch-metrics clusterrolebinding/elasticsearch-proxy; do
+                if [[ $(oc get $object --ignore-not-found -o jsonpath='{.metadata.ownerReferences[0].name}') == "elasticsearch" ]]; then
+                  oc patch $object --type=json -p '[{"op":"remove","path":"/metadata/ownerReferences"}]'
+                fi
+              done

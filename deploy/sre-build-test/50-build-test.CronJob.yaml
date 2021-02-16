@@ -18,14 +18,11 @@ spec:
               requiredDuringSchedulingIgnoredDuringExecution:
                 nodeSelectorTerms:
                 - matchExpressions:
-                  - key: "node-role.kubernetes.io"
-                    operator: In
-                    values:
-                      - infra
+                  - key: "node-role.kubernetes.io/infra"
+                    operator: Exists
           tolerations:
-          - operator: Equal
-            key: node-role.kubernetes.io
-            value: infra
+          - operator: Exists
+            key: node-role.kubernetes.io/infra
             effect: NoSchedule
           serviceAccountName: sre-build-test
           restartPolicy: Never
@@ -33,19 +30,89 @@ spec:
           - name: sre-build-test
             image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
             imagePullPolicy: Always
+            env:
+              - name: POD_NAME
+                valueFrom:
+                  fieldRef:
+                    fieldPath: metadata.name
+              - name: POD_NS
+                valueFrom:
+                  fieldRef:
+                    fieldPath: metadata.namespace
             command:
-            - /bin/sh
+            - /bin/bash
             - -c
-            - >-
-              export NS=openshift-build-test-$(date +%s); 
-              oc create ns $NS; 
-              oc -n $NS new-build nodejs~https://github.com/openshift/nodejs-ex --name=sre-build-test; 
-              echo $(date): Waiting for build to complete.; 
-              while :; 
-              do 
-                oc -n $NS get build -o custom-columns=STATUS:.status.phase --no-headers | grep Complete && break; 
-                echo $(date): Checking build again in 15 seconds, NS=$NS; 
-                sleep 15; 
-              done; 
-              echo $(date): Done, deleting build NS=$NS; 
-              oc delete ns $NS
+            - |
+              # ensure we fail if something exits non-zero
+              set -o errexit
+              set -o nounset
+              set -o pipefail
+
+              # cleanup traps on exiting, so these always run
+              cleanup () {
+                echo "$(date): Done, deleting build NS=$NS"
+                oc delete ns "${NS}"
+              }
+              trap "cleanup" EXIT SIGINT
+
+              # set NS to include job name, to ease linking namespace to a specific job
+              JOB_PREFIX=sre-build-test
+              NS="${POD_NS}-${POD_NAME##${JOB_PREFIX}-}"
+              JOB_NAME=$(echo "${POD_NAME}" | rev | cut -d- -f2- | rev)
+
+              GET_FAILED_JOBS=$(cat <<END
+              import json,sys
+              r = json.load(sys.stdin)
+              # create a list of jobs
+              jobs = [ job['metadata']['name'] for job in r['items'] if
+                # no jobs are currently running 
+                ( not 'active' in job['status']) and
+                # if '.status.failed' exists on job
+                'failed' in job['status'] and
+                # if job failed count is bigger than backoffLimit
+                #
+                # this check is because the failed tries can be one less than limit
+                # see code in https://github.com/kubernetes/kubernetes/blob/master/pkg/controller/job/job_controller.go#L509
+                # if this changes we should consider using an easier implementation
+                job['spec']['backoffLimit'] - 1 <= job['status']['failed']]
+              print(" ".join(jobs))
+              END
+              )
+              oc create ns "${NS}"
+
+              # run build
+              oc -n "${NS}" new-build nodejs~https://github.com/openshift/nodejs-ex --name="${JOB_PREFIX}"
+              echo "$(date): Waiting for build to complete."
+              while :
+              do
+                ST=$(oc -n "${NS}" get build -o custom-columns=STATUS:.status.phase --no-headers)
+                case ${ST} in
+                  "")
+                    # if build status is blank, assume we are still starting the build
+                    ST="Starting"
+                    ;;
+                  Failed)
+                    echo "$(date): Build Failed" >&2
+                    exit 1
+                    ;;
+                  Cancelled)
+                    echo "$(date): Build was Cancelled" >&2
+                    exit 1
+                    ;;
+                  Complete)
+                    echo "$(date): Build Complete"
+                    # Get all job names that have exceeded failed retries
+                    JOBS=$(oc -n "${POD_NS}" get job -o json)
+                    JOBS_TO_DELETE=$(echo "${JOBS}" | python -c "$GET_FAILED_JOBS")
+
+                    if [[ -n "${JOBS_TO_DELETE}" ]] ; then
+                      echo "$(date): Selected jobs for deletion: ${JOBS_TO_DELETE}"
+                      echo "${JOBS_TO_DELETE}" | xargs oc -n "${POD_NS}" delete job
+                    fi
+                    break
+                    ;;
+                esac
+                echo "$(date): Build is ${ST}; checking build again in 15 seconds, NS=${NS}"
+                sleep 15
+              done
+              exit 0

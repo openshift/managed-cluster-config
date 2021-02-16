@@ -6,7 +6,7 @@ aggregationRule:
       operator: In
       values:
         - "project"
-  # aggregate all "admin" scope rbac from OCP to dedicated-admins-project
+  # aggregate all "admin" scope rbac from OCP to dedicated-admins-project (webhooks deny management of specific SRE apiGroups)
   - matchExpressions:
     - key: rbac.authorization.k8s.io/aggregate-to-admin
       operator: In
@@ -35,6 +35,7 @@ aggregationRule:
       - openshift-rbac-permissions
       - openshift-splunk-forwarder-operator
       - openshift-velero
+      - openshift-managed-upgrade-operator
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:

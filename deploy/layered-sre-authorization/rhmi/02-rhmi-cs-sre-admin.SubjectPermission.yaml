@@ -1,0 +1,13 @@
+apiVersion: managed.openshift.io/v1alpha1
+kind: SubjectPermission
+metadata:
+  name: rhmi-cs-sre-admin
+  namespace: openshift-rbac-permissions
+spec:
+  permissions:
+  - allowFirst: true
+    clusterRoleName: backplane-rhmi-cssre-admins-project
+    namespacesAllowedRegex: .*
+    namespacesDeniedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$)
+  subjectKind: Group
+  subjectName: layered-cs-sre-admins

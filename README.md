@@ -6,18 +6,72 @@ This repo contains static configuration specific to a "managed" OpenShift Dedica
 
 To add a new SelectorSyncSet, add your yaml manifest to the `deploy` dir, then run the `make` command.
 
+Alternatively you can enable GitHub Actions on your fork and `make` will be ran automatically. Additionally,
+the action will create a new commit with the generated files.
+
+
 # Building
 
 ## Dependencies
 
 - oyaml: `pip install oyaml`
 
-# Selector Sync Set Configuration
-There is a limited configuration available at this time.  The file `sss-config.yaml` contains configurations that apply to the current directory only and it supports the following features:
+# Configuration
 
-* matchLabels (default: `{}`) - adds additional `matchLabels` conditions to the `clusterDeploymentSelector`
-* resourceApplyMode (default: `"Sync"`) - sets the `resourceApplyMode`
-* matchLabelsApplyMode (optional, default: not set) - When set as `"OR"` generates a separate SSS per `matchLabels` conditions. Default behavior creates a single SSS with all `matchLabels` conditions.  This is to tackle a situation where we want to apply configuration for one of many label conditions.
+All resources in `deploy/` are bundled into a template that is used by config management to apply to target "hive" clusters.  The configuration for this supports two options for deployment.  They can be deployed in the template so they are:
+
+1. deployed directly to the "hive" cluster
+2. deployed to the "hive" cluster inside a SelectorSyncSet
+
+Direct deployment (#1) supports resources that are not synced down to OSD clusters.  SelectorSyncSet deployment (#2) supports resoures that _are_ synced down to OSD clusters.  Each are explained in detail here.  The general configuration is managed in a `config.yaml` file in each deploy directory.  Key things of note:
+
+* This file is **optional**!  If not present it's assumed `deploymentMode` is `"SelectorSyncSet"` with no additional configuration.
+* Configuration is _not_ inherited by sub-directories!  Every (EVERY) directory in the `deploy/` hierarchy must define a `config.yaml` file.
+
+You must specify a `deploymentMode` property in `config.yaml`.
+
+* `deploymentMode` (optional, default = `"SelectorSyncSet"`) - either "Direct" or "SelectorSyncSet".
+
+## Direct Deployment
+
+You must specify the `environments` where the resource is deployed.  There is no default set of environments.  It is a child of the top level `direct` property.
+
+* `environments` (required, no default) - manages what environments the resources are deployed into.  Valid values are any of `"integration"`, `"stage"`, and `"production"`.
+
+Example to deploy only to all environments:
+```yaml
+deploymentMode: "Direct"
+direct:
+    environments: ["integration", "stage", "production"]
+```
+
+Example to deploy only to integration and stage:
+```yaml
+deploymentMode: "Direct"
+direct:
+    environments: ["integration", "stage"]
+```
+
+## SelectorSyncSet Deployment
+
+In the `config.yaml` file you define a top level property `selectorSyncSet`.  Within this configuration is supported for `matchLaels`, `matchExpressions`, `matchLabelsApplyMode`, `resourceApplyMode`, and `applyBehavior`.
+
+* `matchLabels` (optional, default: `{}`) - adds additional `matchLabels` conditions to the SelectorSyncSet's `clusterDeploymentSelector`
+* `matchExpressions` (optional, default: `[]`) - adds `matchExpressions` conditions to the SelectoSyncSet's `clusterDeploymentSelector`
+* `resourceApplyMode` (optional, default: `"Sync"`) - sets the SelectorSyncSet's `resourceApplyMode`
+* `matchLabelsApplyMode` (optional, default: `"AND"`) - When set as `"OR"` generates a separate SSS per `matchLabels` conditions. Default behavior creates a single SSS with all `matchLabels` conditions.  This is to tackle a situation where we want to apply configuration for one of many label conditions.
+* `applyBehavior` (optional, default: None, [see hive default](https://github.com/openshift/hive/blob/master/config/crds/hive.openshift.io_selectorsyncsets.yaml)) - sets the SelectorSyncSet's `applyBehavior`
+
+Example to apply a directory for any of a set of label conditions using Upsert:
+```yaml
+deploymentMode: "SelectorSyncSet"
+selectorSyncSet:
+    matchLabels:
+        myAwesomeLabel: "some value"
+        someOtherLabel: "something else"
+    resourceApplyMode: "Upsert"
+    matchLabelsApplyMode: "OR"
+```
 
 # Selector Sync Sets included in this repo
 
@@ -46,7 +100,7 @@ NOTE that ClusterVersion is being patched to add overrides.  If other overrides 
 
 ## Console Branding
 
-Docs TBA.
+In OSD, managed-cluster-config sets a [key named `branding` to `dedicated`](https://github.com/openshift/managed-cluster-config/blob/master/deploy/osd-console-branding/osd-branding.console.yaml) in the [Console operator](https://github.com/openshift/api/blob/master/operator/v1/types_console.go#L81-L128). This value is in turn read by code that applies the [logo](https://github.com/openshift/console/blob/1572a985cc0753d7e2630984c5163170765e9487/frontend/public/components/masthead.jsx) and [other branding elements](https://github.com/openshift/console/search?p=2&q=dedicated) predefined for that value.
 
 ## OAuth Templates
 
@@ -69,20 +123,6 @@ To opt-in to logging, the customer must:
 2. install the `elasticsearch` operator
 3. create `ClusterLogging` CR in `openshift-logging`
 
-## EFS Enablement via CSI
-
-[`efs-csi`](deploy/efs-csi) enables AWS EFS via the CSI driver. Customer
-opts in by opening a ServiceNow ticket, whereupon SRE must add the appropriate
-[label](deploy/efs-csi/sss-config.yaml) to the cluster. The
-SelectorSyncSet:
-
-- Installs a DaemonSet into the `openshift-efs-csi` namespace, running the CSI driver
-  image on worker nodes.
-- Creates a CSIDriver resource.
-- Creates a StorageClass pointing to the CSIDriver.
-- Sets up a ClusterRoleBinding allowing dedicated-admins to create
-  PersistentVolumes.
-
 # Dependencies
 
 pyyaml
@@ -91,14 +131,3 @@ pyyaml
 # Additional Scripts
 
 There are additional scripts in this repo as a holding place for a better place or a better solution / process.
-
-## Cluster Upgrade
-
-Script `scripts/create-upgrade.sh` is used to upgrade all clusters managed by one Hive instance.  The script requires two inputs: the starting version and the target version.  If the target version is not available in the upgrade graph the upgrade will not be done.
-
-To use the script:
-1. kubectl/oc login into the desired Hive cluster
-2. run the script, i.e. scripts/cluster-upgrade.sh 4.1.0 4.1.1
-3. do #2 until there are no clusters listed as "progressing"
-
-Note the script isn't a perfect solution.  It requires being run multiple times.  Whoever runs it must watch how long cluster upgrades are progressing.  If a cluster is taking a long time it's possible additional steps are needed in the cluster.  Usually this is some cluster operator is in a degraded state and needs fixing.

@@ -1,0 +1,91 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: sre-managed-upgrade-operator-alerts
+    role: alert-rules
+  name: sre-managed-upgrade-operator-alerts
+  namespace: openshift-monitoring
+spec:
+  groups:
+  - name: sre-managed-upgrade-operator-alerts
+    rules:
+    - alert: UpgradeConfigValidationFailedSRE
+      # Get alert immediately once the upgradeconfig validation failed
+      expr: upgradeoperator_upgradeconfig_validation_failed > 0
+      for: 5m
+      labels:
+        severity: critical
+        namespace: openshift-monitoring
+      annotations:
+        summary: "Upgrade config validation failed"
+        description: "Upgrade config validation failed"
+    - alert: UpgradeClusterCheckFailedSRE
+      # Get alert immediately once the cluster check failed
+      expr: upgradeoperator_cluster_check_failed > 0
+      for: 5m
+      labels:
+        severity: critical
+        namespace: openshift-monitoring
+      annotations:
+        summary: "cluster check failed"
+        description: "basic cluster checks failed on either before the upgrade or after the upgrade"
+    - alert: UpgradeNodeScalingFailedSRE
+      # Get alert once the Node cannot be scaled up
+      expr: upgradeoperator_scaling_failed > 0
+      for: 5m
+      labels:
+        severity: critical
+        namespace: openshift-monitoring
+      annotations:
+        summary: "node scaling failed"
+        description: "The extra machine/node was not ready before the upgrade started"
+    - alert: UpgradeClusterVerificationFailedSRE
+      # Get alert if the verification steps failed after the cluster upgraded
+      expr: upgradeoperator_cluster_verification_failed > 0
+      for: 5m
+      labels:
+        severity: critical
+        namespace: openshift-monitoring
+      annotations:
+        summary: "cluster verification failed"
+        description: "Some of the infra components which are running on the cluster are not working well after the upgrade"
+    - alert: UpgradeControlPlaneUpgradeTimeoutSRE
+      # Get alert if the control plane upgrade cannot be finished in the expected duration
+      expr: upgradeoperator_controlplane_timeout > 0
+      for: 5m
+      labels:
+        severity: critical
+        namespace: openshift-monitoring
+      annotations:
+        summary: "Controlplane upgrade timeout for {{ $labels.version }}"
+        description: "controlplane upgrade for {{ $labels.version }} cannot be finished in the given time period"
+    - alert: UpgradeNodeUpgradeTimeoutSRE
+      # Get alert if the worker nodes upgrade cannot be finished in the expected duration
+      expr: upgradeoperator_worker_timeout > 0
+      for: 5m
+      labels:
+        severity: critical
+        namespace: openshift-monitoring
+      annotations:
+        summary: "Nodes upgrade timeout for {{ $labels.version }}"
+        description: "nodes upgrade for {{ $labels.version }} cannot be finished after the silence expired"
+    - alert: UpgradeNodeDrainFailedSRE
+      # Get alert if the node drain takes too long during the upgrade
+      expr: upgradeoperator_node_drain_timeout > 0
+      for: 5m
+      labels:
+        severity: critical
+        namespace: openshift-monitoring
+      annotations:
+        summary: "Node drain failed in the given time period which is not caused by the PDB"
+        description: "node drain takes too long and cannot be finished in the given time period during cluster upgrade"
+    - alert: UpgradeConfigSyncFailureOver1HrSRE
+      expr: upgradeoperator_upgradeconfig_synced > 0
+      for: 1h
+      labels:
+        severity: warning
+        namespace: openshift-monitoring
+      annotations:
+        summary: "UpgradeConfig has not successfully synced in 1 hour."
+        description: "This clusters UpgradeConfig has not been synced in 1 hour and may be out of date"

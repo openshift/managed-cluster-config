@@ -12,14 +12,14 @@ data:
         - effect: NoSchedule
           key: node-role.kubernetes.io/infra
           operator: Exists
-      retention: 10d
+      retention: 15d
       volumeClaimTemplate:
         metadata:
           name: prometheus-data
         spec:
           resources:
             requests:
-              storage: 50Gi
+              storage: 100Gi
     alertmanagerMain:
       nodeSelector:
         node-role.kubernetes.io/infra: ""
@@ -70,3 +70,13 @@ data:
         - effect: NoSchedule
           key: node-role.kubernetes.io/infra
           operator: Exists
+    # https://access.redhat.com/solutions/5685771
+    # https://bugzilla.redhat.com/show_bug.cgi?id=1906496
+    thanosQuerier:
+      resources:
+        limits:
+          cpu: 500m
+          memory: 2048Mi
+        requests:
+          cpu: 5m
+          memory: 125Mi

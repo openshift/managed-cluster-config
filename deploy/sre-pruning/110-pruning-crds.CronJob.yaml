@@ -1,0 +1,29 @@
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: crd-pruner
+  namespace: openshift-sre-pruning
+spec:
+  failedJobsHistoryLimit: 5
+  successfulJobsHistoryLimit: 3
+  concurrencyPolicy: Replace
+  schedule: "0 */1 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: sre-pruner-sa
+          restartPolicy: Never
+          containers:
+          - name: crd-pruner
+            image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+            imagePullPolicy: Always
+            args:
+            - /bin/bash
+            - -c
+            - >-
+              oc delete
+              customresourcedefinition.apiextensions.k8s.io/machinedisruptionbudgets.healthchecking.openshift.io
+              customresourcedefinition.apiextensions.k8s.io/machinehealthchecks.healthchecking.openshift.io
+              --ignore-not-found

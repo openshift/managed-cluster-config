@@ -5,19 +5,6 @@ metadata:
   namespace: openshift-sre-pruning
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: sre-pruner-images
-roleRef:
-  kind: ClusterRole
-  name: system:image-pruner
-  apiGroup: rbac.authorization.k8s.io
-subjects:
-- kind: ServiceAccount
-  name: sre-pruner-sa
-  namespace: openshift-sre-pruning
----
-apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: sre-pruner-buildsdeploys-cr
@@ -66,6 +53,22 @@ rules:
   - prometheusrules
   verbs:
   - delete
+# crd pruning
+- apiGroups:
+  - apiextensions.k8s.io
+  resources:
+  - customresourcedefinitions
+  verbs:
+  - delete
+# cronjob pruning
+- apiGroups:
+  - batch
+  resources:
+  - cronjobs
+  - jobs
+  verbs:
+  - delete
+  - list
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding

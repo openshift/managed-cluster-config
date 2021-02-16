@@ -4,5 +4,5 @@ kind: Config
 name: cluster
 # patch registry to deploy on infras: https://docs.openshift.com/container-platform/4.2/machine_management/creating-infrastructure-machinesets.html#infrastructure-moving-registry_creating-infrastructure-machinesets
 # patch registry to expose default route: https://docs.openshift.com/container-platform/4.1/registry/configuring-registry-operator.html#registry-operator-default-crd_configuring-registry-operator
-patch: '{"spec":{"defaultRoute":true,"nodeSelector":{"node-role.kubernetes.io/infra":""},"tolerations":[{"effect":"NoSchedule","key":"node-role.kubernetes.io/infra","operator":"Exists"}]}}'
+patch: '{"spec":{"defaultRoute":true,"affinity":{"nodeAffinity":{"preferredDuringSchedulingIgnoredDuringExecution":[{"preference":{"matchExpressions":[{"key":"node-role.kubernetes.io/infra","operator":"Exists"}]},"weight":1}]}},"tolerations":[{"effect":"NoSchedule","key":"node-role.kubernetes.io/infra","operator":"Exists"}]}}'
 patchType: merge
