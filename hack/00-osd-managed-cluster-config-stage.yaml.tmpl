@@ -7561,6 +7561,33 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: user-workload-monitoring-config-edit
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: dedicated-admins-user-workload-monitoring-create-cm
+        namespace: openshift-user-workload-monitoring
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - configmaps
+        verbs:
+        - '*'
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: dedicated-admins-uwm-config-create
+        namespace: openshift-user-workload-monitoring
+      subjects:
+      - apiGroup: rbac.authorization.k8s.io
+        kind: Group
+        name: dedicated-admins
+      - kind: Group
+        name: system:serviceaccounts:dedicated-admin
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: dedicated-admins-user-workload-monitoring-create-cm
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
