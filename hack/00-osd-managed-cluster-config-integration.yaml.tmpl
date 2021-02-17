@@ -2252,8 +2252,14 @@ objects:
         name: cluster-monitoring-config
         namespace: openshift-monitoring
       data:
-        config.yaml: "prometheusK8s:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
-          \ \"\"\n  tolerations: \n    - effect: NoSchedule\n      key: node-role.kubernetes.io/infra\n\
+        config.yaml: "prometheusK8s:\n# If the location of this config changes,\n\
+          # make sure to adjust https://github.com/openshift/ops-sop/blob/master/v4/howto/o11m_mst_killswitch.md\n\
+          # so that killswitch instructions point to the right file!\n  remoteWrite:\n\
+          \    - url: http://token-refresher.openshift-monitoring.svc.cluster.local\n\
+          \      writeRelabelConfigs:\n        - action: keep\n          sourceLabels:\
+          \ [__name__]\n          regex: '(cluster_admin_enabled|identity_provider)'\n\
+          \  nodeSelector:\n    node-role.kubernetes.io/infra: \"\"\n  tolerations:\
+          \ \n    - effect: NoSchedule\n      key: node-role.kubernetes.io/infra\n\
           \      operator: Exists\n  retention: 15d\n  volumeClaimTemplate:\n    metadata:\n\
           \      name: prometheus-data\n    spec:\n      resources:\n        requests:\n\
           \          storage: 100Gi\nalertmanagerMain:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
@@ -2300,8 +2306,14 @@ objects:
         name: cluster-monitoring-config
         namespace: openshift-monitoring
       data:
-        config.yaml: "prometheusK8s:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
-          \ \"\"\n  tolerations: \n    - effect: NoSchedule\n      key: node-role.kubernetes.io/infra\n\
+        config.yaml: "prometheusK8s:\n# If the location of this config changes,\n\
+          # make sure to adjust https://github.com/openshift/ops-sop/blob/master/v4/howto/o11m_mst_killswitch.md\n\
+          # so that killswitch instructions point to the right file!\n  remoteWrite:\n\
+          \    - url: http://token-refresher.openshift-monitoring.svc.cluster.local\n\
+          \      writeRelabelConfigs:\n        - action: keep\n          sourceLabels:\
+          \ [__name__]\n          regex: '(cluster_admin_enabled|identity_provider)'\n\
+          \  nodeSelector:\n    node-role.kubernetes.io/infra: \"\"\n  tolerations:\
+          \ \n    - effect: NoSchedule\n      key: node-role.kubernetes.io/infra\n\
           \      operator: Exists\n  retention: 15d\n  volumeClaimTemplate:\n    metadata:\n\
           \      name: prometheus-data\n    spec:\n      resources:\n        requests:\n\
           \          storage: 100Gi\nalertmanagerMain:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
@@ -2348,8 +2360,14 @@ objects:
         name: cluster-monitoring-config
         namespace: openshift-monitoring
       data:
-        config.yaml: "prometheusK8s:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
-          \ \"\"\n  tolerations: \n    - effect: NoSchedule\n      key: node-role.kubernetes.io/infra\n\
+        config.yaml: "prometheusK8s:\n# If the location of this config changes,\n\
+          # make sure to adjust https://github.com/openshift/ops-sop/blob/master/v4/howto/o11m_mst_killswitch.md\n\
+          # so that killswitch instructions point to the right file!\n  remoteWrite:\n\
+          \    - url: http://token-refresher.openshift-monitoring.svc.cluster.local\n\
+          \      writeRelabelConfigs:\n        - action: keep\n          sourceLabels:\
+          \ [__name__]\n          regex: '(cluster_admin_enabled|identity_provider)'\n\
+          \  nodeSelector:\n    node-role.kubernetes.io/infra: \"\"\n  tolerations:\
+          \ \n    - effect: NoSchedule\n      key: node-role.kubernetes.io/infra\n\
           \      operator: Exists\n  retention: 15d\n  volumeClaimTemplate:\n    metadata:\n\
           \      name: prometheus-data\n    spec:\n      resources:\n        requests:\n\
           \          storage: 100Gi\nalertmanagerMain:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
@@ -7436,11 +7454,6 @@ objects:
     clusterDeploymentSelector:
       matchLabels:
         api.openshift.com/managed: 'true'
-      matchExpressions:
-      - key: api.openshift.com/environment
-        operator: NotIn
-        values:
-        - production
     resourceApplyMode: Sync
     resources:
     - apiVersion: apps/v1
