@@ -7325,6 +7325,55 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: osd-storage
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/cluster-platform
+        operator: In
+        values:
+        - gcp
+      - key: api.openshift.com/environment
+        operator: In
+        values:
+        - stage
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: storage.k8s.io/v1
+      kind: StorageClass
+      metadata:
+        name: ssd
+        annotations:
+          storageclass.kubernetes.io/is-default-class: 'true'
+      provisioner: kubernetes.io/gce-ssd
+      parameters:
+        type: pd-ssd
+        replication-type: none
+      volumeBindingMode: WaitForFirstConsumer
+      allowVolumeExpansion: true
+      reclaimPolicy: Delete
+    - apiVersion: storage.k8s.io/v1
+      kind: StorageClass
+      metadata:
+        name: standard
+        annotations:
+          storageclass.kubernetes.io/is-default-class: 'false'
+      provisioner: kubernetes.io/gce-pd
+      parameters:
+        type: pd-standard
+        replication-type: none
+      volumeBindingMode: WaitForFirstConsumer
+      allowVolumeExpansion: true
+      reclaimPolicy: Delete
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: osd-strimzi-operator
   spec:
     clusterDeploymentSelector:
