@@ -159,3 +159,19 @@ rules:
   - serverstatusrequests
   verbs:
   - '*'
+# SRE can temporarily elevate to cluster-admin by patching osd-sre-cluster-admins clusterrolebinding
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - clusterroles
+  verbs:
+  - bind
+  - escalate
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - clusterrolebindings
+  resourceNames:
+  - osd-sre-cluster-admins
+  verbs:
+  - patch
