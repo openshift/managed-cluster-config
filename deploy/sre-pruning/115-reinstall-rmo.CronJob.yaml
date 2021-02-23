@@ -91,7 +91,7 @@ spec:
 
               set -euxo pipefail
 
-              COUNT_CSV=$(oc get csv | grep route-monitor-operator | wc -l) || true
+              COUNT_CSV=$(oc -n openshift-route-monitor-operator get csv  | grep route-monitor-operator | wc -l) || true
               if [[ $COUNT_CSV -gt 2 ]]; then
                 oc -n openshift-route-monitor-operator get csv | grep -v NAME | awk '{print $1}'  | grep route-monitor-operator | xargs oc delete csv
                 oc -n openshift-route-monitor-operator get installplan | grep -v NAME | awk '{print $1}'  | xargs oc delete installplan
