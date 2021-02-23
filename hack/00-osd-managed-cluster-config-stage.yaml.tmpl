@@ -10150,6 +10150,105 @@ objects:
                   - --keep-younger-than=24h
                   - --keep-failed=1
                   - --confirm
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: sre-rmo-cleanup-sa
+        namespace: openshift-route-monitor-operator
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: sre-rmo-cleanup-role
+        namespace: openshift-route-monitor-operator
+      rules:
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - clusterserviceversions
+        - subscriptions
+        - installplans
+        verbs:
+        - list
+        - get
+        - delete
+        - create
+      - apiGroups:
+        - batch
+        resources:
+        - cronjobs
+        verbs:
+        - list
+        - get
+        - delete
+      - apiGroups:
+        - ''
+        resources:
+        - serviceaccounts
+        verbs:
+        - list
+        - get
+        - delete
+      - apiGroups:
+        - rbac.authorization.k8s.io
+        resources:
+        - roles
+        - rolebindings
+        verbs:
+        - list
+        - get
+        - delete
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: sre-rmo-cleanup-rb
+      roleRef:
+        kind: Role
+        name: sre-rmo-cleanup-role
+        apiGroup: rbac.authorization.k8s.io
+        namespace: openshift-route-monitor-operator
+      subjects:
+      - kind: ServiceAccount
+        name: sre-rmo-cleanup-sa
+        namespace: openshift-route-monitor-operator
+    - apiVersion: batch/v1beta1
+      kind: CronJob
+      metadata:
+        name: sre-rmo-cleanup
+        namespace: openshift-route-monitor-operator
+      spec:
+        ttlSecondsAfterFinished: 100
+        failedJobsHistoryLimit: 1
+        successfulJobsHistoryLimit: 3
+        concurrencyPolicy: Replace
+        schedule: '*/30 * * * *'
+        jobTemplate:
+          spec:
+            template:
+              spec:
+                serviceAccountName: sre-rmo-cleanup-sa
+                restartPolicy: Never
+                containers:
+                - name: rmo-reinstaller
+                  image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+                  imagePullPolicy: Always
+                  command:
+                  - sh
+                  - -c
+                  - "#!/bin/bash\n\nset -euxo pipefail\n\nCOUNT_CSV=$(oc -n openshift-route-monitor-operator\
+                    \ get csv  | grep route-monitor-operator | wc -l) || true\nif\
+                    \ [[ $COUNT_CSV -gt 2 ]]; then\n  oc -n openshift-route-monitor-operator\
+                    \ get csv | grep -v NAME | awk '{print $1}'  | grep route-monitor-operator\
+                    \ | xargs oc delete csv\n  oc -n openshift-route-monitor-operator\
+                    \ get installplan | grep -v NAME | awk '{print $1}'  | xargs oc\
+                    \ delete installplan\n  touch /tmp/sub.yaml\n  oc -n openshift-route-monitor-operator\
+                    \ get subscription route-monitor-operator -o yaml > /tmp/sub.yaml\n\
+                    \  oc -n openshift-route-monitor-operator delete -f /tmp/sub.yaml\n\
+                    \  oc -n openshift-route-monitor-operator apply -f /tmp/sub.yaml\n\
+                    fi\noc -n openshift-route-monitor-operator delete cronjob sre-rmo-cleanup\
+                    \ || true\noc -n openshift-route-monitor-operator delete role\
+                    \ sre-rmo-cleanup-role || true\noc -n openshift-route-monitor-operator\
+                    \ delete rolebinding sre-rmo-cleanup-rb || true\noc -n openshift-route-monitor-operator\
+                    \ delete serviceaccount sre-rmo-cleanup-sa || true\nexit 0\n"
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
