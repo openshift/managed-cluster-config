@@ -10219,10 +10219,10 @@ objects:
                   command:
                   - sh
                   - -c
-                  - "#!/bin/bash\n\nset -euxo pipefail\n\nCOUNT_CSV=$(oc get csv |\
-                    \ grep route-monitor-operator | wc -l) || true\nif [[ $COUNT_CSV\
-                    \ -gt 2 ]]; then\n  oc -n openshift-route-monitor-operator get\
-                    \ csv | grep -v NAME | awk '{print $1}'  | grep route-monitor-operator\
+                  - "#!/bin/bash\n\nset -euxo pipefail\n\nCOUNT_CSV=$(oc -n openshift-route-monitor-operator\
+                    \ get csv  | grep route-monitor-operator | wc -l) || true\nif\
+                    \ [[ $COUNT_CSV -gt 2 ]]; then\n  oc -n openshift-route-monitor-operator\
+                    \ get csv | grep -v NAME | awk '{print $1}'  | grep route-monitor-operator\
                     \ | xargs oc delete csv\n  oc -n openshift-route-monitor-operator\
                     \ get installplan | grep -v NAME | awk '{print $1}'  | xargs oc\
                     \ delete installplan\n  touch /tmp/sub.yaml\n  oc -n openshift-route-monitor-operator\
