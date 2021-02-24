@@ -7,17 +7,6 @@ data:
   config.yaml: |
     enableUserWorkload: true 
     prometheusK8s:
-    # If the location of this config changes,
-    # make sure to adjust https://github.com/openshift/ops-sop/blob/master/v4/howto/o11m_mst_killswitch.md
-    # so that killswitch instructions point to the right file!
-      remoteWrite:
-        - url: http://token-refresher.openshift-monitoring.svc.cluster.local
-          queueConfig:
-            maxSamplesPerSend: 500
-          writeRelabelConfigs:
-            - action: keep
-              sourceLabels: [__name__]
-              regex: '(cluster_admin_enabled|identity_provider|kube_node_info|kube_node_created|kube_node_role)'
       nodeSelector:
         node-role.kubernetes.io/infra: ""
       tolerations:
