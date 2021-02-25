@@ -12,12 +12,19 @@ data:
     # so that killswitch instructions point to the right file!
       remoteWrite:
         - url: http://token-refresher.openshift-monitoring.svc.cluster.local
-          queueConfig:
-            maxSamplesPerSend: 500
+          remoteTimeout: 30s
           writeRelabelConfigs:
-            - action: keep
-              sourceLabels: [__name__]
-              regex: '(cluster_admin_enabled|identity_provider|kube_node_info|kube_node_created|kube_node_role)'
+          - sourceLabels: [__name__]
+            action: keep
+            regex: '(cluster_admin_enabled|identity_provider|kube_node_info|kube_node_created|kube_node_role)'
+          queueConfig:
+            capacity: 2500
+            maxShards: 1000
+            minShards: 1
+            maxSamplesPerSend: 500
+            batchSendDeadline: 60s
+            minBackoff: 30ms
+            maxBackoff: 100ms
       nodeSelector:
         node-role.kubernetes.io/infra: ""
       tolerations:
