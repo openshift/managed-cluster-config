@@ -7058,6 +7058,41 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: osd-pcap-collector
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+    resourceApplyMode: Sync
+    applyBehavior: CreateOnly
+    resources:
+    - kind: SecurityContextConstraints
+      apiVersion: v1
+      metadata:
+        name: pcap
+      allowPrivilegedContainer: true
+      allowHostNetwork: true
+      allowedCapabilities:
+      - NET_ADMIN
+      - NET_RAW
+      runAsUser:
+        type: MustRunAsNonRoot
+      seLinuxContext:
+        type: RunAsAny
+      users:
+      - system:serviceaccount:sbr-hosted-pcap:default
+      groups:
+      - dedicated-admins
+      - osd-devaccess
+      - cluster-admins
+      - osd-sre-cluster-admins
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: osd-project-request-template
   spec:
     clusterDeploymentSelector:
