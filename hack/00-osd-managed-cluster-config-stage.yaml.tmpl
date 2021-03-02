@@ -2390,6 +2390,15 @@ objects:
     clusterDeploymentSelector:
       matchLabels:
         api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/environment
+        operator: In
+        values:
+        - stage
+      - key: api.openshift.com/legal-entity-id
+        operator: In
+        values:
+        - 1HELaFOf2YHWwwvt3XMbT5Mja7M
     resourceApplyMode: Sync
     resources:
     - apiVersion: v1
@@ -2415,17 +2424,6 @@ objects:
         source: redhat-operators
         sourceNamespace: openshift-marketplace
         name: compliance-operator
-    - deploymentMode: SelectorSyncSet
-      selectorSyncSet:
-        matchLabels:
-        - key: api.openshift.com/environment
-          operator: In
-          values:
-          - stage
-        - key: api.openshift.com/legal-entity-id
-          operator: In
-          values:
-          - 1HELaFOf2YHWwwvt3XMbT5Mja7M
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
