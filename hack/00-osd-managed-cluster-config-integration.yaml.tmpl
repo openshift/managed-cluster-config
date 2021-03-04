@@ -1961,6 +1961,54 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: backplane-srep-hive
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: ext-managed.openshift.io/hive-shard
+        operator: In
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-srep-hive-project
+      rules:
+      - apiGroups:
+        - hive.openshift.io
+        resources:
+        - clusterdeployments
+        verbs:
+        - patch
+      - apiGroups:
+        - hiveinternal.openshift.io
+        resources:
+        - clustersyncs
+        verbs:
+        - delete
+    - apiVersion: managed.openshift.io/v1alpha1
+      kind: SubjectPermission
+      metadata:
+        name: backplane-srep-hive
+        namespace: openshift-rbac-permissions
+      spec:
+        permissions:
+        - allowFirst: true
+          clusterRoleName: backplane-srep-hive-project
+          namespacesAllowedRegex: (^uhc-.*)
+        subjectKind: Group
+        subjectName: system:serviceaccounts:openshift-backplane-srep
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: bz1883589-kubeapiserver-revert
   spec:
     clusterDeploymentSelector:
