@@ -1618,10 +1618,36 @@ objects:
         api.openshift.com/managed: 'true'
     resourceApplyMode: Sync
     resources:
-    - apiVersion: v1
-      kind: Namespace
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
       metadata:
-        name: openshift-backplane-cluster-admin
+        name: backplane-impersonate-cluster-admin
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - users
+        verbs:
+        - impersonate
+        resourceNames:
+        - backplane-cluster-admin
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: backplane-impersonate-cluster-admin
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: backplane-impersonate-cluster-admin
+      subjects:
+      - kind: Group
+        name: system:serviceaccounts:openshift-backplane-srep
+      - kind: Group
+        name: system:serviceaccounts:openshift-backplane-cssre
+    - apiVersion: user.openshift.io/v1
+      kind: User
+      metadata:
+        name: backplane-cluster-admin
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRoleBinding
       metadata:
@@ -1631,8 +1657,8 @@ objects:
         kind: ClusterRole
         name: cluster-admin
       subjects:
-      - kind: Group
-        name: system:serviceaccounts:openshift-backplane-cluster-admin
+      - kind: User
+        name: backplane-cluster-admin
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
