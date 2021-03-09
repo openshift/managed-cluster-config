@@ -4868,12 +4868,6 @@ objects:
         verbs:
         - get
         - list
-      - apiGroups:
-        - ''
-        resources:
-        - pods/exec
-        verbs:
-        - create
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: RoleBinding
       metadata:
@@ -4973,27 +4967,6 @@ objects:
       - kind: ServiceAccount
         name: osd-cluster-ready
         namespace: openshift-monitoring
-    - apiVersion: batch/v1
-      kind: Job
-      metadata:
-        name: osd-cluster-ready
-        namespace: openshift-monitoring
-      spec:
-        backoffLimit: 500
-        template:
-          metadata:
-            name: osd-cluster-ready
-          spec:
-            containers:
-            - env:
-              - name: MAX_CLUSTER_AGE_MINUTES
-                value: '240'
-              name: osd-cluster-ready
-              image: quay.io/openshift-sre/osd-cluster-ready:v0.1.38-614bf59
-              command:
-              - /root/main
-            restartPolicy: OnFailure
-            serviceAccountName: osd-cluster-ready
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
