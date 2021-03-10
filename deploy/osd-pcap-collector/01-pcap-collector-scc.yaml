@@ -1,7 +1,7 @@
 kind: SecurityContextConstraints
 apiVersion: v1
 metadata:
-  name: pcap
+  name: pcap-collector
 allowPrivilegedContainer: true 
 allowHostNetwork: true
 allowedCapabilities:
@@ -10,11 +10,4 @@ allowedCapabilities:
 runAsUser:
   type: MustRunAsNonRoot
 seLinuxContext:
-  type: RunAsAny
-users:
-- system:serviceaccount:sbr-hosted-pcap:default
-groups:
-- dedicated-admins
-- osd-devaccess
-- cluster-admins
-- osd-sre-cluster-admins
+  type: MustRunAs
