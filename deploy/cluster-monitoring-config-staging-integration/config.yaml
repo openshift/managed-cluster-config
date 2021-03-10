@@ -1,10 +1,12 @@
 deploymentMode: "SelectorSyncSet"
 selectorSyncSet:
-  matchLabelsApplyMode: "OR"
   matchExpressions:
     - key: hive.openshift.io/version-major-minor
-      operator: NotIn
+      operator: In
       values: ["4.6", "4.7", "4.8"]
     - key: ext-managed.openshift.io/uwm-disabled
-      operator: In
+      operator: NotIn
       values: ["true"]
+    - key: api.openshift.com/environment
+      operator: NotIn
+      values: ["production"]
