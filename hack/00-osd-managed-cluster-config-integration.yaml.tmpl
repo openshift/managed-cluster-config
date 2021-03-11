@@ -7973,6 +7973,46 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: osd-upgrade-banner
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.0'
+        - '4.1'
+        - '4.2'
+        - '4.3'
+        - '4.4'
+        - '4.5'
+      - key: api.openshift.com/environment
+        operator: NotIn
+        values:
+        - production
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: console.openshift.io/v1
+      kind: ConsoleNotification
+      metadata:
+        name: upgrade-required
+      spec:
+        backgroundColor: '#EE0000'
+        location: BannerTop
+        text: An urgent upgrade for your cluster is required to continue receiving
+          support |
+        link:
+          href: https://cloud.redhat.com/openshift/?plan_id=OSD,ROSA
+          text: Access the OpenShift Cluster Manager to schedule an upgrade
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: osd-user-workload-monitoring
   spec:
     clusterDeploymentSelector:
