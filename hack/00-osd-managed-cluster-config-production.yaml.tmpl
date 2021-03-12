@@ -1618,6 +1618,10 @@ objects:
         api.openshift.com/managed: 'true'
     resourceApplyMode: Sync
     resources:
+    - apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: openshift-backplane-cluster-admin
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
@@ -1659,6 +1663,8 @@ objects:
       subjects:
       - kind: User
         name: backplane-cluster-admin
+      - kind: Group
+        name: system:serviceaccounts:openshift-backplane-cluster-admin
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
