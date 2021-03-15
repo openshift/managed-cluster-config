@@ -10802,6 +10802,35 @@ objects:
           - events
           snapshotVolumes: false
           ttl: 0h25m0s
+- apiVersion: rbac.authorization.k8s.io/v1
+  kind: Role
+  metadata:
+    name: backplane-dev
+    namespace: backplane
+  rules:
+  - apiGroups:
+    - ''
+    resources:
+    - secrets
+    resourceNames:
+    - backplane-aws-credentials
+    verbs:
+    - get
+    - list
+    - watch
+- apiVersion: rbac.authorization.k8s.io/v1
+  kind: RoleBinding
+  metadata:
+    name: backplane-dev
+    namespace: backplane
+  roleRef:
+    apiGroup: rbac.authorization.k8s.io
+    kind: Role
+    name: backplane-dev
+  subjects:
+  - apiGroup: rbac.authorization.k8s.io
+    kind: Group
+    name: system:serviceaccounts:openshift-backplane-srep
 - apiVersion: v1
   data:
     environment: integration
