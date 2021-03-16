@@ -2479,10 +2479,9 @@ objects:
         operator: NotIn
         values:
         - 'true'
-      - key: api.openshift.com/environment
-        operator: In
-        values:
-        - production
+      - key: api.openshift.com/legal-entity-id
+        operator: NotIn
+        values: ${{OBSERVATORIUM_LEGALENTITY_IDS}}
     resourceApplyMode: Sync
     resources:
     - apiVersion: v1
@@ -2620,7 +2619,7 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: cluster-monitoring-config-staging-integration
+    name: cluster-monitoring-config-observatoirum-enabled
   spec:
     clusterDeploymentSelector:
       matchLabels:
@@ -2636,10 +2635,9 @@ objects:
         operator: NotIn
         values:
         - 'true'
-      - key: api.openshift.com/environment
-        operator: NotIn
-        values:
-        - production
+      - key: api.openshift.com/legal-entity-id
+        operator: In
+        values: ${{OBSERVATORIUM_LEGALENTITY_IDS}}
     resourceApplyMode: Sync
     resources:
     - apiVersion: v1
