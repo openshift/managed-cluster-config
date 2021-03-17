@@ -32,8 +32,12 @@ generate-oauth-templates:
 	# Each SSS must not be too big as well.  each sub-dir of deploy/ becomes a SSS.  therefore each of the html
 	# becomes a separate dir.  This is a k8s limitation for annotation value size.
 	for TYPE in login providers errors; do \
-		oc --kubeconfig=.kubeconfig create secret generic osd-oauth-templates-$$TYPE -n openshift-config --from-file=$$TYPE.html=source/html/$$TYPE.html --dry-run -o yaml > deploy/osd-oauth-templates-$$TYPE/osd-oauth-templates-$$TYPE.secret.yaml; \
+		oc --kubeconfig=.kubeconfig create secret generic osd-oauth-templates-$$TYPE -n openshift-config --from-file=$$TYPE.html=source/html/osd/$$TYPE.html --dry-run -o yaml > deploy/osd-oauth-templates-$$TYPE/osd-oauth-templates-$$TYPE.secret.yaml; \
+		oc --kubeconfig=.kubeconfig create secret generic rosa-oauth-templates-$$TYPE -n openshift-config --from-file=$$TYPE.html=source/html/rosa/$$TYPE.html --dry-run -o yaml > deploy/rosa-oauth-templates-$$TYPE/rosa-oauth-templates-$$TYPE.secret.yaml; \
 	done
+
+	oc --kubeconfig=.kubeconfig create configmap rosa-brand-logo -n openshift-config --from-file source/html/rosa/rosa-brand-logo.svg --dry-run -o yaml > deploy/rosa-console-branding-configmap/rosa-brand-logo.yaml
+
 
 .PHONY: generate-hive-templates
 generate-hive-templates: generate-oauth-templates
