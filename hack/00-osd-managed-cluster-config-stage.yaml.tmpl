@@ -8033,6 +8033,33 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: osd-upstream-update-patch
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.7'
+        - '4.8'
+        - '4.9'
+    resourceApplyMode: Sync
+    patches:
+    - apiVersion: config.openshift.io/v1
+      kind: ClusterVersion
+      name: version
+      applyMode: AlwaysApply
+      patch: '{"spec":{"upstream":"https://api.openshift.com/api/upgrades_info/v1/graph"}}'
+      patchType: merge
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: osd-user-workload-monitoring
   spec:
     clusterDeploymentSelector:
