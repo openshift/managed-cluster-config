@@ -24,7 +24,7 @@ endif
 CONTAINER_ENGINE=$(shell command -v podman 2>/dev/null || command -v docker 2>/dev/null)
 
 .PHONY: default
-default: generate-oauth-templates generate-hive-templates 
+default: generate-oauth-templates generate-hive-templates
 
 .PHONY: generate-oauth-templates
 generate-oauth-templates:
