@@ -3642,6 +3642,44 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: managed-upgrade-operator-config
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/version-major-minor
+        operator: NotIn
+        values:
+        - '4.5'
+        - '4.6'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: managed-upgrade-operator-config
+        namespace: openshift-managed-upgrade-operator
+      data:
+        config.yaml: "configManager:\n  source: OCM\n  ocmBaseUrl: ${OCM_BASE_URL}\n\
+          \  watchInterval: 60\nmaintenance:\n  controlPlaneTime: 90\n  ignoredAlerts:\n\
+          \    controlPlaneCriticals:\n    # ClusterOperatorDown - OSD-6330\n    -\
+          \ ClusterOperatorDown\n    # ClusterOperatorDegraded - OSD-6330\n    - ClusterOperatorDegraded\n\
+          scale:\n  timeOut: 30\nupgradeWindow:\n  delayTrigger: 30\n  timeOut: 120\n\
+          nodeDrain:\n  timeOut: 45\n  expectedNodeDrainTime: 8\nhealthCheck:\n  ignoredCriticals:\n\
+          \  - DNSErrors05MinSRE\n  - MetricsClientSendFailingSRE\n  - UpgradeNodeScalingFailedSRE\n\
+          \  - UpgradeClusterCheckFailedSRE\n  - PrometheusRuleFailures\n  - CannotRetrieveUpdates\n\
+          extDependencyAvailabilityChecks:\n  http:\n    timeout: 10\n    urls:\n\
+          \      - https://quay.io/health\n      - ${OCM_BASE_URL}\nverification:\n\
+          \  ignoredNamespaces:\n  - openshift-logging\n  namespacePrefixesToCheck:\n\
+          \  - openshift\n  - kube\n  - default\n"
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: managed-upgrade-operator-config-4.5
   spec:
     clusterDeploymentSelector:
@@ -3704,43 +3742,6 @@ objects:
           \    controlPlaneCriticals:\n    # ClusterOperatorDown - OSD-6330\n    -\
           \ ClusterOperatorDown\n    # ClusterOperatorDegraded - OSD-6330\n    - ClusterOperatorDegraded\n\
           \    # CloudCredentialOperatorDown - BZ 1889540\n    - CloudCredentialOperatorDown\n\
-          scale:\n  timeOut: 30\nupgradeWindow:\n  delayTrigger: 30\n  timeOut: 120\n\
-          nodeDrain:\n  timeOut: 45\n  expectedNodeDrainTime: 8\nhealthCheck:\n  ignoredCriticals:\n\
-          \  - DNSErrors05MinSRE\n  - MetricsClientSendFailingSRE\n  - UpgradeNodeScalingFailedSRE\n\
-          \  - UpgradeClusterCheckFailedSRE\n  - PrometheusRuleFailures\n  - CannotRetrieveUpdates\n\
-          extDependencyAvailabilityChecks:\n  http:\n    timeout: 10\n    urls:\n\
-          \      - https://quay.io/health\n      - ${OCM_BASE_URL}\nverification:\n\
-          \  ignoredNamespaces:\n  - openshift-logging\n  namespacePrefixesToCheck:\n\
-          \  - openshift\n  - kube\n  - default\n"
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    labels:
-      managed.openshift.io/gitHash: ${IMAGE_TAG}
-      managed.openshift.io/gitRepoName: ${REPO_NAME}
-      managed.openshift.io/osd: 'true'
-    name: managed-upgrade-operator-config-4.7
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-      matchExpressions:
-      - key: hive.openshift.io/version-major-minor
-        operator: In
-        values:
-        - '4.7'
-    resourceApplyMode: Sync
-    resources:
-    - apiVersion: v1
-      kind: ConfigMap
-      metadata:
-        name: managed-upgrade-operator-config
-        namespace: openshift-managed-upgrade-operator
-      data:
-        config.yaml: "configManager:\n  source: OCM\n  ocmBaseUrl: ${OCM_BASE_URL}\n\
-          \  watchInterval: 60\nmaintenance:\n  controlPlaneTime: 90\n  ignoredAlerts:\n\
-          \    controlPlaneCriticals:\n    # ClusterOperatorDown - OSD-6330\n    -\
-          \ ClusterOperatorDown\n    # ClusterOperatorDegraded - OSD-6330\n    - ClusterOperatorDegraded\n\
           scale:\n  timeOut: 30\nupgradeWindow:\n  delayTrigger: 30\n  timeOut: 120\n\
           nodeDrain:\n  timeOut: 45\n  expectedNodeDrainTime: 8\nhealthCheck:\n  ignoredCriticals:\n\
           \  - DNSErrors05MinSRE\n  - MetricsClientSendFailingSRE\n  - UpgradeNodeScalingFailedSRE\n\
