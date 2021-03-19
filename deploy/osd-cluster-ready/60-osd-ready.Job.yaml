@@ -4,23 +4,16 @@ metadata:
     name: osd-cluster-ready
     namespace: openshift-monitoring
 spec:
-    # NOTE: We're making this ridiculously high to ensure that
-    # we exceed MAX_CLUSTER_AGE_MINUTES even in the fastest
-    # case. We rely on the logic in the job to exit cleanly when
-    # that max age is reached.
+    # NOTE: We're making this ridiculously high to ensure that the
+    # actual code gets a chance to run to completion. However, consumers
+    # should implement a sensible timeout rather than waiting forever.
     backoffLimit: 500
     template:
         metadata:
             name: osd-cluster-ready
         spec:
             containers:
-            # TODO: Remove this override once
-            # https://bugzilla.redhat.com/show_bug.cgi?id=1921413
-            # is resolved
-            - env:
-              - name: MAX_CLUSTER_AGE_MINUTES
-                value: "240"
-              name: osd-cluster-ready
+            - name: osd-cluster-ready
               image: quay.io/openshift-sre/osd-cluster-ready:v0.1.45-c9f1f45
               command: ["/root/main"]
             restartPolicy: OnFailure
