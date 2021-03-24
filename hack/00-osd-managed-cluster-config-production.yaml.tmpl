@@ -6395,6 +6395,97 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: osd-file-integrity-operator
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: openshift-file-integrity
+        labels:
+          openshift.io/cluster-monitoring: 'true'
+    - apiVersion: operators.coreos.com/v1
+      kind: OperatorGroup
+      metadata:
+        name: file-integrity-operator
+        namespace: openshift-file-integrity
+      spec:
+        targetNamespaces:
+        - openshift-file-integrity
+    - apiVersion: operators.coreos.com/v1alpha1
+      kind: Subscription
+      metadata:
+        name: file-integrity-operator
+        namespace: openshift-file-integrity
+      spec:
+        channel: '4.6'
+        installPlanApproval: Automatic
+        source: redhat-operators
+        sourceNamespace: openshift-marketplace
+        name: file-integrity-operator
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: prometheus-k8s
+        namespace: openshift-cloud-ingress-operator
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - services
+        - endpoints
+        - pods
+        verbs:
+        - get
+        - list
+        - watch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: prometheus-k8s
+        namespace: openshift-file-integrity
+      roleRef:
+        kind: Role
+        name: prometheus-k8s
+      subjects:
+      - kind: ServiceAccount
+        name: prometheus-k8s
+        namespace: openshift-monitoring
+    - apiVersion: fileintegrity.openshift.io/v1alpha1
+      kind: FileIntegrity
+      metadata:
+        name: fileintegrity
+        namespace: openshift-file-integrity
+      spec:
+        config:
+          gracePeriod: 900
+        tolerations:
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/infra
+          operator: Exists
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/master
+          operator: Exists
+    - deploymentMode: SelectorSyncSet
+      selectorSyncSet:
+        matchExpressions:
+        - key: api.openshift.com/environment
+          operator: In
+          values:
+          - staging
+        matchLabels:
+          api.openshift.com/legal-entity-id: ${{SREP_LEGAL_ENTITY_ID}}
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: osd-hsts-routes
   spec:
     clusterDeploymentSelector:
