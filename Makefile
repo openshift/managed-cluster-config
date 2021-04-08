@@ -23,6 +23,14 @@ endif
 
 CONTAINER_ENGINE=$(shell command -v podman 2>/dev/null || command -v docker 2>/dev/null)
 
+ifeq ($(CONTAINER_ENGINE),)
+# Running already in a container
+OC := oc --dry-run=true --kubeconfig=.kubeconfig
+else
+# Run the oc inside container
+OC := $(CONTAINER_ENGINE) run --rm -v `pwd -P`:`pwd -P`:z -w=`pwd` quay.io/openshift/origin-cli:4.7.0 oc --dry-run=client --kubeconfig=.kubeconfig
+endif
+
 .PHONY: default
 default: generate-oauth-templates generate-rosa-brand-logo generate-hive-templates
 
@@ -32,13 +40,13 @@ generate-oauth-templates:
 	# Each SSS must not be too big as well.  each sub-dir of deploy/ becomes a SSS.  therefore each of the html
 	# becomes a separate dir.  This is a k8s limitation for annotation value size.
 	for TYPE in login providers errors; do \
-		$(CONTAINER_ENGINE) run --rm -v `pwd -P`:`pwd -P`:z -w=`pwd` quay.io/openshift/origin-cli:4.7.0 oc --kubeconfig=.kubeconfig create secret generic osd-oauth-templates-$$TYPE -n openshift-config --from-file=$$TYPE.html=source/html/osd/$$TYPE.html --dry-run=client -o yaml > deploy/osd-oauth-templates-$$TYPE/osd-oauth-templates-$$TYPE.secret.yaml; \
-		$(CONTAINER_ENGINE) run --rm -v `pwd -P`:`pwd -P`:z -w=`pwd` quay.io/openshift/origin-cli:4.7.0 oc --kubeconfig=.kubeconfig create secret generic rosa-oauth-templates-$$TYPE -n openshift-config --from-file=$$TYPE.html=source/html/rosa/$$TYPE.html --dry-run=client -o yaml > deploy/rosa-oauth-templates-$$TYPE/rosa-oauth-templates-$$TYPE.secret.yaml; \
+		$(OC) create secret generic osd-oauth-templates-$$TYPE -n openshift-config --from-file=$$TYPE.html=source/html/osd/$$TYPE.html -o yaml > deploy/osd-oauth-templates-$$TYPE/osd-oauth-templates-$$TYPE.secret.yaml; \
+		$(OC) create secret generic rosa-oauth-templates-$$TYPE -n openshift-config --from-file=$$TYPE.html=source/html/rosa/$$TYPE.html -o yaml > deploy/rosa-oauth-templates-$$TYPE/rosa-oauth-templates-$$TYPE.secret.yaml; \
 	done
 
 .PHONY: generate-rosa-brand-logo
 generate-rosa-brand-logo:
-	$(CONTAINER_ENGINE) run --rm -v `pwd -P`:`pwd -P`:z -w=`pwd` quay.io/openshift/origin-cli:4.7.0 oc --kubeconfig=.kubeconfig create configmap rosa-brand-logo -n openshift-config --from-file source/html/rosa/rosa-brand-logo.svg --dry-run=client -o yaml > deploy/rosa-console-branding-configmap/rosa-brand-logo.yaml
+	$(OC) create configmap rosa-brand-logo -n openshift-config --from-file source/html/rosa/rosa-brand-logo.svg -o yaml > deploy/rosa-console-branding-configmap/rosa-brand-logo.yaml
 
 .PHONY: generate-hive-templates
 generate-hive-templates: generate-oauth-templates
