@@ -11035,7 +11035,11 @@ objects:
       name: cluster
       namespace: openshift-image-registry
       patch: '{"spec":{"keepYoungerThan":86400000000000, "ignoreInvalidImageReferences":
-        true, "schedule": "0 */1 * * *", "suspend": false}}'
+        true, "schedule": "0 */1 * * *", "suspend": false, "affinity": {"nodeAffinity":
+        {"preferredDuringSchedulingIgnoredDuringExecution": [{"preference": {"matchExpressions":
+        [{"key": "node-role.kubernetes.io/infra", "operator": "Exists"}]}, "weight":
+        1}]}}, "tolerations": [{"effect": "NoSchedule", "key": "node-role.kubernetes.io/infra",
+        "operator": "Exists"}]}}'
       patchType: merge
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
@@ -11087,6 +11091,18 @@ objects:
           spec:
             template:
               spec:
+                affinity:
+                  nodeAffinity:
+                    preferredDuringSchedulingIgnoredDuringExecution:
+                    - preference:
+                        matchExpressions:
+                        - key: node-role.kubernetes.io/infra
+                          operator: Exists
+                      weight: 1
+                tolerations:
+                - effect: NoSchedule
+                  key: node-role.kubernetes.io/infra
+                  operator: Exists
                 serviceAccountName: sre-pruner-sa
                 restartPolicy: Never
                 containers:
