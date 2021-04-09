@@ -2255,6 +2255,18 @@ objects:
           spec:
             template:
               spec:
+                affinity:
+                  nodeAffinity:
+                    preferredDuringSchedulingIgnoredDuringExecution:
+                    - preference:
+                        matchExpressions:
+                        - key: node-role.kubernetes.io/infra
+                          operator: Exists
+                      weight: 1
+                tolerations:
+                - effect: NoSchedule
+                  key: node-role.kubernetes.io/infra
+                  operator: Exists
                 serviceAccountName: osd-delete-prometheus-operator-bz1891815
                 restartPolicy: Never
                 containers:
@@ -2325,6 +2337,18 @@ objects:
           spec:
             template:
               spec:
+                affinity:
+                  nodeAffinity:
+                    preferredDuringSchedulingIgnoredDuringExecution:
+                    - preference:
+                        matchExpressions:
+                        - key: node-role.kubernetes.io/infra
+                          operator: Exists
+                      weight: 1
+                tolerations:
+                - effect: NoSchedule
+                  key: node-role.kubernetes.io/infra
+                  operator: Exists
                 serviceAccountName: osd-delete-ownerrefs-bz1906584
                 restartPolicy: Never
                 containers:
@@ -5437,6 +5461,18 @@ objects:
           spec:
             template:
               spec:
+                affinity:
+                  nodeAffinity:
+                    preferredDuringSchedulingIgnoredDuringExecution:
+                    - preference:
+                        matchExpressions:
+                        - key: node-role.kubernetes.io/infra
+                          operator: Exists
+                      weight: 1
+                tolerations:
+                - effect: NoSchedule
+                  key: node-role.kubernetes.io/infra
+                  operator: Exists
                 serviceAccountName: osd-patch-subscription-source
                 restartPolicy: Never
                 containers:
@@ -6196,6 +6232,18 @@ objects:
           spec:
             template:
               spec:
+                affinity:
+                  nodeAffinity:
+                    preferredDuringSchedulingIgnoredDuringExecution:
+                    - preference:
+                        matchExpressions:
+                        - key: node-role.kubernetes.io/infra
+                          operator: Exists
+                      weight: 1
+                tolerations:
+                - effect: NoSchedule
+                  key: node-role.kubernetes.io/infra
+                  operator: Exists
                 restartPolicy: Never
                 serviceAccountName: osd-delete-backplane-serviceaccounts
                 containers:
@@ -6705,6 +6753,18 @@ objects:
           spec:
             template:
               spec:
+                affinity:
+                  nodeAffinity:
+                    preferredDuringSchedulingIgnoredDuringExecution:
+                    - preference:
+                        matchExpressions:
+                        - key: node-role.kubernetes.io/infra
+                          operator: Exists
+                      weight: 1
+                tolerations:
+                - effect: NoSchedule
+                  key: node-role.kubernetes.io/infra
+                  operator: Exists
                 serviceAccountName: osd-logging-freeze
                 restartPolicy: Never
                 containers:
@@ -6728,19 +6788,19 @@ objects:
                     \" ] && [ \"$CURR_APPROVAL\" == \"Automatic\" ];\n  then\n   \
                     \ # subscription is automatic, we are in a freeze, and haven't\
                     \ tried to make it manual yet\n\n    echo \"Moving $SUBSCRIPTION\
-                    \ in $NS to installPlanApproval='Manual'\"\n    \n    # also add\
-                    \ annotation first for undoing this later\n    oc -n $NS annotate\
-                    \ $SUBSCRIPTION $ANNOTATION_NAME=$CURR_APPROVAL\n    \n    oc\
-                    \ -n $NS patch $SUBSCRIPTION --type='json' -p=\"[{'op': 'replace',\
-                    \ 'path': '/spec/installPlanApproval', 'value': 'Manual'}]\"\n\
-                    \  \n  elif [ \"$FREEZE\" != \"true\" ] && [ \"$OLD_APPROVAL\"\
-                    \ != \"\" ];\n  then\n    # old approval annotation is set and\
-                    \ we are NOT in a freeze\n\n    # only patch if the old value\
-                    \ != current value\n    # (remember, customer could have changed\
-                    \ the value!)\n    if [ \"$OLD_APPROVAL\" != \"$CURR_APPROVAL\"\
-                    \ ];\n    then\n      echo \"Moving $SUBSCRIPTION in $NS to installPlanApproval='$OLD_APPROVAL'\"\
-                    \n      oc -n $NS patch $SUBSCRIPTION --type='json' -p=\"[{'op':\
-                    \ 'replace', 'path': '/spec/installPlanApproval', 'value': '$OLD_APPROVAL'}]\"\
+                    \ in $NS to installPlanApproval='Manual'\"\n\n    # also add annotation\
+                    \ first for undoing this later\n    oc -n $NS annotate $SUBSCRIPTION\
+                    \ $ANNOTATION_NAME=$CURR_APPROVAL\n\n    oc -n $NS patch $SUBSCRIPTION\
+                    \ --type='json' -p=\"[{'op': 'replace', 'path': '/spec/installPlanApproval',\
+                    \ 'value': 'Manual'}]\"\n\n  elif [ \"$FREEZE\" != \"true\" ]\
+                    \ && [ \"$OLD_APPROVAL\" != \"\" ];\n  then\n    # old approval\
+                    \ annotation is set and we are NOT in a freeze\n\n    # only patch\
+                    \ if the old value != current value\n    # (remember, customer\
+                    \ could have changed the value!)\n    if [ \"$OLD_APPROVAL\" !=\
+                    \ \"$CURR_APPROVAL\" ];\n    then\n      echo \"Moving $SUBSCRIPTION\
+                    \ in $NS to installPlanApproval='$OLD_APPROVAL'\"\n      oc -n\
+                    \ $NS patch $SUBSCRIPTION --type='json' -p=\"[{'op': 'replace',\
+                    \ 'path': '/spec/installPlanApproval', 'value': '$OLD_APPROVAL'}]\"\
                     \n\n      # get the current value again so we can be sure it was\
                     \ actually set\n      CURR_APPROVAL=$(oc -n $NS get $SUBSCRIPTION\
                     \ -o jsonpath={'.spec.installPlanApproval'})\n    fi\n\n    if\
@@ -7913,6 +7973,18 @@ objects:
           spec:
             template:
               spec:
+                affinity:
+                  nodeAffinity:
+                    preferredDuringSchedulingIgnoredDuringExecution:
+                    - preference:
+                        matchExpressions:
+                        - key: node-role.kubernetes.io/infra
+                          operator: Exists
+                      weight: 1
+                tolerations:
+                - effect: NoSchedule
+                  key: node-role.kubernetes.io/infra
+                  operator: Exists
                 serviceAccountName: osd-delete-ownerrefs-serviceaccounts
                 restartPolicy: Never
                 containers:
@@ -10884,6 +10956,18 @@ objects:
           spec:
             template:
               spec:
+                affinity:
+                  nodeAffinity:
+                    preferredDuringSchedulingIgnoredDuringExecution:
+                    - preference:
+                        matchExpressions:
+                        - key: node-role.kubernetes.io/infra
+                          operator: Exists
+                      weight: 1
+                tolerations:
+                - effect: NoSchedule
+                  key: node-role.kubernetes.io/infra
+                  operator: Exists
                 serviceAccountName: sre-pruner-sa
                 restartPolicy: Never
                 containers:
@@ -10909,6 +10993,18 @@ objects:
           spec:
             template:
               spec:
+                affinity:
+                  nodeAffinity:
+                    preferredDuringSchedulingIgnoredDuringExecution:
+                    - preference:
+                        matchExpressions:
+                        - key: node-role.kubernetes.io/infra
+                          operator: Exists
+                      weight: 1
+                tolerations:
+                - effect: NoSchedule
+                  key: node-role.kubernetes.io/infra
+                  operator: Exists
                 serviceAccountName: sre-pruner-sa
                 restartPolicy: Never
                 containers:
@@ -10938,6 +11034,18 @@ objects:
           spec:
             template:
               spec:
+                affinity:
+                  nodeAffinity:
+                    preferredDuringSchedulingIgnoredDuringExecution:
+                    - preference:
+                        matchExpressions:
+                        - key: node-role.kubernetes.io/infra
+                          operator: Exists
+                      weight: 1
+                tolerations:
+                - effect: NoSchedule
+                  key: node-role.kubernetes.io/infra
+                  operator: Exists
                 serviceAccountName: sre-pruner-sa
                 restartPolicy: Never
                 containers:
@@ -10964,6 +11072,18 @@ objects:
           spec:
             template:
               spec:
+                affinity:
+                  nodeAffinity:
+                    preferredDuringSchedulingIgnoredDuringExecution:
+                    - preference:
+                        matchExpressions:
+                        - key: node-role.kubernetes.io/infra
+                          operator: Exists
+                      weight: 1
+                tolerations:
+                - effect: NoSchedule
+                  key: node-role.kubernetes.io/infra
+                  operator: Exists
                 serviceAccountName: sre-pruner-sa
                 restartPolicy: Never
                 containers:
@@ -10990,6 +11110,18 @@ objects:
           spec:
             template:
               spec:
+                affinity:
+                  nodeAffinity:
+                    preferredDuringSchedulingIgnoredDuringExecution:
+                    - preference:
+                        matchExpressions:
+                        - key: node-role.kubernetes.io/infra
+                          operator: Exists
+                      weight: 1
+                tolerations:
+                - effect: NoSchedule
+                  key: node-role.kubernetes.io/infra
+                  operator: Exists
                 serviceAccountName: sre-pruner-sa
                 restartPolicy: Never
                 containers:
