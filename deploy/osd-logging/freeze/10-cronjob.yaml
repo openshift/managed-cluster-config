@@ -1,47 +1,4 @@
 ---
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: osd-logging-freeze
-  namespace: openshift-logging
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  name: osd-logging-freeze
-  namespace: openshift-logging
-rules:
-- apiGroups:
-  - operators.coreos.com
-  resources:
-  - subscriptions
-  verbs:
-  - patch
-  - get
-  - list
-- apiGroups:
-  - ""
-  resources:
-  - configmaps
-  verbs:
-  - get
-  - list
----
-kind: RoleBinding
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: osd-logging-freeze
-  namespace: openshift-logging
-subjects:
-- kind: ServiceAccount
-  name: osd-logging-freeze
-  namespace: openshift-logging
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: osd-logging-freeze
-  namespace: openshift-logging
----
 apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
@@ -56,6 +13,18 @@ spec:
     spec:
       template:
         spec:
+          affinity:
+            nodeAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+              - preference:
+                  matchExpressions:
+                  - key: node-role.kubernetes.io/infra
+                    operator: Exists
+                weight: 1
+          tolerations:
+            - effect: NoSchedule
+              key: node-role.kubernetes.io/infra
+              operator: Exists
           serviceAccountName: osd-logging-freeze
           restartPolicy: Never
           containers:
@@ -85,12 +54,12 @@ spec:
                   # subscription is automatic, we are in a freeze, and haven't tried to make it manual yet
 
                   echo "Moving $SUBSCRIPTION in $NS to installPlanApproval='Manual'"
-                  
+
                   # also add annotation first for undoing this later
                   oc -n $NS annotate $SUBSCRIPTION $ANNOTATION_NAME=$CURR_APPROVAL
-                  
+
                   oc -n $NS patch $SUBSCRIPTION --type='json' -p="[{'op': 'replace', 'path': '/spec/installPlanApproval', 'value': 'Manual'}]"
-                
+
                 elif [ "$FREEZE" != "true" ] && [ "$OLD_APPROVAL" != "" ];
                 then
                   # old approval annotation is set and we are NOT in a freeze
