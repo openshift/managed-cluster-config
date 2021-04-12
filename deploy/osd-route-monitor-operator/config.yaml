@@ -1,3 +1,6 @@
-deploymentMode: "Direct"
-direct:
-  environments: ["integration", "stage", "production"]
+deploymentMode: "SelectorSyncSet"
+selectorSyncSet:
+  matchExpressions:
+  - key: api.openshift.com/environment
+    operator: NotIn
+    values: ["production"]
