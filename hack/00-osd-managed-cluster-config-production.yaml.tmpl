@@ -7741,6 +7741,36 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: osd-route-monitor-operator
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/environment
+        operator: NotIn
+        values:
+        - production
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: monitoring.openshift.io/v1alpha1
+      kind: RouteMonitor
+      metadata:
+        name: console
+        namespace: openshift-route-monitor-operator
+      spec:
+        route:
+          name: console
+          namespace: openshift-console
+        slo:
+          targetAvailabilityPercent: '99.5'
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: osd-samesite-cookie
   spec:
     clusterDeploymentSelector:
@@ -11273,14 +11303,3 @@ objects:
   metadata:
     name: hive-environment
     namespace: openshift-config
-- apiVersion: monitoring.openshift.io/v1alpha1
-  kind: RouteMonitor
-  metadata:
-    name: console
-    namespace: openshift-route-monitor-operator
-  spec:
-    route:
-      name: console
-      namespace: openshift-console
-    slo:
-      targetAvailabilityPercent: '99.5'
