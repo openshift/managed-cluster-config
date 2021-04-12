@@ -2347,85 +2347,6 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: bz1915081
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-    resourceApplyMode: Sync
-    patches:
-    - apiVersion: apps/v1
-      kind: DaemonSet
-      name: node-ca
-      namespace: openshift-image-registry
-      applyMode: AlwaysApply
-      patch: '{"spec":{"template":{"spec":{"tolerations":[{"operator":"Exists"}]}}}}'
-      patchType: merge
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    labels:
-      managed.openshift.io/gitHash: ${IMAGE_TAG}
-      managed.openshift.io/gitRepoName: ${REPO_NAME}
-      managed.openshift.io/osd: 'true'
-    name: bz1915661
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-      matchExpressions:
-      - key: hive.openshift.io/version-major-minor-patch
-        operator: In
-        values:
-        - 4.7.0
-    resourceApplyMode: Sync
-    resources:
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: osd-pruner-bz1915661
-      rules:
-      - apiGroups:
-        - batch
-        resources:
-        - jobs
-        verbs:
-        - get
-        - list
-      - apiGroups:
-        - batch
-        resources:
-        - cronjobs
-        verbs:
-        - get
-        - list
-      - apiGroups:
-        - apps
-        - extensions
-        resources:
-        - statefulsets
-        verbs:
-        - get
-        - list
-    - kind: ClusterRoleBinding
-      apiVersion: rbac.authorization.k8s.io/v1
-      metadata:
-        name: osd-pruner-bz1915661
-      subjects:
-      - kind: ServiceAccount
-        name: pruner
-        namespace: openshift-image-registry
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: ClusterRole
-        name: osd-pruner-bz1915661
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    labels:
-      managed.openshift.io/gitHash: ${IMAGE_TAG}
-      managed.openshift.io/gitRepoName: ${REPO_NAME}
-      managed.openshift.io/osd: 'true'
     name: ccs-dedicated-admins
   spec:
     clusterDeploymentSelector:
@@ -10823,11 +10744,6 @@ objects:
       kind: Namespace
       metadata:
         name: openshift-sre-pruning
-    - apiVersion: v1
-      kind: ServiceAccount
-      metadata:
-        name: sre-pruner-sa
-        namespace: openshift-sre-pruning
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
@@ -10868,26 +10784,6 @@ objects:
         - builds
         verbs:
         - delete
-      - apiGroups:
-        - monitoring.coreos.com
-        resources:
-        - prometheusrules
-        verbs:
-        - delete
-      - apiGroups:
-        - apiextensions.k8s.io
-        resources:
-        - customresourcedefinitions
-        verbs:
-        - delete
-      - apiGroups:
-        - batch
-        resources:
-        - cronjobs
-        - jobs
-        verbs:
-        - delete
-        - list
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRoleBinding
       metadata:
@@ -10900,31 +10796,11 @@ objects:
       - kind: ServiceAccount
         name: sre-pruner-sa
         namespace: openshift-sre-pruning
-    - apiVersion: batch/v1beta1
-      kind: CronJob
+    - apiVersion: v1
+      kind: ServiceAccount
       metadata:
-        name: alert-pruner
+        name: sre-pruner-sa
         namespace: openshift-sre-pruning
-      spec:
-        failedJobsHistoryLimit: 5
-        successfulJobsHistoryLimit: 3
-        concurrencyPolicy: Replace
-        schedule: 0 */1 * * *
-        jobTemplate:
-          spec:
-            template:
-              spec:
-                serviceAccountName: sre-pruner-sa
-                restartPolicy: Never
-                containers:
-                - name: alert-pruner
-                  image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
-                  imagePullPolicy: Always
-                  args:
-                  - /bin/bash
-                  - -c
-                  - oc delete prometheusrules.monitoring.coreos.com/kube-apiserver
-                    --namespace=openshift-kube-apiserver --ignore-not-found
     - apiVersion: batch/v1beta1
       kind: CronJob
       metadata:
@@ -10954,58 +10830,6 @@ objects:
                   - --keep-complete=1
                   - --keep-failed=1
                   - --confirm
-    - apiVersion: batch/v1beta1
-      kind: CronJob
-      metadata:
-        name: crd-pruner
-        namespace: openshift-sre-pruning
-      spec:
-        failedJobsHistoryLimit: 5
-        successfulJobsHistoryLimit: 3
-        concurrencyPolicy: Replace
-        schedule: 0 */1 * * *
-        jobTemplate:
-          spec:
-            template:
-              spec:
-                serviceAccountName: sre-pruner-sa
-                restartPolicy: Never
-                containers:
-                - name: crd-pruner
-                  image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
-                  imagePullPolicy: Always
-                  args:
-                  - /bin/bash
-                  - -c
-                  - oc delete customresourcedefinition.apiextensions.k8s.io/machinedisruptionbudgets.healthchecking.openshift.io
-                    customresourcedefinition.apiextensions.k8s.io/machinehealthchecks.healthchecking.openshift.io
-                    --ignore-not-found
-    - apiVersion: batch/v1beta1
-      kind: CronJob
-      metadata:
-        name: cronjob-pruner
-        namespace: openshift-sre-pruning
-      spec:
-        failedJobsHistoryLimit: 5
-        successfulJobsHistoryLimit: 3
-        concurrencyPolicy: Replace
-        schedule: 0 */1 * * *
-        jobTemplate:
-          spec:
-            template:
-              spec:
-                serviceAccountName: sre-pruner-sa
-                restartPolicy: Never
-                containers:
-                - name: alert-pruner
-                  image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
-                  imagePullPolicy: Always
-                  args:
-                  - /bin/bash
-                  - -c
-                  - "for j in $(oc get jobs -n openshift-sre-pruning -oname | grep\
-                    \ cronjob-pruner); do\n  oc delete -n openshift-sre-pruning $j\
-                    \ --ignore-not-found\ndone"
     - apiVersion: batch/v1beta1
       kind: CronJob
       metadata:
