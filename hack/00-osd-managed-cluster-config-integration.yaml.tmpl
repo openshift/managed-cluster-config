@@ -7388,6 +7388,32 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: osd-oauth-tokens
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/environment
+        operator: NotIn
+        values:
+        - production
+        - staging
+    resourceApplyMode: Sync
+    patches:
+    - apiVersion: config.openshift.io/v1
+      applyMode: AlwaysApply
+      kind: OAuth
+      name: cluster
+      patch: '{"spec":{"tokenConfig":{"accessTokenMaxAgeSeconds":86400, "accessTokenInactivityTimeoutSeconds":21600,"accessTokenInactivityTimeout":"6h"}}}'
+      patchType: merge
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: osd-openshift-operators-redhat
   spec:
     clusterDeploymentSelector:
