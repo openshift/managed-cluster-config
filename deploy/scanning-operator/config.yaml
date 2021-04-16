@@ -2,5 +2,8 @@ deploymentMode: "SelectorSyncSet"
 selectorSyncSet:
   matchExpressions:
   - key: api.openshift.com/environment
-    operator: NotIn
-    values: ["production"]
+    operator: In
+    values: ["staging"]
+  matchLabels:
+    # Only apply on clusters owned by (SREP)
+    api.openshift.com/legal-entity-id: "${{SREP_LEGAL_ENTITY_ID}}"
