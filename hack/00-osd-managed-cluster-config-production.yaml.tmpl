@@ -5235,18 +5235,13 @@ objects:
         values:
         - rosa
     resourceApplyMode: Sync
-    resources:
+    patches:
     - apiVersion: operator.openshift.io/v1
+      applyMode: AlwaysApply
       kind: Console
-      metadata:
-        name: cluster
-      spec:
-        managementState: Managed
-        authentication:
-          logoutRedirect: https://www.redhat.com/i/should/logout
-        customization:
-          brand: dedicated
-          documentationBaseURL: https://docs.openshift.com/dedicated/4/
+      name: cluster
+      patchType: merge
+      patch: '{"spec":{"managementState":"Managed","route":null,"customization":{"brand":"dedicated","documentationBaseURL":"https://docs.openshift.com/dedicated/4/","customProductName":null,"customLogoFile":null}}}'
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -9278,21 +9273,14 @@ objects:
         values:
         - rosa
     resourceApplyMode: Sync
-    resources:
+    patches:
     - apiVersion: operator.openshift.io/v1
+      applyMode: AlwaysApply
       kind: Console
-      metadata:
-        name: cluster
-      spec:
-        managementState: Managed
-        authentication:
-          logoutRedirect: https://www.redhat.com/i/should/logout
-        customization:
-          customProductName: Red Hat OpenShift Service on AWS
-          customLogoFile:
-            name: rosa-brand-logo
-            key: rosa-brand-logo.svg
-          documentationBaseURL: https://docs.openshift.com/rosa/
+      name: cluster
+      patchType: merge
+      patch: '{"spec":{"managementState":"Managed","route":null,"customization":{"brand":null,"documentationBaseURL":"https://docs.openshift.com/rosa/","customProductName":"Red
+        Hat OpenShift Service on AWS","customLogoFile":{"name":"rosa-brand-logo","key":"rosa-brand-logo.svg"}}}}'
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
