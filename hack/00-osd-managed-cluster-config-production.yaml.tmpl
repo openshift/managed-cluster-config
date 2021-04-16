@@ -2666,6 +2666,49 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: container-security-operator
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/legal-entity-id: ${{SREP_LEGAL_ENTITY_ID}}
+      matchExpressions:
+      - key: api.openshift.com/environment
+        operator: In
+        values:
+        - staging
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: openshift-container-security-operator
+    - apiVersion: operators.coreos.com/v1
+      kind: OperatorGroup
+      metadata:
+        name: container-security-operator
+        namespace: openshift-container-security-operator
+      spec:
+        targetNamespaces:
+        - openshift-container-security-operator
+    - apiVersion: operators.coreos.com/v1alpha1
+      kind: Subscription
+      metadata:
+        name: container-security-operator
+        namespace: openshift-container-security-operator
+      spec:
+        channel: quay-v3.4
+        installPlanApproval: Automatic
+        source: redhat-operators
+        sourceNamespace: openshift-marketplace
+        name: container-security-operator
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: customer-registry-cas
   spec:
     clusterDeploymentSelector:
