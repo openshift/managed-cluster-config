@@ -33,6 +33,7 @@ You must specify a `deploymentMode` property in `config.yaml`.
 * `deploymentMode` (optional, default = `"SelectorSyncSet"`) - either "Direct" or "SelectorSyncSet".
 
 ## Direct Deployment
+> :warning: **In most of the cases, use a SelectorSyncSet Deployment**: Be very careful here!
 
 You must specify the `environments` where the resource is deployed.  There is no default set of environments.  It is a child of the top level `direct` property.
 
