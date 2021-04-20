@@ -11031,7 +11031,7 @@ objects:
                     COUNT_CSV=$(oc -n \"$NAMESPACE\" get csv -l operators.coreos.com/route-monitor-operator.openshift-route-monitor-operator=\
                     \ -o name | wc -l) || true\nif [[ $COUNT_CSV -ge 2 ]]; then\n\
                     \  oc -n \"$NAMESPACE\" delete csv -l operators.coreos.com/route-monitor-operator.openshift-route-monitor-operator=\n\
-                    \  oc -n \"$NAMESPACE\" get installplan -o name | xargs oc delete\n\
+                    \  oc -n \"$NAMESPACE\" delete installplan --all --ignore-not-found\n\
                     \  touch /tmp/sub.yaml\n  oc -n \"$NAMESPACE\" get subscription\
                     \ route-monitor-operator -o yaml > /tmp/sub.yaml\n  oc -n \"$NAMESPACE\"\
                     \ delete -f /tmp/sub.yaml\n  oc -n \"$NAMESPACE\" apply -f /tmp/sub.yaml\n\
