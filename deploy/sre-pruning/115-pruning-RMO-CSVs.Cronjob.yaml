@@ -94,7 +94,7 @@ spec:
               COUNT_CSV=$(oc -n "$NAMESPACE" get csv -l operators.coreos.com/route-monitor-operator.openshift-route-monitor-operator= -o name | wc -l) || true
               if [[ $COUNT_CSV -ge 2 ]]; then
                 oc -n "$NAMESPACE" delete csv -l operators.coreos.com/route-monitor-operator.openshift-route-monitor-operator=
-                oc -n "$NAMESPACE" get installplan -o name | xargs oc delete
+                oc -n "$NAMESPACE" delete installplan --all --ignore-not-found
                 touch /tmp/sub.yaml
                 oc -n "$NAMESPACE" get subscription route-monitor-operator -o yaml > /tmp/sub.yaml
                 oc -n "$NAMESPACE" delete -f /tmp/sub.yaml
