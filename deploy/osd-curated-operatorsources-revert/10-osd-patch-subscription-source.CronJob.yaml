@@ -1,37 +1,3 @@
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: osd-patch-subscription-source
-  namespace: openshift-marketplace
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: osd-patch-subscription-source
-rules:
-- apiGroups:
-  - operators.coreos.com
-  resources:
-  - subscriptions
-  verbs:
-  - patch
-  - get
-  - list
----
-kind: ClusterRoleBinding
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: osd-patch-subscription-source
-subjects:
-- kind: ServiceAccount
-  name: osd-patch-subscription-source
-  namespace: openshift-marketplace
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: osd-patch-subscription-source
----
 apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
@@ -46,6 +12,18 @@ spec:
     spec:
       template:
         spec:
+          affinity:
+            nodeAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+              - preference:
+                  matchExpressions:
+                  - key: node-role.kubernetes.io/infra
+                    operator: Exists
+                weight: 1
+          tolerations:
+            - effect: NoSchedule
+              key: node-role.kubernetes.io/infra
+              operator: Exists
           serviceAccountName: osd-patch-subscription-source
           restartPolicy: Never
           containers:
