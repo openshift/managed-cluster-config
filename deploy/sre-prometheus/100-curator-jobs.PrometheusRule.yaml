@@ -1,0 +1,23 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: sre-curator-jobs
+    role: alert-rules
+  name: sre-curator-jobs
+  namespace: openshift-monitoring
+spec:
+  groups:
+  - name: sre-curator-jobs
+    rules:
+    # https://issues.redhat.com/browse/OSD-6348
+    - alert: CuratorJobFailedSRE
+      expr: kube_job_failed{job="kube-state-metrics",namespace="openshift-logging",job_name=~"^curator-.*"} > 1
+      # The cronjob runs this once an hour; and (anecdotally) the job
+      # takes close to an hour to run.
+      for: 120m
+      labels:
+        severity: warning
+        namespace: '{{ $labels.namespace }}'
+      annotations:
+        message: Curator job {{ $labels.job_name }} has failed 2 or more times in the last two hours in namespace {{ $labels.namespace }}.
