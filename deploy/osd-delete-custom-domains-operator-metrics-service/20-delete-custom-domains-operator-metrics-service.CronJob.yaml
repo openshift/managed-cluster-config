@@ -1,0 +1,36 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: osd-delete-custom-domains-operator-metrics-service
+  namespace: openshift-custom-domains-operator
+spec:
+  failedJobsHistoryLimit: 5
+  successfulJobsHistoryLimit: 3
+  concurrencyPolicy: Replace
+  schedule: "*/10 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          affinity:
+            nodeAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+              - preference:
+                  matchExpressions:
+                  - key: node-role.kubernetes.io/infra
+                    operator: Exists
+                weight: 1
+          tolerations:
+            - effect: NoSchedule
+              key: node-role.kubernetes.io/infra
+              operator: Exists
+          restartPolicy: Never
+          serviceAccountName: osd-delete-custom-domains-operator-metrics-service
+          containers:
+            - name: osd-delete-custom-domains-operator-metrics-service
+              imagePullPolicy: Always
+              image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+              args:
+                - /bin/bash
+                - -c
+                - oc delete svc custom-domains-operator-metrics || true
