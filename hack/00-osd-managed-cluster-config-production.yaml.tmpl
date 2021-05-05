@@ -637,6 +637,146 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: OSD-6246-flowcontrol-fix
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.5'
+        - '4.6'
+      - key: hive.openshift.io/version-major-minor-patch
+        operator: NotIn
+        values:
+        - 4.6.13
+        - 4.6.14
+        - 4.6.15
+        - 4.6.16
+        - 4.6.17
+        - 4.6.18
+        - 4.6.19
+        - 4.6.20
+        - 4.6.21
+        - 4.6.22
+        - 4.6.23
+        - 4.6.24
+        - 4.6.25
+        - 4.6.26
+        - 4.6.27
+        - 4.6.28
+        - 4.6.29
+        - 4.6.30
+        - 4.6.31
+        - 4.6.32
+        - 4.6.33
+        - 4.6.34
+        - 4.6.35
+        - 4.6.36
+        - 4.6.37
+        - 4.6.38
+        - 4.6.39
+        - 4.6.40
+        - 4.6.41
+        - 4.6.42
+        - 4.6.43
+        - 4.6.44
+        - 4.6.45
+        - 4.6.46
+        - 4.6.47
+        - 4.6.48
+        - 4.6.49
+        - 4.6.50
+        - 4.6.51
+        - 4.6.52
+        - 4.6.53
+        - 4.6.54
+        - 4.6.55
+        - 4.6.56
+        - 4.6.57
+        - 4.6.58
+        - 4.6.59
+        - 4.6.60
+        - 4.6.61
+        - 4.6.62
+        - 4.6.63
+        - 4.6.64
+        - 4.6.65
+        - 4.6.66
+        - 4.6.67
+        - 4.6.68
+        - 4.6.69
+        - 4.6.70
+        - 4.6.71
+        - 4.6.72
+        - 4.6.73
+        - 4.6.74
+        - 4.6.75
+        - 4.6.76
+        - 4.6.77
+        - 4.6.78
+        - 4.6.79
+        - 4.6.80
+        - 4.6.81
+        - 4.6.82
+        - 4.6.83
+        - 4.6.84
+        - 4.6.85
+        - 4.6.86
+        - 4.6.87
+        - 4.6.88
+        - 4.6.89
+        - 4.6.90
+        - 4.6.91
+        - 4.6.92
+        - 4.6.93
+        - 4.6.94
+        - 4.6.95
+        - 4.6.96
+        - 4.6.97
+        - 4.6.98
+        - 4.6.99
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: flowcontrol.apiserver.k8s.io/v1alpha1
+      kind: FlowSchema
+      metadata:
+        name: osd-exempt-service-accounts
+      spec:
+        distinguisherMethod:
+          type: ByUser
+        matchingPrecedence: 10
+        priorityLevelConfiguration:
+          name: exempt
+        rules:
+        - nonResourceRules:
+          - nonResourceURLs:
+            - '*'
+            verbs:
+            - '*'
+          resourceRules:
+          - apiGroups:
+            - '*'
+            clusterScope: true
+            namespaces:
+            - '*'
+            resources:
+            - '*'
+            verbs:
+            - '*'
+          subjects:
+          - group:
+              name: system:serviceaccounts
+            kind: Group
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: backplane-cee
   spec:
     clusterDeploymentSelector:
@@ -3826,146 +3966,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: cluster-config-v1-reader
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    labels:
-      managed.openshift.io/gitHash: ${IMAGE_TAG}
-      managed.openshift.io/gitRepoName: ${REPO_NAME}
-      managed.openshift.io/osd: 'true'
-    name: osd-6246-flowcontrol-fix
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-      matchExpressions:
-      - key: hive.openshift.io/version-major-minor
-        operator: In
-        values:
-        - '4.5'
-        - '4.6'
-      - key: hive.openshift.io/version-major-minor-patch
-        operator: NotIn
-        values:
-        - 4.6.13
-        - 4.6.14
-        - 4.6.15
-        - 4.6.16
-        - 4.6.17
-        - 4.6.18
-        - 4.6.19
-        - 4.6.20
-        - 4.6.21
-        - 4.6.22
-        - 4.6.23
-        - 4.6.24
-        - 4.6.25
-        - 4.6.26
-        - 4.6.27
-        - 4.6.28
-        - 4.6.29
-        - 4.6.30
-        - 4.6.31
-        - 4.6.32
-        - 4.6.33
-        - 4.6.34
-        - 4.6.35
-        - 4.6.36
-        - 4.6.37
-        - 4.6.38
-        - 4.6.39
-        - 4.6.40
-        - 4.6.41
-        - 4.6.42
-        - 4.6.43
-        - 4.6.44
-        - 4.6.45
-        - 4.6.46
-        - 4.6.47
-        - 4.6.48
-        - 4.6.49
-        - 4.6.50
-        - 4.6.51
-        - 4.6.52
-        - 4.6.53
-        - 4.6.54
-        - 4.6.55
-        - 4.6.56
-        - 4.6.57
-        - 4.6.58
-        - 4.6.59
-        - 4.6.60
-        - 4.6.61
-        - 4.6.62
-        - 4.6.63
-        - 4.6.64
-        - 4.6.65
-        - 4.6.66
-        - 4.6.67
-        - 4.6.68
-        - 4.6.69
-        - 4.6.70
-        - 4.6.71
-        - 4.6.72
-        - 4.6.73
-        - 4.6.74
-        - 4.6.75
-        - 4.6.76
-        - 4.6.77
-        - 4.6.78
-        - 4.6.79
-        - 4.6.80
-        - 4.6.81
-        - 4.6.82
-        - 4.6.83
-        - 4.6.84
-        - 4.6.85
-        - 4.6.86
-        - 4.6.87
-        - 4.6.88
-        - 4.6.89
-        - 4.6.90
-        - 4.6.91
-        - 4.6.92
-        - 4.6.93
-        - 4.6.94
-        - 4.6.95
-        - 4.6.96
-        - 4.6.97
-        - 4.6.98
-        - 4.6.99
-    resourceApplyMode: Sync
-    resources:
-    - apiVersion: flowcontrol.apiserver.k8s.io/v1alpha1
-      kind: FlowSchema
-      metadata:
-        name: osd-exempt-service-accounts
-      spec:
-        distinguisherMethod:
-          type: ByUser
-        matchingPrecedence: 10
-        priorityLevelConfiguration:
-          name: exempt
-        rules:
-        - nonResourceRules:
-          - nonResourceURLs:
-            - '*'
-            verbs:
-            - '*'
-          resourceRules:
-          - apiGroups:
-            - '*'
-            clusterScope: true
-            namespaces:
-            - '*'
-            resources:
-            - '*'
-            verbs:
-            - '*'
-          subjects:
-          - group:
-              name: system:serviceaccounts
-            kind: Group
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -7401,7 +7401,7 @@ objects:
         - type: Ready
           timeout: 480s
           status: Unknown
-        maxUnhealthy: 2
+        maxUnhealthy: 3
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
