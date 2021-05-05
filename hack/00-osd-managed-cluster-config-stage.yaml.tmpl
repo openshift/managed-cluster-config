@@ -1018,6 +1018,107 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: backplane-cssre-addon-managed-api-service-internal
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/addon-managed-api-service-internal: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: openshift-backplane-cssre
+    - aggregationRule:
+        clusterRoleSelectors:
+        - matchExpressions:
+          - key: managed.openshift.io/aggregate-to-cssre-admins
+            operator: In
+            values:
+            - cluster
+        - matchExpressions:
+          - key: managed.openshift.io/aggregate-to-dedicated-admins
+            operator: In
+            values:
+            - cluster
+      apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-cssre-admins-cluster
+      rules: []
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: backplane-cssre
+        namespace: openshift-monitoring
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods/portforward
+        verbs:
+        - create
+    - apiVersion: rbac.authorization.k8s.io/v1
+      aggregationRule:
+        clusterRoleSelectors:
+        - matchExpressions:
+          - key: rbac.authorization.k8s.io/aggregate-to-view
+            operator: In
+            values:
+            - 'true'
+        - matchExpressions:
+          - key: managed.openshift.io/aggregate-to-backplane-cssre
+            operator: In
+            values:
+            - 'true'
+      kind: ClusterRole
+      metadata:
+        name: backplane-cssre-readers-cluster
+      rules: []
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: backplane-cssre-admins
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: backplane-cssre-admins-cluster
+      subjects:
+      - kind: Group
+        name: system:serviceaccounts:openshift-backplane-cssre
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: backplane-cssre
+        namespace: openshift-monitoring
+      subjects:
+      - apiGroup: rbac.authorization.k8s.io
+        kind: Group
+        name: system:serviceaccounts:openshift-backplane-cssre
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: backplane-cssre
+        namespace: openshift-monitoring
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: backplane-cssre-readers
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: backplane-cssre-readers-cluster
+      subjects:
+      - kind: Group
+        name: system:serviceaccounts:openshift-backplane-cssre
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: backplane-cssre-rhmi-addon-rhmi-operator
   spec:
     clusterDeploymentSelector:
@@ -1452,6 +1553,7 @@ objects:
       matchLabels:
         api.openshift.com/managed: 'true'
         api.openshift.com/addon-managed-api-service: 'true'
+        api.openshift.com/addon-managed-api-service-internal: 'true'
     resourceApplyMode: Sync
     resources:
     - apiVersion: rbac.authorization.k8s.io/v1
@@ -3046,6 +3148,70 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: layered-sre-authorization-addon-managed-api-service-internal
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/addon-managed-api-service-internal: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: user.openshift.io/v1
+      kind: Group
+      metadata:
+        name: layered-cs-sre-admins
+      users: ${{CS_SRE_USERS}}
+    - aggregationRule:
+        clusterRoleSelectors:
+        - matchExpressions:
+          - key: managed.openshift.io/aggregate-to-cssre-admins
+            operator: In
+            values:
+            - cluster
+        - matchExpressions:
+          - key: managed.openshift.io/aggregate-to-dedicated-admins
+            operator: In
+            values:
+            - cluster
+      apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-cssre-admins-cluster
+      rules: []
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: backplane-cssre-admins-legacy
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: backplane-cssre-admins-cluster
+      subjects:
+      - kind: Group
+        name: layered-cs-sre-admins
+    - apiVersion: user.openshift.io/v1
+      kind: Group
+      metadata:
+        name: layered-sre-cluster-admins
+      users: []
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: layered-sre-cluster-admins
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: cluster-admin
+      subjects:
+      - kind: Group
+        name: layered-sre-cluster-admins
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: layered-sre-authorization-rhmi-addon-rhmi-operator
   spec:
     clusterDeploymentSelector:
@@ -3480,6 +3646,7 @@ objects:
       matchLabels:
         api.openshift.com/managed: 'true'
         api.openshift.com/addon-managed-api-service: 'true'
+        api.openshift.com/addon-managed-api-service-internal: 'true'
     resourceApplyMode: Sync
     resources:
     - apiVersion: rbac.authorization.k8s.io/v1
