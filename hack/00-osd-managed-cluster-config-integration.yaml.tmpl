@@ -2174,27 +2174,6 @@ objects:
       metadata:
         name: backplane-srep-readers-cluster
       rules: []
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: backplane-srep-readers-project
-      rules:
-      - apiGroups:
-        - '*'
-        resources:
-        - pods
-        - services
-        - daemonsets
-        - roles
-        - deployments
-        - replicasets
-        - statefulsets
-        - jobs
-        - cronjobs
-        verbs:
-        - get
-        - list
-        - watch
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -2208,10 +2187,6 @@ objects:
         - allowFirst: true
           clusterRoleName: backplane-srep-admins-project
           namespacesAllowedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
-          namespacesDeniedRegex: openshift-backplane-cluster-admin
-        - allowFirst: true
-          clusterRoleName: backplane-srep-readers-project
-          namespacesAllowedRegex: '*'
           namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-srep
