@@ -2438,6 +2438,29 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
+        name: backplane-srep-hive-osd-operators-reader
+      rules:
+      - apiGroups:
+        - rbac.authorization.k8s.io
+        resources:
+        - roles
+        - rolebindings
+        verbs:
+        - get
+        - watch
+        - list
+      - apiGroups:
+        - authorization.openshift.io
+        resources:
+        - roles
+        - rolebindings
+        verbs:
+        - get
+        - watch
+        - list
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
         name: backplane-srep-hive-project
       rules:
       - apiGroups:
@@ -2462,6 +2485,10 @@ objects:
         - allowFirst: true
           clusterRoleName: backplane-srep-hive-project
           namespacesAllowedRegex: (^uhc-.*)
+        - allowFirst: true
+          clusterRoleName: backplane-srep-hive-reader
+          namespacesAllowedRegex: ^.*-operator$
+          namespacesDeniedRegex: ^uhc-.*
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-srep
 - apiVersion: hive.openshift.io/v1
