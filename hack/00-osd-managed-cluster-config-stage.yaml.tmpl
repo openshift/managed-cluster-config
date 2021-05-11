@@ -7135,6 +7135,19 @@ objects:
     resourceApplyMode: Sync
     applyBehavior: CreateOnly
     resources:
+    - kind: ClusterRole
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        name: osd-gcp-storage-dedicated-admin
+        labels:
+          managed.openshift.io/aggregate-to-dedicated-admins: cluster
+      rules:
+      - verbs:
+        - '*'
+        apiGroups:
+        - storage.k8s.io
+        resources:
+        - storageclasses
     - apiVersion: storage.k8s.io/v1
       kind: StorageClass
       metadata:
