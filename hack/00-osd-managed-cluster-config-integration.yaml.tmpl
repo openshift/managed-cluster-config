@@ -7135,19 +7135,6 @@ objects:
     resourceApplyMode: Sync
     applyBehavior: CreateOnly
     resources:
-    - kind: ClusterRole
-      apiVersion: rbac.authorization.k8s.io/v1
-      metadata:
-        name: osd-gcp-storage-dedicated-admin
-        labels:
-          managed.openshift.io/aggregate-to-dedicated-admins: cluster
-      rules:
-      - verbs:
-        - '*'
-        apiGroups:
-        - storage.k8s.io
-        resources:
-        - storageclasses
     - apiVersion: storage.k8s.io/v1
       kind: StorageClass
       metadata:
@@ -7161,6 +7148,42 @@ objects:
       volumeBindingMode: WaitForFirstConsumer
       allowVolumeExpansion: true
       reclaimPolicy: Delete
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-gcp-ssd-storage-gcp-dedicated-admin
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/ccs
+        operator: In
+        values:
+        - 'true'
+      - key: hive.openshift.io/cluster-platform
+        operator: In
+        values:
+        - gcp
+    resourceApplyMode: Sync
+    resources:
+    - kind: ClusterRole
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        name: osd-gcp-storage-dedicated-admin
+        labels:
+          managed.openshift.io/aggregate-to-dedicated-admins: cluster
+      rules:
+      - verbs:
+        - '*'
+        apiGroups:
+        - storage.k8s.io
+        resources:
+        - storageclasses
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
