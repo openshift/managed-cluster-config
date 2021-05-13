@@ -347,6 +347,36 @@ objects:
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
+    name: resource-quota-storage-7100gb
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/storage-quota-gib: '7100'
+      matchExpressions:
+      - key: api.openshift.com/ccs
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: persistent-volume-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/storage-pv-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            requests.storage: 7100Gi
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
     name: resource-quota-service-lb-default
   spec:
     clusterDeploymentSelector:
