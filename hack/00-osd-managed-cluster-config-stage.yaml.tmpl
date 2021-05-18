@@ -4459,6 +4459,64 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: odh-gpu-namespace-gpu-operator
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/addon-managed-odh: 'true'
+    resourceApplyMode: Upsert
+    resources:
+    - apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: gpu-operator-resources
+        label:
+          openshift.io/cluster-monitoring: 'true'
+    - apiVersion: operators.coreos.com/v1
+      kind: OperatorGroup
+      metadata:
+        generateName: gpu-operator-
+        name: gpu-operator-ci
+        namespace: gpu-operator-resources
+      spec:
+        targetNamespaces:
+        - gpu-operator-resources
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: odh-gpu-namespace-nfd-operator
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/addon-managed-odh: 'true'
+    resourceApplyMode: Upsert
+    resources:
+    - apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: openshift-nfd
+    - apiVersion: operators.coreos.com/v1
+      kind: OperatorGroup
+      metadata:
+        generateName: openshift-nfd-
+        name: openshift-nfd-ci
+        namespace: openshift-nfd
+      spec:
+        targetNamespaces:
+        - openshift-nfd
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: osd-6246-flowcontrol-fix
   spec:
     clusterDeploymentSelector:
