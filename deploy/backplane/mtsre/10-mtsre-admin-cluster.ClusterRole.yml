@@ -1,0 +1,14 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: backplane-mtsre-admin-cluster
+rules:
+# OSD-7254, allow mt-sre to create machineconfig
+# and subscription for managing gpu operator
+- apiGroups:
+  - ""
+  resources:
+  - machineconfigs
+  - subscriptions
+  verbs:
+  - create
