@@ -1,0 +1,14 @@
+deploymentMode: SelectorSyncSet
+selectorSyncSet:
+  matchLabels:
+    api.openshift.com/managed: 'true'
+    api.openshift.com/storage-quota-gib: '3600'
+  matchExpressions:
+  - key: api.openshift.com/ccs
+    operator: NotIn
+    values:
+    - 'true'
+  - key: hive.openshift.io/cluster-platform
+    operator: In
+    values:
+    - aws

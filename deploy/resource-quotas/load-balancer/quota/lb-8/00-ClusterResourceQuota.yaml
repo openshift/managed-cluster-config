@@ -1,0 +1,14 @@
+kind: ClusterResourceQuota
+apiVersion: quota.openshift.io/v1
+metadata:
+  name: loadbalancer-quota
+spec:
+  selector:
+    annotations: null
+    labels:
+      matchExpressions:
+      - key: managed.openshift.io/service-lb-quota-exempt
+        operator: DoesNotExist
+  quota:
+    hard:
+      services.loadbalancers: '8'

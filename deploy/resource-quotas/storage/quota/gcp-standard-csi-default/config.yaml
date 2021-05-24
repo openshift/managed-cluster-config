@@ -1,0 +1,17 @@
+deploymentMode: SelectorSyncSet
+selectorSyncSet:
+  matchExpressions:
+  - key: api.openshift.com/managed
+    operator: In
+    values:
+    - 'true'
+  - key: api.openshift.com/storage-quota-gib
+    operator: DoesNotExist
+  - key: api.openshift.com/ccs
+    operator: NotIn
+    values:
+    - 'true'
+  - key: hive.openshift.io/cluster-platform
+    operator: In
+    values:
+    - gcp

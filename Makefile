@@ -32,7 +32,7 @@ OC := $(CONTAINER_ENGINE) run --rm -v `pwd -P`:`pwd -P`:z -w=`pwd` quay.io/opens
 endif
 
 .PHONY: default
-default: generate-oauth-templates generate-rosa-brand-logo generate-hive-templates
+default: generate-oauth-templates generate-storage-quota-templates generate-lb-quota-templates generate-rosa-brand-logo generate-hive-templates
 
 .PHONY: generate-oauth-templates
 generate-oauth-templates:
@@ -44,12 +44,20 @@ generate-oauth-templates:
 		$(OC) create secret generic rosa-oauth-templates-$$TYPE -n openshift-config --from-file=$$TYPE.html=source/html/rosa/$$TYPE.html -o yaml > deploy/rosa-oauth-templates-$$TYPE/rosa-oauth-templates-$$TYPE.secret.yaml; \
 	done
 
+.PHONY: generate-storage-quota-templates
+generate-storage-quota-templates:
+	make -C $(RESOURCE_QUOTAS_DIRECTORY)/storage
+
+.PHONY: generate-lb-quota-templates
+generate-lb-quota-templates:
+	make -C $(RESOURCE_QUOTAS_DIRECTORY)/load-balancer
+
 .PHONY: generate-rosa-brand-logo
 generate-rosa-brand-logo:
 	$(OC) create configmap rosa-brand-logo -n openshift-config --from-file source/html/rosa/rosa-brand-logo.svg -o yaml > deploy/rosa-console-branding-configmap/rosa-brand-logo.yaml
 
 .PHONY: generate-hive-templates
-generate-hive-templates: generate-oauth-templates
+generate-hive-templates: generate-oauth-templates generate-storage-quota-templates generate-lb-quota-templates
 	if [ -z ${IN_CONTAINER} ]; then \
 		$(CONTAINER_ENGINE) pull quay.io/app-sre/python:3 && $(CONTAINER_ENGINE) tag quay.io/app-sre/python:3 python:3 || true; \
 		$(CONTAINER_ENGINE) run --rm -v `pwd -P`:`pwd -P`:z python:3 /bin/sh -c "cd `pwd -P`; pip install oyaml; ${GEN_TEMPLATE}"; \

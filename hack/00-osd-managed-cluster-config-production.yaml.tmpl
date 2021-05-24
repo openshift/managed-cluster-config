@@ -42,552 +42,6 @@ metadata:
   name: selectorsyncset-template
 objects:
 - apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    name: resource-quota-storage-default
-  spec:
-    clusterDeploymentSelector:
-      matchExpressions:
-      - key: api.openshift.com/managed
-        operator: In
-        values:
-        - 'true'
-      - key: api.openshift.com/storage-quota-gib
-        operator: DoesNotExist
-      - key: api.openshift.com/ccs
-        operator: NotIn
-        values:
-        - 'true'
-    resourceApplyMode: Sync
-    resources:
-    - kind: ClusterResourceQuota
-      apiVersion: quota.openshift.io/v1
-      metadata:
-        name: persistent-volume-quota
-      spec:
-        selector:
-          annotations: null
-          labels:
-            matchExpressions:
-            - key: managed.openshift.io/storage-pv-quota-exempt
-              operator: DoesNotExist
-        quota:
-          hard:
-            requests.storage: 100Gi
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    name: resource-quota-storage-100gb
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-        api.openshift.com/storage-quota-gib: '100'
-      matchExpressions:
-      - key: api.openshift.com/ccs
-        operator: NotIn
-        values:
-        - 'true'
-    resourceApplyMode: Sync
-    resources:
-    - kind: ClusterResourceQuota
-      apiVersion: quota.openshift.io/v1
-      metadata:
-        name: persistent-volume-quota
-      spec:
-        selector:
-          annotations: null
-          labels:
-            matchExpressions:
-            - key: managed.openshift.io/storage-pv-quota-exempt
-              operator: DoesNotExist
-        quota:
-          hard:
-            requests.storage: 100Gi
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    name: resource-quota-storage-600gb
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-        api.openshift.com/storage-quota-gib: '600'
-      matchExpressions:
-      - key: api.openshift.com/ccs
-        operator: NotIn
-        values:
-        - 'true'
-    resourceApplyMode: Sync
-    resources:
-    - kind: ClusterResourceQuota
-      apiVersion: quota.openshift.io/v1
-      metadata:
-        name: persistent-volume-quota
-      spec:
-        selector:
-          annotations: null
-          labels:
-            matchExpressions:
-            - key: managed.openshift.io/storage-pv-quota-exempt
-              operator: DoesNotExist
-        quota:
-          hard:
-            requests.storage: 600Gi
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    name: resource-quota-storage-1100gb
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-        api.openshift.com/storage-quota-gib: '1100'
-      matchExpressions:
-      - key: api.openshift.com/ccs
-        operator: NotIn
-        values:
-        - 'true'
-    resourceApplyMode: Sync
-    resources:
-    - kind: ClusterResourceQuota
-      apiVersion: quota.openshift.io/v1
-      metadata:
-        name: persistent-volume-quota
-      spec:
-        selector:
-          annotations: null
-          labels:
-            matchExpressions:
-            - key: managed.openshift.io/storage-pv-quota-exempt
-              operator: DoesNotExist
-        quota:
-          hard:
-            requests.storage: 1100Gi
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    name: resource-quota-storage-1600gb
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-        api.openshift.com/storage-quota-gib: '1600'
-      matchExpressions:
-      - key: api.openshift.com/ccs
-        operator: NotIn
-        values:
-        - 'true'
-    resourceApplyMode: Sync
-    resources:
-    - kind: ClusterResourceQuota
-      apiVersion: quota.openshift.io/v1
-      metadata:
-        name: persistent-volume-quota
-      spec:
-        selector:
-          annotations: null
-          labels:
-            matchExpressions:
-            - key: managed.openshift.io/storage-pv-quota-exempt
-              operator: DoesNotExist
-        quota:
-          hard:
-            requests.storage: 1600Gi
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    name: resource-quota-storage-2100gb
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-        api.openshift.com/storage-quota-gib: '2100'
-      matchExpressions:
-      - key: api.openshift.com/ccs
-        operator: NotIn
-        values:
-        - 'true'
-    resourceApplyMode: Sync
-    resources:
-    - kind: ClusterResourceQuota
-      apiVersion: quota.openshift.io/v1
-      metadata:
-        name: persistent-volume-quota
-      spec:
-        selector:
-          annotations: null
-          labels:
-            matchExpressions:
-            - key: managed.openshift.io/storage-pv-quota-exempt
-              operator: DoesNotExist
-        quota:
-          hard:
-            requests.storage: 2100Gi
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    name: resource-quota-storage-2600gb
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-        api.openshift.com/storage-quota-gib: '2600'
-      matchExpressions:
-      - key: api.openshift.com/ccs
-        operator: NotIn
-        values:
-        - 'true'
-    resourceApplyMode: Sync
-    resources:
-    - kind: ClusterResourceQuota
-      apiVersion: quota.openshift.io/v1
-      metadata:
-        name: persistent-volume-quota
-      spec:
-        selector:
-          annotations: null
-          labels:
-            matchExpressions:
-            - key: managed.openshift.io/storage-pv-quota-exempt
-              operator: DoesNotExist
-        quota:
-          hard:
-            requests.storage: 2600Gi
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    name: resource-quota-storage-3100gb
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-        api.openshift.com/storage-quota-gib: '3100'
-      matchExpressions:
-      - key: api.openshift.com/ccs
-        operator: NotIn
-        values:
-        - 'true'
-    resourceApplyMode: Sync
-    resources:
-    - kind: ClusterResourceQuota
-      apiVersion: quota.openshift.io/v1
-      metadata:
-        name: persistent-volume-quota
-      spec:
-        selector:
-          annotations: null
-          labels:
-            matchExpressions:
-            - key: managed.openshift.io/storage-pv-quota-exempt
-              operator: DoesNotExist
-        quota:
-          hard:
-            requests.storage: 3100Gi
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    name: resource-quota-storage-3600gb
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-        api.openshift.com/storage-quota-gib: '3600'
-      matchExpressions:
-      - key: api.openshift.com/ccs
-        operator: NotIn
-        values:
-        - 'true'
-    resourceApplyMode: Sync
-    resources:
-    - kind: ClusterResourceQuota
-      apiVersion: quota.openshift.io/v1
-      metadata:
-        name: persistent-volume-quota
-      spec:
-        selector:
-          annotations: null
-          labels:
-            matchExpressions:
-            - key: managed.openshift.io/storage-pv-quota-exempt
-              operator: DoesNotExist
-        quota:
-          hard:
-            requests.storage: 3600Gi
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    name: resource-quota-storage-4100gb
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-        api.openshift.com/storage-quota-gib: '4100'
-      matchExpressions:
-      - key: api.openshift.com/ccs
-        operator: NotIn
-        values:
-        - 'true'
-    resourceApplyMode: Sync
-    resources:
-    - kind: ClusterResourceQuota
-      apiVersion: quota.openshift.io/v1
-      metadata:
-        name: persistent-volume-quota
-      spec:
-        selector:
-          annotations: null
-          labels:
-            matchExpressions:
-            - key: managed.openshift.io/storage-pv-quota-exempt
-              operator: DoesNotExist
-        quota:
-          hard:
-            requests.storage: 4100Gi
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    name: resource-quota-storage-7100gb
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-        api.openshift.com/storage-quota-gib: '7100'
-      matchExpressions:
-      - key: api.openshift.com/ccs
-        operator: NotIn
-        values:
-        - 'true'
-    resourceApplyMode: Sync
-    resources:
-    - kind: ClusterResourceQuota
-      apiVersion: quota.openshift.io/v1
-      metadata:
-        name: persistent-volume-quota
-      spec:
-        selector:
-          annotations: null
-          labels:
-            matchExpressions:
-            - key: managed.openshift.io/storage-pv-quota-exempt
-              operator: DoesNotExist
-        quota:
-          hard:
-            requests.storage: 7100Gi
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    name: resource-quota-service-lb-default
-  spec:
-    clusterDeploymentSelector:
-      matchExpressions:
-      - key: api.openshift.com/managed
-        operator: In
-        values:
-        - 'true'
-      - key: api.openshift.com/service-lb-quota
-        operator: DoesNotExist
-      - key: api.openshift.com/ccs
-        operator: NotIn
-        values:
-        - 'true'
-    resourceApplyMode: Sync
-    resources:
-    - kind: ClusterResourceQuota
-      apiVersion: quota.openshift.io/v1
-      metadata:
-        name: loadbalancer-quota
-      spec:
-        selector:
-          annotations: null
-          labels:
-            matchExpressions:
-            - key: managed.openshift.io/service-lb-quota-exempt
-              operator: DoesNotExist
-        quota:
-          hard:
-            services.loadbalancers: '0'
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    name: resource-quota-service-lb-0
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-        api.openshift.com/service-lb-quota: '0'
-      matchExpressions:
-      - key: api.openshift.com/ccs
-        operator: NotIn
-        values:
-        - 'true'
-    resourceApplyMode: Sync
-    resources:
-    - kind: ClusterResourceQuota
-      apiVersion: quota.openshift.io/v1
-      metadata:
-        name: loadbalancer-quota
-      spec:
-        selector:
-          annotations: null
-          labels:
-            matchExpressions:
-            - key: managed.openshift.io/service-lb-quota-exempt
-              operator: DoesNotExist
-        quota:
-          hard:
-            services.loadbalancers: '0'
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    name: resource-quota-service-lb-4
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-        api.openshift.com/service-lb-quota: '4'
-      matchExpressions:
-      - key: api.openshift.com/ccs
-        operator: NotIn
-        values:
-        - 'true'
-    resourceApplyMode: Sync
-    resources:
-    - kind: ClusterResourceQuota
-      apiVersion: quota.openshift.io/v1
-      metadata:
-        name: loadbalancer-quota
-      spec:
-        selector:
-          annotations: null
-          labels:
-            matchExpressions:
-            - key: managed.openshift.io/service-lb-quota-exempt
-              operator: DoesNotExist
-        quota:
-          hard:
-            services.loadbalancers: '4'
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    name: resource-quota-service-lb-8
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-        api.openshift.com/service-lb-quota: '8'
-      matchExpressions:
-      - key: api.openshift.com/ccs
-        operator: NotIn
-        values:
-        - 'true'
-    resourceApplyMode: Sync
-    resources:
-    - kind: ClusterResourceQuota
-      apiVersion: quota.openshift.io/v1
-      metadata:
-        name: loadbalancer-quota
-      spec:
-        selector:
-          annotations: null
-          labels:
-            matchExpressions:
-            - key: managed.openshift.io/service-lb-quota-exempt
-              operator: DoesNotExist
-        quota:
-          hard:
-            services.loadbalancers: '8'
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    name: resource-quota-service-lb-12
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-        api.openshift.com/service-lb-quota: '12'
-      matchExpressions:
-      - key: api.openshift.com/ccs
-        operator: NotIn
-        values:
-        - 'true'
-    resourceApplyMode: Sync
-    resources:
-    - kind: ClusterResourceQuota
-      apiVersion: quota.openshift.io/v1
-      metadata:
-        name: loadbalancer-quota
-      spec:
-        selector:
-          annotations: null
-          labels:
-            matchExpressions:
-            - key: managed.openshift.io/service-lb-quota-exempt
-              operator: DoesNotExist
-        quota:
-          hard:
-            services.loadbalancers: '12'
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    name: resource-quota-service-lb-16
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-        api.openshift.com/service-lb-quota: '16'
-      matchExpressions:
-      - key: api.openshift.com/ccs
-        operator: NotIn
-        values:
-        - 'true'
-    resourceApplyMode: Sync
-    resources:
-    - kind: ClusterResourceQuota
-      apiVersion: quota.openshift.io/v1
-      metadata:
-        name: loadbalancer-quota
-      spec:
-        selector:
-          annotations: null
-          labels:
-            matchExpressions:
-            - key: managed.openshift.io/service-lb-quota-exempt
-              operator: DoesNotExist
-        quota:
-          hard:
-            services.loadbalancers: '16'
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    name: resource-quota-service-lb-20
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-        api.openshift.com/service-lb-quota: '20'
-      matchExpressions:
-      - key: api.openshift.com/ccs
-        operator: NotIn
-        values:
-        - 'true'
-    resourceApplyMode: Sync
-    resources:
-    - kind: ClusterResourceQuota
-      apiVersion: quota.openshift.io/v1
-      metadata:
-        name: loadbalancer-quota
-      spec:
-        selector:
-          annotations: null
-          labels:
-            matchExpressions:
-            - key: managed.openshift.io/service-lb-quota-exempt
-              operator: DoesNotExist
-        quota:
-          hard:
-            services.loadbalancers: '20'
-- apiVersion: hive.openshift.io/v1
   kind: SelectorSyncIdentityProvider
   metadata:
     name: osd-sre-identityprovider
@@ -10070,6 +9524,1941 @@ objects:
       patch: '{ "metadata": {"labels": {"managed.openshift.io/service-lb-quota-exempt":"true"}
         } }'
       patchType: merge
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: resource-quotas-load-balancer-quota-lb-0
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/service-lb-quota: '0'
+      matchExpressions:
+      - key: api.openshift.com/ccs
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: loadbalancer-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/service-lb-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            services.loadbalancers: '0'
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: resource-quotas-load-balancer-quota-lb-12
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/service-lb-quota: '12'
+      matchExpressions:
+      - key: api.openshift.com/ccs
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: loadbalancer-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/service-lb-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            services.loadbalancers: '12'
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: resource-quotas-load-balancer-quota-lb-16
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/service-lb-quota: '16'
+      matchExpressions:
+      - key: api.openshift.com/ccs
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: loadbalancer-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/service-lb-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            services.loadbalancers: '16'
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: resource-quotas-load-balancer-quota-lb-20
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/service-lb-quota: '20'
+      matchExpressions:
+      - key: api.openshift.com/ccs
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: loadbalancer-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/service-lb-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            services.loadbalancers: '20'
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: resource-quotas-load-balancer-quota-lb-4
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/service-lb-quota: '4'
+      matchExpressions:
+      - key: api.openshift.com/ccs
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: loadbalancer-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/service-lb-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            services.loadbalancers: '4'
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: resource-quotas-load-balancer-quota-lb-8
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/service-lb-quota: '8'
+      matchExpressions:
+      - key: api.openshift.com/ccs
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: loadbalancer-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/service-lb-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            services.loadbalancers: '8'
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: resource-quotas-load-balancer-quota-lb-default
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/managed
+        operator: In
+        values:
+        - 'true'
+      - key: api.openshift.com/service-lb-quota
+        operator: DoesNotExist
+      - key: api.openshift.com/ccs
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: loadbalancer-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/service-lb-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            services.loadbalancers: '0'
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: resource-quotas-storage-quota-aws-gp2-100gb
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/storage-quota-gib: '100'
+      matchExpressions:
+      - key: api.openshift.com/ccs
+        operator: NotIn
+        values:
+        - 'true'
+      - key: hive.openshift.io/cluster-platform
+        operator: In
+        values:
+        - aws
+    resourceApplyMode: Sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: persistent-volume-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/storage-pv-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            gp2.storageclass.storage.k8s.io/requests.storage: 100Gi
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: resource-quotas-storage-quota-aws-gp2-1100gb
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/storage-quota-gib: '1100'
+      matchExpressions:
+      - key: api.openshift.com/ccs
+        operator: NotIn
+        values:
+        - 'true'
+      - key: hive.openshift.io/cluster-platform
+        operator: In
+        values:
+        - aws
+    resourceApplyMode: Sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: persistent-volume-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/storage-pv-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            gp2.storageclass.storage.k8s.io/requests.storage: 1100Gi
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: resource-quotas-storage-quota-aws-gp2-1600gb
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/storage-quota-gib: '1600'
+      matchExpressions:
+      - key: api.openshift.com/ccs
+        operator: NotIn
+        values:
+        - 'true'
+      - key: hive.openshift.io/cluster-platform
+        operator: In
+        values:
+        - aws
+    resourceApplyMode: Sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: persistent-volume-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/storage-pv-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            gp2.storageclass.storage.k8s.io/requests.storage: 1600Gi
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: resource-quotas-storage-quota-aws-gp2-2100gb
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/storage-quota-gib: '2100'
+      matchExpressions:
+      - key: api.openshift.com/ccs
+        operator: NotIn
+        values:
+        - 'true'
+      - key: hive.openshift.io/cluster-platform
+        operator: In
+        values:
+        - aws
+    resourceApplyMode: Sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: persistent-volume-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/storage-pv-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            gp2.storageclass.storage.k8s.io/requests.storage: 2100Gi
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: resource-quotas-storage-quota-aws-gp2-2600gb
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/storage-quota-gib: '2600'
+      matchExpressions:
+      - key: api.openshift.com/ccs
+        operator: NotIn
+        values:
+        - 'true'
+      - key: hive.openshift.io/cluster-platform
+        operator: In
+        values:
+        - aws
+    resourceApplyMode: Sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: persistent-volume-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/storage-pv-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            gp2.storageclass.storage.k8s.io/requests.storage: 2600Gi
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: resource-quotas-storage-quota-aws-gp2-3100gb
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/storage-quota-gib: '3100'
+      matchExpressions:
+      - key: api.openshift.com/ccs
+        operator: NotIn
+        values:
+        - 'true'
+      - key: hive.openshift.io/cluster-platform
+        operator: In
+        values:
+        - aws
+    resourceApplyMode: Sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: persistent-volume-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/storage-pv-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            gp2.storageclass.storage.k8s.io/requests.storage: 3100Gi
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: resource-quotas-storage-quota-aws-gp2-3600gb
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/storage-quota-gib: '3600'
+      matchExpressions:
+      - key: api.openshift.com/ccs
+        operator: NotIn
+        values:
+        - 'true'
+      - key: hive.openshift.io/cluster-platform
+        operator: In
+        values:
+        - aws
+    resourceApplyMode: Sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: persistent-volume-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/storage-pv-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            gp2.storageclass.storage.k8s.io/requests.storage: 3600Gi
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: resource-quotas-storage-quota-aws-gp2-4100gb
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/storage-quota-gib: '4100'
+      matchExpressions:
+      - key: api.openshift.com/ccs
+        operator: NotIn
+        values:
+        - 'true'
+      - key: hive.openshift.io/cluster-platform
+        operator: In
+        values:
+        - aws
+    resourceApplyMode: Sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: persistent-volume-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/storage-pv-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            gp2.storageclass.storage.k8s.io/requests.storage: 4100Gi
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: resource-quotas-storage-quota-aws-gp2-600gb
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/storage-quota-gib: '600'
+      matchExpressions:
+      - key: api.openshift.com/ccs
+        operator: NotIn
+        values:
+        - 'true'
+      - key: hive.openshift.io/cluster-platform
+        operator: In
+        values:
+        - aws
+    resourceApplyMode: Sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: persistent-volume-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/storage-pv-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            gp2.storageclass.storage.k8s.io/requests.storage: 600Gi
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: resource-quotas-storage-quota-aws-gp2-7100gb
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/storage-quota-gib: '7100'
+      matchExpressions:
+      - key: api.openshift.com/ccs
+        operator: NotIn
+        values:
+        - 'true'
+      - key: hive.openshift.io/cluster-platform
+        operator: In
+        values:
+        - aws
+    resourceApplyMode: Sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: persistent-volume-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/storage-pv-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            gp2.storageclass.storage.k8s.io/requests.storage: 7100Gi
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: resource-quotas-storage-quota-aws-gp2-csi-100gb
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/storage-quota-gib: '100'
+      matchExpressions:
+      - key: api.openshift.com/ccs
+        operator: NotIn
+        values:
+        - 'true'
+      - key: hive.openshift.io/cluster-platform
+        operator: In
+        values:
+        - aws
+    resourceApplyMode: Sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: persistent-volume-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/storage-pv-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            gp2-csi.storageclass.storage.k8s.io/requests.storage: 100Gi
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: resource-quotas-storage-quota-aws-gp2-csi-1100gb
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/storage-quota-gib: '1100'
+      matchExpressions:
+      - key: api.openshift.com/ccs
+        operator: NotIn
+        values:
+        - 'true'
+      - key: hive.openshift.io/cluster-platform
+        operator: In
+        values:
+        - aws
+    resourceApplyMode: Sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: persistent-volume-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/storage-pv-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            gp2-csi.storageclass.storage.k8s.io/requests.storage: 1100Gi
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: resource-quotas-storage-quota-aws-gp2-csi-1600gb
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/storage-quota-gib: '1600'
+      matchExpressions:
+      - key: api.openshift.com/ccs
+        operator: NotIn
+        values:
+        - 'true'
+      - key: hive.openshift.io/cluster-platform
+        operator: In
+        values:
+        - aws
+    resourceApplyMode: Sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: persistent-volume-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/storage-pv-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            gp2-csi.storageclass.storage.k8s.io/requests.storage: 1600Gi
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: resource-quotas-storage-quota-aws-gp2-csi-2100gb
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/storage-quota-gib: '2100'
+      matchExpressions:
+      - key: api.openshift.com/ccs
+        operator: NotIn
+        values:
+        - 'true'
+      - key: hive.openshift.io/cluster-platform
+        operator: In
+        values:
+        - aws
+    resourceApplyMode: Sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: persistent-volume-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/storage-pv-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            gp2-csi.storageclass.storage.k8s.io/requests.storage: 2100Gi
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: resource-quotas-storage-quota-aws-gp2-csi-2600gb
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/storage-quota-gib: '2600'
+      matchExpressions:
+      - key: api.openshift.com/ccs
+        operator: NotIn
+        values:
+        - 'true'
+      - key: hive.openshift.io/cluster-platform
+        operator: In
+        values:
+        - aws
+    resourceApplyMode: Sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: persistent-volume-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/storage-pv-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            gp2-csi.storageclass.storage.k8s.io/requests.storage: 2600Gi
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: resource-quotas-storage-quota-aws-gp2-csi-3100gb
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/storage-quota-gib: '3100'
+      matchExpressions:
+      - key: api.openshift.com/ccs
+        operator: NotIn
+        values:
+        - 'true'
+      - key: hive.openshift.io/cluster-platform
+        operator: In
+        values:
+        - aws
+    resourceApplyMode: Sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: persistent-volume-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/storage-pv-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            gp2-csi.storageclass.storage.k8s.io/requests.storage: 3100Gi
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: resource-quotas-storage-quota-aws-gp2-csi-3600gb
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/storage-quota-gib: '3600'
+      matchExpressions:
+      - key: api.openshift.com/ccs
+        operator: NotIn
+        values:
+        - 'true'
+      - key: hive.openshift.io/cluster-platform
+        operator: In
+        values:
+        - aws
+    resourceApplyMode: Sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: persistent-volume-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/storage-pv-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            gp2-csi.storageclass.storage.k8s.io/requests.storage: 3600Gi
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: resource-quotas-storage-quota-aws-gp2-csi-4100gb
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/storage-quota-gib: '4100'
+      matchExpressions:
+      - key: api.openshift.com/ccs
+        operator: NotIn
+        values:
+        - 'true'
+      - key: hive.openshift.io/cluster-platform
+        operator: In
+        values:
+        - aws
+    resourceApplyMode: Sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: persistent-volume-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/storage-pv-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            gp2-csi.storageclass.storage.k8s.io/requests.storage: 4100Gi
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: resource-quotas-storage-quota-aws-gp2-csi-600gb
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/storage-quota-gib: '600'
+      matchExpressions:
+      - key: api.openshift.com/ccs
+        operator: NotIn
+        values:
+        - 'true'
+      - key: hive.openshift.io/cluster-platform
+        operator: In
+        values:
+        - aws
+    resourceApplyMode: Sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: persistent-volume-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/storage-pv-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            gp2-csi.storageclass.storage.k8s.io/requests.storage: 600Gi
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: resource-quotas-storage-quota-aws-gp2-csi-7100gb
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/storage-quota-gib: '7100'
+      matchExpressions:
+      - key: api.openshift.com/ccs
+        operator: NotIn
+        values:
+        - 'true'
+      - key: hive.openshift.io/cluster-platform
+        operator: In
+        values:
+        - aws
+    resourceApplyMode: Sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: persistent-volume-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/storage-pv-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            gp2-csi.storageclass.storage.k8s.io/requests.storage: 7100Gi
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: resource-quotas-storage-quota-aws-gp2-csi-default
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/managed
+        operator: In
+        values:
+        - 'true'
+      - key: api.openshift.com/storage-quota-gib
+        operator: DoesNotExist
+      - key: api.openshift.com/ccs
+        operator: NotIn
+        values:
+        - 'true'
+      - key: hive.openshift.io/cluster-platform
+        operator: In
+        values:
+        - aws
+    resourceApplyMode: Sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: persistent-volume-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/storage-pv-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            gp2-csi.storageclass.storage.k8s.io/requests.storage: 100Gi
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: resource-quotas-storage-quota-aws-gp2-default
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/managed
+        operator: In
+        values:
+        - 'true'
+      - key: api.openshift.com/storage-quota-gib
+        operator: DoesNotExist
+      - key: api.openshift.com/ccs
+        operator: NotIn
+        values:
+        - 'true'
+      - key: hive.openshift.io/cluster-platform
+        operator: In
+        values:
+        - aws
+    resourceApplyMode: Sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: persistent-volume-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/storage-pv-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            gp2.storageclass.storage.k8s.io/requests.storage: 100Gi
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: resource-quotas-storage-quota-gcp-standard-100gb
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/storage-quota-gib: '100'
+      matchExpressions:
+      - key: api.openshift.com/ccs
+        operator: NotIn
+        values:
+        - 'true'
+      - key: hive.openshift.io/cluster-platform
+        operator: In
+        values:
+        - gcp
+    resourceApplyMode: Sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: persistent-volume-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/storage-pv-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            standard.storageclass.storage.k8s.io/requests.storage: 100Gi
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: resource-quotas-storage-quota-gcp-standard-1100gb
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/storage-quota-gib: '1100'
+      matchExpressions:
+      - key: api.openshift.com/ccs
+        operator: NotIn
+        values:
+        - 'true'
+      - key: hive.openshift.io/cluster-platform
+        operator: In
+        values:
+        - gcp
+    resourceApplyMode: Sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: persistent-volume-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/storage-pv-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            standard.storageclass.storage.k8s.io/requests.storage: 1100Gi
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: resource-quotas-storage-quota-gcp-standard-1600gb
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/storage-quota-gib: '1600'
+      matchExpressions:
+      - key: api.openshift.com/ccs
+        operator: NotIn
+        values:
+        - 'true'
+      - key: hive.openshift.io/cluster-platform
+        operator: In
+        values:
+        - gcp
+    resourceApplyMode: Sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: persistent-volume-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/storage-pv-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            standard.storageclass.storage.k8s.io/requests.storage: 1600Gi
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: resource-quotas-storage-quota-gcp-standard-2100gb
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/storage-quota-gib: '2100'
+      matchExpressions:
+      - key: api.openshift.com/ccs
+        operator: NotIn
+        values:
+        - 'true'
+      - key: hive.openshift.io/cluster-platform
+        operator: In
+        values:
+        - gcp
+    resourceApplyMode: Sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: persistent-volume-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/storage-pv-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            standard.storageclass.storage.k8s.io/requests.storage: 2100Gi
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: resource-quotas-storage-quota-gcp-standard-2600gb
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/storage-quota-gib: '2600'
+      matchExpressions:
+      - key: api.openshift.com/ccs
+        operator: NotIn
+        values:
+        - 'true'
+      - key: hive.openshift.io/cluster-platform
+        operator: In
+        values:
+        - gcp
+    resourceApplyMode: Sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: persistent-volume-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/storage-pv-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            standard.storageclass.storage.k8s.io/requests.storage: 2600Gi
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: resource-quotas-storage-quota-gcp-standard-3100gb
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/storage-quota-gib: '3100'
+      matchExpressions:
+      - key: api.openshift.com/ccs
+        operator: NotIn
+        values:
+        - 'true'
+      - key: hive.openshift.io/cluster-platform
+        operator: In
+        values:
+        - gcp
+    resourceApplyMode: Sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: persistent-volume-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/storage-pv-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            standard.storageclass.storage.k8s.io/requests.storage: 3100Gi
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: resource-quotas-storage-quota-gcp-standard-3600gb
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/storage-quota-gib: '3600'
+      matchExpressions:
+      - key: api.openshift.com/ccs
+        operator: NotIn
+        values:
+        - 'true'
+      - key: hive.openshift.io/cluster-platform
+        operator: In
+        values:
+        - gcp
+    resourceApplyMode: Sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: persistent-volume-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/storage-pv-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            standard.storageclass.storage.k8s.io/requests.storage: 3600Gi
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: resource-quotas-storage-quota-gcp-standard-4100gb
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/storage-quota-gib: '4100'
+      matchExpressions:
+      - key: api.openshift.com/ccs
+        operator: NotIn
+        values:
+        - 'true'
+      - key: hive.openshift.io/cluster-platform
+        operator: In
+        values:
+        - gcp
+    resourceApplyMode: Sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: persistent-volume-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/storage-pv-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            standard.storageclass.storage.k8s.io/requests.storage: 4100Gi
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: resource-quotas-storage-quota-gcp-standard-600gb
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/storage-quota-gib: '600'
+      matchExpressions:
+      - key: api.openshift.com/ccs
+        operator: NotIn
+        values:
+        - 'true'
+      - key: hive.openshift.io/cluster-platform
+        operator: In
+        values:
+        - gcp
+    resourceApplyMode: Sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: persistent-volume-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/storage-pv-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            standard.storageclass.storage.k8s.io/requests.storage: 600Gi
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: resource-quotas-storage-quota-gcp-standard-7100gb
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/storage-quota-gib: '7100'
+      matchExpressions:
+      - key: api.openshift.com/ccs
+        operator: NotIn
+        values:
+        - 'true'
+      - key: hive.openshift.io/cluster-platform
+        operator: In
+        values:
+        - gcp
+    resourceApplyMode: Sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: persistent-volume-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/storage-pv-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            standard.storageclass.storage.k8s.io/requests.storage: 7100Gi
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: resource-quotas-storage-quota-gcp-standard-csi-100gb
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/storage-quota-gib: '100'
+      matchExpressions:
+      - key: api.openshift.com/ccs
+        operator: NotIn
+        values:
+        - 'true'
+      - key: hive.openshift.io/cluster-platform
+        operator: In
+        values:
+        - gcp
+    resourceApplyMode: Sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: persistent-volume-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/storage-pv-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            standard-csi.storageclass.storage.k8s.io/requests.storage: 100Gi
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: resource-quotas-storage-quota-gcp-standard-csi-1100gb
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/storage-quota-gib: '1100'
+      matchExpressions:
+      - key: api.openshift.com/ccs
+        operator: NotIn
+        values:
+        - 'true'
+      - key: hive.openshift.io/cluster-platform
+        operator: In
+        values:
+        - gcp
+    resourceApplyMode: Sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: persistent-volume-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/storage-pv-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            standard-csi.storageclass.storage.k8s.io/requests.storage: 1100Gi
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: resource-quotas-storage-quota-gcp-standard-csi-1600gb
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/storage-quota-gib: '1600'
+      matchExpressions:
+      - key: api.openshift.com/ccs
+        operator: NotIn
+        values:
+        - 'true'
+      - key: hive.openshift.io/cluster-platform
+        operator: In
+        values:
+        - gcp
+    resourceApplyMode: Sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: persistent-volume-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/storage-pv-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            standard-csi.storageclass.storage.k8s.io/requests.storage: 1600Gi
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: resource-quotas-storage-quota-gcp-standard-csi-2100gb
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/storage-quota-gib: '2100'
+      matchExpressions:
+      - key: api.openshift.com/ccs
+        operator: NotIn
+        values:
+        - 'true'
+      - key: hive.openshift.io/cluster-platform
+        operator: In
+        values:
+        - gcp
+    resourceApplyMode: Sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: persistent-volume-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/storage-pv-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            standard-csi.storageclass.storage.k8s.io/requests.storage: 2100Gi
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: resource-quotas-storage-quota-gcp-standard-csi-2600gb
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/storage-quota-gib: '2600'
+      matchExpressions:
+      - key: api.openshift.com/ccs
+        operator: NotIn
+        values:
+        - 'true'
+      - key: hive.openshift.io/cluster-platform
+        operator: In
+        values:
+        - gcp
+    resourceApplyMode: Sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: persistent-volume-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/storage-pv-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            standard-csi.storageclass.storage.k8s.io/requests.storage: 2600Gi
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: resource-quotas-storage-quota-gcp-standard-csi-3100gb
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/storage-quota-gib: '3100'
+      matchExpressions:
+      - key: api.openshift.com/ccs
+        operator: NotIn
+        values:
+        - 'true'
+      - key: hive.openshift.io/cluster-platform
+        operator: In
+        values:
+        - gcp
+    resourceApplyMode: Sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: persistent-volume-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/storage-pv-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            standard-csi.storageclass.storage.k8s.io/requests.storage: 3100Gi
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: resource-quotas-storage-quota-gcp-standard-csi-3600gb
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/storage-quota-gib: '3600'
+      matchExpressions:
+      - key: api.openshift.com/ccs
+        operator: NotIn
+        values:
+        - 'true'
+      - key: hive.openshift.io/cluster-platform
+        operator: In
+        values:
+        - gcp
+    resourceApplyMode: Sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: persistent-volume-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/storage-pv-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            standard-csi.storageclass.storage.k8s.io/requests.storage: 3600Gi
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: resource-quotas-storage-quota-gcp-standard-csi-4100gb
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/storage-quota-gib: '4100'
+      matchExpressions:
+      - key: api.openshift.com/ccs
+        operator: NotIn
+        values:
+        - 'true'
+      - key: hive.openshift.io/cluster-platform
+        operator: In
+        values:
+        - gcp
+    resourceApplyMode: Sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: persistent-volume-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/storage-pv-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            standard-csi.storageclass.storage.k8s.io/requests.storage: 4100Gi
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: resource-quotas-storage-quota-gcp-standard-csi-600gb
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/storage-quota-gib: '600'
+      matchExpressions:
+      - key: api.openshift.com/ccs
+        operator: NotIn
+        values:
+        - 'true'
+      - key: hive.openshift.io/cluster-platform
+        operator: In
+        values:
+        - gcp
+    resourceApplyMode: Sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: persistent-volume-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/storage-pv-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            standard-csi.storageclass.storage.k8s.io/requests.storage: 600Gi
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: resource-quotas-storage-quota-gcp-standard-csi-7100gb
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/storage-quota-gib: '7100'
+      matchExpressions:
+      - key: api.openshift.com/ccs
+        operator: NotIn
+        values:
+        - 'true'
+      - key: hive.openshift.io/cluster-platform
+        operator: In
+        values:
+        - gcp
+    resourceApplyMode: Sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: persistent-volume-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/storage-pv-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            standard-csi.storageclass.storage.k8s.io/requests.storage: 7100Gi
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: resource-quotas-storage-quota-gcp-standard-csi-default
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/managed
+        operator: In
+        values:
+        - 'true'
+      - key: api.openshift.com/storage-quota-gib
+        operator: DoesNotExist
+      - key: api.openshift.com/ccs
+        operator: NotIn
+        values:
+        - 'true'
+      - key: hive.openshift.io/cluster-platform
+        operator: In
+        values:
+        - gcp
+    resourceApplyMode: Sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: persistent-volume-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/storage-pv-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            standard-csi.storageclass.storage.k8s.io/requests.storage: 100Gi
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: resource-quotas-storage-quota-gcp-standard-default
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/managed
+        operator: In
+        values:
+        - 'true'
+      - key: api.openshift.com/storage-quota-gib
+        operator: DoesNotExist
+      - key: api.openshift.com/ccs
+        operator: NotIn
+        values:
+        - 'true'
+      - key: hive.openshift.io/cluster-platform
+        operator: In
+        values:
+        - gcp
+    resourceApplyMode: Sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: persistent-volume-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/storage-pv-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            standard.storageclass.storage.k8s.io/requests.storage: 100Gi
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
