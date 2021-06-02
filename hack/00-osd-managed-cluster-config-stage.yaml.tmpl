@@ -4369,9 +4369,7 @@ objects:
           \  - DNSErrors05MinSRE\n  - MetricsClientSendFailingSRE\n  - UpgradeNodeScalingFailedSRE\n\
           \  - UpgradeClusterCheckFailedSRE\n  - PrometheusRuleFailures\n  - CannotRetrieveUpdates\n\
           extDependencyAvailabilityChecks:\n  http:\n    timeout: 10\n    urls:\n\
-          \      - https://quay.io/health\n      - ${OCM_BASE_URL}\nverification:\n\
-          \  ignoredNamespaces:\n  - openshift-logging\n  namespacePrefixesToCheck:\n\
-          \  - openshift\n  - kube\n  - default\n"
+          \      - https://quay.io/health\n      - ${OCM_BASE_URL}\n"
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -11074,16 +11072,6 @@ objects:
               summary: node scaling failed
               description: The extra machine/node was not ready before the upgrade
                 started
-          - alert: UpgradeClusterVerificationFailedSRE
-            expr: upgradeoperator_cluster_verification_failed > 0
-            for: 5m
-            labels:
-              severity: critical
-              namespace: openshift-monitoring
-            annotations:
-              summary: cluster verification failed
-              description: Some of the infra components which are running on the cluster
-                are not working well after the upgrade
           - alert: UpgradeControlPlaneUpgradeTimeoutSRE
             expr: upgradeoperator_controlplane_timeout > 0
             for: 5m
