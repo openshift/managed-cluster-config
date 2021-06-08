@@ -40,16 +40,6 @@ spec:
       annotations:
         summary: "node scaling failed"
         description: "The extra machine/node was not ready before the upgrade started"
-    - alert: UpgradeClusterVerificationFailedSRE
-      # Get alert if the verification steps failed after the cluster upgraded
-      expr: upgradeoperator_cluster_verification_failed > 0
-      for: 5m
-      labels:
-        severity: critical
-        namespace: openshift-monitoring
-      annotations:
-        summary: "cluster verification failed"
-        description: "Some of the infra components which are running on the cluster are not working well after the upgrade"
     - alert: UpgradeControlPlaneUpgradeTimeoutSRE
       # Get alert if the control plane upgrade cannot be finished in the expected duration
       expr: upgradeoperator_controlplane_timeout > 0
