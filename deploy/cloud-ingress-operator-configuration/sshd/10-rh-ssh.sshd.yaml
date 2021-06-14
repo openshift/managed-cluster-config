@@ -1,0 +1,17 @@
+apiVersion: cloudingress.managed.openshift.io/v1alpha1
+kind: SSHD
+metadata:
+  name: rh-ssh
+  namespace: openshift-sre-sshd
+  labels:
+      # Keep this in sync with image
+      managed.openshift.io/version: v49-1fde8e5
+spec:
+  dnsName: rh-ssh
+  allowedCIDRBlocks: ${{ALLOWED_CIDR_BLOCKS}}
+  # Keep the managed.openshift.io/version label in sync with this.
+  image: quay.io/app-sre/sre-ssh-proxy@sha256:67ecbf78aa15cc991d92643675d0c947fe4efea1e7a30d743d34e21f84cc2ed8
+  configMapSelector:
+    matchExpressions:
+    - key: api.openshift.com/authorized-keys
+      operator: Exists
