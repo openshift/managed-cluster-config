@@ -38,6 +38,10 @@ parameters:
   required: true
 - name: OBSERVATORIUM_LEGALENTITY_IDS
   required: true
+- name: ALLOWED_CIDR_BLOCKS
+  required: true
+- name: ENABLE_MANAGEMENT_API_SERVER_INGRESS
+  required: true
 metadata:
   name: selectorsyncset-template
 objects:
@@ -2808,6 +2812,79 @@ objects:
         - clusterRoleName: admin
           namespacesAllowedRegex: ^openshift-customer-monitoring$
           allowFirst: true
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: cloud-ingress-operator-configuration-apischeme
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/sts
+        operator: NotIn
+        values:
+        - 'true'
+      - key: api.openshift.com/private-link
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Upsert
+    resources:
+    - apiVersion: cloudingress.managed.openshift.io/v1alpha1
+      kind: APIScheme
+      metadata:
+        name: rh-api
+        namespace: openshift-cloud-ingress-operator
+        annotations:
+          allowedCIDRBlocks: ${ALLOWED_CIDR_BLOCKS}
+      spec:
+        managementAPIServerIngress:
+          enabled: ${{ENABLE_MANAGEMENT_API_SERVER_INGRESS}}
+          dnsName: rh-api
+          allowedCIDRBlocks: ${{ALLOWED_CIDR_BLOCKS}}
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: cloud-ingress-operator-configuration-sshd
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/sts
+        operator: NotIn
+        values:
+        - 'true'
+      - key: api.openshift.com/private-link
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: cloudingress.managed.openshift.io/v1alpha1
+      kind: SSHD
+      metadata:
+        name: rh-ssh
+        namespace: openshift-sre-sshd
+        labels:
+          managed.openshift.io/version: v49-1fde8e5
+      spec:
+        dnsName: rh-ssh
+        allowedCIDRBlocks: ${{ALLOWED_CIDR_BLOCKS}}
+        image: quay.io/app-sre/sre-ssh-proxy@sha256:67ecbf78aa15cc991d92643675d0c947fe4efea1e7a30d743d34e21f84cc2ed8
+        configMapSelector:
+          matchExpressions:
+          - key: api.openshift.com/authorized-keys
+            operator: Exists
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
