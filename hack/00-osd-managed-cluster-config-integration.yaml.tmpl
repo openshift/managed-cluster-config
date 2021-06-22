@@ -11692,7 +11692,7 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: sre-prometheus-aws-sts
+    name: sre-prometheus-aws-sts-privatelink
   spec:
     clusterDeploymentSelector:
       matchLabels:
@@ -11700,6 +11700,10 @@ objects:
         hive.openshift.io/cluster-platform: aws
       matchExpressions:
       - key: api.openshift.com/sts
+        operator: NotIn
+        values:
+        - 'true'
+      - key: api.openshift.com/private-link
         operator: NotIn
         values:
         - 'true'
