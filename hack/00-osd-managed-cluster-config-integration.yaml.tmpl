@@ -8655,6 +8655,15 @@ objects:
     resourceApplyMode: Sync
     resources:
     - apiVersion: monitoring.openshift.io/v1alpha1
+      kind: ClusterUrlMonitor
+      metadata:
+        name: api
+        namespace: openshift-route-monitor-operator
+      spec:
+        prefix: https://api.
+        port: '6443'
+        suffix: /healthz
+    - apiVersion: monitoring.openshift.io/v1alpha1
       kind: RouteMonitor
       metadata:
         name: console
@@ -8665,36 +8674,6 @@ objects:
           namespace: openshift-console
         slo:
           targetAvailabilityPercent: '99.5'
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    labels:
-      managed.openshift.io/gitHash: ${IMAGE_TAG}
-      managed.openshift.io/gitRepoName: ${REPO_NAME}
-      managed.openshift.io/osd: 'true'
-    name: osd-route-monitor-operator-stage-only
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-      matchExpressions:
-      - key: api.openshift.com/environment
-        operator: NotIn
-        values:
-        - production
-    resourceApplyMode: Sync
-    resources:
-    - apiVersion: monitoring.openshift.io/v1alpha1
-      kind: ClusterUrlMonitor
-      metadata:
-        name: api
-        namespace: openshift-route-monitor-operator
-      spec:
-        prefix: https://api.
-        port: '6443'
-        suffix: /version
-        slo:
-          targetAvailabilityPercent: '99.95'
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
