@@ -650,6 +650,28 @@ objects:
       kind: Role
       metadata:
         name: backplane-cee
+        namespace: openshift-machine-api
+      rules:
+      - apiGroups:
+        - machineconfiguration.openshift.io
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: backplane-cee
         namespace: openshift-monitoring
       rules:
       - apiGroups:
@@ -658,6 +680,20 @@ objects:
         - pods/portforward
         verbs:
         - create
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: backplane-cee
+        namespace: openshift-machine-api
+      subjects:
+      - apiGroup: rbac.authorization.k8s.io
+        kind: Group
+        name: system:serviceaccounts:openshift-backplane-cee
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: backplane-cee
+        namespace: openshift-machine-api
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: RoleBinding
       metadata:
