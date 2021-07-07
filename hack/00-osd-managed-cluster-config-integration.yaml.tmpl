@@ -661,25 +661,15 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: RoleBinding
       metadata:
-        name: backplane-cee-impersonation
-        namespace: openshift-monitoring
-      subjects:
-      - apiGroup: rbac.authorization.k8s.io
-        kind: Group
-        name: openshift-backplane-cee
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: Role
-        name: backplane-cee
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: RoleBinding
-      metadata:
         name: backplane-cee
         namespace: openshift-monitoring
       subjects:
       - apiGroup: rbac.authorization.k8s.io
         kind: Group
         name: system:serviceaccounts:openshift-backplane-cee
+      - apiGroup: rbac.authorization.k8s.io
+        kind: Group
+        name: system:backplane:cee
       roleRef:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
@@ -723,41 +713,20 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: RoleBinding
       metadata:
-        name: backplane-cee-mustgather-impersonation
-        namespace: openshift-must-gather-operator
-      subjects:
-      - apiGroup: rbac.authorization.k8s.io
-        kind: Group
-        name: openshift-backplane-cee
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: Role
-        name: backplane-cee-mustgather
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: RoleBinding
-      metadata:
         name: backplane-cee-mustgather
         namespace: openshift-must-gather-operator
       subjects:
       - apiGroup: rbac.authorization.k8s.io
         kind: Group
         name: system:serviceaccounts:openshift-backplane-cee
+      - apiGroup: rbac.authorization.k8s.io
+        kind: Group
+        name: system:backplane:cee
       roleRef:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-cee-mustgather
         namespace: openshift-must-gather-operator
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRoleBinding
-      metadata:
-        name: backplane-cee-readers-impersonation
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: ClusterRole
-        name: backplane-cee-readers-cluster
-      subjects:
-      - kind: Group
-        name: openshift-backplane-cee
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRoleBinding
       metadata:
@@ -769,6 +738,8 @@ objects:
       subjects:
       - kind: Group
         name: system:serviceaccounts:openshift-backplane-cee
+      - kind: Group
+        name: system:backplane:cee
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -837,17 +808,6 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRoleBinding
       metadata:
-        name: backplane-cssre-admins-impersonation
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: ClusterRole
-        name: backplane-cssre-admins-cluster
-      subjects:
-      - kind: Group
-        name: openshift-backplane-cssre
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRoleBinding
-      metadata:
         name: backplane-cssre-admins
       roleRef:
         apiGroup: rbac.authorization.k8s.io
@@ -856,19 +816,8 @@ objects:
       subjects:
       - kind: Group
         name: system:serviceaccounts:openshift-backplane-cssre
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: RoleBinding
-      metadata:
-        name: backplane-cssre-impersonation
-        namespace: openshift-monitoring
-      subjects:
-      - apiGroup: rbac.authorization.k8s.io
-        kind: Group
-        name: openshift-backplane-cssre
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: Role
-        name: backplane-cssre
+      - kind: Group
+        name: system:backplane:cssre
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: RoleBinding
       metadata:
@@ -878,22 +827,14 @@ objects:
       - apiGroup: rbac.authorization.k8s.io
         kind: Group
         name: system:serviceaccounts:openshift-backplane-cssre
+      - apiGroup: rbac.authorization.k8s.io
+        kind: Group
+        name: system:backplane:cssre
       roleRef:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-cssre
         namespace: openshift-monitoring
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRoleBinding
-      metadata:
-        name: backplane-cssre-readers-impersonation
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: ClusterRole
-        name: backplane-cssre-readers-cluster
-      subjects:
-      - kind: Group
-        name: openshift-backplane-cssre
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRoleBinding
       metadata:
@@ -905,6 +846,8 @@ objects:
       subjects:
       - kind: Group
         name: system:serviceaccounts:openshift-backplane-cssre
+      - kind: Group
+        name: system:backplane:cssre
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -973,17 +916,6 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRoleBinding
       metadata:
-        name: backplane-cssre-admins-impersonation
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: ClusterRole
-        name: backplane-cssre-admins-cluster
-      subjects:
-      - kind: Group
-        name: openshift-backplane-cssre
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRoleBinding
-      metadata:
         name: backplane-cssre-admins
       roleRef:
         apiGroup: rbac.authorization.k8s.io
@@ -992,19 +924,8 @@ objects:
       subjects:
       - kind: Group
         name: system:serviceaccounts:openshift-backplane-cssre
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: RoleBinding
-      metadata:
-        name: backplane-cssre-impersonation
-        namespace: openshift-monitoring
-      subjects:
-      - apiGroup: rbac.authorization.k8s.io
-        kind: Group
-        name: openshift-backplane-cssre
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: Role
-        name: backplane-cssre
+      - kind: Group
+        name: system:backplane:cssre
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: RoleBinding
       metadata:
@@ -1014,22 +935,14 @@ objects:
       - apiGroup: rbac.authorization.k8s.io
         kind: Group
         name: system:serviceaccounts:openshift-backplane-cssre
+      - apiGroup: rbac.authorization.k8s.io
+        kind: Group
+        name: system:backplane:cssre
       roleRef:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-cssre
         namespace: openshift-monitoring
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRoleBinding
-      metadata:
-        name: backplane-cssre-readers-impersonation
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: ClusterRole
-        name: backplane-cssre-readers-cluster
-      subjects:
-      - kind: Group
-        name: openshift-backplane-cssre
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRoleBinding
       metadata:
@@ -1041,6 +954,8 @@ objects:
       subjects:
       - kind: Group
         name: system:serviceaccounts:openshift-backplane-cssre
+      - kind: Group
+        name: system:backplane:cssre
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -1109,17 +1024,6 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRoleBinding
       metadata:
-        name: backplane-cssre-admins-impersonation
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: ClusterRole
-        name: backplane-cssre-admins-cluster
-      subjects:
-      - kind: Group
-        name: openshift-backplane-cssre
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRoleBinding
-      metadata:
         name: backplane-cssre-admins
       roleRef:
         apiGroup: rbac.authorization.k8s.io
@@ -1128,19 +1032,8 @@ objects:
       subjects:
       - kind: Group
         name: system:serviceaccounts:openshift-backplane-cssre
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: RoleBinding
-      metadata:
-        name: backplane-cssre-impersonation
-        namespace: openshift-monitoring
-      subjects:
-      - apiGroup: rbac.authorization.k8s.io
-        kind: Group
-        name: openshift-backplane-cssre
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: Role
-        name: backplane-cssre
+      - kind: Group
+        name: system:backplane:cssre
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: RoleBinding
       metadata:
@@ -1150,22 +1043,14 @@ objects:
       - apiGroup: rbac.authorization.k8s.io
         kind: Group
         name: system:serviceaccounts:openshift-backplane-cssre
+      - apiGroup: rbac.authorization.k8s.io
+        kind: Group
+        name: system:backplane:cssre
       roleRef:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-cssre
         namespace: openshift-monitoring
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRoleBinding
-      metadata:
-        name: backplane-cssre-readers-impersonation
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: ClusterRole
-        name: backplane-cssre-readers-cluster
-      subjects:
-      - kind: Group
-        name: openshift-backplane-cssre
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRoleBinding
       metadata:
@@ -1177,6 +1062,8 @@ objects:
       subjects:
       - kind: Group
         name: system:serviceaccounts:openshift-backplane-cssre
+      - kind: Group
+        name: system:backplane:cssre
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -1245,17 +1132,6 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRoleBinding
       metadata:
-        name: backplane-cssre-admins-impersonation
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: ClusterRole
-        name: backplane-cssre-admins-cluster
-      subjects:
-      - kind: Group
-        name: openshift-backplane-cssre
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRoleBinding
-      metadata:
         name: backplane-cssre-admins
       roleRef:
         apiGroup: rbac.authorization.k8s.io
@@ -1264,19 +1140,8 @@ objects:
       subjects:
       - kind: Group
         name: system:serviceaccounts:openshift-backplane-cssre
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: RoleBinding
-      metadata:
-        name: backplane-cssre-impersonation
-        namespace: openshift-monitoring
-      subjects:
-      - apiGroup: rbac.authorization.k8s.io
-        kind: Group
-        name: openshift-backplane-cssre
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: Role
-        name: backplane-cssre
+      - kind: Group
+        name: system:backplane:cssre
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: RoleBinding
       metadata:
@@ -1286,22 +1151,14 @@ objects:
       - apiGroup: rbac.authorization.k8s.io
         kind: Group
         name: system:serviceaccounts:openshift-backplane-cssre
+      - apiGroup: rbac.authorization.k8s.io
+        kind: Group
+        name: system:backplane:cssre
       roleRef:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-cssre
         namespace: openshift-monitoring
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRoleBinding
-      metadata:
-        name: backplane-cssre-readers-impersonation
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: ClusterRole
-        name: backplane-cssre-readers-cluster
-      subjects:
-      - kind: Group
-        name: openshift-backplane-cssre
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRoleBinding
       metadata:
@@ -1313,6 +1170,8 @@ objects:
       subjects:
       - kind: Group
         name: system:serviceaccounts:openshift-backplane-cssre
+      - kind: Group
+        name: system:backplane:cssre
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -1523,7 +1382,7 @@ objects:
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
-        name: backplane-rhmi-cssre-admins-impersonation
+        name: backplane-rhmi-cssre-admins
         namespace: openshift-rbac-permissions
       spec:
         permissions:
@@ -1532,7 +1391,7 @@ objects:
           namespacesAllowedRegex: .*
           namespacesDeniedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$)
         subjectKind: Group
-        subjectName: openshift-backplane-cssre
+        subjectName: system:backplane:cssre
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -1756,7 +1615,7 @@ objects:
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
-        name: backplane-rhmi-cssre-admins-impersonation
+        name: backplane-rhmi-cssre-admins
         namespace: openshift-rbac-permissions
       spec:
         permissions:
@@ -1765,7 +1624,7 @@ objects:
           namespacesAllowedRegex: .*
           namespacesDeniedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$)
         subjectKind: Group
-        subjectName: openshift-backplane-cssre
+        subjectName: system:backplane:cssre
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -1983,7 +1842,7 @@ objects:
           clusterRoleName: backplane-rhoam-cssre-admins-project
           namespacesAllowedRegex: (^redhat-rhoam$|^redhat-rhoam-.*)
         subjectKind: Group
-        subjectName: openshift-backplane-cssre
+        subjectName: system:backplane:cssre
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -2200,7 +2059,7 @@ objects:
           clusterRoleName: backplane-rhoam-cssre-admins-project
           namespacesAllowedRegex: (^redhat-rhoam$|^redhat-rhoam-.*)
         subjectKind: Group
-        subjectName: openshift-backplane-cssre
+        subjectName: system:backplane:cssre
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -2243,19 +2102,6 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRoleBinding
       metadata:
-        name: backplane-impersonate-cluster-admin-impersonation
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: ClusterRole
-        name: backplane-impersonate-cluster-admin
-      subjects:
-      - kind: Group
-        name: openshift-backplane-srep
-      - kind: Group
-        name: openshift-backplane-cssre
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRoleBinding
-      metadata:
         name: backplane-impersonate-cluster-admin
       roleRef:
         apiGroup: rbac.authorization.k8s.io
@@ -2266,6 +2112,10 @@ objects:
         name: system:serviceaccounts:openshift-backplane-srep
       - kind: Group
         name: system:serviceaccounts:openshift-backplane-cssre
+      - kind: Group
+        name: system:backplane:cssre
+      - kind: Group
+        name: system:backplane:srep
     - apiVersion: user.openshift.io/v1
       kind: User
       metadata:
@@ -2320,17 +2170,6 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRoleBinding
       metadata:
-        name: backplane-mtsre-readers-impersonate
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: ClusterRole
-        name: backplane-mtsre-readers-cluster
-      subjects:
-      - kind: Group
-        name: :openshift-backplane-mtsre
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRoleBinding
-      metadata:
         name: backplane-mtsre-readers
       roleRef:
         apiGroup: rbac.authorization.k8s.io
@@ -2339,6 +2178,8 @@ objects:
       subjects:
       - kind: Group
         name: system:serviceaccounts:openshift-backplane-mtsre
+      - kind: Group
+        name: system:backplane:mtsre
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -2365,7 +2206,7 @@ objects:
           clusterRoleName: admin
           namespacesAllowedRegex: (^gpu-operator-resources$|^nfd-operator$|^openshift-operators$|^redhat-ods-.*)
         subjectKind: Group
-        subjectName: openshift-backplane-mtsre
+        subjectName: system:backplane:mtsre
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -2712,7 +2553,7 @@ objects:
           namespacesAllowedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
           namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
-        subjectName: openshift-backplane-srep
+        subjectName: system:backplane:srep
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -2749,19 +2590,6 @@ objects:
     resourceApplyMode: Sync
     resources:
     - apiVersion: rbac.authorization.k8s.io/v1
-      kind: RoleBinding
-      metadata:
-        name: backplane-dev-impersonate
-        namespace: backplane
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: Role
-        name: backplane-dev
-      subjects:
-      - apiGroup: rbac.authorization.k8s.io
-        kind: Group
-        name: openshift-backplane-srep
-    - apiVersion: rbac.authorization.k8s.io/v1
       kind: Role
       metadata:
         name: backplane-dev
@@ -2789,6 +2617,9 @@ objects:
       - apiGroup: rbac.authorization.k8s.io
         kind: Group
         name: system:serviceaccounts:openshift-backplane-srep
+      - apiGroup: rbac.authorization.k8s.io
+        kind: Group
+        name: system:backplane:srep
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
@@ -2844,7 +2675,7 @@ objects:
           namespacesAllowedRegex: ^.*-operator$
           namespacesDeniedRegex: ^uhc-.*
         subjectKind: Group
-        subjectName: openshift-backplane-srep
+        subjectName: system:backplane:srep
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
