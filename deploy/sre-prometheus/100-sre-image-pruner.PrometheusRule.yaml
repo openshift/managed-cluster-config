@@ -1,0 +1,21 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: sre-image-pruning
+    role: alert-rules
+  name: sre-image-pruning
+  namespace: openshift-image-registry
+spec:
+  groups:
+  - name: sre-image-pruning
+    rules:
+    - alert: ImagePruningCronjobFailed
+      expr: count(kube_job_failed{namespace=~"(openshift-.*|kube-.*|default)",job="kube-state-metrics"}  > 0) > 1
+      for: 30m
+      labels:
+        severity: warning
+        namespace: openshift-image-registry
+      annotations:
+        message: Image Pruning Job failed more than 1 time {{ $labels.namespace }}/{{ $labels.cronjob }}.
+        link: "https://github.com/openshift/ops-sop/tree/master/v4/alerts/KubeJobFailed.md"
