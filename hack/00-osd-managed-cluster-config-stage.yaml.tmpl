@@ -7542,16 +7542,10 @@ objects:
       matchLabels:
         api.openshift.com/managed: 'true'
       matchExpressions:
-      - key: api.openshift.com/product
-        operator: NotIn
-        values:
-        - rosa
-      - key: hive.openshift.io/version-major-minor
+      - key: ext-managed.openshift.io/extended-logging-support
         operator: In
         values:
-        - '4.4'
-        - '4.5'
-        - '4.6'
+        - 'true'
     resourceApplyMode: Sync
     resources:
     - apiVersion: v1
@@ -7674,16 +7668,10 @@ objects:
       matchLabels:
         api.openshift.com/managed: 'true'
       matchExpressions:
-      - key: api.openshift.com/product
-        operator: NotIn
-        values:
-        - rosa
-      - key: hive.openshift.io/version-major-minor
+      - key: ext-managed.openshift.io/extended-logging-support
         operator: In
         values:
-        - '4.4'
-        - '4.5'
-        - '4.6'
+        - 'true'
     resourceApplyMode: Sync
     resources:
     - apiVersion: v1
@@ -7945,18 +7933,16 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: osd-logging-unsupported-version-major-minor
+    name: osd-logging-unsupported-extended-logging-support
   spec:
     clusterDeploymentSelector:
       matchLabels:
         api.openshift.com/managed: 'true'
       matchExpressions:
-      - key: hive.openshift.io/version-major-minor
+      - key: ext-managed.openshift.io/extended-logging-support
         operator: NotIn
         values:
-        - '4.4'
-        - '4.5'
-        - '4.6'
+        - 'true'
     resourceApplyMode: Upsert
     resources:
     - apiVersion: v1
