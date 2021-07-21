@@ -1,0 +1,24 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: sre-certman-operator-alerts
+    role: alert-rules
+  name: sre-certman-operator-alerts
+  namespace: openshift-monitoring
+spec:
+  groups:
+  - name: sre-certman-operator-alerts
+    rules:
+    - alert: CertmanCertExpires5Days
+      # This alert lets us know if a certificate managed by certman-operator
+      # will expire in 5 days or less. Under normal operations, certificates
+      # should be renewed well before that.
+      expr: |
+        certman_operator_certificate_valid_duration_days <= 5
+      labels:
+        severity: critical
+        commonName: "{{ $labels.cn }}"
+        namespace: openshift-monitoring
+      annotations:
+        message: certificate expires in 5 days and has not renewed
