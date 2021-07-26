@@ -10554,6 +10554,62 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: scanning-operator
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/legal-entity-id: ${{SREP_LEGAL_ENTITY_ID}}
+      matchExpressions:
+      - key: api.openshift.com/environment
+        operator: In
+        values:
+        - staging
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: openshift-scanning-operator
+    - apiVersion: operators.coreos.com/v1
+      kind: OperatorGroup
+      metadata:
+        name: scanning-operator
+        namespace: openshift-scanning-operator
+      spec:
+        targetNamespaces:
+        - openshift-scanning-operator
+    - apiVersion: operators.coreos.com/v1alpha1
+      kind: CatalogSource
+      metadata:
+        name: scanning-operator
+        namespace: openshift-scanning-operator
+      spec:
+        sourceType: grpc
+        image: quay.io/dedgar/scanning-operator-catalog:v0.0.76
+        displayName: scanning-operator-catalog
+        publisher: Red Hat
+        updateStrategy:
+          registryPoll:
+            interval: 30m
+    - apiVersion: operators.coreos.com/v1alpha1
+      kind: Subscription
+      metadata:
+        name: scanning-operator
+        namespace: openshift-scanning-operator
+      spec:
+        channel: ${CHANNEL}
+        installPlanApproval: Automatic
+        source: scanning-operator-catalog
+        sourceNamespace: openshift-scanning-operator
+        name: scanning-operator
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: sre-authorization
   spec:
     clusterDeploymentSelector:
