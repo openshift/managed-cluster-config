@@ -3316,6 +3316,27 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: hive-namespace-labels
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        ext-managed.openshift.io/hive-shard: 'true'
+    resourceApplyMode: Sync
+    patches:
+    - kind: Namespace
+      apiVersion: v1
+      name: openshift-operator-lifecycle-manager
+      applyMode: AlwaysApply
+      patch: '{ "metadata": {"labels": {"release":"monitoring"} } }'
+      patchType: merge
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: kubelet-config
   spec:
     clusterDeploymentSelector:
