@@ -3150,49 +3150,6 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: compliance-operator
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-        api.openshift.com/legal-entity-id: ${{SREP_LEGAL_ENTITY_ID}}
-      matchExpressions:
-      - key: api.openshift.com/environment
-        operator: In
-        values:
-        - staging
-    resourceApplyMode: Sync
-    resources:
-    - apiVersion: v1
-      kind: Namespace
-      metadata:
-        name: openshift-compliance
-    - apiVersion: operators.coreos.com/v1
-      kind: OperatorGroup
-      metadata:
-        name: compliance-operator
-        namespace: openshift-compliance
-      spec:
-        targetNamespaces:
-        - openshift-compliance
-    - apiVersion: operators.coreos.com/v1alpha1
-      kind: Subscription
-      metadata:
-        name: compliance-operator
-        namespace: openshift-compliance
-      spec:
-        channel: '4.6'
-        installPlanApproval: Automatic
-        source: redhat-operators
-        sourceNamespace: openshift-marketplace
-        name: compliance-operator
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    labels:
-      managed.openshift.io/gitHash: ${IMAGE_TAG}
-      managed.openshift.io/gitRepoName: ${REPO_NAME}
-      managed.openshift.io/osd: 'true'
     name: container-security-operator
   spec:
     clusterDeploymentSelector:
