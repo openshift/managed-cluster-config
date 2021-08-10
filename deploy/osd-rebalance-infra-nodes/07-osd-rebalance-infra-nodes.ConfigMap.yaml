@@ -37,10 +37,10 @@ data:
                 if [ ${VOLUME_NAME} ] && [ "${AZ_COUNT}" != "1" ]; then
                     PVC=$(oc get pod -n $NS $POD -o jsonpath='{.spec.volumes[?(@.name=="'$VOLUME_NAME'")].persistentVolumeClaim.claimName}')
                     echo "INFO: Deleting PVC $PVC"
-                    oc delete pvc --wait=false -n $NS $PVC
+                    oc delete pvc --wait=true -n $NS $PVC
                 fi
                 echo "INFO: Deleting pod $POD"
-                oc delete pod -n $NS $POD
+                oc delete pod -n $NS $POD --wait=true
                 REBALANCE_PODS=true
             fi
             LAST_POD_NODE_NAME=$POD_NODE_NAME
@@ -55,7 +55,7 @@ data:
             POD_STATUS_PHASE=$(oc get pods -n $NS $POD -o jsonpath='{.status.phase}')
             if [ "${POD_STATUS_PHASE}" == "Pending" ]; then
                 echo "INFO: Deleting pod $POD"
-                oc delete pod -n $NS $POD
+                oc delete pod -n $NS $POD --wait=true
                 PENDING_PODS=true
             fi
         done
@@ -67,7 +67,7 @@ data:
         LABEL=$3
         for POD in $( oc get pods -n $NS -l $LABEL=$APP -o jsonpath='{.items[*].metadata.name}' ) ; do
             echo "INFO: Waiting for $POD to be Running..."
-            while [ "$(oc get pod -n $NS $POD -o jsonpath='{.status.phase}' 2>/dev/null)" != "Running" ];
+            while [ ! -z "$(oc get pod -n $NS $POD -o jsonpath='{.status.phase}' 2>/dev/null)" ] && [ "$(oc get pod -n $NS $POD -o jsonpath='{.status.phase}' 2>/dev/null)" != "Running" ];
             do
                 sleep 1
             done
@@ -86,7 +86,8 @@ data:
     if $REBALANCE_PODS; then
         echo "INFO: Restarting prometheus operator..."
         OPERATOR_POD=$( oc get pod -n openshift-monitoring -l app.kubernetes.io/name=prometheus-operator -o jsonpath='{.items[*].metadata.name}' )
-        oc delete pod -n openshift-monitoring $OPERATOR_POD
+        oc delete pod -n openshift-monitoring $OPERATOR_POD --wait=true
+        sleep 10
     fi
 
     echo "INFO: Check pending prometheus pods..."
@@ -101,7 +102,8 @@ data:
     if $PENDING_PODS; then
         echo "INFO: Restarting prometheus operator..."
         OPERATOR_POD=$( oc get pod -n openshift-monitoring -l app.kubernetes.io/name=prometheus-operator -o jsonpath='{.items[*].metadata.name}' )
-        oc delete pod -n openshift-monitoring $OPERATOR_POD
+        oc delete pod -n openshift-monitoring $OPERATOR_POD --wait=true
+        sleep 10
     fi
 
     echo "INFO: Wait for running prometheus pods..."
