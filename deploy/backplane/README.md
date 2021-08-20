@@ -6,5 +6,6 @@ This directory is focused around managing roles for backplane users based on the
 | cee  | RBAC for users from CEE  |
 | cssre  | RBAC for SRE managing layered products or add-ons in OSD clusters. This has subdirectories for each available add-on |
 | elevated-sre | RBAC for cluster admin. Used as an elevation strategy for break-glass   |
+| mtsre  | RBAC for the Managed Tenants SRE team, which manages layered products or add-ons in OSD clusters. This has subdirectories for each available add-on |
 | srep  | RBAC for SRE Platform team  |
 
