@@ -30,6 +30,8 @@ parameters:
   required: true
 - name: SREP_LEGAL_ENTITY_ID
   required: true
+- name: DPTP_LEGAL_ENTITY_ID
+  required: true
 - name: OBSERVATORIUM_LEGALENTITY_IDS
   required: true
 - name: ALLOWED_CIDR_BLOCKS
@@ -3559,11 +3561,17 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: kubelet-config
+    name: kubelet-config-version-major-minor
   spec:
     clusterDeploymentSelector:
       matchLabels:
         api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/version-major-minor
+        operator: NotIn
+        values:
+        - '4.8'
+        - '4.9'
     resourceApplyMode: Upsert
     patches:
     - kind: MachineConfigPool
@@ -3593,6 +3601,97 @@ objects:
           systemReserved:
             cpu: 1000m
             memory: 1Gi
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: kubelet-config-legal-entity-id
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/legal-entity-id
+        operator: NotIn
+        values:
+        - ${{DPTP_LEGAL_ENTITY_ID}}
+    resourceApplyMode: Upsert
+    patches:
+    - kind: MachineConfigPool
+      apiVersion: machineconfiguration.openshift.io/v1
+      name: worker
+      applyMode: AlwaysApply
+      patch: '{ "metadata": {"labels": {"managed.openshift.io/custom-kubelet":""}
+        } }'
+      patchType: merge
+    - kind: MachineConfigPool
+      apiVersion: machineconfiguration.openshift.io/v1
+      name: master
+      applyMode: AlwaysApply
+      patch: '{ "metadata": {"labels": {"managed.openshift.io/custom-kubelet":""}
+        } }'
+      patchType: merge
+    resources:
+    - apiVersion: machineconfiguration.openshift.io/v1
+      kind: KubeletConfig
+      metadata:
+        name: custom-kubelet
+      spec:
+        machineConfigPoolSelector:
+          matchLabels:
+            managed.openshift.io/custom-kubelet: ''
+        kubeletConfig:
+          systemReserved:
+            cpu: 1000m
+            memory: 1Gi
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: kubelet-config-testplatform
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.8'
+        - '4.9'
+      - key: api.openshift.com/legal-entity-id
+        operator: In
+        values:
+        - ${{DPTP_LEGAL_ENTITY_ID}}
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: machineconfiguration.openshift.io/v1
+      kind: KubeletConfig
+      metadata:
+        name: custom-kubelet
+      spec:
+        machineConfigPoolSelector:
+          matchLabels:
+            pools.operator.machineconfiguration.openshift.io/master: ''
+        kubeletConfig:
+          systemReserved:
+            cpu: 1000m
+            memory: 1Gi
+    - apiVersion: machineconfiguration.openshift.io/v1
+      kind: KubeletConfig
+      metadata:
+        name: system-reserved-worker
+      spec:
+        autoSizingReserved: true
+        machineConfigPoolSelector:
+          matchLabels:
+            pools.operator.machineconfiguration.openshift.io/worker: ''
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
