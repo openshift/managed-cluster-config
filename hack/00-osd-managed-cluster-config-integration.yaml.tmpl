@@ -6195,6 +6195,165 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: osd-delete-backplane-script-resources
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: openshift-backplane-managed-scripts
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: osd-backplane
+        namespace: openshift-backplane-managed-scripts
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: osd-delete-backplane-script-resources
+        namespace: openshift-backplane-managed-scripts
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        - serviceaccounts
+        verbs:
+        - get
+        - list
+        - delete
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: osd-delete-backplane-script-resources
+        namespace: openshift-backplane-managed-scripts
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: osd-delete-backplane-script-resources
+      subjects:
+      - kind: ServiceAccount
+        name: osd-backplane
+        namespace: openshift-backplane-managed-scripts
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: osd-delete-backplane-script-resources
+      rules:
+      - apiGroups:
+        - rbac.authorization.k8s.io
+        resources:
+        - roles
+        - rolebindings
+        - clusterroles
+        - clusterrolebindings
+        verbs:
+        - get
+        - list
+        - delete
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: osd-delete-backplane-script-resources
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: osd-delete-backplane-script-resources
+      subjects:
+      - kind: ServiceAccount
+        name: osd-backplane
+        namespace: openshift-backplane-managed-scripts
+    - apiVersion: batch/v1beta1
+      kind: CronJob
+      metadata:
+        name: osd-delete-backplane-script-resources
+        namespace: openshift-backplane-managed-scripts
+      spec:
+        failedJobsHistoryLimit: 5
+        successfulJobsHistoryLimit: 3
+        concurrencyPolicy: Replace
+        schedule: 42 0 * * *
+        jobTemplate:
+          spec:
+            template:
+              spec:
+                affinity:
+                  nodeAffinity:
+                    preferredDuringSchedulingIgnoredDuringExecution:
+                    - preference:
+                        matchExpressions:
+                        - key: node-role.kubernetes.io/infra
+                          operator: Exists
+                      weight: 1
+                tolerations:
+                - effect: NoSchedule
+                  key: node-role.kubernetes.io/infra
+                  operator: Exists
+                restartPolicy: Never
+                serviceAccountName: osd-backplane
+                containers:
+                - name: osd-delete-backplane-script-resources
+                  imagePullPolicy: Always
+                  image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+                  args:
+                  - /bin/bash
+                  - -c
+                  - "set -euxo pipefail\n\n# Namespace which pods run in\nNS=\"openshift-backplane-managed-scripts\"\
+                    \n# Label which all backplane script resources should have\nLABEL=\"\
+                    managed.openshift.io/backplane-job-uuid\"\n# Only delete resources\
+                    \ created before this time, in unix epoch seconds.\nDEL_ONLY_BEFORE=$(($(date\
+                    \ +%s) - 3600*24))\n\n### Gather data\n# Format: pod_name pod_status\
+                    \ creation_timestamp\nPODS=$(oc get pod -n $NS --selector $LABEL\
+                    \ -o custom-columns=NAME:.metadata.name,PHASE:.status.phase,CT:.metadata.creationTimestamp\
+                    \ --no-headers)\n\n# Format: sa_name\nSAS=$(oc get serviceaccount\
+                    \ -n $NS --selector $LABEL -o custom-columns=NAME:.metadata.name\
+                    \ --no-headers)\n\n# Format: role_name role_ns\nROLES=$(oc get\
+                    \ role -A --selector $LABEL -o custom-columns=NAME:.metadata.name,NS:.metadata.namespace\
+                    \ --no-headers) \n\n# Format: rolebinding_name rolebinding_ns\n\
+                    ROLEBINDINGS=$(oc get rolebinding -A --selector $LABEL -o custom-columns=NAME:.metadata.name,NS:.metadata.namespace\
+                    \ --no-headers)\n\n# Format: clusterrole_name\nCROLES=$(oc get\
+                    \ clusterrole --selector $LABEL -o custom-columns=NAME:.metadata.name\
+                    \ --no-headers)\n\n# Format: clusterrolebinding_name\nCROLEBINDINGS=$(oc\
+                    \ get clusterrolebinding --selector $LABEL -o custom-columns=NAME:.metadata.name\
+                    \ --no-headers)\n\n# Pick up those resources we don't want to\
+                    \ delete.\n# - Current running pods and related resources.\n#\
+                    \ - pods created within THRESHOLD_PERIOD and related resouces.\n\
+                    PODS_TO_KEEP=$(awk -v before=$DEL_ONLY_BEFORE \\\n  '{\n  if($2\
+                    \ ~ /Running/){print $1} \n  else{cmd = sprintf(\"date +\\\"%%s\\\
+                    \" --date=%s\", $3); cmd|getline unix_sec; close(cmd); if(unix_sec+0\
+                    \ > before+0){print $1}}\n  }' \\\n  <<< \"$PODS\")\n\nPODS_TO_DEL=$(awk\
+                    \ '{print $1}' <<< \"$PODS\")\n\nfor pod in $PODS_TO_KEEP\ndo\n\
+                    \  PODS_TO_DEL=$({ grep -v \"$pod\" || test $? = 1; } <<< \"$PODS_TO_DEL\"\
+                    )\n  SAS=$({ grep -v \"$pod\" || test $? = 1; } <<< \"$SAS\")\n\
+                    \  ROLES=$({ grep -v \"$pod\" || test $? = 1; } <<< \"$ROLES\"\
+                    )\n  ROLEBINDINGS=$({ grep -v \"$pod\" || test $? = 1; } <<< \"\
+                    $ROLEBINDINGS\")\n  CROLES=$({ grep -v \"$pod\" || test $? = 1;\
+                    \ } <<< \"$CROLES\")\n  CROLEBINDINGS=$({ grep -v \"$pod\" ||\
+                    \ test $? = 1; } <<< \"$CROLEBINDINGS\")\ndone\n\n## Delete non-running\
+                    \ pods\nfor pod in $PODS_TO_DEL\ndo\n  oc delete pod -n $NS $pod\n\
+                    done\n\n## Delete Rolebindings\n[[ -z \"$ROLEBINDINGS\" ]] ||\
+                    \ while read line\ndo\n  rb_name=$(echo $line | awk '{print $1}')\n\
+                    \  rb_namespace=$(echo $line | awk '{print $2}')\n  oc delete\
+                    \ rolebindings -n $rb_namespace $rb_name\ndone <<< \"$ROLEBINDINGS\"\
+                    \n\n## Delete ClusterRolebindings\nfor clb in $CROLEBINDINGS\n\
+                    do\n  oc delete clusterrolebinding $clb\ndone\n\n## Delete Roles\n\
+                    [[ -z \"$ROLES\" ]] || while read line\ndo\n  role_name=$(echo\
+                    \ $line | awk '{print $1}')\n  role_namespace=$(echo $line | awk\
+                    \ '{print $2}')\n  oc delete role -n $role_namespace $role_name\n\
+                    done <<< \"$ROLES\"\n\n## Delete Clusterroles\nfor crole in $CROLES\n\
+                    do\n  oc delete clusterrole $crole\ndone\n\n## Delete SAs\nfor\
+                    \ sa in $SAS\ndo\n  oc delete serviceaccount -n $NS $sa\ndone\n"
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: osd-delete-backplane-serviceaccounts
   spec:
     clusterDeploymentSelector:
