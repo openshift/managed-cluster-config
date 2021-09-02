@@ -13,7 +13,7 @@ metadata:
   name: {}
   namespace: {}
 data:
-  managed_resources.yaml: |
+  managed_namespaces.yaml: |
 {}
 """
 
@@ -37,6 +37,7 @@ def collect_managed_resources(kinds):
     Given a list of resource kinds, returns a dictionary of the managed resources for each kind
     """
     resources = dict()
+    resources["Resources"] = {}
     managed_label = "hive.openshift.io/managed=true"
     keys_to_extract = ["namespace", "name"]
     for kind in kinds:
@@ -68,8 +69,39 @@ def collect_managed_resources(kinds):
                 }
                 for i in kind_dict["items"]
             ]
-            resources[kind_name] = filtered_kind_list
+            resources["Resources"][kind_name] = filtered_kind_list
+    resources = remove_backplane_service_account(resources)
     return resources
+
+
+def remove_backplane_service_account(resource_dict):
+    """
+    Replace the generated serviceaccount name for backplane users and replace with a generic value
+    """
+    # if there aren't any serviceaccounts, return the dictionary unchanged.
+    if "ServiceAccount" not in resource_dict["Resources"]:
+        return resource_dict
+    # get unique backplane serviceaccount id
+    backplane_sacct_id = (
+        subprocess.check_output(["oc", "whoami"])
+        .decode("utf-8")
+        .split(":")[-1]
+        .rstrip()
+    )
+    backplane_sa_list_entry = {
+        "namespace": "openshift-backplane-srep",
+        "name": backplane_sacct_id,
+    }
+    # replace backplane service account id with a generic value
+    if backplane_sa_list_entry in resource_dict["Resources"]["ServiceAccount"]:
+        resource_dict["Resources"]["ServiceAccount"].remove(backplane_sa_list_entry)
+        resource_dict["Resources"]["ServiceAccount"].append(
+            {
+                "namespace": "openshift-backplane-srep",
+                "name": "UNIQUE_BACKPLANE_SERVICEACCOUNT_ID",
+            }
+        )
+    return resource_dict
 
 
 def main():
