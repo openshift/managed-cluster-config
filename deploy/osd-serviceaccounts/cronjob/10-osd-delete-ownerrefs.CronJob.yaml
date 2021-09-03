@@ -1,35 +1,4 @@
 ---
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: osd-delete-ownerrefs-serviceaccounts
-  namespace: openshift-backplane-srep
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: osd-delete-ownerrefs-serviceaccounts
-rules:
-- apiGroups:
-  - ""
-  resources:
-  - serviceaccounts
-  verbs:
-  - "*"
----
-kind: ClusterRoleBinding
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: osd-delete-ownerrefs-serviceaccounts
-subjects:
-- kind: ServiceAccount
-  name: osd-delete-ownerrefs-serviceaccounts
-  namespace: openshift-backplane-srep
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: osd-delete-ownerrefs-serviceaccounts
----
 apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
@@ -44,6 +13,18 @@ spec:
     spec:
       template:
         spec:
+          affinity:
+            nodeAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+              - preference:
+                  matchExpressions:
+                  - key: node-role.kubernetes.io/infra
+                    operator: Exists
+                weight: 1
+          tolerations:
+            - effect: NoSchedule
+              key: node-role.kubernetes.io/infra
+              operator: Exists
           serviceAccountName: osd-delete-ownerrefs-serviceaccounts
           restartPolicy: Never
           containers:

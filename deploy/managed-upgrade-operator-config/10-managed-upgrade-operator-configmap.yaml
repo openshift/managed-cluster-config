@@ -31,18 +31,35 @@ data:
       - MetricsClientSendFailingSRE
       - UpgradeNodeScalingFailedSRE
       - UpgradeClusterCheckFailedSRE
+      - PruningCronjobErrorSRE
       - PrometheusRuleFailures
       - CannotRetrieveUpdates
+      - FluentdNodeDown
+      # https://bugzilla.redhat.com/show_bug.cgi?id=1986981
+      - PrometheusRemoteWriteBehind
+      - KubePersistentVolumeErrors
+      - PrometheusBadConfig
+      - PrometheusRemoteStorageFailures
+      - AlertmanagerMembersInconsistent
+      - AlertmanagerClusterFailedToSendAlerts
+      - AlertmanagerConfigInconsistent
+      - AlertmanagerClusterDown
+      - KubeStateMetricsListErrors
+      - KubeStateMetricsWatchErrors
+      - ThanosRuleSenderIsFailingAlerts
+      - ThanosRuleHighRuleEvaluationFailures
+      - ThanosNoRuleEvaluations
+      ignoredNamespaces:
+      - openshift-logging
+      - openshift-redhat-marketplace
+      - openshift-operators
+      - openshift-customer-monitoring
+      - openshift-cnv
+      - openshift-route-monitoring-operator
+      - openshift-user-workload-monitoring
+      - openshift-pipelines
     extDependencyAvailabilityChecks:
       http:
         timeout: 10
         urls:
-          - https://quay.io/health
           - ${OCM_BASE_URL}
-    verification:
-      ignoredNamespaces:
-      - openshift-logging
-      namespacePrefixesToCheck:
-      - openshift
-      - kube
-      - default

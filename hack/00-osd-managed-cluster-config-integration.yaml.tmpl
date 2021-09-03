@@ -26,17 +26,17 @@ parameters:
   required: true
 - name: TELEMETER_SERVER_URL
   required: true
-- name: CS_SRE_USERS
-  required: true
-- name: CEE_USERS
-  required: true
-- name: SREP_USERS
-  required: true
 - name: OCM_BASE_URL
   required: true
 - name: SREP_LEGAL_ENTITY_ID
   required: true
+- name: DPTP_LEGAL_ENTITY_ID
+  required: true
 - name: OBSERVATORIUM_LEGALENTITY_IDS
+  required: true
+- name: ALLOWED_CIDR_BLOCKS
+  required: true
+- name: ENABLE_MANAGEMENT_API_SERVER_INGRESS
   required: true
 metadata:
   name: selectorsyncset-template
@@ -347,6 +347,36 @@ objects:
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
+    name: resource-quota-storage-7100gb
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/storage-quota-gib: '7100'
+      matchExpressions:
+      - key: api.openshift.com/ccs
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: persistent-volume-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/storage-pv-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            requests.storage: 7100Gi
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
     name: resource-quota-service-lb-default
   spec:
     clusterDeploymentSelector:
@@ -558,60 +588,6 @@ objects:
           hard:
             services.loadbalancers: '20'
 - apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncIdentityProvider
-  metadata:
-    name: osd-sre-identityprovider
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-      matchExpressions:
-      - key: api.openshift.com/environment
-        operator: NotIn
-        values:
-        - production
-    identityProviders:
-    - challenge: true
-      ldap:
-        attributes:
-          email:
-          - ${IDENTITY_ATTR_EMAIL}
-          id:
-          - ${IDENTITY_ATTR_ID}
-          name:
-          - ${IDENTITY_ATTR_NAME}
-          preferredUsername:
-          - ${IDENTITY_ATTR_PREFERRED_USERNAME}
-        bindDN: ${IDENTITY_BIND_DN}
-        bindPassword:
-          name: osd-ldap-secret
-        ca:
-          name: osd-ldap-ca-configmap
-        insecure: false
-        url: ${IDENTITY_URL}
-      login: true
-      mappingMethod: ${IDENTITY_MAPPING_METHOD}
-      name: ${IDENTITY_NAME}
-      type: LDAP
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncIdentityProvider
-  metadata:
-    name: osd-sre-google-identityprovider
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-        api.openshift.com/environment: production
-    identityProviders:
-    - google:
-        clientID: ${IDENTITY_SRE_GOOGLE_CLIENTID}
-        clientSecret:
-          name: osd-google-secret
-        hostedDomain: redhat.com
-      mappingMethod: claim
-      name: OpenShift_SRE
-      type: Google
-- apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
     name: osd-observatorium-credentials-secret
@@ -648,6 +624,64 @@ objects:
       kind: Namespace
       metadata:
         name: openshift-backplane-cee
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-cee-cluster-readers
+      rules:
+      - apiGroups:
+        - machineconfiguration.openshift.io
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: backplane-cee
+        namespace: openshift-monitoring
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods/portforward
+        verbs:
+        - create
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: backplane-cee-cluster-rolebinding
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: backplane-cee-cluster-readers
+      subjects:
+      - kind: Group
+        name: system:serviceaccounts:openshift-backplane-cee
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: backplane-cee
+        namespace: openshift-monitoring
+      subjects:
+      - apiGroup: rbac.authorization.k8s.io
+        kind: Group
+        name: system:serviceaccounts:openshift-backplane-cee
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: backplane-cee
+        namespace: openshift-monitoring
     - aggregationRule:
         clusterRoleSelectors:
         - matchExpressions:
@@ -1018,6 +1052,107 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: backplane-cssre-addon-managed-api-service-internal
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/addon-managed-api-service-internal: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: openshift-backplane-cssre
+    - aggregationRule:
+        clusterRoleSelectors:
+        - matchExpressions:
+          - key: managed.openshift.io/aggregate-to-cssre-admins
+            operator: In
+            values:
+            - cluster
+        - matchExpressions:
+          - key: managed.openshift.io/aggregate-to-dedicated-admins
+            operator: In
+            values:
+            - cluster
+      apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-cssre-admins-cluster
+      rules: []
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: backplane-cssre
+        namespace: openshift-monitoring
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods/portforward
+        verbs:
+        - create
+    - apiVersion: rbac.authorization.k8s.io/v1
+      aggregationRule:
+        clusterRoleSelectors:
+        - matchExpressions:
+          - key: rbac.authorization.k8s.io/aggregate-to-view
+            operator: In
+            values:
+            - 'true'
+        - matchExpressions:
+          - key: managed.openshift.io/aggregate-to-backplane-cssre
+            operator: In
+            values:
+            - 'true'
+      kind: ClusterRole
+      metadata:
+        name: backplane-cssre-readers-cluster
+      rules: []
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: backplane-cssre-admins
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: backplane-cssre-admins-cluster
+      subjects:
+      - kind: Group
+        name: system:serviceaccounts:openshift-backplane-cssre
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: backplane-cssre
+        namespace: openshift-monitoring
+      subjects:
+      - apiGroup: rbac.authorization.k8s.io
+        kind: Group
+        name: system:serviceaccounts:openshift-backplane-cssre
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: backplane-cssre
+        namespace: openshift-monitoring
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: backplane-cssre-readers
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: backplane-cssre-readers-cluster
+      subjects:
+      - kind: Group
+        name: system:serviceaccounts:openshift-backplane-cssre
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: backplane-cssre-rhmi-addon-rhmi-operator
   spec:
     clusterDeploymentSelector:
@@ -1116,6 +1251,12 @@ objects:
         - ''
         resources:
         - pods/exec
+        verbs:
+        - create
+      - apiGroups:
+        - ''
+        resources:
+        - pods/portforward
         verbs:
         - create
       - apiGroups:
@@ -1333,6 +1474,12 @@ objects:
         verbs:
         - create
       - apiGroups:
+        - ''
+        resources:
+        - pods/portforward
+        verbs:
+        - create
+      - apiGroups:
         - batch
         resources:
         - jobs
@@ -1446,7 +1593,7 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: backplane-cssre-rhoam
+    name: backplane-cssre-rhoam-addon-managed-api-service
   spec:
     clusterDeploymentSelector:
       matchLabels:
@@ -1530,6 +1677,12 @@ objects:
         - ''
         resources:
         - pods/exec
+        verbs:
+        - create
+      - apiGroups:
+        - ''
+        resources:
+        - pods/portforward
         verbs:
         - create
       - apiGroups:
@@ -1635,7 +1788,212 @@ objects:
         permissions:
         - allowFirst: true
           clusterRoleName: backplane-rhoam-cssre-admins-project
-          namespacesAllowedRegex: (^redhat-rhoam$|^redhat-rhoam-.*)
+          namespacesAllowedRegex: (^redhat-rhoami?$|^redhat-rhoami?-.*)
+        subjectKind: Group
+        subjectName: system:serviceaccounts:openshift-backplane-cssre
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: backplane-cssre-rhoam-addon-managed-api-service-internal
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/addon-managed-api-service-internal: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-rhoam-cssre-admins-cluster-aggregate
+        labels:
+          managed.openshift.io/aggregate-to-cssre-admins: cluster
+      rules:
+      - apiGroups:
+        - config.openshift.io
+        resources:
+        - projects
+        verbs:
+        - create
+        - get
+        - list
+        - patch
+        - update
+        - watch
+      - apiGroups:
+        - config.openshift.io
+        resources:
+        - infrastructures
+        - oauths
+        verbs:
+        - get
+      - apiGroups:
+        - project.openshift.io
+        resources:
+        - projects
+        verbs:
+        - '*'
+      - apiGroups:
+        - ''
+        resources:
+        - namespaces
+        - namespaces/finalize
+        verbs:
+        - create
+        - get
+        - list
+        - patch
+        - update
+        - watch
+      - apiGroups:
+        - user.openshift.io
+        resources:
+        - groups
+        verbs:
+        - patch
+        - update
+        - get
+      - apiGroups:
+        - apiextensions.k8s.io
+        - applicationmonitoring.integreatly.org
+        - apps.3scale.net
+        - capabilities.3scale.net
+        - keycloak.org
+        - monitoring.coreos.com
+        resources:
+        - '*'
+        verbs:
+        - create
+        - get
+        - list
+        - patch
+        - update
+        - watch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-rhoam-cssre-admins-project
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods/exec
+        verbs:
+        - create
+      - apiGroups:
+        - ''
+        resources:
+        - pods/portforward
+        verbs:
+        - create
+      - apiGroups:
+        - batch
+        resources:
+        - jobs
+        - cronjobs
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - build.openshift.io
+        resources:
+        - builds
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        - pods/attach
+        verbs:
+        - create
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        - pods/log
+        verbs:
+        - get
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - delete
+      - apiGroups:
+        - integreatly.org
+        resources:
+        - '*'
+        verbs:
+        - create
+        - get
+        - list
+        - patch
+        - update
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - secrets
+        - configmaps
+        - persistentvolumeclaims
+        verbs:
+        - '*'
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - installplans
+        verbs:
+        - patch
+      - apiGroups:
+        - policy
+        resources:
+        - poddisruptionbudgets
+        verbs:
+        - list
+        - get
+      - apiGroups:
+        - apps
+        resources:
+        - statefulsets
+        verbs:
+        - list
+        - get
+      - apiGroups:
+        - ''
+        resources:
+        - events
+        verbs:
+        - list
+        - get
+      - apiGroups:
+        - ''
+        resources:
+        - endpoints
+        verbs:
+        - list
+        - get
+      - apiGroups:
+        - tekton.dev
+        resources:
+        - '*'
+        verbs:
+        - '*'
+    - apiVersion: managed.openshift.io/v1alpha1
+      kind: SubjectPermission
+      metadata:
+        name: backplane-rhoam-cssre-admins
+        namespace: openshift-rbac-permissions
+      spec:
+        permissions:
+        - allowFirst: true
+          clusterRoleName: backplane-rhoam-cssre-admins-project
+          namespacesAllowedRegex: (^redhat-rhoami?$|^redhat-rhoami?-.*)
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-cssre
 - apiVersion: hive.openshift.io/v1
@@ -1693,6 +2051,403 @@ objects:
       subjects:
       - kind: User
         name: backplane-cluster-admin
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: backplane-mkrts-addon-kas-fleetshard-operator
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/addon-kas-fleetshard-operator: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: openshift-backplane-rts
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-mkrts-readers-cluster
+      aggregationRule:
+        clusterRoleSelectors:
+        - matchExpressions:
+          - key: rbac.authorization.k8s.io/aggregate-to-view
+            operator: In
+            values:
+            - 'true'
+        - matchExpressions:
+          - key: managed.openshift.io/aggregate-to-dedicated-readers
+            operator: In
+            values:
+            - 'true'
+      rules: []
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: backplane-mkrts-readers
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: backplane-mkrts-readers-cluster
+      subjects:
+      - kind: Group
+        name: system:serviceaccounts:openshift-backplane-rts
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: backplane-mkrts-addon-kas-fleetshard-operator-qe
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/addon-kas-fleetshard-operator-qe: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: openshift-backplane-rts
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-mkrts-readers-cluster
+      aggregationRule:
+        clusterRoleSelectors:
+        - matchExpressions:
+          - key: rbac.authorization.k8s.io/aggregate-to-view
+            operator: In
+            values:
+            - 'true'
+        - matchExpressions:
+          - key: managed.openshift.io/aggregate-to-dedicated-readers
+            operator: In
+            values:
+            - 'true'
+      rules: []
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: backplane-mkrts-readers
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: backplane-mkrts-readers-cluster
+      subjects:
+      - kind: Group
+        name: system:serviceaccounts:openshift-backplane-rts
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: backplane-mkrts-addon-managed-kafka
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/addon-managed-kafka: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: openshift-backplane-rts
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-mkrts-readers-cluster
+      aggregationRule:
+        clusterRoleSelectors:
+        - matchExpressions:
+          - key: rbac.authorization.k8s.io/aggregate-to-view
+            operator: In
+            values:
+            - 'true'
+        - matchExpressions:
+          - key: managed.openshift.io/aggregate-to-dedicated-readers
+            operator: In
+            values:
+            - 'true'
+      rules: []
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: backplane-mkrts-readers
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: backplane-mkrts-readers-cluster
+      subjects:
+      - kind: Group
+        name: system:serviceaccounts:openshift-backplane-rts
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: backplane-mkrts-addon-managed-kafka-qe
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/addon-managed-kafka-qe: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: openshift-backplane-rts
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-mkrts-readers-cluster
+      aggregationRule:
+        clusterRoleSelectors:
+        - matchExpressions:
+          - key: rbac.authorization.k8s.io/aggregate-to-view
+            operator: In
+            values:
+            - 'true'
+        - matchExpressions:
+          - key: managed.openshift.io/aggregate-to-dedicated-readers
+            operator: In
+            values:
+            - 'true'
+      rules: []
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: backplane-mkrts-readers
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: backplane-mkrts-readers-cluster
+      subjects:
+      - kind: Group
+        name: system:serviceaccounts:openshift-backplane-rts
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: backplane-mkrts-redhat-kas-fleetshard-addon-kas-fleetshard-operator
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/addon-kas-fleetshard-operator: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: managed.openshift.io/v1alpha1
+      kind: SubjectPermission
+      metadata:
+        name: backplane-mkrts-admins
+        namespace: openshift-rbac-permissions
+      spec:
+        permissions:
+        - allowFirst: true
+          clusterRoleName: admin
+          namespacesAllowedRegex: (^redhat-managed-kafka-.*|^redhat-kas-fleetshard-.*|^managed-application-services-observability)
+        subjectKind: Group
+        subjectName: system:serviceaccounts:openshift-backplane-rts
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: backplane-mkrts-redhat-kas-fleetshard-addon-kas-fleetshard-operator-qe
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/addon-kas-fleetshard-operator-qe: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: managed.openshift.io/v1alpha1
+      kind: SubjectPermission
+      metadata:
+        name: backplane-mkrts-admins
+        namespace: openshift-rbac-permissions
+      spec:
+        permissions:
+        - allowFirst: true
+          clusterRoleName: admin
+          namespacesAllowedRegex: (^redhat-managed-kafka-.*|^redhat-kas-fleetshard-.*|^managed-application-services-observability)
+        subjectKind: Group
+        subjectName: system:serviceaccounts:openshift-backplane-rts
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: backplane-mkrts-redhat-kas-fleetshard-addon-managed-kafka
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/addon-managed-kafka: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: managed.openshift.io/v1alpha1
+      kind: SubjectPermission
+      metadata:
+        name: backplane-mkrts-admins
+        namespace: openshift-rbac-permissions
+      spec:
+        permissions:
+        - allowFirst: true
+          clusterRoleName: admin
+          namespacesAllowedRegex: (^redhat-managed-kafka-.*|^redhat-kas-fleetshard-.*|^managed-application-services-observability)
+        subjectKind: Group
+        subjectName: system:serviceaccounts:openshift-backplane-rts
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: backplane-mkrts-redhat-kas-fleetshard-addon-managed-kafka-qe
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/addon-managed-kafka-qe: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: managed.openshift.io/v1alpha1
+      kind: SubjectPermission
+      metadata:
+        name: backplane-mkrts-admins
+        namespace: openshift-rbac-permissions
+      spec:
+        permissions:
+        - allowFirst: true
+          clusterRoleName: admin
+          namespacesAllowedRegex: (^redhat-managed-kafka-.*|^redhat-kas-fleetshard-.*|^managed-application-services-observability)
+        subjectKind: Group
+        subjectName: system:serviceaccounts:openshift-backplane-rts
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: backplane-mtsre-addon-managed-odh
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/addon-managed-odh: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: openshift-backplane-mtsre
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-mtsre-readers-cluster
+      aggregationRule:
+        clusterRoleSelectors:
+        - matchExpressions:
+          - key: rbac.authorization.k8s.io/aggregate-to-view
+            operator: In
+            values:
+            - 'true'
+        - matchExpressions:
+          - key: managed.openshift.io/aggregate-to-dedicated-readers
+            operator: In
+            values:
+            - 'true'
+      rules: []
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: backplane-mtsre-readers
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: backplane-mtsre-readers-cluster
+      subjects:
+      - kind: Group
+        name: system:serviceaccounts:openshift-backplane-mtsre
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: backplane-mtsre-managed-odh
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/addon-managed-odh: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: managed.openshift.io/v1alpha1
+      kind: SubjectPermission
+      metadata:
+        name: backplane-mtsre-admins
+        namespace: openshift-rbac-permissions
+      spec:
+        permissions:
+        - allowFirst: true
+          clusterRoleName: admin
+          namespacesAllowedRegex: (^rhods-notebooks$|^redhat-ods-.*)
+        subjectKind: Group
+        subjectName: system:serviceaccounts:openshift-backplane-mtsre
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: backplane-mtsre-ocs-converged
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/addon-ocs-converged: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: managed.openshift.io/v1alpha1
+      kind: SubjectPermission
+      metadata:
+        name: backplane-mtsre-ocs-converged-admins
+        namespace: openshift-rbac-permissions
+      spec:
+        permissions:
+        - allowFirst: true
+          clusterRoleName: admin
+          namespacesAllowedRegex: (^openshift-storage$)
+        subjectKind: Group
+        subjectName: system:serviceaccounts:openshift-backplane-mtsre
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -1802,6 +2557,14 @@ objects:
         - deletecollection
       - apiGroups:
         - machineconfiguration.openshift.io
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - machine.openshift.io
         resources:
         - '*'
         verbs:
@@ -1981,6 +2744,12 @@ objects:
         - subscriptions
         verbs:
         - delete
+      - apiGroups:
+        - ''
+        resources:
+        - configmaps
+        verbs:
+        - patch
     - apiVersion: rbac.authorization.k8s.io/v1
       aggregationRule:
         clusterRoleSelectors:
@@ -2064,6 +2833,29 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
+        name: backplane-srep-hive-osd-operators-reader
+      rules:
+      - apiGroups:
+        - rbac.authorization.k8s.io
+        resources:
+        - roles
+        - rolebindings
+        verbs:
+        - get
+        - watch
+        - list
+      - apiGroups:
+        - authorization.openshift.io
+        resources:
+        - roles
+        - rolebindings
+        verbs:
+        - get
+        - watch
+        - list
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
         name: backplane-srep-hive-project
       rules:
       - apiGroups:
@@ -2088,6 +2880,10 @@ objects:
         - allowFirst: true
           clusterRoleName: backplane-srep-hive-project
           namespacesAllowedRegex: (^uhc-.*)
+        - allowFirst: true
+          clusterRoleName: backplane-srep-hive-osd-operators-reader
+          namespacesAllowedRegex: ^.*-operator$
+          namespacesDeniedRegex: ^uhc-.*
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-srep
 - apiVersion: hive.openshift.io/v1
@@ -2181,6 +2977,18 @@ objects:
           spec:
             template:
               spec:
+                affinity:
+                  nodeAffinity:
+                    preferredDuringSchedulingIgnoredDuringExecution:
+                    - preference:
+                        matchExpressions:
+                        - key: node-role.kubernetes.io/infra
+                          operator: Exists
+                      weight: 1
+                tolerations:
+                - effect: NoSchedule
+                  key: node-role.kubernetes.io/infra
+                  operator: Exists
                 serviceAccountName: osd-delete-prometheus-operator-bz1891815
                 restartPolicy: Never
                 containers:
@@ -2251,6 +3059,18 @@ objects:
           spec:
             template:
               spec:
+                affinity:
+                  nodeAffinity:
+                    preferredDuringSchedulingIgnoredDuringExecution:
+                    - preference:
+                        matchExpressions:
+                        - key: node-role.kubernetes.io/infra
+                          operator: Exists
+                      weight: 1
+                tolerations:
+                - effect: NoSchedule
+                  key: node-role.kubernetes.io/infra
+                  operator: Exists
                 serviceAccountName: osd-delete-ownerrefs-bz1906584
                 restartPolicy: Never
                 containers:
@@ -2266,85 +3086,6 @@ objects:
                     \ == \"elasticsearch\" ]]; then\n    oc patch $object --type=json\
                     \ -p '[{\"op\":\"remove\",\"path\":\"/metadata/ownerReferences\"\
                     }]'\n  fi\ndone\n"
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    labels:
-      managed.openshift.io/gitHash: ${IMAGE_TAG}
-      managed.openshift.io/gitRepoName: ${REPO_NAME}
-      managed.openshift.io/osd: 'true'
-    name: bz1915081
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-    resourceApplyMode: Sync
-    patches:
-    - apiVersion: apps/v1
-      kind: DaemonSet
-      name: node-ca
-      namespace: openshift-image-registry
-      applyMode: AlwaysApply
-      patch: '{"spec":{"template":{"spec":{"tolerations":[{"operator":"Exists"}]}}}}'
-      patchType: merge
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    labels:
-      managed.openshift.io/gitHash: ${IMAGE_TAG}
-      managed.openshift.io/gitRepoName: ${REPO_NAME}
-      managed.openshift.io/osd: 'true'
-    name: bz1915661
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-      matchExpressions:
-      - key: hive.openshift.io/version-major-minor-patch
-        operator: In
-        values:
-        - 4.7.0
-    resourceApplyMode: Sync
-    resources:
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: osd-pruner-bz1915661
-      rules:
-      - apiGroups:
-        - batch
-        resources:
-        - jobs
-        verbs:
-        - get
-        - list
-      - apiGroups:
-        - batch
-        resources:
-        - cronjobs
-        verbs:
-        - get
-        - list
-      - apiGroups:
-        - apps
-        - extensions
-        resources:
-        - statefulsets
-        verbs:
-        - get
-        - list
-    - kind: ClusterRoleBinding
-      apiVersion: rbac.authorization.k8s.io/v1
-      metadata:
-        name: osd-pruner-bz1915661
-      subjects:
-      - kind: ServiceAccount
-        name: pruner
-        namespace: openshift-image-registry
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: ClusterRole
-        name: osd-pruner-bz1915661
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -2392,6 +3133,79 @@ objects:
         - clusterRoleName: admin
           namespacesAllowedRegex: ^openshift-customer-monitoring$
           allowFirst: true
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: cloud-ingress-operator-configuration-apischeme
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/sts
+        operator: NotIn
+        values:
+        - 'true'
+      - key: api.openshift.com/private-link
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Upsert
+    resources:
+    - apiVersion: cloudingress.managed.openshift.io/v1alpha1
+      kind: APIScheme
+      metadata:
+        name: rh-api
+        namespace: openshift-cloud-ingress-operator
+        annotations:
+          allowedCIDRBlocks: ${ALLOWED_CIDR_BLOCKS}
+      spec:
+        managementAPIServerIngress:
+          enabled: ${{ENABLE_MANAGEMENT_API_SERVER_INGRESS}}
+          dnsName: rh-api
+          allowedCIDRBlocks: ${{ALLOWED_CIDR_BLOCKS}}
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: cloud-ingress-operator-configuration-sshd
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/sts
+        operator: NotIn
+        values:
+        - 'true'
+      - key: api.openshift.com/private-link
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: cloudingress.managed.openshift.io/v1alpha1
+      kind: SSHD
+      metadata:
+        name: rh-ssh
+        namespace: openshift-sre-sshd
+        labels:
+          managed.openshift.io/version: v49-1fde8e5
+      spec:
+        dnsName: rh-ssh
+        allowedCIDRBlocks: ${{ALLOWED_CIDR_BLOCKS}}
+        image: quay.io/app-sre/sre-ssh-proxy@sha256:67ecbf78aa15cc991d92643675d0c947fe4efea1e7a30d743d34e21f84cc2ed8
+        configMapSelector:
+          matchExpressions:
+          - key: api.openshift.com/authorized-keys
+            operator: Exists
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -2472,11 +3286,9 @@ objects:
         api.openshift.com/managed: 'true'
       matchExpressions:
       - key: hive.openshift.io/version-major-minor
-        operator: In
+        operator: NotIn
         values:
-        - '4.6'
-        - '4.7'
-        - '4.8'
+        - '4.5'
       - key: ext-managed.openshift.io/uwm-disabled
         operator: NotIn
         values:
@@ -2494,13 +3306,13 @@ objects:
           # so that killswitch instructions point to the right file!\n  remoteWrite:\n\
           \    - url: http://token-refresher.openshift-monitoring.svc.cluster.local\n\
           \      remoteTimeout: 30s\n      writeRelabelConfigs:\n      - sourceLabels:\
-          \ [__name__]\n        action: keep\n        regex: '(cluster_admin_enabled|identity_provider)'\n\
+          \ [__name__]\n        action: keep\n        regex: '(cluster_admin_enabled|identity_provider|probe_success|probe_duration_seconds)'\n\
           \      queueConfig:\n        capacity: 2500\n        maxShards: 1000\n \
           \       minShards: 1\n        maxSamplesPerSend: 500\n        batchSendDeadline:\
           \ 60s\n        minBackoff: 30ms\n        maxBackoff: 100ms\n  nodeSelector:\n\
           \    node-role.kubernetes.io/infra: \"\"\n  tolerations:\n    - effect:\
           \ NoSchedule\n      key: node-role.kubernetes.io/infra\n      operator:\
-          \ Exists\n  retention: 15d\n  volumeClaimTemplate:\n    metadata:\n    \
+          \ Exists\n  retention: 11d\n  volumeClaimTemplate:\n    metadata:\n    \
           \  name: prometheus-data\n    spec:\n      resources:\n        requests:\n\
           \          storage: 100Gi\nalertmanagerMain:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
           \ \"\"\n  tolerations:\n    - effect: NoSchedule\n      key: node-role.kubernetes.io/infra\n\
@@ -2537,11 +3349,9 @@ objects:
         api.openshift.com/managed: 'true'
       matchExpressions:
       - key: hive.openshift.io/version-major-minor
-        operator: NotIn
+        operator: In
         values:
-        - '4.6'
-        - '4.7'
-        - '4.8'
+        - '4.5'
     resourceApplyMode: Sync
     resources:
     - apiVersion: v1
@@ -2552,7 +3362,7 @@ objects:
       data:
         config.yaml: "prometheusK8s:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
           \ \"\"\n  tolerations:\n    - effect: NoSchedule\n      key: node-role.kubernetes.io/infra\n\
-          \      operator: Exists\n  retention: 15d\n  volumeClaimTemplate:\n    metadata:\n\
+          \      operator: Exists\n  retention: 11d\n  volumeClaimTemplate:\n    metadata:\n\
           \      name: prometheus-data\n    spec:\n      resources:\n        requests:\n\
           \          storage: 100Gi\nalertmanagerMain:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
           \ \"\"\n  tolerations:\n    - effect: NoSchedule\n      key: node-role.kubernetes.io/infra\n\
@@ -2600,7 +3410,7 @@ objects:
       data:
         config.yaml: "prometheusK8s:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
           \ \"\"\n  tolerations:\n    - effect: NoSchedule\n      key: node-role.kubernetes.io/infra\n\
-          \      operator: Exists\n  retention: 15d\n  volumeClaimTemplate:\n    metadata:\n\
+          \      operator: Exists\n  retention: 11d\n  volumeClaimTemplate:\n    metadata:\n\
           \      name: prometheus-data\n    spec:\n      resources:\n        requests:\n\
           \          storage: 100Gi\nalertmanagerMain:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
           \ \"\"\n  tolerations:\n    - effect: NoSchedule\n      key: node-role.kubernetes.io/infra\n\
@@ -2628,7 +3438,7 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: compliance-operator
+    name: container-security-operator
   spec:
     clusterDeploymentSelector:
       matchLabels:
@@ -2644,26 +3454,26 @@ objects:
     - apiVersion: v1
       kind: Namespace
       metadata:
-        name: openshift-compliance
+        name: openshift-container-security-operator
     - apiVersion: operators.coreos.com/v1
       kind: OperatorGroup
       metadata:
-        name: compliance-operator
-        namespace: openshift-compliance
+        name: container-security-operator
+        namespace: openshift-container-security-operator
       spec:
         targetNamespaces:
-        - openshift-compliance
+        - openshift-container-security-operator
     - apiVersion: operators.coreos.com/v1alpha1
       kind: Subscription
       metadata:
-        name: compliance-operator
-        namespace: openshift-compliance
+        name: container-security-operator
+        namespace: openshift-container-security-operator
       spec:
-        channel: '4.6'
+        channel: quay-v3.4
         installPlanApproval: Automatic
         source: redhat-operators
         sourceNamespace: openshift-marketplace
-        name: compliance-operator
+        name: container-security-operator
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -2751,12 +3561,18 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: kubelet-config
+    name: kubelet-config-version-major-minor
   spec:
     clusterDeploymentSelector:
       matchLabels:
         api.openshift.com/managed: 'true'
-    resourceApplyMode: Sync
+      matchExpressions:
+      - key: hive.openshift.io/version-major-minor
+        operator: NotIn
+        values:
+        - '4.8'
+        - '4.9'
+    resourceApplyMode: Upsert
     patches:
     - kind: MachineConfigPool
       apiVersion: machineconfiguration.openshift.io/v1
@@ -2792,405 +3608,45 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: layered-sre-authorization-addon-rhmi-operator
+    name: kubelet-config-legal-entity-id
   spec:
     clusterDeploymentSelector:
       matchLabels:
         api.openshift.com/managed: 'true'
-        api.openshift.com/addon-rhmi-operator: 'true'
-    resourceApplyMode: Sync
+      matchExpressions:
+      - key: api.openshift.com/legal-entity-id
+        operator: NotIn
+        values:
+        - ${{DPTP_LEGAL_ENTITY_ID}}
+    resourceApplyMode: Upsert
+    patches:
+    - kind: MachineConfigPool
+      apiVersion: machineconfiguration.openshift.io/v1
+      name: worker
+      applyMode: AlwaysApply
+      patch: '{ "metadata": {"labels": {"managed.openshift.io/custom-kubelet":""}
+        } }'
+      patchType: merge
+    - kind: MachineConfigPool
+      apiVersion: machineconfiguration.openshift.io/v1
+      name: master
+      applyMode: AlwaysApply
+      patch: '{ "metadata": {"labels": {"managed.openshift.io/custom-kubelet":""}
+        } }'
+      patchType: merge
     resources:
-    - apiVersion: user.openshift.io/v1
-      kind: Group
+    - apiVersion: machineconfiguration.openshift.io/v1
+      kind: KubeletConfig
       metadata:
-        name: layered-cs-sre-admins
-      users: ${{CS_SRE_USERS}}
-    - aggregationRule:
-        clusterRoleSelectors:
-        - matchExpressions:
-          - key: managed.openshift.io/aggregate-to-cssre-admins
-            operator: In
-            values:
-            - cluster
-        - matchExpressions:
-          - key: managed.openshift.io/aggregate-to-dedicated-admins
-            operator: In
-            values:
-            - cluster
-      apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: backplane-cssre-admins-cluster
-      rules: []
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRoleBinding
-      metadata:
-        name: backplane-cssre-admins-legacy
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: ClusterRole
-        name: backplane-cssre-admins-cluster
-      subjects:
-      - kind: Group
-        name: layered-cs-sre-admins
-    - apiVersion: user.openshift.io/v1
-      kind: Group
-      metadata:
-        name: layered-sre-cluster-admins
-      users: []
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRoleBinding
-      metadata:
-        name: layered-sre-cluster-admins
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: ClusterRole
-        name: cluster-admin
-      subjects:
-      - kind: Group
-        name: layered-sre-cluster-admins
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    labels:
-      managed.openshift.io/gitHash: ${IMAGE_TAG}
-      managed.openshift.io/gitRepoName: ${REPO_NAME}
-      managed.openshift.io/osd: 'true'
-    name: layered-sre-authorization-addon-rhmi-operator-internal
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-        api.openshift.com/addon-rhmi-operator-internal: 'true'
-    resourceApplyMode: Sync
-    resources:
-    - apiVersion: user.openshift.io/v1
-      kind: Group
-      metadata:
-        name: layered-cs-sre-admins
-      users: ${{CS_SRE_USERS}}
-    - aggregationRule:
-        clusterRoleSelectors:
-        - matchExpressions:
-          - key: managed.openshift.io/aggregate-to-cssre-admins
-            operator: In
-            values:
-            - cluster
-        - matchExpressions:
-          - key: managed.openshift.io/aggregate-to-dedicated-admins
-            operator: In
-            values:
-            - cluster
-      apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: backplane-cssre-admins-cluster
-      rules: []
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRoleBinding
-      metadata:
-        name: backplane-cssre-admins-legacy
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: ClusterRole
-        name: backplane-cssre-admins-cluster
-      subjects:
-      - kind: Group
-        name: layered-cs-sre-admins
-    - apiVersion: user.openshift.io/v1
-      kind: Group
-      metadata:
-        name: layered-sre-cluster-admins
-      users: []
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRoleBinding
-      metadata:
-        name: layered-sre-cluster-admins
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: ClusterRole
-        name: cluster-admin
-      subjects:
-      - kind: Group
-        name: layered-sre-cluster-admins
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    labels:
-      managed.openshift.io/gitHash: ${IMAGE_TAG}
-      managed.openshift.io/gitRepoName: ${REPO_NAME}
-      managed.openshift.io/osd: 'true'
-    name: layered-sre-authorization-addon-managed-api-service
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-        api.openshift.com/addon-managed-api-service: 'true'
-    resourceApplyMode: Sync
-    resources:
-    - apiVersion: user.openshift.io/v1
-      kind: Group
-      metadata:
-        name: layered-cs-sre-admins
-      users: ${{CS_SRE_USERS}}
-    - aggregationRule:
-        clusterRoleSelectors:
-        - matchExpressions:
-          - key: managed.openshift.io/aggregate-to-cssre-admins
-            operator: In
-            values:
-            - cluster
-        - matchExpressions:
-          - key: managed.openshift.io/aggregate-to-dedicated-admins
-            operator: In
-            values:
-            - cluster
-      apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: backplane-cssre-admins-cluster
-      rules: []
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRoleBinding
-      metadata:
-        name: backplane-cssre-admins-legacy
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: ClusterRole
-        name: backplane-cssre-admins-cluster
-      subjects:
-      - kind: Group
-        name: layered-cs-sre-admins
-    - apiVersion: user.openshift.io/v1
-      kind: Group
-      metadata:
-        name: layered-sre-cluster-admins
-      users: []
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRoleBinding
-      metadata:
-        name: layered-sre-cluster-admins
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: ClusterRole
-        name: cluster-admin
-      subjects:
-      - kind: Group
-        name: layered-sre-cluster-admins
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    labels:
-      managed.openshift.io/gitHash: ${IMAGE_TAG}
-      managed.openshift.io/gitRepoName: ${REPO_NAME}
-      managed.openshift.io/osd: 'true'
-    name: layered-sre-authorization-rhmi-addon-rhmi-operator
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-        api.openshift.com/addon-rhmi-operator: 'true'
-    resourceApplyMode: Sync
-    resources:
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: backplane-rhmi-cssre-admins-cluster-aggregate
-        labels:
-          managed.openshift.io/aggregate-to-cssre-admins: cluster
-      rules:
-      - apiGroups:
-        - config.openshift.io
-        resources:
-        - projects
-        verbs:
-        - create
-        - get
-        - list
-        - patch
-        - update
-        - watch
-      - apiGroups:
-        - config.openshift.io
-        resources:
-        - infrastructures
-        - oauths
-        verbs:
-        - get
-      - apiGroups:
-        - project.openshift.io
-        resources:
-        - projects
-        verbs:
-        - '*'
-      - apiGroups:
-        - ''
-        resources:
-        - namespaces
-        - namespaces/finalize
-        verbs:
-        - create
-        - get
-        - list
-        - patch
-        - update
-        - watch
-      - apiGroups:
-        - user.openshift.io
-        resources:
-        - groups
-        verbs:
-        - patch
-        - update
-        - get
-      - apiGroups:
-        - quota.openshift.io
-        resources:
-        - clusterresourcequotas/status
-        - clusterresourcequotas
-        verbs:
-        - '*'
-      - apiGroups:
-        - apiextensions.k8s.io
-        - admin-enmasse.io
-        - apicur.io
-        - applicationmonitoring.integreatly.org
-        - apps.3scale.net
-        - capabilities.3scale.net
-        - enmasse.io
-        - iot.enmasse.io
-        - keycloak.org
-        - monitoring.coreos.com
-        - push.aerogear.org
-        - org.eclipse.che
-        - syndesis.io
-        resources:
-        - '*'
-        verbs:
-        - create
-        - get
-        - list
-        - patch
-        - update
-        - watch
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: backplane-rhmi-cssre-admins-project
-      rules:
-      - apiGroups:
-        - ''
-        resources:
-        - pods/exec
-        verbs:
-        - create
-      - apiGroups:
-        - batch
-        resources:
-        - jobs
-        - cronjobs
-        verbs:
-        - delete
-        - deletecollection
-      - apiGroups:
-        - build.openshift.io
-        resources:
-        - builds
-        verbs:
-        - delete
-        - deletecollection
-      - apiGroups:
-        - ''
-        resources:
-        - pods
-        - pods/attach
-        verbs:
-        - create
-      - apiGroups:
-        - ''
-        resources:
-        - pods
-        - pods/log
-        verbs:
-        - get
-      - apiGroups:
-        - ''
-        resources:
-        - pods
-        verbs:
-        - delete
-      - apiGroups:
-        - integreatly.org
-        resources:
-        - '*'
-        verbs:
-        - create
-        - get
-        - list
-        - patch
-        - update
-        - watch
-      - apiGroups:
-        - ''
-        resources:
-        - secrets
-        - configmaps
-        - persistentvolumeclaims
-        verbs:
-        - '*'
-      - apiGroups:
-        - operators.coreos.com
-        resources:
-        - installplans
-        verbs:
-        - patch
-      - apiGroups:
-        - policy
-        resources:
-        - poddisruptionbudgets
-        verbs:
-        - list
-        - get
-      - apiGroups:
-        - apps
-        resources:
-        - statefulsets
-        verbs:
-        - list
-        - get
-      - apiGroups:
-        - ''
-        resources:
-        - events
-        verbs:
-        - list
-        - get
-      - apiGroups:
-        - ''
-        resources:
-        - endpoints
-        verbs:
-        - list
-        - get
-      - apiGroups:
-        - tekton.dev
-        resources:
-        - '*'
-        verbs:
-        - '*'
-    - apiVersion: managed.openshift.io/v1alpha1
-      kind: SubjectPermission
-      metadata:
-        name: rhmi-cs-sre-admin
-        namespace: openshift-rbac-permissions
+        name: custom-kubelet
       spec:
-        permissions:
-        - allowFirst: true
-          clusterRoleName: backplane-rhmi-cssre-admins-project
-          namespacesAllowedRegex: .*
-          namespacesDeniedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$)
-        subjectKind: Group
-        subjectName: layered-cs-sre-admins
+        machineConfigPoolSelector:
+          matchLabels:
+            managed.openshift.io/custom-kubelet: ''
+        kubeletConfig:
+          systemReserved:
+            cpu: 1000m
+            memory: 1Gi
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -3198,412 +3654,44 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: layered-sre-authorization-rhmi-addon-rhmi-operator-internal
+    name: kubelet-config-testplatform
   spec:
     clusterDeploymentSelector:
       matchLabels:
         api.openshift.com/managed: 'true'
-        api.openshift.com/addon-rhmi-operator-internal: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.8'
+        - '4.9'
+      - key: api.openshift.com/legal-entity-id
+        operator: In
+        values:
+        - ${{DPTP_LEGAL_ENTITY_ID}}
     resourceApplyMode: Sync
     resources:
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
+    - apiVersion: machineconfiguration.openshift.io/v1
+      kind: KubeletConfig
       metadata:
-        name: backplane-rhmi-cssre-admins-cluster-aggregate
-        labels:
-          managed.openshift.io/aggregate-to-cssre-admins: cluster
-      rules:
-      - apiGroups:
-        - config.openshift.io
-        resources:
-        - projects
-        verbs:
-        - create
-        - get
-        - list
-        - patch
-        - update
-        - watch
-      - apiGroups:
-        - config.openshift.io
-        resources:
-        - infrastructures
-        - oauths
-        verbs:
-        - get
-      - apiGroups:
-        - project.openshift.io
-        resources:
-        - projects
-        verbs:
-        - '*'
-      - apiGroups:
-        - ''
-        resources:
-        - namespaces
-        - namespaces/finalize
-        verbs:
-        - create
-        - get
-        - list
-        - patch
-        - update
-        - watch
-      - apiGroups:
-        - user.openshift.io
-        resources:
-        - groups
-        verbs:
-        - patch
-        - update
-        - get
-      - apiGroups:
-        - quota.openshift.io
-        resources:
-        - clusterresourcequotas/status
-        - clusterresourcequotas
-        verbs:
-        - '*'
-      - apiGroups:
-        - apiextensions.k8s.io
-        - admin-enmasse.io
-        - apicur.io
-        - applicationmonitoring.integreatly.org
-        - apps.3scale.net
-        - capabilities.3scale.net
-        - enmasse.io
-        - iot.enmasse.io
-        - keycloak.org
-        - monitoring.coreos.com
-        - push.aerogear.org
-        - org.eclipse.che
-        - syndesis.io
-        resources:
-        - '*'
-        verbs:
-        - create
-        - get
-        - list
-        - patch
-        - update
-        - watch
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: backplane-rhmi-cssre-admins-project
-      rules:
-      - apiGroups:
-        - ''
-        resources:
-        - pods/exec
-        verbs:
-        - create
-      - apiGroups:
-        - batch
-        resources:
-        - jobs
-        - cronjobs
-        verbs:
-        - delete
-        - deletecollection
-      - apiGroups:
-        - build.openshift.io
-        resources:
-        - builds
-        verbs:
-        - delete
-        - deletecollection
-      - apiGroups:
-        - ''
-        resources:
-        - pods
-        - pods/attach
-        verbs:
-        - create
-      - apiGroups:
-        - ''
-        resources:
-        - pods
-        - pods/log
-        verbs:
-        - get
-      - apiGroups:
-        - ''
-        resources:
-        - pods
-        verbs:
-        - delete
-      - apiGroups:
-        - integreatly.org
-        resources:
-        - '*'
-        verbs:
-        - create
-        - get
-        - list
-        - patch
-        - update
-        - watch
-      - apiGroups:
-        - ''
-        resources:
-        - secrets
-        - configmaps
-        - persistentvolumeclaims
-        verbs:
-        - '*'
-      - apiGroups:
-        - operators.coreos.com
-        resources:
-        - installplans
-        verbs:
-        - patch
-      - apiGroups:
-        - policy
-        resources:
-        - poddisruptionbudgets
-        verbs:
-        - list
-        - get
-      - apiGroups:
-        - apps
-        resources:
-        - statefulsets
-        verbs:
-        - list
-        - get
-      - apiGroups:
-        - ''
-        resources:
-        - events
-        verbs:
-        - list
-        - get
-      - apiGroups:
-        - ''
-        resources:
-        - endpoints
-        verbs:
-        - list
-        - get
-      - apiGroups:
-        - tekton.dev
-        resources:
-        - '*'
-        verbs:
-        - '*'
-    - apiVersion: managed.openshift.io/v1alpha1
-      kind: SubjectPermission
-      metadata:
-        name: rhmi-cs-sre-admin
-        namespace: openshift-rbac-permissions
+        name: custom-kubelet
       spec:
-        permissions:
-        - allowFirst: true
-          clusterRoleName: backplane-rhmi-cssre-admins-project
-          namespacesAllowedRegex: .*
-          namespacesDeniedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$)
-        subjectKind: Group
-        subjectName: layered-cs-sre-admins
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    labels:
-      managed.openshift.io/gitHash: ${IMAGE_TAG}
-      managed.openshift.io/gitRepoName: ${REPO_NAME}
-      managed.openshift.io/osd: 'true'
-    name: layered-sre-authorization-rhoam
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-        api.openshift.com/addon-managed-api-service: 'true'
-    resourceApplyMode: Sync
-    resources:
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
+        machineConfigPoolSelector:
+          matchLabels:
+            pools.operator.machineconfiguration.openshift.io/master: ''
+        kubeletConfig:
+          systemReserved:
+            cpu: 1000m
+            memory: 1Gi
+    - apiVersion: machineconfiguration.openshift.io/v1
+      kind: KubeletConfig
       metadata:
-        name: backplane-rhoam-cssre-admins-cluster-aggregate
-        labels:
-          managed.openshift.io/aggregate-to-cssre-admins: cluster
-      rules:
-      - apiGroups:
-        - config.openshift.io
-        resources:
-        - projects
-        verbs:
-        - create
-        - get
-        - list
-        - patch
-        - update
-        - watch
-      - apiGroups:
-        - config.openshift.io
-        resources:
-        - infrastructures
-        - oauths
-        verbs:
-        - get
-      - apiGroups:
-        - project.openshift.io
-        resources:
-        - projects
-        verbs:
-        - '*'
-      - apiGroups:
-        - ''
-        resources:
-        - namespaces
-        - namespaces/finalize
-        verbs:
-        - create
-        - get
-        - list
-        - patch
-        - update
-        - watch
-      - apiGroups:
-        - user.openshift.io
-        resources:
-        - groups
-        verbs:
-        - patch
-        - update
-        - get
-      - apiGroups:
-        - apiextensions.k8s.io
-        - applicationmonitoring.integreatly.org
-        - apps.3scale.net
-        - capabilities.3scale.net
-        - keycloak.org
-        - monitoring.coreos.com
-        resources:
-        - '*'
-        verbs:
-        - create
-        - get
-        - list
-        - patch
-        - update
-        - watch
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: backplane-rhoam-cssre-admins-project
-      rules:
-      - apiGroups:
-        - ''
-        resources:
-        - pods/exec
-        verbs:
-        - create
-      - apiGroups:
-        - batch
-        resources:
-        - jobs
-        - cronjobs
-        verbs:
-        - delete
-        - deletecollection
-      - apiGroups:
-        - build.openshift.io
-        resources:
-        - builds
-        verbs:
-        - delete
-        - deletecollection
-      - apiGroups:
-        - ''
-        resources:
-        - pods
-        - pods/attach
-        verbs:
-        - create
-      - apiGroups:
-        - ''
-        resources:
-        - pods
-        - pods/log
-        verbs:
-        - get
-      - apiGroups:
-        - ''
-        resources:
-        - pods
-        verbs:
-        - delete
-      - apiGroups:
-        - integreatly.org
-        resources:
-        - '*'
-        verbs:
-        - create
-        - get
-        - list
-        - patch
-        - update
-        - watch
-      - apiGroups:
-        - ''
-        resources:
-        - secrets
-        - configmaps
-        - persistentvolumeclaims
-        verbs:
-        - '*'
-      - apiGroups:
-        - operators.coreos.com
-        resources:
-        - installplans
-        verbs:
-        - patch
-      - apiGroups:
-        - policy
-        resources:
-        - poddisruptionbudgets
-        verbs:
-        - list
-        - get
-      - apiGroups:
-        - apps
-        resources:
-        - statefulsets
-        verbs:
-        - list
-        - get
-      - apiGroups:
-        - ''
-        resources:
-        - events
-        verbs:
-        - list
-        - get
-      - apiGroups:
-        - ''
-        resources:
-        - endpoints
-        verbs:
-        - list
-        - get
-      - apiGroups:
-        - tekton.dev
-        resources:
-        - '*'
-        verbs:
-        - '*'
-    - apiVersion: managed.openshift.io/v1alpha1
-      kind: SubjectPermission
-      metadata:
-        name: rhoam-cs-sre-admin
-        namespace: openshift-rbac-permissions
+        name: system-reserved-worker
       spec:
-        permissions:
-        - allowFirst: true
-          clusterRoleName: backplane-rhoam-cssre-admins-project
-          namespacesAllowedRegex: (^redhat-rhoam$|^redhat-rhoam-.*)
-        subjectKind: Group
-        subjectName: layered-cs-sre-admins
+        autoSizingReserved: true
+        machineConfigPoolSelector:
+          matchLabels:
+            pools.operator.machineconfiguration.openshift.io/worker: ''
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -3622,7 +3710,7 @@ objects:
         values:
         - '4.5'
         - '4.6'
-    resourceApplyMode: Sync
+    resourceApplyMode: Upsert
     resources:
     - apiVersion: v1
       kind: ConfigMap
@@ -3637,11 +3725,18 @@ objects:
           scale:\n  timeOut: 30\nupgradeWindow:\n  delayTrigger: 30\n  timeOut: 120\n\
           nodeDrain:\n  timeOut: 45\n  expectedNodeDrainTime: 8\nhealthCheck:\n  ignoredCriticals:\n\
           \  - DNSErrors05MinSRE\n  - MetricsClientSendFailingSRE\n  - UpgradeNodeScalingFailedSRE\n\
-          \  - UpgradeClusterCheckFailedSRE\n  - PrometheusRuleFailures\n  - CannotRetrieveUpdates\n\
-          extDependencyAvailabilityChecks:\n  http:\n    timeout: 10\n    urls:\n\
-          \      - https://quay.io/health\n      - ${OCM_BASE_URL}\nverification:\n\
-          \  ignoredNamespaces:\n  - openshift-logging\n  namespacePrefixesToCheck:\n\
-          \  - openshift\n  - kube\n  - default\n"
+          \  - UpgradeClusterCheckFailedSRE\n  - PruningCronjobErrorSRE\n  - PrometheusRuleFailures\n\
+          \  - CannotRetrieveUpdates\n  - FluentdNodeDown\n  # https://bugzilla.redhat.com/show_bug.cgi?id=1986981\n\
+          \  - PrometheusRemoteWriteBehind\n  - KubePersistentVolumeErrors\n  - PrometheusBadConfig\n\
+          \  - PrometheusRemoteStorageFailures\n  - AlertmanagerMembersInconsistent\n\
+          \  - AlertmanagerClusterFailedToSendAlerts\n  - AlertmanagerConfigInconsistent\n\
+          \  - AlertmanagerClusterDown\n  - KubeStateMetricsListErrors\n  - KubeStateMetricsWatchErrors\n\
+          \  - ThanosRuleSenderIsFailingAlerts\n  - ThanosRuleHighRuleEvaluationFailures\n\
+          \  - ThanosNoRuleEvaluations\n  ignoredNamespaces:\n  - openshift-logging\n\
+          \  - openshift-redhat-marketplace\n  - openshift-operators\n  - openshift-customer-monitoring\n\
+          \  - openshift-cnv\n  - openshift-route-monitoring-operator\n  - openshift-user-workload-monitoring\n\
+          \  - openshift-pipelines\nextDependencyAvailabilityChecks:\n  http:\n  \
+          \  timeout: 10\n    urls:\n      - ${OCM_BASE_URL}\n"
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -3659,7 +3754,7 @@ objects:
         operator: In
         values:
         - '4.5'
-    resourceApplyMode: Sync
+    resourceApplyMode: Upsert
     resources:
     - apiVersion: v1
       kind: ConfigMap
@@ -3676,9 +3771,12 @@ objects:
           scale:\n  timeOut: 30\nupgradeWindow:\n  delayTrigger: 30\n  timeOut: 120\n\
           nodeDrain:\n  timeOut: 45\n  expectedNodeDrainTime: 8\nhealthCheck:\n  ignoredCriticals:\n\
           \  - DNSErrors05MinSRE\n  - MetricsClientSendFailingSRE\n  - UpgradeNodeScalingFailedSRE\n\
-          \  - UpgradeClusterCheckFailedSRE\n  - PrometheusRuleFailures\n  - CannotRetrieveUpdates\n\
-          extDependencyAvailabilityChecks:\n  http:\n    timeout: 10\n    urls:\n\
-          \      - https://quay.io/health\n      - ${OCM_BASE_URL}\nverification:\n\
+          \  - UpgradeClusterCheckFailedSRE\n  - PruningCronjobErrorSRE\n  - PrometheusRuleFailures\n\
+          \  - CannotRetrieveUpdates\n  - FluentdNodeDown\n  ignoredNamespaces:\n\
+          \  - openshift-logging\n  - openshift-redhat-marketplace\n  - openshift-operators\n\
+          \  - openshift-customer-monitoring\n  - openshift-cnv\n  - openshift-route-monitoring-operator\n\
+          \  - openshift-user-workload-monitoring\n  - openshift-pipelines\nextDependencyAvailabilityChecks:\n\
+          \  http:\n    timeout: 10\n    urls:\n      - ${OCM_BASE_URL}\nverification:\n\
           \  ignoredNamespaces:\n  - openshift-logging\n  namespacePrefixesToCheck:\n\
           \  - openshift\n  - kube\n  - default\n"
 - apiVersion: hive.openshift.io/v1
@@ -3698,7 +3796,7 @@ objects:
         operator: In
         values:
         - '4.6'
-    resourceApplyMode: Sync
+    resourceApplyMode: Upsert
     resources:
     - apiVersion: v1
       kind: ConfigMap
@@ -3714,9 +3812,12 @@ objects:
           scale:\n  timeOut: 30\nupgradeWindow:\n  delayTrigger: 30\n  timeOut: 120\n\
           nodeDrain:\n  timeOut: 45\n  expectedNodeDrainTime: 8\nhealthCheck:\n  ignoredCriticals:\n\
           \  - DNSErrors05MinSRE\n  - MetricsClientSendFailingSRE\n  - UpgradeNodeScalingFailedSRE\n\
-          \  - UpgradeClusterCheckFailedSRE\n  - PrometheusRuleFailures\n  - CannotRetrieveUpdates\n\
-          extDependencyAvailabilityChecks:\n  http:\n    timeout: 10\n    urls:\n\
-          \      - https://quay.io/health\n      - ${OCM_BASE_URL}\nverification:\n\
+          \  - UpgradeClusterCheckFailedSRE\n  - PruningCronjobErrorSRE\n  - PrometheusRuleFailures\n\
+          \  - CannotRetrieveUpdates\n  - FluentdNodeDown\n  ignoredNamespaces:\n\
+          \  - openshift-logging\n  - openshift-redhat-marketplace\n  - openshift-operators\n\
+          \  - openshift-customer-monitoring\n  - openshift-cnv\n  - openshift-route-monitoring-operator\n\
+          \  - openshift-user-workload-monitoring\n  - openshift-pipelines\nextDependencyAvailabilityChecks:\n\
+          \  http:\n    timeout: 10\n    urls:\n      - ${OCM_BASE_URL}\nverification:\n\
           \  ignoredNamespaces:\n  - openshift-logging\n  namespacePrefixesToCheck:\n\
           \  - openshift\n  - kube\n  - default\n"
 - apiVersion: hive.openshift.io/v1
@@ -4500,6 +4601,32 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: osd-audit-policy
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/legal-entity-id: ${{SREP_LEGAL_ENTITY_ID}}
+      matchExpressions:
+      - key: api.openshift.com/environment
+        operator: In
+        values:
+        - staging
+    resourceApplyMode: Sync
+    patches:
+    - apiVersion: config.openshift.io/v1
+      applyMode: AlwaysApply
+      kind: APIServer
+      name: cluster
+      patch: '{"spec":{"audit":{"profile":"WriteRequestBodies"}}}'
+      patchType: merge
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: osd-channel-patch-candidate-4.5
   spec:
     clusterDeploymentSelector:
@@ -5132,13 +5259,12 @@ objects:
         template:
           metadata:
             name: osd-cluster-ready
+            labels:
+              managed.openshift.io/version: v0.1.45-c9f1f45
           spec:
             containers:
-            - env:
-              - name: MAX_CLUSTER_AGE_MINUTES
-                value: '240'
-              name: osd-cluster-ready
-              image: quay.io/openshift-sre/osd-cluster-ready:v0.1.45-c9f1f45
+            - name: osd-cluster-ready
+              image: quay.io/openshift-sre/osd-cluster-ready@sha256:eb600ec385f76bd1cb746287dafc512ffcdaf09fd7aa7c7d78ac7aed30f665d2
               command:
               - /root/main
             restartPolicy: OnFailure
@@ -5243,18 +5369,13 @@ objects:
         values:
         - rosa
     resourceApplyMode: Sync
-    resources:
+    patches:
     - apiVersion: operator.openshift.io/v1
+      applyMode: AlwaysApply
       kind: Console
-      metadata:
-        name: cluster
-      spec:
-        managementState: Managed
-        authentication:
-          logoutRedirect: https://www.redhat.com/i/should/logout
-        customization:
-          brand: dedicated
-          documentationBaseURL: https://docs.openshift.com/dedicated/4/
+      name: cluster
+      patchType: merge
+      patch: '{"spec":{"managementState":"Managed","route":null,"customization":{"brand":"dedicated","documentationBaseURL":"https://docs.openshift.com/dedicated/4/","customProductName":null,"customLogoFile":null}}}'
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -5366,6 +5487,18 @@ objects:
           spec:
             template:
               spec:
+                affinity:
+                  nodeAffinity:
+                    preferredDuringSchedulingIgnoredDuringExecution:
+                    - preference:
+                        matchExpressions:
+                        - key: node-role.kubernetes.io/infra
+                          operator: Exists
+                      weight: 1
+                tolerations:
+                - effect: NoSchedule
+                  key: node-role.kubernetes.io/infra
+                  operator: Exists
                 serviceAccountName: osd-patch-subscription-source
                 restartPolicy: Never
                 containers:
@@ -5509,6 +5642,12 @@ objects:
         - list
         - get
         - watch
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - delete
       - apiGroups:
         - operators.coreos.com
         resources:
@@ -6056,6 +6195,165 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: osd-delete-backplane-script-resources
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: openshift-backplane-managed-scripts
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: osd-backplane
+        namespace: openshift-backplane-managed-scripts
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: osd-delete-backplane-script-resources
+        namespace: openshift-backplane-managed-scripts
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        - serviceaccounts
+        verbs:
+        - get
+        - list
+        - delete
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: osd-delete-backplane-script-resources
+        namespace: openshift-backplane-managed-scripts
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: osd-delete-backplane-script-resources
+      subjects:
+      - kind: ServiceAccount
+        name: osd-backplane
+        namespace: openshift-backplane-managed-scripts
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: osd-delete-backplane-script-resources
+      rules:
+      - apiGroups:
+        - rbac.authorization.k8s.io
+        resources:
+        - roles
+        - rolebindings
+        - clusterroles
+        - clusterrolebindings
+        verbs:
+        - get
+        - list
+        - delete
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: osd-delete-backplane-script-resources
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: osd-delete-backplane-script-resources
+      subjects:
+      - kind: ServiceAccount
+        name: osd-backplane
+        namespace: openshift-backplane-managed-scripts
+    - apiVersion: batch/v1beta1
+      kind: CronJob
+      metadata:
+        name: osd-delete-backplane-script-resources
+        namespace: openshift-backplane-managed-scripts
+      spec:
+        failedJobsHistoryLimit: 5
+        successfulJobsHistoryLimit: 3
+        concurrencyPolicy: Replace
+        schedule: 42 0 * * *
+        jobTemplate:
+          spec:
+            template:
+              spec:
+                affinity:
+                  nodeAffinity:
+                    preferredDuringSchedulingIgnoredDuringExecution:
+                    - preference:
+                        matchExpressions:
+                        - key: node-role.kubernetes.io/infra
+                          operator: Exists
+                      weight: 1
+                tolerations:
+                - effect: NoSchedule
+                  key: node-role.kubernetes.io/infra
+                  operator: Exists
+                restartPolicy: Never
+                serviceAccountName: osd-backplane
+                containers:
+                - name: osd-delete-backplane-script-resources
+                  imagePullPolicy: Always
+                  image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+                  args:
+                  - /bin/bash
+                  - -c
+                  - "set -euxo pipefail\n\n# Namespace which pods run in\nNS=\"openshift-backplane-managed-scripts\"\
+                    \n# Label which all backplane script resources should have\nLABEL=\"\
+                    managed.openshift.io/backplane-job-uuid\"\n# Only delete resources\
+                    \ created before this time, in unix epoch seconds.\nDEL_ONLY_BEFORE=$(($(date\
+                    \ +%s) - 3600*24))\n\n### Gather data\n# Format: pod_name pod_status\
+                    \ creation_timestamp\nPODS=$(oc get pod -n $NS --selector $LABEL\
+                    \ -o custom-columns=NAME:.metadata.name,PHASE:.status.phase,CT:.metadata.creationTimestamp\
+                    \ --no-headers)\n\n# Format: sa_name\nSAS=$(oc get serviceaccount\
+                    \ -n $NS --selector $LABEL -o custom-columns=NAME:.metadata.name\
+                    \ --no-headers)\n\n# Format: role_name role_ns\nROLES=$(oc get\
+                    \ role -A --selector $LABEL -o custom-columns=NAME:.metadata.name,NS:.metadata.namespace\
+                    \ --no-headers) \n\n# Format: rolebinding_name rolebinding_ns\n\
+                    ROLEBINDINGS=$(oc get rolebinding -A --selector $LABEL -o custom-columns=NAME:.metadata.name,NS:.metadata.namespace\
+                    \ --no-headers)\n\n# Format: clusterrole_name\nCROLES=$(oc get\
+                    \ clusterrole --selector $LABEL -o custom-columns=NAME:.metadata.name\
+                    \ --no-headers)\n\n# Format: clusterrolebinding_name\nCROLEBINDINGS=$(oc\
+                    \ get clusterrolebinding --selector $LABEL -o custom-columns=NAME:.metadata.name\
+                    \ --no-headers)\n\n# Pick up those resources we don't want to\
+                    \ delete.\n# - Current running pods and related resources.\n#\
+                    \ - pods created within THRESHOLD_PERIOD and related resouces.\n\
+                    PODS_TO_KEEP=$(awk -v before=$DEL_ONLY_BEFORE \\\n  '{\n  if($2\
+                    \ ~ /Running/){print $1} \n  else{cmd = sprintf(\"date +\\\"%%s\\\
+                    \" --date=%s\", $3); cmd|getline unix_sec; close(cmd); if(unix_sec+0\
+                    \ > before+0){print $1}}\n  }' \\\n  <<< \"$PODS\")\n\nPODS_TO_DEL=$(awk\
+                    \ '{print $1}' <<< \"$PODS\")\n\nfor pod in $PODS_TO_KEEP\ndo\n\
+                    \  PODS_TO_DEL=$({ grep -v \"$pod\" || test $? = 1; } <<< \"$PODS_TO_DEL\"\
+                    )\n  SAS=$({ grep -v \"$pod\" || test $? = 1; } <<< \"$SAS\")\n\
+                    \  ROLES=$({ grep -v \"$pod\" || test $? = 1; } <<< \"$ROLES\"\
+                    )\n  ROLEBINDINGS=$({ grep -v \"$pod\" || test $? = 1; } <<< \"\
+                    $ROLEBINDINGS\")\n  CROLES=$({ grep -v \"$pod\" || test $? = 1;\
+                    \ } <<< \"$CROLES\")\n  CROLEBINDINGS=$({ grep -v \"$pod\" ||\
+                    \ test $? = 1; } <<< \"$CROLEBINDINGS\")\ndone\n\n## Delete non-running\
+                    \ pods\nfor pod in $PODS_TO_DEL\ndo\n  oc delete pod -n $NS $pod\n\
+                    done\n\n## Delete Rolebindings\n[[ -z \"$ROLEBINDINGS\" ]] ||\
+                    \ while read line\ndo\n  rb_name=$(echo $line | awk '{print $1}')\n\
+                    \  rb_namespace=$(echo $line | awk '{print $2}')\n  oc delete\
+                    \ rolebindings -n $rb_namespace $rb_name\ndone <<< \"$ROLEBINDINGS\"\
+                    \n\n## Delete ClusterRolebindings\nfor clb in $CROLEBINDINGS\n\
+                    do\n  oc delete clusterrolebinding $clb\ndone\n\n## Delete Roles\n\
+                    [[ -z \"$ROLES\" ]] || while read line\ndo\n  role_name=$(echo\
+                    \ $line | awk '{print $1}')\n  role_namespace=$(echo $line | awk\
+                    \ '{print $2}')\n  oc delete role -n $role_namespace $role_name\n\
+                    done <<< \"$ROLES\"\n\n## Delete Clusterroles\nfor crole in $CROLES\n\
+                    do\n  oc delete clusterrole $crole\ndone\n\n## Delete SAs\nfor\
+                    \ sa in $SAS\ndo\n  oc delete serviceaccount -n $NS $sa\ndone\n"
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: osd-delete-backplane-serviceaccounts
   spec:
     clusterDeploymentSelector:
@@ -6125,6 +6423,18 @@ objects:
           spec:
             template:
               spec:
+                affinity:
+                  nodeAffinity:
+                    preferredDuringSchedulingIgnoredDuringExecution:
+                    - preference:
+                        matchExpressions:
+                        - key: node-role.kubernetes.io/infra
+                          operator: Exists
+                      weight: 1
+                tolerations:
+                - effect: NoSchedule
+                  key: node-role.kubernetes.io/infra
+                  operator: Exists
                 restartPolicy: Never
                 serviceAccountName: osd-delete-backplane-serviceaccounts
                 containers:
@@ -6150,185 +6460,72 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: osd-devaccess
+    name: osd-gcp-ssd-storage
   spec:
     clusterDeploymentSelector:
       matchLabels:
         api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/ccs
+        operator: In
+        values:
+        - 'true'
+      - key: hive.openshift.io/cluster-platform
+        operator: In
+        values:
+        - gcp
+    resourceApplyMode: Sync
+    applyBehavior: CreateOnly
+    resources:
+    - apiVersion: storage.k8s.io/v1
+      kind: StorageClass
+      metadata:
+        name: ssd
+        annotations:
+          storageclass.kubernetes.io/is-default-class: 'false'
+      provisioner: kubernetes.io/gce-pd
+      parameters:
+        type: pd-ssd
+        replication-type: none
+      volumeBindingMode: WaitForFirstConsumer
+      allowVolumeExpansion: true
+      reclaimPolicy: Delete
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-gcp-ssd-storage-gcp-dedicated-admin
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/ccs
+        operator: In
+        values:
+        - 'true'
+      - key: hive.openshift.io/cluster-platform
+        operator: In
+        values:
+        - gcp
     resourceApplyMode: Sync
     resources:
-    - apiVersion: user.openshift.io/v1
-      kind: Group
-      metadata:
-        name: osd-devaccess
-      users: ${{CEE_USERS}}
-    - aggregationRule:
-        clusterRoleSelectors:
-        - matchExpressions:
-          - key: rbac.authorization.k8s.io/aggregate-to-view
-            operator: In
-            values:
-            - 'true'
-        - matchExpressions:
-          - key: managed.openshift.io/aggregate-to-devaccess
-            operator: In
-            values:
-            - 'true'
+    - kind: ClusterRole
       apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
       metadata:
-        name: osd-devaccess
-      rules: []
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: osd-devaccess-aggregate
+        name: osd-gcp-storage-dedicated-admin
         labels:
-          managed.openshift.io/aggregate-to-devaccess: 'true'
+          managed.openshift.io/aggregate-to-dedicated-admins: cluster
       rules:
-      - apiGroups:
-        - ''
-        resources:
-        - nodes
-        verbs:
-        - get
-        - list
-      - apiGroups:
-        - ''
-        resources:
-        - pods/exec
-        verbs:
-        - create
-      - apiGroups:
-        - config.openshift.io
-        resources:
-        - projects
-        verbs:
-        - get
-        - list
-      - apiGroups:
-        - project.openshift.io
-        resources:
-        - projects
-        verbs:
-        - get
-        - list
-      - apiGroups:
-        - user.openshift.io
-        resources:
-        - groups
-        verbs:
-        - get
-        - list
-      - apiGroups:
-        - ''
-        resources:
-        - namespaces
-        - namespaces/finalize
-        verbs:
-        - get
-        - list
-      - apiGroups:
-        - ''
-        resources:
-        - pods
-        verbs:
-        - get
-        - list
-      - apiGroups:
-        - security.openshift.io
-        resources:
-        - podsecuritypolicyreviews
-        - podsecuritypolicyselfsubjectreviews
-        - podsecuritypolicysubjectreviews
-        verbs:
-        - create
-      - apiGroups:
-        - authorization.openshift.io
-        resources:
-        - localresourceaccessreviews
-        verbs:
-        - create
-      - apiGroups:
-        - ''
-        - image.openshift.io
-        resources:
-        - images
-        verbs:
-        - get
-        - list
-      - nonResourceURLs:
+      - verbs:
         - '*'
-        verbs:
-        - '*'
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRoleBinding
-      metadata:
-        name: osd-devaccess
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: ClusterRole
-        name: osd-devaccess
-      subjects:
-      - kind: Group
-        name: osd-devaccess
-    - apiVersion: v1
-      data:
-        ca.crt: '-----BEGIN CERTIFICATE-----
-
-          MIIENDCCAxygAwIBAgIJANunI0D662cnMA0GCSqGSIb3DQEBCwUAMIGlMQswCQYD
-
-          VQQGEwJVUzEXMBUGA1UECAwOTm9ydGggQ2Fyb2xpbmExEDAOBgNVBAcMB1JhbGVp
-
-          Z2gxFjAUBgNVBAoMDVJlZCBIYXQsIEluYy4xEzARBgNVBAsMClJlZCBIYXQgSVQx
-
-          GzAZBgNVBAMMElJlZCBIYXQgSVQgUm9vdCBDQTEhMB8GCSqGSIb3DQEJARYSaW5m
-
-          b3NlY0ByZWRoYXQuY29tMCAXDTE1MDcwNjE3MzgxMVoYDzIwNTUwNjI2MTczODEx
-
-          WjCBpTELMAkGA1UEBhMCVVMxFzAVBgNVBAgMDk5vcnRoIENhcm9saW5hMRAwDgYD
-
-          VQQHDAdSYWxlaWdoMRYwFAYDVQQKDA1SZWQgSGF0LCBJbmMuMRMwEQYDVQQLDApS
-
-          ZWQgSGF0IElUMRswGQYDVQQDDBJSZWQgSGF0IElUIFJvb3QgQ0ExITAfBgkqhkiG
-
-          9w0BCQEWEmluZm9zZWNAcmVkaGF0LmNvbTCCASIwDQYJKoZIhvcNAQEBBQADggEP
-
-          ADCCAQoCggEBALQt9OJQh6GC5LT1g80qNh0u50BQ4sZ/yZ8aETxt+5lnPVX6MHKz
-
-          bfwI6nO1aMG6j9bSw+6UUyPBHP796+FT/pTS+K0wsDV7c9XvHoxJBJJU38cdLkI2
-
-          c/i7lDqTfTcfLL2nyUBd2fQDk1B0fxrskhGIIZ3ifP1Ps4ltTkv8hRSob3VtNqSo
-
-          GxkKfvD2PKjTPxDPWYyruy9irLZioMffi3i/gCut0ZWtAyO3MVH5qWF/enKwgPES
-
-          X9po+TdCvRB/RUObBaM761EcrLSM1GqHNueSfqnho3AjLQ6dBnPWlo638Zm1VebK
-
-          BELyhkLWMSFkKwDmne0jQ02Y4g075vCKvCsCAwEAAaNjMGEwHQYDVR0OBBYEFH7R
-
-          4yC+UehIIPeuL8Zqw3PzbgcZMB8GA1UdIwQYMBaAFH7R4yC+UehIIPeuL8Zqw3Pz
-
-          bgcZMA8GA1UdEwEB/wQFMAMBAf8wDgYDVR0PAQH/BAQDAgGGMA0GCSqGSIb3DQEB
-
-          CwUAA4IBAQBDNvD2Vm9sA5A9AlOJR8+en5Xz9hXcxJB5phxcZQ8jFoG04Vshvd0e
-
-          LEnUrMcfFgIZ4njMKTQCM4ZFUPAieyLx4f52HuDopp3e5JyIMfW+KFcNIpKwCsak
-
-          oSoKtIUOsUJK7qBVZxcrIyeQV2qcYOeZhtS5wBqIwOAhFwlCET7Ze58QHmS48slj
-
-          S9K0JAcps2xdnGu0fkzhSQxY8GPQNFTlr6rYld5+ID/hHeS76gq0YG3q6RLWRkHf
-
-          4eTkRjivAlExrFzKcljC4axKQlnOvVAzz+Gm32U0xPBF4ByePVxCJUHw1TsyTmel
-
-          RxNEp7yHoXcwn+fXna+t5JWh1gxUZty3
-
-          -----END CERTIFICATE-----
-
-          '
-      kind: ConfigMap
-      metadata:
-        name: osd-devaccess-ldap-ca-configmap
-        namespace: openshift-config
+        apiGroups:
+        - storage.k8s.io
+        resources:
+        - storageclasses
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -7165,7 +7362,46 @@ objects:
         - type: Ready
           timeout: 480s
           status: Unknown
-        maxUnhealthy: 2
+        maxUnhealthy: 3
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-managed-resources
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/environment
+        operator: In
+        values:
+        - integration
+        - staging
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: managed-namespaces
+        namespace: openshift-monitoring
+      data:
+        managed_namespaces.yaml: "Resources:\n  Namespace:\n  - name: dedicated-admin\n\
+          \  - name: openshift-aqua\n  - name: openshift-backplane\n  - name: openshift-backplane-cee\n\
+          \  - name: openshift-backplane-managed-scripts\n  - name: openshift-backplane-srep\n\
+          \  - name: openshift-build-test\n  - name: openshift-cloud-ingress-operator\n\
+          \  - name: openshift-codeready-workspaces\n  - name: openshift-compliance\n\
+          \  - name: openshift-container-security-operator\n  - name: openshift-custom-domains-operator\n\
+          \  - name: openshift-customer-monitoring\n  - name: openshift-logging\n\
+          \  - name: openshift-managed-upgrade-operator\n  - name: openshift-must-gather-operator\n\
+          \  - name: openshift-operators-redhat\n  - name: openshift-osd-metrics\n\
+          \  - name: openshift-rbac-permissions\n  - name: openshift-route-monitor-operator\n\
+          \  - name: openshift-security\n  - name: openshift-splunk-forwarder-operator\n\
+          \  - name: openshift-sre-pruning\n  - name: openshift-sre-sshd\n  - name:\
+          \ openshift-strimzi\n  - name: openshift-validation-webhook\n  - name: openshift-velero\n"
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -7248,6 +7484,37 @@ objects:
       patch: '{ "metadata": {"labels": {"name":"openshift-operator-lifecycle-manager"}
         } }'
       patchType: merge
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-netnamespaces
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        labels:
+          managed.openshift.io/aggregate-to-dedicated-admins: cluster
+        name: osd-netnamespaces-dedicated-admin-cluster
+      rules:
+      - apiGroups:
+        - network.openshift.io
+        resources:
+        - netnamespaces
+        verbs:
+        - get
+        - list
+        - patch
+        - update
+        - watch
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -7396,6 +7663,32 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: osd-oauth-tokens
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/environment
+        operator: NotIn
+        values:
+        - production
+        - staging
+    resourceApplyMode: Sync
+    patches:
+    - apiVersion: config.openshift.io/v1
+      applyMode: AlwaysApply
+      kind: OAuth
+      name: cluster
+      patch: '{"spec":{"tokenConfig":{"accessTokenMaxAgeSeconds":86400, "accessTokenInactivityTimeoutSeconds":21600,"accessTokenInactivityTimeout":"6h"}}}'
+      patchType: merge
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: osd-openshift-operators-redhat
   spec:
     clusterDeploymentSelector:
@@ -7515,7 +7808,7 @@ objects:
         name: pcap-collector
         apiGroup: rbac.authorization.k8s.io
     - kind: SecurityContextConstraints
-      apiVersion: v1
+      apiVersion: security.openshift.io/v1
       metadata:
         name: pcap-dedicated-admins
       allowPrivilegedContainer: false
@@ -7606,6 +7899,218 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: osd-rebalance-infra-nodes
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: osd-rebalance-infra-nodes
+        namespace: openshift-monitoring
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: osd-rebalance-infra-nodes
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - nodes
+        verbs:
+        - list
+    - kind: ClusterRoleBinding
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        name: osd-rebalance-infra-nodes
+      subjects:
+      - kind: ServiceAccount
+        name: osd-rebalance-infra-nodes
+        namespace: openshift-monitoring
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: osd-rebalance-infra-nodes
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: osd-rebalance-infra-nodes-openshift-monitoring
+        namespace: openshift-monitoring
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - get
+        - list
+        - delete
+      - apiGroups:
+        - ''
+        resources:
+        - persistentvolumeclaims
+        verbs:
+        - delete
+    - kind: RoleBinding
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        name: osd-rebalance-infra-nodes-openshift-monitoring
+        namespace: openshift-monitoring
+      subjects:
+      - kind: ServiceAccount
+        name: osd-rebalance-infra-nodes
+        namespace: openshift-monitoring
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: osd-rebalance-infra-nodes-openshift-monitoring
+        namespace: openshift-monitoring
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: osd-rebalance-infra-nodes-openshift-security
+        namespace: openshift-security
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - get
+        - list
+        - delete
+    - kind: RoleBinding
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        name: osd-rebalance-infra-nodes-openshift-security
+        namespace: openshift-security
+      subjects:
+      - kind: ServiceAccount
+        name: osd-rebalance-infra-nodes
+        namespace: openshift-monitoring
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: osd-rebalance-infra-nodes-openshift-security
+        namespace: openshift-security
+    - apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: osd-rebalance-infra-nodes
+        namespace: openshift-monitoring
+      data:
+        entrypoint: "#!/bin/bash\n\necho \"INFO: Attempting infra node pod rebalancing...\"\
+          \n\nAZ_COUNT=$(oc get nodes -o yaml | grep -E \"^\\s+failure-domain.beta.kubernetes.io/zone\"\
+          \ | sort | uniq | wc -l)\n\necho \"INFO: Number of AZs ${AZ_COUNT}\"\n\n\
+          INFRA_NODE_COUNT=$(oc get nodes -l node-role.kubernetes.io=infra --no-headers\
+          \ | wc -l)\n\necho \"INFO: Number of INFRA NODES ${INFRA_NODE_COUNT}\"\n\
+          \nREBALANCE_PODS=false\nPENDING_PODS=false\n\nrebalancePods() {\n    APP=$1\n\
+          \    NS=$2\n    LABEL=$3\n    VOLUME_NAME=$4\n    ALL_POD_NODES=$(oc get\
+          \ pods -n $NS -l $LABEL=$APP -o wide --no-headers | awk '{print $7}' | sort\
+          \ | wc -l)\n    UNIQUE_POD_NODES=$(oc get pods -n $NS -l $LABEL=$APP -o\
+          \ wide --no-headers | awk '{print $7}' | sort | uniq | wc -l)\n    echo\
+          \ \"INFO: $APP pods needing rebalance: $(( $UNIQUE_POD_NODES == $INFRA_NODE_COUNT\
+          \ ? 0 : ALL_POD_NODES - UNIQUE_POD_NODES ))\"\n\n    LAST_POD_NODE_NAME=\"\
+          \"\n    for POD in $( oc get pods -n $NS -l $LABEL=$APP -o jsonpath='{.items[*].metadata.name}'\
+          \ ) ; do\n        POD_NODE_NAME=$(oc get pod -n $NS $POD -o jsonpath='{.spec.nodeName}')\n\
+          \        if [ $UNIQUE_POD_NODES -ne $INFRA_NODE_COUNT ] && [ \"${POD_NODE_NAME}\"\
+          \ == \"${LAST_POD_NODE_NAME}\" ]; then\n            if [ ${VOLUME_NAME}\
+          \ ] && [ \"${AZ_COUNT}\" != \"1\" ]; then\n                PVC=$(oc get\
+          \ pod -n $NS $POD -o jsonpath='{.spec.volumes[?(@.name==\"'$VOLUME_NAME'\"\
+          )].persistentVolumeClaim.claimName}')\n                echo \"INFO: Deleting\
+          \ PVC $PVC\"\n                oc delete pvc --wait=true -n $NS $PVC\n  \
+          \          fi\n            echo \"INFO: Deleting pod $POD\"\n          \
+          \  oc delete pod -n $NS $POD --wait=true\n            REBALANCE_PODS=true\n\
+          \        fi\n        LAST_POD_NODE_NAME=$POD_NODE_NAME\n    done\n}\n\n\
+          checkPendingPods() {\n    APP=$1\n    NS=$2\n    LABEL=$3\n    for POD in\
+          \ $( oc get pods -n $NS -l $LABEL=$APP -o jsonpath='{.items[*].metadata.name}'\
+          \ ) ; do\n        POD_STATUS_PHASE=$(oc get pods -n $NS $POD -o jsonpath='{.status.phase}')\n\
+          \        if [ \"${POD_STATUS_PHASE}\" == \"Pending\" ]; then\n         \
+          \   echo \"INFO: Deleting pod $POD\"\n            oc delete pod -n $NS $POD\
+          \ --wait=true\n            PENDING_PODS=true\n        fi\n    done\n}\n\n\
+          waitRunningPods() {\n    APP=$1\n    NS=$2\n    LABEL=$3\n    for POD in\
+          \ $( oc get pods -n $NS -l $LABEL=$APP -o jsonpath='{.items[*].metadata.name}'\
+          \ ) ; do\n        echo \"INFO: Waiting for $POD to be Running...\"\n   \
+          \     while [ ! -z \"$(oc get pod -n $NS $POD -o jsonpath='{.status.phase}'\
+          \ 2>/dev/null)\" ] && [ \"$(oc get pod -n $NS $POD -o jsonpath='{.status.phase}'\
+          \ 2>/dev/null)\" != \"Running\" ];\n        do\n            sleep 1\n  \
+          \      done\n    done\n}\n\necho \"INFO: Rebalancing prometheus pods...\"\
+          \nrebalancePods prometheus openshift-monitoring app prometheus-data\n\n\
+          echo \"INFO: Rebalancing alertmanager pods...\"\nrebalancePods alertmanager\
+          \ openshift-monitoring app alertmanager-data\n\necho \"INFO: Rebalancing\
+          \ splunk-heavy-forwarder pods...\"\nrebalancePods splunk-heavy-forwarder\
+          \ openshift-security name\n\nif $REBALANCE_PODS; then\n    echo \"INFO:\
+          \ Restarting prometheus operator...\"\n    OPERATOR_POD=$( oc get pod -n\
+          \ openshift-monitoring -l app.kubernetes.io/name=prometheus-operator -o\
+          \ jsonpath='{.items[*].metadata.name}' )\n    oc delete pod -n openshift-monitoring\
+          \ $OPERATOR_POD --wait=true\n    sleep 10\nfi\n\necho \"INFO: Check pending\
+          \ prometheus pods...\"\ncheckPendingPods prometheus openshift-monitoring\
+          \ app\n\necho \"INFO: Check pending alertmanager pods...\"\ncheckPendingPods\
+          \ alertmanager openshift-monitoring app\n\necho \"INFO: Check pending splunk-heavy-forwarder\
+          \ pods...\"\ncheckPendingPods splunk-heavy-forwarder openshift-security\
+          \ name\n\nif $PENDING_PODS; then\n    echo \"INFO: Restarting prometheus\
+          \ operator...\"\n    OPERATOR_POD=$( oc get pod -n openshift-monitoring\
+          \ -l app.kubernetes.io/name=prometheus-operator -o jsonpath='{.items[*].metadata.name}'\
+          \ )\n    oc delete pod -n openshift-monitoring $OPERATOR_POD --wait=true\n\
+          \    sleep 10\nfi\n\necho \"INFO: Wait for running prometheus pods...\"\n\
+          waitRunningPods prometheus openshift-monitoring app\n\necho \"INFO: Wait\
+          \ for running alertmanager pods...\"\nwaitRunningPods alertmanager openshift-monitoring\
+          \ app\n\necho \"INFO: Wait for running splunk-heavy-forwarder pods...\"\n\
+          waitRunningPods splunk-heavy-forwarder openshift-security name"
+    - apiVersion: batch/v1
+      kind: CronJob
+      metadata:
+        name: osd-rebalance-infra-nodes
+        namespace: openshift-monitoring
+      spec:
+        failedJobsHistoryLimit: 3
+        successfulJobsHistoryLimit: 3
+        concurrencyPolicy: Replace
+        schedule: 0 0 * * *
+        jobTemplate:
+          spec:
+            template:
+              spec:
+                affinity:
+                  nodeAffinity:
+                    preferredDuringSchedulingIgnoredDuringExecution:
+                    - preference:
+                        matchExpressions:
+                        - key: node-role.kubernetes.io/infra
+                          operator: Exists
+                      weight: 1
+                tolerations:
+                - effect: NoSchedule
+                  key: node-role.kubernetes.io/infra
+                  operator: Exists
+                serviceAccountName: osd-rebalance-infra-nodes
+                restartPolicy: Never
+                containers:
+                - name: osd-rebalance-infra-nodes
+                  image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+                  command:
+                  - /bin/sh
+                  - -c
+                  - /etc/config/entrypoint
+                  volumeMounts:
+                  - name: osd-rebalance-infra-nodes
+                    mountPath: /etc/config
+                    readOnly: true
+                volumes:
+                - name: osd-rebalance-infra-nodes
+                  configMap:
+                    name: osd-rebalance-infra-nodes
+                    defaultMode: 493
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: osd-registry
   spec:
     clusterDeploymentSelector:
@@ -7632,8 +8137,8 @@ objects:
       applyMode: AlwaysApply
       kind: Config
       name: cluster
-      patch: '[{"op":"remove","path":"/spec/nodeSelector"}]'
-      patchType: json
+      patch: '{"spec":{"nodeSelector": null}}'
+      patchType: merge
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -7663,6 +8168,42 @@ objects:
       name: cluster
       patch: '{"spec":{"defaultRoute":true,"nodeSelector":{"node-role.kubernetes.io/infra":""},"tolerations":[{"effect":"NoSchedule","key":"node-role.kubernetes.io/infra","operator":"Exists"}]}}'
       patchType: merge
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-route-monitor-operator
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: monitoring.openshift.io/v1alpha1
+      kind: ClusterUrlMonitor
+      metadata:
+        name: api
+        namespace: openshift-route-monitor-operator
+      spec:
+        prefix: https://api.
+        port: '6443'
+        suffix: /healthz
+        slo:
+          targetAvailabilityPercent: '99.0'
+    - apiVersion: monitoring.openshift.io/v1alpha1
+      kind: RouteMonitor
+      metadata:
+        name: console
+        namespace: openshift-route-monitor-operator
+      spec:
+        route:
+          name: console
+          namespace: openshift-console
+        slo:
+          targetAvailabilityPercent: '99.5'
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -7842,6 +8383,18 @@ objects:
           spec:
             template:
               spec:
+                affinity:
+                  nodeAffinity:
+                    preferredDuringSchedulingIgnoredDuringExecution:
+                    - preference:
+                        matchExpressions:
+                        - key: node-role.kubernetes.io/infra
+                          operator: Exists
+                      weight: 1
+                tolerations:
+                - effect: NoSchedule
+                  key: node-role.kubernetes.io/infra
+                  operator: Exists
                 serviceAccountName: osd-delete-ownerrefs-serviceaccounts
                 restartPolicy: Never
                 containers:
@@ -7860,43 +8413,6 @@ objects:
                     Removing owner ref from SA '$SA' in NS '$NS'\"\n    oc -n $NS\
                     \ patch serviceaccount $SA --type=json -p '[{\"op\":\"remove\"\
                     ,\"path\":\"/metadata/ownerReferences\"}]'\n  done\ndone\n"
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    labels:
-      managed.openshift.io/gitHash: ${IMAGE_TAG}
-      managed.openshift.io/gitRepoName: ${REPO_NAME}
-      managed.openshift.io/osd: 'true'
-    name: osd-storage
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-      matchExpressions:
-      - key: api.openshift.com/ccs
-        operator: In
-        values:
-        - 'true'
-      - key: hive.openshift.io/cluster-platform
-        operator: In
-        values:
-        - gcp
-    resourceApplyMode: Sync
-    applyBehavior: CreateOnly
-    resources:
-    - apiVersion: storage.k8s.io/v1
-      kind: StorageClass
-      metadata:
-        name: ssd
-        annotations:
-          storageclass.kubernetes.io/is-default-class: 'false'
-      provisioner: kubernetes.io/gce-ssd
-      parameters:
-        type: pd-ssd
-        replication-type: none
-      volumeBindingMode: WaitForFirstConsumer
-      allowVolumeExpansion: true
-      reclaimPolicy: Delete
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -8982,6 +9498,7 @@ objects:
       - apiGroups:
         - storage.k8s.io
         resources:
+        - storageclasses
         - volumeattachments
         - csinodes
         - csidrivers
@@ -9003,6 +9520,14 @@ objects:
         - groups
         - identities
         - users
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - operators
         verbs:
         - get
         - list
@@ -9196,6 +9721,56 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: rbac-rotate-certs
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.5'
+        - '4.6'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: dedicated-admins-cert-secret
+        namespace: openshift-kube-apiserver-operator
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - secrets
+        verbs:
+        - get
+        - patch
+        resourceNames:
+        - kube-apiserver-to-kubelet-signer
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: dedicated-admins-cert-secret
+        namespace: openshift-kube-apiserver-operator
+      subjects:
+      - apiGroup: rbac.authorization.k8s.io
+        kind: Group
+        name: dedicated-admins
+      - kind: Group
+        name: system:serviceaccounts:dedicated-admin
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: dedicated-admins-cert-secret
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: resource-quotas
   spec:
     clusterDeploymentSelector:
@@ -9256,21 +9831,14 @@ objects:
         values:
         - rosa
     resourceApplyMode: Sync
-    resources:
+    patches:
     - apiVersion: operator.openshift.io/v1
+      applyMode: AlwaysApply
       kind: Console
-      metadata:
-        name: cluster
-      spec:
-        managementState: Managed
-        authentication:
-          logoutRedirect: https://www.redhat.com/i/should/logout
-        customization:
-          customProductName: Red Hat OpenShift Service on AWS
-          customLogoFile:
-            name: rosa-brand-logo
-            key: rosa-brand-logo.svg
-          documentationBaseURL: https://docs.openshift.com/rosa/
+      name: cluster
+      patchType: merge
+      patch: '{"spec":{"managementState":"Managed","route":null,"customization":{"brand":null,"documentationBaseURL":"https://docs.openshift.com/rosa/","customProductName":"Red
+        Hat OpenShift Service on AWS","customLogoFile":{"name":"rosa-brand-logo","key":"rosa-brand-logo.svg"}}}}'
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -9494,253 +10062,6 @@ objects:
       metadata:
         creationTimestamp: null
         name: rosa-oauth-templates-providers
-        namespace: openshift-config
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    labels:
-      managed.openshift.io/gitHash: ${IMAGE_TAG}
-      managed.openshift.io/gitRepoName: ${REPO_NAME}
-      managed.openshift.io/osd: 'true'
-    name: sre-authorization
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-    resourceApplyMode: Sync
-    resources:
-    - apiVersion: user.openshift.io/v1
-      kind: Group
-      metadata:
-        name: osd-sre-cluster-admins
-      users: []
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRoleBinding
-      metadata:
-        name: osd-sre-cluster-admins
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: ClusterRole
-        name: cluster-admin
-      subjects:
-      - kind: Group
-        name: osd-sre-cluster-admins
-    - apiVersion: user.openshift.io/v1
-      kind: Group
-      metadata:
-        name: osd-sre-admins
-      users: ${{SREP_USERS}}
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: osd-sre-admin
-      rules:
-      - apiGroups:
-        - '*'
-        resources:
-        - '*'
-        verbs:
-        - get
-        - list
-        - watch
-      - apiGroups:
-        - ''
-        resources:
-        - nodes
-        verbs:
-        - patch
-      - apiGroups:
-        - ''
-        resources:
-        - pods/eviction
-        verbs:
-        - create
-      - apiGroups:
-        - ''
-        resources:
-        - pods/exec
-        verbs:
-        - create
-      - apiGroups:
-        - batch
-        resources:
-        - jobs
-        verbs:
-        - delete
-        - deletecollection
-      - apiGroups:
-        - build.openshift.io
-        resources:
-        - builds
-        verbs:
-        - delete
-        - deletecollection
-      - apiGroups:
-        - config.openshift.io
-        resources:
-        - projects
-        verbs:
-        - '*'
-      - apiGroups:
-        - project.openshift.io
-        resources:
-        - projects
-        verbs:
-        - '*'
-      - apiGroups:
-        - ''
-        resources:
-        - namespaces
-        - namespaces/finalize
-        verbs:
-        - '*'
-      - apiGroups:
-        - ''
-        resources:
-        - pods
-        - pods/attach
-        verbs:
-        - create
-      - apiGroups:
-        - ''
-        resources:
-        - pods
-        verbs:
-        - delete
-      - apiGroups:
-        - security.openshift.io
-        resources:
-        - podsecuritypolicyreviews
-        - podsecuritypolicyselfsubjectreviews
-        - podsecuritypolicysubjectreviews
-        verbs:
-        - create
-      - apiGroups:
-        - user.openshift.io
-        resources:
-        - groups
-        verbs:
-        - patch
-        - update
-      - apiGroups:
-        - config.openshift.io
-        resources:
-        - clusterversions
-        verbs:
-        - patch
-        - update
-      - apiGroups:
-        - authorization.openshift.io
-        resources:
-        - localresourceaccessreviews
-        - resourceaccessreviews
-        verbs:
-        - create
-      - apiGroups:
-        - authorization.k8s.io
-        - authorization.openshift.io
-        resources:
-        - localsubjectaccessreviews
-        - subjectaccessreviews
-        verbs:
-        - create
-      - nonResourceURLs:
-        - '*'
-        verbs:
-        - '*'
-      - apiGroups:
-        - logging.openshift.io
-        resources:
-        - '*'
-        verbs:
-        - '*'
-      - apiGroups:
-        - certificates.k8s.io
-        resources:
-        - certificatesigningrequests/approval
-        verbs:
-        - update
-      - apiGroups:
-        - velero.io
-        resources:
-        - backups
-        verbs:
-        - create
-      - apiGroups:
-        - velero.io
-        resources:
-        - deletebackuprequests
-        - downloadrequests
-        - serverstatusrequests
-        verbs:
-        - '*'
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRoleBinding
-      metadata:
-        name: osd-sre-admin
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: ClusterRole
-        name: osd-sre-admin
-      subjects:
-      - kind: Group
-        name: osd-sre-admins
-    - apiVersion: v1
-      data:
-        ca.crt: '-----BEGIN CERTIFICATE-----
-
-          MIIENDCCAxygAwIBAgIJANunI0D662cnMA0GCSqGSIb3DQEBCwUAMIGlMQswCQYD
-
-          VQQGEwJVUzEXMBUGA1UECAwOTm9ydGggQ2Fyb2xpbmExEDAOBgNVBAcMB1JhbGVp
-
-          Z2gxFjAUBgNVBAoMDVJlZCBIYXQsIEluYy4xEzARBgNVBAsMClJlZCBIYXQgSVQx
-
-          GzAZBgNVBAMMElJlZCBIYXQgSVQgUm9vdCBDQTEhMB8GCSqGSIb3DQEJARYSaW5m
-
-          b3NlY0ByZWRoYXQuY29tMCAXDTE1MDcwNjE3MzgxMVoYDzIwNTUwNjI2MTczODEx
-
-          WjCBpTELMAkGA1UEBhMCVVMxFzAVBgNVBAgMDk5vcnRoIENhcm9saW5hMRAwDgYD
-
-          VQQHDAdSYWxlaWdoMRYwFAYDVQQKDA1SZWQgSGF0LCBJbmMuMRMwEQYDVQQLDApS
-
-          ZWQgSGF0IElUMRswGQYDVQQDDBJSZWQgSGF0IElUIFJvb3QgQ0ExITAfBgkqhkiG
-
-          9w0BCQEWEmluZm9zZWNAcmVkaGF0LmNvbTCCASIwDQYJKoZIhvcNAQEBBQADggEP
-
-          ADCCAQoCggEBALQt9OJQh6GC5LT1g80qNh0u50BQ4sZ/yZ8aETxt+5lnPVX6MHKz
-
-          bfwI6nO1aMG6j9bSw+6UUyPBHP796+FT/pTS+K0wsDV7c9XvHoxJBJJU38cdLkI2
-
-          c/i7lDqTfTcfLL2nyUBd2fQDk1B0fxrskhGIIZ3ifP1Ps4ltTkv8hRSob3VtNqSo
-
-          GxkKfvD2PKjTPxDPWYyruy9irLZioMffi3i/gCut0ZWtAyO3MVH5qWF/enKwgPES
-
-          X9po+TdCvRB/RUObBaM761EcrLSM1GqHNueSfqnho3AjLQ6dBnPWlo638Zm1VebK
-
-          BELyhkLWMSFkKwDmne0jQ02Y4g075vCKvCsCAwEAAaNjMGEwHQYDVR0OBBYEFH7R
-
-          4yC+UehIIPeuL8Zqw3PzbgcZMB8GA1UdIwQYMBaAFH7R4yC+UehIIPeuL8Zqw3Pz
-
-          bgcZMA8GA1UdEwEB/wQFMAMBAf8wDgYDVR0PAQH/BAQDAgGGMA0GCSqGSIb3DQEB
-
-          CwUAA4IBAQBDNvD2Vm9sA5A9AlOJR8+en5Xz9hXcxJB5phxcZQ8jFoG04Vshvd0e
-
-          LEnUrMcfFgIZ4njMKTQCM4ZFUPAieyLx4f52HuDopp3e5JyIMfW+KFcNIpKwCsak
-
-          oSoKtIUOsUJK7qBVZxcrIyeQV2qcYOeZhtS5wBqIwOAhFwlCET7Ze58QHmS48slj
-
-          S9K0JAcps2xdnGu0fkzhSQxY8GPQNFTlr6rYld5+ID/hHeS76gq0YG3q6RLWRkHf
-
-          4eTkRjivAlExrFzKcljC4axKQlnOvVAzz+Gm32U0xPBF4ByePVxCJUHw1TsyTmel
-
-          RxNEp7yHoXcwn+fXna+t5JWh1gxUZty3
-
-          -----END CERTIFICATE-----
-
-          '
-      kind: ConfigMap
-      metadata:
-        name: osd-ldap-ca-configmap
         namespace: openshift-config
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
@@ -10207,16 +10528,6 @@ objects:
               summary: node scaling failed
               description: The extra machine/node was not ready before the upgrade
                 started
-          - alert: UpgradeClusterVerificationFailedSRE
-            expr: upgradeoperator_cluster_verification_failed > 0
-            for: 5m
-            labels:
-              severity: critical
-              namespace: openshift-monitoring
-            annotations:
-              summary: cluster verification failed
-              description: Some of the infra components which are running on the cluster
-                are not working well after the upgrade
           - alert: UpgradeControlPlaneUpgradeTimeoutSRE
             expr: upgradeoperator_controlplane_timeout > 0
             for: 5m
@@ -10424,7 +10735,7 @@ objects:
               '
             for: 5m
             labels:
-              severity: warning
+              severity: critical
               namespace: openshift-monitoring
     - apiVersion: monitoring.coreos.com/v1
       kind: PrometheusRule
@@ -10630,24 +10941,6 @@ objects:
       kind: PrometheusRule
       metadata:
         labels:
-          prometheus: sre-cloud-ingress-operator-offline-alerts
-          role: alert-rules
-        name: sre-cloud-ingress-operator-offline-alerts
-        namespace: openshift-monitoring
-      spec:
-        groups:
-        - name: sre-cloud-ingress-operator-offline-alerts
-          rules:
-          - alert: CloudIngressOperatorOfflineSRE
-            expr: absent(up{service="localmetrics-cloud-ingress-operator", namespace="openshift-cloud-ingress-operator"})
-            for: 15m
-            labels:
-              severity: critical
-              namespace: openshift-monitoring
-    - apiVersion: monitoring.coreos.com/v1
-      kind: PrometheusRule
-      metadata:
-        labels:
           prometheus: sre-ebs-iops-burstbalance
           role: alert-rules
         name: sre-ebs-iops-burstbalance
@@ -10711,6 +11004,48 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: sre-prometheus-aws-sts-privatelink
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        hive.openshift.io/cluster-platform: aws
+      matchExpressions:
+      - key: api.openshift.com/sts
+        operator: NotIn
+        values:
+        - 'true'
+      - key: api.openshift.com/private-link
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
+          prometheus: sre-cloud-ingress-operator-offline-alerts
+          role: alert-rules
+        name: sre-cloud-ingress-operator-offline-alerts
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-cloud-ingress-operator-offline-alerts
+          rules:
+          - alert: CloudIngressOperatorOfflineSRE
+            expr: absent(up{service="cloud-ingress-operator", namespace="openshift-cloud-ingress-operator"})
+            for: 15m
+            labels:
+              severity: critical
+              namespace: openshift-monitoring
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: sre-pruning
   spec:
     clusterDeploymentSelector:
@@ -10722,11 +11057,6 @@ objects:
       kind: Namespace
       metadata:
         name: openshift-sre-pruning
-    - apiVersion: v1
-      kind: ServiceAccount
-      metadata:
-        name: sre-pruner-sa
-        namespace: openshift-sre-pruning
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
@@ -10768,25 +11098,21 @@ objects:
         verbs:
         - delete
       - apiGroups:
+        - ''
+        resources:
+        - services
+        verbs:
+        - list
+        - get
+        - delete
+      - apiGroups:
         - monitoring.coreos.com
         resources:
-        - prometheusrules
+        - servicemonitors
         verbs:
-        - delete
-      - apiGroups:
-        - apiextensions.k8s.io
-        resources:
-        - customresourcedefinitions
-        verbs:
-        - delete
-      - apiGroups:
-        - batch
-        resources:
-        - cronjobs
-        - jobs
-        verbs:
-        - delete
         - list
+        - get
+        - delete
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRoleBinding
       metadata:
@@ -10799,31 +11125,11 @@ objects:
       - kind: ServiceAccount
         name: sre-pruner-sa
         namespace: openshift-sre-pruning
-    - apiVersion: batch/v1beta1
-      kind: CronJob
+    - apiVersion: v1
+      kind: ServiceAccount
       metadata:
-        name: alert-pruner
+        name: sre-pruner-sa
         namespace: openshift-sre-pruning
-      spec:
-        failedJobsHistoryLimit: 5
-        successfulJobsHistoryLimit: 3
-        concurrencyPolicy: Replace
-        schedule: 0 */1 * * *
-        jobTemplate:
-          spec:
-            template:
-              spec:
-                serviceAccountName: sre-pruner-sa
-                restartPolicy: Never
-                containers:
-                - name: alert-pruner
-                  image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
-                  imagePullPolicy: Always
-                  args:
-                  - /bin/bash
-                  - -c
-                  - oc delete prometheusrules.monitoring.coreos.com/kube-apiserver
-                    --namespace=openshift-kube-apiserver --ignore-not-found
     - apiVersion: batch/v1beta1
       kind: CronJob
       metadata:
@@ -10838,6 +11144,18 @@ objects:
           spec:
             template:
               spec:
+                affinity:
+                  nodeAffinity:
+                    preferredDuringSchedulingIgnoredDuringExecution:
+                    - preference:
+                        matchExpressions:
+                        - key: node-role.kubernetes.io/infra
+                          operator: Exists
+                      weight: 1
+                tolerations:
+                - effect: NoSchedule
+                  key: node-role.kubernetes.io/infra
+                  operator: Exists
                 serviceAccountName: sre-pruner-sa
                 restartPolicy: Never
                 containers:
@@ -10856,58 +11174,6 @@ objects:
     - apiVersion: batch/v1beta1
       kind: CronJob
       metadata:
-        name: crd-pruner
-        namespace: openshift-sre-pruning
-      spec:
-        failedJobsHistoryLimit: 5
-        successfulJobsHistoryLimit: 3
-        concurrencyPolicy: Replace
-        schedule: 0 */1 * * *
-        jobTemplate:
-          spec:
-            template:
-              spec:
-                serviceAccountName: sre-pruner-sa
-                restartPolicy: Never
-                containers:
-                - name: crd-pruner
-                  image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
-                  imagePullPolicy: Always
-                  args:
-                  - /bin/bash
-                  - -c
-                  - oc delete customresourcedefinition.apiextensions.k8s.io/machinedisruptionbudgets.healthchecking.openshift.io
-                    customresourcedefinition.apiextensions.k8s.io/machinehealthchecks.healthchecking.openshift.io
-                    --ignore-not-found
-    - apiVersion: batch/v1beta1
-      kind: CronJob
-      metadata:
-        name: cronjob-pruner
-        namespace: openshift-sre-pruning
-      spec:
-        failedJobsHistoryLimit: 5
-        successfulJobsHistoryLimit: 3
-        concurrencyPolicy: Replace
-        schedule: 0 */1 * * *
-        jobTemplate:
-          spec:
-            template:
-              spec:
-                serviceAccountName: sre-pruner-sa
-                restartPolicy: Never
-                containers:
-                - name: alert-pruner
-                  image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
-                  imagePullPolicy: Always
-                  args:
-                  - /bin/bash
-                  - -c
-                  - "for j in $(oc get jobs -n openshift-sre-pruning -oname | grep\
-                    \ cronjob-pruner); do\n  oc delete -n openshift-sre-pruning $j\
-                    \ --ignore-not-found\ndone"
-    - apiVersion: batch/v1beta1
-      kind: CronJob
-      metadata:
         name: deployments-pruner
         namespace: openshift-sre-pruning
       spec:
@@ -10919,6 +11185,18 @@ objects:
           spec:
             template:
               spec:
+                affinity:
+                  nodeAffinity:
+                    preferredDuringSchedulingIgnoredDuringExecution:
+                    - preference:
+                        matchExpressions:
+                        - key: node-role.kubernetes.io/infra
+                          operator: Exists
+                      weight: 1
+                tolerations:
+                - effect: NoSchedule
+                  key: node-role.kubernetes.io/infra
+                  operator: Exists
                 serviceAccountName: sre-pruner-sa
                 restartPolicy: Never
                 containers:
@@ -10934,6 +11212,43 @@ objects:
                   - --keep-younger-than=24h
                   - --keep-failed=1
                   - --confirm
+    - apiVersion: batch/v1beta1
+      kind: CronJob
+      metadata:
+        name: services-pruner
+        namespace: openshift-sre-pruning
+      spec:
+        failedJobsHistoryLimit: 5
+        successfulJobsHistoryLimit: 3
+        concurrencyPolicy: Replace
+        schedule: '*/7 * * * *'
+        jobTemplate:
+          spec:
+            template:
+              spec:
+                affinity:
+                  nodeAffinity:
+                    preferredDuringSchedulingIgnoredDuringExecution:
+                    - preference:
+                        matchExpressions:
+                        - key: node-role.kubernetes.io/infra
+                          operator: Exists
+                      weight: 1
+                tolerations:
+                - effect: NoSchedule
+                  key: node-role.kubernetes.io/infra
+                  operator: Exists
+                serviceAccountName: sre-pruner-sa
+                restartPolicy: Never
+                containers:
+                - name: services-pruner
+                  image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+                  imagePullPolicy: Always
+                  args:
+                  - /bin/bash
+                  - -c
+                  - oc delete services/localmetrics-cloud-ingress-operator servicemonitors/localmetrics-cloud-ingress-operator
+                    --namespace openshift-cloud-ingress-operator --ignore-not-found
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -10964,7 +11279,11 @@ objects:
       name: cluster
       namespace: openshift-image-registry
       patch: '{"spec":{"keepYoungerThan":86400000000000, "ignoreInvalidImageReferences":
-        true, "schedule": "0 */1 * * *", "suspend": false}}'
+        true, "schedule": "0 */1 * * *", "suspend": false, "affinity": {"nodeAffinity":
+        {"preferredDuringSchedulingIgnoredDuringExecution": [{"preference": {"matchExpressions":
+        [{"key": "node-role.kubernetes.io/infra", "operator": "Exists"}]}, "weight":
+        1}]}}, "tolerations": [{"effect": "NoSchedule", "key": "node-role.kubernetes.io/infra",
+        "operator": "Exists"}]}}'
       patchType: merge
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
@@ -11016,6 +11335,18 @@ objects:
           spec:
             template:
               spec:
+                affinity:
+                  nodeAffinity:
+                    preferredDuringSchedulingIgnoredDuringExecution:
+                    - preference:
+                        matchExpressions:
+                        - key: node-role.kubernetes.io/infra
+                          operator: Exists
+                      weight: 1
+                tolerations:
+                - effect: NoSchedule
+                  key: node-role.kubernetes.io/infra
+                  operator: Exists
                 serviceAccountName: sre-pruner-sa
                 restartPolicy: Never
                 containers:
@@ -11041,6 +11372,11 @@ objects:
     clusterDeploymentSelector:
       matchLabels:
         api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/sts
+        operator: NotIn
+        values:
+        - 'true'
     resourceApplyMode: Sync
     resources:
     - apiVersion: managed.openshift.io/v1alpha2
@@ -11059,19 +11395,23 @@ objects:
           includedNamespaces:
           - '*'
           excludedResources:
-          - imagetags
-          - images
-          - templateinstances
-          - clusterserviceversions
-          - packagemanifests
-          - subscriptions
-          - servicebrokers
-          - servicebindings
-          - serviceclasses
-          - serviceinstances
-          - serviceplans
-          - operatorgroups
+          - imagetags.image.openshift.io
+          - images.image.openshift.io
+          - oauthaccesstokens.oauth.openshift.io
+          - oauthauthorizetokens.oauth.openshift.io
+          - templateinstances.template.openshift.io
+          - clusterserviceversions.operators.coreos.com
+          - packagemanifests.packages.operators.coreos.com
+          - operatorgroups.operators.coreos.com
+          - subscriptions.operators.coreos.com
+          - servicebrokers.servicecatalog.k8s.io
+          - servicebindings.servicecatalog.k8s.io
+          - serviceclasses.servicecatalog.k8s.io
+          - serviceinstances.servicecatalog.k8s.io
+          - serviceplans.servicecatalog.k8s.io
+          - events.events.k8s.io
           - events
+          snapshotVolumes: false
           ttl: 168h0m0s
     - apiVersion: velero.io/v1
       kind: Schedule
@@ -11084,18 +11424,21 @@ objects:
           includedNamespaces:
           - '*'
           excludedResources:
-          - imagetags
-          - images
-          - templateinstances
-          - clusterserviceversions
-          - packagemanifests
-          - subscriptions
-          - servicebrokers
-          - servicebindings
-          - serviceclasses
-          - serviceinstances
-          - serviceplans
-          - operatorgroups
+          - imagetags.image.openshift.io
+          - images.image.openshift.io
+          - oauthaccesstokens.oauth.openshift.io
+          - oauthauthorizetokens.oauth.openshift.io
+          - templateinstances.template.openshift.io
+          - clusterserviceversions.operators.coreos.com
+          - packagemanifests.packages.operators.coreos.com
+          - operatorgroups.operators.coreos.com
+          - subscriptions.operators.coreos.com
+          - servicebrokers.servicecatalog.k8s.io
+          - servicebindings.servicecatalog.k8s.io
+          - serviceclasses.servicecatalog.k8s.io
+          - serviceinstances.servicecatalog.k8s.io
+          - serviceplans.servicecatalog.k8s.io
+          - events.events.k8s.io
           - events
           snapshotVolumes: false
           ttl: 24h0m0s
@@ -11110,19 +11453,23 @@ objects:
           includedNamespaces:
           - '*'
           excludedResources:
-          - imagetags
-          - images
-          - templateinstances
-          - clusterserviceversions
-          - packagemanifests
-          - subscriptions
-          - servicebrokers
-          - servicebindings
-          - serviceclasses
-          - serviceinstances
-          - serviceplans
-          - operatorgroups
+          - imagetags.image.openshift.io
+          - images.image.openshift.io
+          - oauthaccesstokens.oauth.openshift.io
+          - oauthauthorizetokens.oauth.openshift.io
+          - templateinstances.template.openshift.io
+          - clusterserviceversions.operators.coreos.com
+          - packagemanifests.packages.operators.coreos.com
+          - operatorgroups.operators.coreos.com
+          - subscriptions.operators.coreos.com
+          - servicebrokers.servicecatalog.k8s.io
+          - servicebindings.servicecatalog.k8s.io
+          - serviceclasses.servicecatalog.k8s.io
+          - serviceinstances.servicecatalog.k8s.io
+          - serviceplans.servicecatalog.k8s.io
+          - events.events.k8s.io
           - events
+          snapshotVolumes: false
           ttl: 720h0m0s
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
@@ -11164,18 +11511,21 @@ objects:
           includedNamespaces:
           - '*'
           excludedResources:
-          - imagetags
-          - images
-          - templateinstances
-          - clusterserviceversions
-          - packagemanifests
-          - subscriptions
-          - servicebrokers
-          - servicebindings
-          - serviceclasses
-          - serviceinstances
-          - serviceplans
-          - operatorgroups
+          - imagetags.image.openshift.io
+          - images.image.openshift.io
+          - oauthaccesstokens.oauth.openshift.io
+          - oauthauthorizetokens.oauth.openshift.io
+          - templateinstances.template.openshift.io
+          - clusterserviceversions.operators.coreos.com
+          - packagemanifests.packages.operators.coreos.com
+          - operatorgroups.operators.coreos.com
+          - subscriptions.operators.coreos.com
+          - servicebrokers.servicecatalog.k8s.io
+          - servicebindings.servicecatalog.k8s.io
+          - serviceclasses.servicecatalog.k8s.io
+          - serviceinstances.servicecatalog.k8s.io
+          - serviceplans.servicecatalog.k8s.io
+          - events.events.k8s.io
           - events
           snapshotVolumes: false
           ttl: 0h25m0s

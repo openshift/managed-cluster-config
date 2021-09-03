@@ -1,0 +1,23 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: backplane-cee-cluster-readers
+rules:
+# CEE can view machineconfigs, machineconfigpools, kubeletconfigs,controllerconfigs
+- apiGroups:
+  - machineconfiguration.openshift.io
+  resources:
+  - '*'
+  verbs:
+  - get
+  - list
+  - watch
+# CEE can view machines, machinehealthchecks, machinesets
+- apiGroups:
+  - machine.openshift.io
+  resources:
+  - '*'
+  verbs:
+  - get
+  - list
+  - watch

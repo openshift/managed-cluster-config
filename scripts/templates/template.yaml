@@ -26,17 +26,17 @@ parameters:
   required: true
 - name: TELEMETER_SERVER_URL
   required: true
-- name: CS_SRE_USERS
-  required: true
-- name: CEE_USERS
-  required: true
-- name: SREP_USERS
-  required: true
 - name: OCM_BASE_URL
   required: true
 - name: SREP_LEGAL_ENTITY_ID
   required: true
+- name: DPTP_LEGAL_ENTITY_ID
+  required: true
 - name: OBSERVATORIUM_LEGALENTITY_IDS
+  required: true
+- name: ALLOWED_CIDR_BLOCKS
+  required: true
+- name: ENABLE_MANAGEMENT_API_SERVER_INGRESS
   required: true
 metadata:
   name: selectorsyncset-template
@@ -348,6 +348,36 @@ objects:
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
+    name: resource-quota-storage-7100gb
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/storage-quota-gib: '7100'
+      matchExpressions:
+      - key: api.openshift.com/ccs
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - kind: ClusterResourceQuota
+      apiVersion: quota.openshift.io/v1
+      metadata:
+        name: persistent-volume-quota
+      spec:
+        selector:
+          annotations: null
+          labels:
+            matchExpressions:
+            - key: managed.openshift.io/storage-pv-quota-exempt
+              operator: DoesNotExist
+        quota:
+          hard:
+            requests.storage: 7100Gi
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
     name: resource-quota-service-lb-default
   spec:
     clusterDeploymentSelector:
@@ -558,62 +588,6 @@ objects:
         quota:
           hard:
             services.loadbalancers: "20"
-# the SelectorSyncIdentityProvider is not something you can oc apply in-cluster, so is not created in `deploy/`
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncIdentityProvider
-  metadata:
-    name: osd-sre-identityprovider
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: "true"
-      matchExpressions:
-        - key: api.openshift.com/environment
-          operator: NotIn
-          values:
-          - "production"
-    identityProviders:
-    - challenge: true
-      ldap:
-        attributes:
-          email:
-          - ${IDENTITY_ATTR_EMAIL}
-          id:
-          - ${IDENTITY_ATTR_ID}
-          name:
-          - ${IDENTITY_ATTR_NAME}
-          preferredUsername:
-          - ${IDENTITY_ATTR_PREFERRED_USERNAME}
-        bindDN: ${IDENTITY_BIND_DN}
-        bindPassword:
-          name: osd-ldap-secret
-        ca:
-          name: osd-ldap-ca-configmap
-        insecure: false
-        url: ${IDENTITY_URL}
-      login: true
-      mappingMethod: ${IDENTITY_MAPPING_METHOD}
-      name: ${IDENTITY_NAME}
-      type: LDAP
-# SelectorSyncIdentityProvider for prod clusters
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncIdentityProvider
-  metadata:
-    name: osd-sre-google-identityprovider
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: "true"
-        api.openshift.com/environment: "production"
-    identityProviders:
-    - google:
-        clientID: ${IDENTITY_SRE_GOOGLE_CLIENTID}
-        clientSecret:
-          name: osd-google-secret
-        hostedDomain: redhat.com
-      mappingMethod: claim
-      name: OpenShift_SRE
-      type: Google
 # SelectorSyncSet for observatorium token refresher credentials Secret
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet

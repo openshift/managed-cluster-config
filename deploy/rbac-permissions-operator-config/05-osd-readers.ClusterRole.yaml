@@ -277,6 +277,7 @@ rules:
 - apiGroups:
   - storage.k8s.io
   resources:
+  - storageclasses
   - volumeattachments
   - csinodes
   - csidrivers
@@ -298,6 +299,17 @@ rules:
   - groups
   - identities
   - users
+  verbs:
+  - get
+  - list
+  - watch
+# SRE can get, list, and watch 'operators.operators.coreos.com'
+# TODO: Temporary permission,
+# Remove after https://github.com/operator-framework/operator-lifecycle-manager/pull/2175
+- apiGroups:
+  - operators.coreos.com
+  resources:
+  - operators
   verbs:
   - get
   - list
