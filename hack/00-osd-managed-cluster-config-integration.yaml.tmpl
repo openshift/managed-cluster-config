@@ -3189,16 +3189,16 @@ objects:
       matchLabels:
         api.openshift.com/managed: 'true'
       matchExpressions:
-      - key: api.openshift.com/sts
-        operator: NotIn
-        values:
-        - 'true'
-      - key: api.openshift.com/private-link
-        operator: NotIn
+      - key: ext-managed.openshift.io/hive-shard
+        operator: In
         values:
         - 'true'
     resourceApplyMode: Sync
     resources:
+    - apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: openshift-sre-sshd
     - apiVersion: cloudingress.managed.openshift.io/v1alpha1
       kind: SSHD
       metadata:
@@ -6596,11 +6596,6 @@ objects:
       matchLabels:
         api.openshift.com/managed: 'true'
     resourceApplyMode: Sync
-    resources:
-    - apiVersion: v1
-      kind: Namespace
-      metadata:
-        name: openshift-sre-sshd
     patches:
     - apiVersion: operator.openshift.io/v1
       applyMode: AlwaysApply
