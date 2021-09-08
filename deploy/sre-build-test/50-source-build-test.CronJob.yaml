@@ -50,7 +50,8 @@ spec:
 
               # cleanup traps on exiting, so these always run
               cleanup () {
-                echo "$(date): Done, deleting build NS=$NS"
+                echo "$(date): Done, deleting build images and build NS=$NS"
+                oc -n "${NS}" get build -o jsonpath='{.items[0].status.output.to.imageDigest}' --ignore-not-found | xargs oc -n "${NS}" delete images
                 oc delete ns "${NS}"
               }
               trap "cleanup" EXIT SIGINT
@@ -81,7 +82,18 @@ spec:
               oc create ns "${NS}"
 
               # run build
-              oc -n "${NS}" new-build nodejs~https://github.com/openshift/nodejs-ex --name="${JOB_PREFIX}"
+              oc -n "${NS}" new-build --name="${JOB_PREFIX}" --binary --strategy source --image-stream openshift/golang
+              cat <<EOF > /tmp/main.go
+              package main
+              import (
+                     "fmt"
+              )
+
+              func main() {
+                      fmt.Println("Hello Openshift SRE :)")
+              }
+              EOF
+              oc -n "${NS}" start-build "${JOB_PREFIX}" --from-file=/tmp/main.go
               echo "$(date): Waiting for build to complete."
               while :
               do
