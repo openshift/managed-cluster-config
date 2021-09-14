@@ -21,7 +21,7 @@ ifndef GEN_TEMPLATE
 $(error GEN_TEMPLATE is not set; check project.mk file)
 endif
 
-CONTAINER_ENGINE=$(shell command -v docker 2>/dev/null || command -v podman 2>/dev/null)
+CONTAINER_ENGINE?=$(shell command -v docker 2>/dev/null || command -v podman 2>/dev/null)
 
 ifeq ($(CONTAINER_ENGINE),)
 # Running already in a container
