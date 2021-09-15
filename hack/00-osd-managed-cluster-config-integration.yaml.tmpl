@@ -7525,38 +7525,6 @@ objects:
         labels:
           openshift.io/cluster-logging: 'true'
           openshift.io/cluster-monitoring: 'true'
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: Role
-      metadata:
-        name: osd-devaccess
-        namespace: openshift-must-gather-operator
-      rules:
-      - apiGroups:
-        - ''
-        resources:
-        - secrets
-        verbs:
-        - create
-      - apiGroups:
-        - managed.openshift.io
-        resources:
-        - mustgathers
-        verbs:
-        - '*'
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: RoleBinding
-      metadata:
-        name: osd-devaccess
-        namespace: openshift-must-gather-operator
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: Role
-        name: osd-devaccess
-        namespace: openshift-must-gather-operator
-      subjects:
-      - apiGroup: rbac.authorization.k8s.io
-        kind: Group
-        name: osd-devaccess
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -7866,47 +7834,6 @@ objects:
         api.openshift.com/managed: 'true'
     resourceApplyMode: Sync
     resources:
-    - kind: SecurityContextConstraints
-      apiVersion: security.openshift.io/v1
-      metadata:
-        name: pcap-collector
-      allowPrivilegedContainer: true
-      allowHostNetwork: true
-      allowedCapabilities:
-      - NET_ADMIN
-      - NET_RAW
-      runAsUser:
-        type: MustRunAsNonRoot
-      seLinuxContext:
-        type: MustRunAs
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: pcap-collector
-      rules:
-      - apiGroups:
-        - security.openshift.io
-        resources:
-        - securitycontextconstraints
-        resourceNames:
-        - pcap-collector
-        verbs:
-        - use
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRoleBinding
-      metadata:
-        name: pcap-collector
-      subjects:
-      - kind: Group
-        name: osd-sre-admins
-        apiGroup: rbac.authorization.k8s.io
-      - kind: Group
-        name: osd-devaccess
-        apiGroup: rbac.authorization.k8s.io
-      roleRef:
-        kind: ClusterRole
-        name: pcap-collector
-        apiGroup: rbac.authorization.k8s.io
     - kind: SecurityContextConstraints
       apiVersion: security.openshift.io/v1
       metadata:
@@ -10858,28 +10785,6 @@ objects:
             labels:
               severity: critical
               namespace: openshift-monitoring
-    - apiVersion: monitoring.coreos.com/v1
-      kind: PrometheusRule
-      metadata:
-        labels:
-          prometheus: osd-sre-cluster-admins
-          role: alert-rules
-        name: osd-sre-cluster-admins
-        namespace: openshift-monitoring
-      spec:
-        groups:
-        - name: osd-sre-cluster-admins
-          rules:
-          - alert: ElevatingClusterAdminSRE
-            expr: openshift_group_user_account{group="osd-sre-cluster-admins"} ==
-              1
-            for: 130m
-            labels:
-              severity: warning
-              namespace: openshift-monitoring
-            annotations:
-              message: SRE "{{ $labels.user }}" elevated to cluster-admin({{ $labels.group
-                }}) more than 2 hours.
     - apiVersion: monitoring.coreos.com/v1
       kind: PrometheusRule
       metadata:
