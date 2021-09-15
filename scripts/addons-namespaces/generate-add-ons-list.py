@@ -54,5 +54,7 @@ def main():
         output=arguments.output
     with open(output, 'w') as file:
         yaml.dump(namescpace_dict, file )
+        
+        
 if __name__ == "__main__":
     main()
