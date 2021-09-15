@@ -23,6 +23,7 @@ def main():
     parser.add_argument(
         "--output",
         "-o",
+        default="managed-cluster-config/resources/addons-namespaces/main.yaml",
         help="The destination of the output yaml file. Default managed-cluster-config/resources/addons-namespaces/main.yaml ",
     )
     arguments = parser.parse_args()
