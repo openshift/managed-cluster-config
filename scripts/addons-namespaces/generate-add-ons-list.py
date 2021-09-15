@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import os
-import string
 import argparse
 import oyaml as yaml
 
@@ -24,7 +23,7 @@ def main():
         "--output",
         "-o",
         default="managed-cluster-config/resources/addons-namespaces/main.yaml",
-        help="The destination of the output yaml file. Default managed-cluster-config/resources/addons-namespaces/main.yaml ",
+        help="The path for the output yaml file ",
     )
     arguments = parser.parse_args()
 
@@ -49,11 +48,12 @@ def main():
                             if namespace != ns:
                                 namespace = ns
                                 namescpace_dict[operator] = namespace 
-    if arguments.output == None :
-        output="managed-cluster-config/resources/addons-namespaces/main.yaml"
-    else:
-        output=arguments.output
+
+    nested_dict= {"addon-namespaces": namescpace_dict}                          
+    output=arguments.output
     with open(output, 'w') as file:
-        yaml.dump(namescpace_dict, file )
+        yaml.dump(nested_dict, file )
+
+
 if __name__ == "__main__":
     main()
