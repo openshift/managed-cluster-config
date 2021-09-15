@@ -10484,38 +10484,6 @@ objects:
       kind: PrometheusRule
       metadata:
         labels:
-          prometheus: sre-csv-abnormal
-          role: alert-rules
-        name: sre-csv-abnormal
-        namespace: openshift-monitoring
-      spec:
-        groups:
-        - name: sre-csv-abnormal-alerts
-          rules:
-          - alert: CsvAbnormalReplacingOver30MinSRE
-            expr: csv_abnormal{phase=~"(^Replacing$|^Failed$|^Unknown$)",exported_namespace=~"(^openshift.*|^kube.*|^redhat.*|^default$)"}
-            for: 30m
-            labels:
-              severity: warning
-              namespace: '{{ $labels.namespace }}'
-            annotations:
-              message: 'CSV {{ $labels.name }} version {{ $labels.version }} is in
-                an abnormal state. Reason: {{ $labels.reason }}'
-              link: https://github.com/openshift/ops-sop/blob/master/v4/alerts/CsvAbnormalSRE.md
-          - alert: CsvAbnormalReplacingOver4HrSRE
-            expr: csv_abnormal{phase=~"(^Replacing$|^Failed$|^Unknown$)",exported_namespace=~"(^openshift.*|^kube.*|^redhat.*|^default$)"}
-            for: 4h
-            labels:
-              severity: critical
-              namespace: '{{ $labels.namespace }}'
-            annotations:
-              message: 'CSV {{ $labels.name }} version {{ $labels.version }} is in
-                an abnormal state. Reason: {{ $labels.reason }}'
-              link: https://github.com/openshift/ops-sop/blob/master/v4/alerts/CsvAbnormalSRE.md
-    - apiVersion: monitoring.coreos.com/v1
-      kind: PrometheusRule
-      metadata:
-        labels:
           prometheus: sre-dns-alerts
           role: alert-rules
         name: sre-dns-alerts
@@ -11139,6 +11107,59 @@ objects:
             labels:
               severity: critical
               namespace: openshift-monitoring
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: sre-prometheus-pre-4.8
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.5'
+        - '4.6'
+        - '4.7'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
+          prometheus: sre-csv-abnormal
+          role: alert-rules
+        name: sre-csv-abnormal
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-csv-abnormal-alerts
+          rules:
+          - alert: CsvAbnormalReplacingOver30MinSRE
+            expr: csv_abnormal{phase=~"(^Replacing$|^Failed$|^Unknown$)",exported_namespace=~"(^openshift.*|^kube.*|^redhat.*|^default$)"}
+            for: 30m
+            labels:
+              severity: warning
+              namespace: '{{ $labels.namespace }}'
+            annotations:
+              message: 'CSV {{ $labels.name }} version {{ $labels.version }} is in
+                an abnormal state. Reason: {{ $labels.reason }}'
+              link: https://github.com/openshift/ops-sop/blob/master/v4/alerts/CsvAbnormalSRE.md
+          - alert: CsvAbnormalReplacingOver4HrSRE
+            expr: csv_abnormal{phase=~"(^Replacing$|^Failed$|^Unknown$)",exported_namespace=~"(^openshift.*|^kube.*|^redhat.*|^default$)"}
+            for: 4h
+            labels:
+              severity: critical
+              namespace: '{{ $labels.namespace }}'
+            annotations:
+              message: 'CSV {{ $labels.name }} version {{ $labels.version }} is in
+                an abnormal state. Reason: {{ $labels.reason }}'
+              link: https://github.com/openshift/ops-sop/blob/master/v4/alerts/CsvAbnormalSRE.md
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
