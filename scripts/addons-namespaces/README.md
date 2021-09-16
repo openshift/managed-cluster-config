@@ -1,8 +1,8 @@
 # How to use the generate-add-ons-list.py script
 
-The script uses python3. Make sure it is installed in your environment.
+The generate-add-ons-list.py script uses python3. Make sure it is installed in your environment.
 
-The script generates a YAML document created by default in managed-cluster-config/resources/addons-namespaces/main.yaml listing all namespaces created via addons that can be found here https://gitlab.cee.redhat.com/service/managed-tenants/-/tree/main/addons
+The script generates a YAML document created by default in managed-cluster-config/resources/addons-namespaces/main.yaml which lists all namespaces created via addons that can be found here https://gitlab.cee.redhat.com/service/managed-tenants/-/tree/main/addons
 
 With the managed-cluster-config repository and the managed-tenants repository cloned this is the way to run the script to generate a yaml listing all namespaces created via addons and save it as managed-cluster-config/resources/addons-namespaces/main.yaml  
 ```
