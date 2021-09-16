@@ -3324,6 +3324,12 @@ objects:
         - 'true'
     resourceApplyMode: Sync
     resources:
+    - apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: openshift-sre-sshd
+        labels:
+          managed.openshift.io/service-lb-quota-exempt: 'true'
     - apiVersion: cloudingress.managed.openshift.io/v1alpha1
       kind: SSHD
       metadata:
@@ -6762,11 +6768,6 @@ objects:
       matchLabels:
         api.openshift.com/managed: 'true'
     resourceApplyMode: Sync
-    resources:
-    - apiVersion: v1
-      kind: Namespace
-      metadata:
-        name: openshift-sre-sshd
     patches:
     - apiVersion: operator.openshift.io/v1
       applyMode: AlwaysApply
@@ -9913,13 +9914,6 @@ objects:
       name: openshift-monitoring
       applyMode: AlwaysApply
       patch: '{ "metadata": {"labels": {"managed.openshift.io/storage-pv-quota-exempt":"true"}
-        } }'
-      patchType: merge
-    - kind: Namespace
-      apiVersion: v1
-      name: openshift-sre-sshd
-      applyMode: AlwaysApply
-      patch: '{ "metadata": {"labels": {"managed.openshift.io/service-lb-quota-exempt":"true"}
         } }'
       patchType: merge
 - apiVersion: hive.openshift.io/v1
