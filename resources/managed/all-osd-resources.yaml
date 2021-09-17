@@ -5,6 +5,8 @@ Resources:
   - namespace: openshift-monitoring
     name: cluster-monitoring-config
   - namespace: openshift-monitoring
+    name: managed-namespaces
+  - namespace: openshift-monitoring
     name: osd-rebalance-infra-nodes
   - namespace: openshift-monitoring
     name: sre-dns-latency-exporter-code
@@ -14,10 +16,6 @@ Resources:
     name: sre-stuck-ebs-vols-code
   - namespace: openshift-security
     name: osd-audit-policy
-  - namespace: openshift-sre-sshd
-    name: aos-osd-customer-support
-  - namespace: openshift-sre-sshd
-    name: aos-sre
   - namespace: openshift-validation-webhook
     name: webhook-cert
   Endpoints:
@@ -59,6 +57,7 @@ Resources:
   - name: openshift-strimzi
   - name: openshift-validation-webhook
   - name: openshift-velero
+  - name: openshift-monitoring
   ReplicationController:
   - namespace: openshift-monitoring
     name: sre-ebs-iops-reporter-1
@@ -136,13 +135,13 @@ Resources:
   - name: configure-alertmanager-operator-prom
   - name: dedicated-admins-cluster
   - name: dedicated-admins-registry-cas-cluster
+  - name: openshift-backplane-managed-scripts-reader
   - name: osd-cluster-ready
   - name: osd-delete-backplane-script-resources
   - name: osd-delete-ownerrefs-bz1906584
   - name: osd-delete-ownerrefs-serviceaccounts
   - name: osd-patch-subscription-source
   - name: osd-rebalance-infra-nodes
-  - name: pcap-collector
   - name: pcap-dedicated-admins
   - name: splunk-forwarder-operator
   - name: splunk-forwarder-operator-clusterrolebinding
@@ -166,6 +165,7 @@ Resources:
   - name: dedicated-admins-registry-cas-cluster
   - name: dedicated-readers
   - name: image-scanner
+  - name: openshift-backplane-managed-scripts-reader
   - name: openshift-splunk-forwarder-operator
   - name: osd-cluster-ready
   - name: osd-custom-domains-dedicated-admin-cluster
@@ -178,7 +178,6 @@ Resources:
   - name: osd-patch-subscription-source
   - name: osd-readers-aggregate
   - name: osd-rebalance-infra-nodes
-  - name: pcap-collector
   - name: pcap-dedicated-admins
   - name: splunk-forwarder-operator
   - name: sre-allow-read-machine-info
@@ -206,6 +205,8 @@ Resources:
     name: deployments-pruner
   - namespace: openshift-sre-pruning
     name: services-pruner
+  - namespace: openshift-sre-pruning
+    name: sre-idp-pruner
   Job:
   - namespace: openshift-monitoring
     name: osd-cluster-ready
@@ -215,9 +216,6 @@ Resources:
   PublishingStrategy:
   - namespace: openshift-cloud-ingress-operator
     name: publishingstrategy
-  SSHD:
-  - namespace: openshift-sre-sshd
-    name: rh-ssh
   ScanSettingBinding:
   - namespace: openshift-compliance
     name: fedramp-moderate
@@ -231,9 +229,9 @@ Resources:
     name: srep-worker-healthcheck
   MachineSet:
   - namespace: openshift-machine-api
-    name: blrm-9-2-7kgj9-infra-us-east-1a
+    name: blrm-9-17-5qbgh-infra-us-east-1a
   - namespace: openshift-machine-api
-    name: blrm-9-2-7kgj9-worker-us-east-1a
+    name: blrm-9-17-5qbgh-worker-us-east-1a
   KubeletConfig:
   - name: custom-kubelet
   SubjectPermission:
@@ -345,28 +343,28 @@ Resources:
   - namespace: openshift-velero
     name: managed-velero-operator
   PackageManifest:
-  - namespace: openshift-managed-upgrade-operator
-    name: managed-upgrade-operator
-  - namespace: openshift-cloud-ingress-operator
-    name: cloud-ingress-operator
-  - namespace: openshift-osd-metrics
-    name: osd-metrics-exporter
-  - namespace: openshift-velero
-    name: managed-velero-operator
-  - namespace: openshift-monitoring
-    name: configure-alertmanager-operator
-  - namespace: openshift-custom-domains-operator
-    name: custom-domains-operator
   - namespace: openshift-splunk-forwarder-operator
     name: splunk-forwarder-operator
-  - namespace: openshift-route-monitor-operator
-    name: route-monitor-operator
-  - namespace: openshift-rbac-permissions
-    name: rbac-permissions-operator
-  - namespace: openshift-must-gather-operator
-    name: must-gather-operator
+  - namespace: openshift-osd-metrics
+    name: osd-metrics-exporter
   - namespace: openshift-compliance
     name: compliance-operator
+  - namespace: openshift-must-gather-operator
+    name: must-gather-operator
+  - namespace: openshift-rbac-permissions
+    name: rbac-permissions-operator
+  - namespace: openshift-route-monitor-operator
+    name: route-monitor-operator
+  - namespace: openshift-managed-upgrade-operator
+    name: managed-upgrade-operator
+  - namespace: openshift-velero
+    name: managed-velero-operator
+  - namespace: openshift-custom-domains-operator
+    name: custom-domains-operator
+  - namespace: openshift-cloud-ingress-operator
+    name: cloud-ingress-operator
+  - namespace: openshift-monitoring
+    name: configure-alertmanager-operator
   Status:
   - {}
   Project:
@@ -401,7 +399,6 @@ Resources:
   - name: loadbalancer-quota
   - name: persistent-volume-quota
   SecurityContextConstraints:
-  - name: pcap-collector
   - name: pcap-dedicated-admins
   - name: splunkforwarder
   SplunkForwarder:
@@ -409,6 +406,5 @@ Resources:
     name: splunkforwarder
   Group:
   - name: dedicated-admins
-  - name: osd-sre-admins
   User:
   - name: backplane-cluster-admin

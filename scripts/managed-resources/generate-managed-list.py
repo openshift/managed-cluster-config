@@ -17,6 +17,12 @@ data:
 {}
 """
 
+# This is a list of namespaces that do not have the "hive.openshift.io/managed=true" label but
+# are still being managed by SRE-P.
+ADDITIONAL_MANAGED_NAMESPACES = [
+    {"name": "openshift-monitoring"},
+]
+
 
 def get_api_resource_kinds():
     """
@@ -71,6 +77,7 @@ def collect_managed_resources(kinds):
             ]
             resources["Resources"][kind_name] = filtered_kind_list
     resources = remove_backplane_service_account(resources)
+    resources["Resources"]["Namespace"] += ADDITIONAL_MANAGED_NAMESPACES
     return resources
 
 
