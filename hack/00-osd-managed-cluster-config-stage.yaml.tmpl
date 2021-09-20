@@ -38,6 +38,8 @@ parameters:
   required: true
 - name: ENABLE_MANAGEMENT_API_SERVER_INGRESS
   required: true
+- name: ROUTER_REPLICA_CLUSTER_IDS
+  required: true
 metadata:
   name: selectorsyncset-template
 objects:
@@ -3305,6 +3307,30 @@ objects:
           enabled: ${{ENABLE_MANAGEMENT_API_SERVER_INGRESS}}
           dnsName: rh-api
           allowedCIDRBlocks: ${{ALLOWED_CIDR_BLOCKS}}
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: cloud-ingress-operator-configuration-routerreplicas-OSD-8028
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/id
+        operator: In
+        values: ${{ROUTER_REPLICA_CLUSTER_IDS}}
+    resourceApplyMode: Sync
+    patches:
+    - apiVersion: v1
+      kind: IngressController
+      name: default
+      applyMode: AlwaysApply
+      patch: '{"spec":{"replicas":3}}'
+      patchType: merge
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
