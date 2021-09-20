@@ -11725,6 +11725,48 @@ objects:
           - events
           snapshotVolumes: false
           ttl: 0h25m0s
+- apiVersion: apps/v1
+  kind: DaemonSet
+  metadata:
+    name: execpid-cleaner
+    namespace: kube-system
+  spec:
+    selector:
+      matchLabels:
+        name: execpid-cleaner
+    template:
+      metadata:
+        labels:
+          name: execpid-cleaner
+      spec:
+        tolerations:
+        - key: node-role.kubernetes.io/master
+          operator: Exists
+          effect: NoSchedule
+        terminationGracePeriodSeconds: 5
+        containers:
+        - name: execpid-cleaner
+          image: image-registry.openshift-image-registry.svc:5000/openshift/tools:latest
+          command:
+          - sh
+          - -c
+          - "set -euo pipefail\nwhile true; do\n    printf \"%s Running cleanup:\\\
+            n\" \"$(date)\"\n    set -x\n    find /run/crio/exec-pid-dir -type f -mmin\
+            \ +15 -exec rm -f {} \\;\n    sleep 15m\n    set +x\ndone\n"
+          securityContext:
+            privileged: true
+          resources:
+            limits:
+              memory: 64Mi
+            requests:
+              memory: 64Mi
+          volumeMounts:
+          - name: exec-pid-dir
+            mountPath: /run/crio/exec-pid-dir
+        volumes:
+        - name: exec-pid-dir
+          hostPath:
+            path: /run/crio/exec-pid-dir
 - apiVersion: v1
   data:
     environment: stage
