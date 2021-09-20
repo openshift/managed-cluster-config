@@ -3230,6 +3230,76 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: bz1997062-crio-pid-leak
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - 4.7,24
+        - 4.7,25
+        - 4.7,26
+        - 4.7,27
+        - 4.7,28
+        - 4.8.5
+        - 4.8.6
+        - 4.8.7
+        - 4.8.8
+        - 4.8.9
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: apps/v1
+      kind: DaemonSet
+      metadata:
+        name: execpid-cleaner
+        namespace: kube-system
+      spec:
+        selector:
+          matchLabels:
+            name: execpid-cleaner
+        template:
+          metadata:
+            labels:
+              name: execpid-cleaner
+          spec:
+            tolerations:
+            - key: node-role.kubernetes.io/infra
+              operator: Exists
+              effect: NoSchedule
+            terminationGracePeriodSeconds: 5
+            containers:
+            - name: execpid-cleaner
+              image: image-registry.openshift-image-registry.svc:5000/openshift/tools:latest
+              command:
+              - sh
+              - -c
+              - "set -euo pipefail\nwhile true; do\n    printf \"%s Running cleanup:\\\
+                n\" \"$(date)\"\n    set -x\n    find /run/crio/exec-pid-dir -type\
+                \ f -mmin +15 -exec rm -f {} \\;\n    sleep 15m\n    set +x\ndone\n"
+              securityContext:
+                privileged: true
+              resources:
+                limits:
+                  memory: 64Mi
+                requests:
+                  memory: 64Mi
+              volumeMounts:
+              - name: exec-pid-dir
+                mountPath: /run/crio/exec-pid-dir
+            volumes:
+            - name: exec-pid-dir
+              hostPath:
+                path: /run/crio/exec-pid-dir
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: ccs-dedicated-admins
   spec:
     clusterDeploymentSelector:
