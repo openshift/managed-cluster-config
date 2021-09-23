@@ -6808,12 +6808,32 @@ objects:
     clusterDeploymentSelector:
       matchLabels:
         api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: ext-managed.openshift.io/hive-shard
+        operator: In
+        values:
+        - 'true'
     resourceApplyMode: Sync
     resources:
     - apiVersion: v1
       kind: Namespace
       metadata:
         name: openshift-sre-sshd
+        labels:
+          managed.openshift.io/service-lb-quota-exempt: 'true'
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-ingress-controller
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+    resourceApplyMode: Sync
     patches:
     - apiVersion: operator.openshift.io/v1
       applyMode: AlwaysApply
@@ -9961,13 +9981,6 @@ objects:
       name: openshift-monitoring
       applyMode: AlwaysApply
       patch: '{ "metadata": {"labels": {"managed.openshift.io/storage-pv-quota-exempt":"true"}
-        } }'
-      patchType: merge
-    - kind: Namespace
-      apiVersion: v1
-      name: openshift-sre-sshd
-      applyMode: AlwaysApply
-      patch: '{ "metadata": {"labels": {"managed.openshift.io/service-lb-quota-exempt":"true"}
         } }'
       patchType: merge
 - apiVersion: hive.openshift.io/v1
