@@ -3311,6 +3311,87 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: bz2008282-pruning
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: bz2008282-pruning-role
+        namespace: openshift
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - secrets
+        verbs:
+        - delete
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: bz2008282-pruning-rolebinding
+        namespace: openshift
+      roleRef:
+        kind: Role
+        name: bz2008282-pruning-role
+        apiGroup: rbac.authorization.k8s.io
+      subjects:
+      - kind: ServiceAccount
+        name: bz2008282-pruning-sa
+        namespace: openshift
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: bz2008282-pruning-sa
+        namespace: openshift
+    - apiVersion: batch/v1beta1
+      kind: CronJob
+      metadata:
+        name: bz2008282-pruner
+        namespace: openshift
+      spec:
+        failedJobsHistoryLimit: 5
+        successfulJobsHistoryLimit: 3
+        concurrencyPolicy: Replace
+        schedule: '*/7 * * * *'
+        jobTemplate:
+          spec:
+            template:
+              spec:
+                affinity:
+                  nodeAffinity:
+                    preferredDuringSchedulingIgnoredDuringExecution:
+                    - preference:
+                        matchExpressions:
+                        - key: node-role.kubernetes.io/infra
+                          operator: Exists
+                      weight: 1
+                tolerations:
+                - effect: NoSchedule
+                  key: node-role.kubernetes.io/infra
+                  operator: Exists
+                serviceAccountName: bz2008282-pruning-sa
+                restartPolicy: Never
+                containers:
+                - name: bz2008282-pruner
+                  image: quay.io/openshift/origin-cli:4.8
+                  imagePullPolicy: Always
+                  args:
+                  - /bin/bash
+                  - -c
+                  - oc delete secret/samples-registry-credentials --namespace openshift
+                    --ignore-not-found
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: ccs-dedicated-admins
   spec:
     clusterDeploymentSelector:
