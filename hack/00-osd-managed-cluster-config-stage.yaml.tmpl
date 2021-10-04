@@ -10461,48 +10461,18 @@ objects:
                   command:
                   - /bin/bash
                   - -c
-                  - "# ensure we fail if something exits non-zero\nset -o errexit\n\
-                    set -o nounset\nset -o pipefail\n\n# cleanup traps on exiting,\
-                    \ so these always run\ncleanup () {\n  echo \"$(date): Done, deleting\
-                    \ build images and build NS=$NS\"\n  oc -n \"${NS}\" get build\
-                    \ -o jsonpath='{.items[0].status.output.to.imageDigest}' --ignore-not-found\
-                    \ | xargs oc -n \"${NS}\" delete images\n  oc delete ns \"${NS}\"\
-                    \n}\ntrap \"cleanup\" EXIT SIGINT\n\n# set NS to include job name,\
-                    \ to ease linking namespace to a specific job\nJOB_PREFIX=sre-build-test\n\
-                    NS=\"${POD_NS}-${POD_NAME##${JOB_PREFIX}-}\"\nJOB_NAME=$(echo\
-                    \ \"${POD_NAME}\" | rev | cut -d- -f2- | rev)\n\nGET_FAILED_JOBS=$(cat\
-                    \ <<END\nimport json,sys\nr = json.load(sys.stdin)\n# create a\
-                    \ list of jobs\njobs = [ job['metadata']['name'] for job in r['items']\
-                    \ if\n  # no jobs are currently running \n  ( not 'active' in\
-                    \ job['status']) and\n  # if '.status.failed' exists on job\n\
-                    \  'failed' in job['status'] and\n  # if job failed count is bigger\
-                    \ than backoffLimit\n  #\n  # this check is because the failed\
-                    \ tries can be one less than limit\n  # see code in https://github.com/kubernetes/kubernetes/blob/master/pkg/controller/job/job_controller.go#L509\n\
-                    \  # if this changes we should consider using an easier implementation\n\
-                    \  job['spec']['backoffLimit'] - 1 <= job['status']['failed']]\n\
-                    print(\" \".join(jobs))\nEND\n)\noc create ns \"${NS}\"\n\n# run\
-                    \ build\noc -n \"${NS}\" new-build --name=\"${JOB_PREFIX}\" --binary\
-                    \ --strategy source --image-stream openshift/golang\ncat <<EOF\
-                    \ > /tmp/main.go\npackage main\nimport (\n       \"fmt\"\n)\n\n\
-                    func main() {\n        fmt.Println(\"Hello Openshift SRE :)\"\
-                    )\n}\nEOF\noc -n \"${NS}\" start-build \"${JOB_PREFIX}\" --from-file=/tmp/main.go\n\
-                    echo \"$(date): Waiting for build to complete.\"\nwhile :\ndo\n\
-                    \  ST=$(oc -n \"${NS}\" get build -o custom-columns=STATUS:.status.phase\
-                    \ --no-headers)\n  case ${ST} in\n    \"\")\n      # if build\
-                    \ status is blank, assume we are still starting the build\n  \
-                    \    ST=\"Starting\"\n      ;;\n    Failed)\n      echo \"$(date):\
-                    \ Build Failed\" >&2\n      exit 1\n      ;;\n    Cancelled)\n\
-                    \      echo \"$(date): Build was Cancelled\" >&2\n      exit 1\n\
-                    \      ;;\n    Complete)\n      echo \"$(date): Build Complete\"\
-                    \n      # Get all job names that have exceeded failed retries\n\
-                    \      JOBS=$(oc -n \"${POD_NS}\" get job -o json)\n      JOBS_TO_DELETE=$(echo\
-                    \ \"${JOBS}\" | python -c \"$GET_FAILED_JOBS\")\n\n      if [[\
-                    \ -n \"${JOBS_TO_DELETE}\" ]] ; then\n        echo \"$(date):\
-                    \ Selected jobs for deletion: ${JOBS_TO_DELETE}\"\n        echo\
-                    \ \"${JOBS_TO_DELETE}\" | xargs oc -n \"${POD_NS}\" delete job\n\
-                    \      fi\n      break\n      ;;\n  esac\n  echo \"$(date): Build\
-                    \ is ${ST}; checking build again in 15 seconds, NS=${NS}\"\n \
-                    \ sleep 15\ndone\nexit 0\n"
+                  - '# ensure we fail if something exits non-zero
+
+                    set -o errexit
+
+                    set -o nounset
+
+                    set -o pipefail
+
+                    oc projects | grep ''openshift-build-test-'' | xargs oc delete
+                    project
+
+                    '
     - apiVersion: monitoring.coreos.com/v1
       kind: PrometheusRule
       metadata:
