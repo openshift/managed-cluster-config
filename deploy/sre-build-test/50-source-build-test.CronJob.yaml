@@ -140,8 +140,6 @@ spec:
                     # clean up any old namespaces, other than the current one
                     echo "$(date): Cleaning up old namespaces"
                     oc delete ns -l "managed.openshift.io/sre-build-test,kubernetes.io/metadata.name!=${NS}" --ignore-not-found --wait=false
-                    # the below is fragile, and can be removed later as the above command will deal with this going forward (once all namespaces have the selector label)
-                    oc get ns -o name | grep -v ${NS} | grep -E '^namespace/openshift-build-test-' | xargs -r oc delete --ignore-not-found --wait=false
                     break
                     ;;
                 esac
