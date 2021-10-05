@@ -11,6 +11,7 @@ spec:
   schedule: "11 * * * *"
   jobTemplate:
     spec:
+      activeDeadlineSeconds: 900
       template:
         spec:
           affinity:
@@ -46,27 +47,25 @@ spec:
               # ensure we fail if something exits non-zero
               set -o errexit
               set -o nounset
-              set -o pipefail
-
-              # cleanup traps on exiting, so these always run
-              cleanup () {
-                echo "$(date): Done, deleting build images and build NS=$NS"
-                oc -n "${NS}" get build -o jsonpath='{.items[0].status.output.to.imageDigest}' --ignore-not-found | xargs oc -n "${NS}" delete images
-                oc delete ns "${NS}"
-              }
-              trap "cleanup" EXIT SIGINT
 
               # set NS to include job name, to ease linking namespace to a specific job
               JOB_PREFIX=sre-build-test
               NS="${POD_NS}-${POD_NAME##${JOB_PREFIX}-}"
               JOB_NAME=$(echo "${POD_NAME}" | rev | cut -d- -f2- | rev)
 
+              # cleanup traps on exiting, so these always run
+              cleanup () {
+                echo "$(date): Done, deleting build NS=$NS"
+                oc delete ns "${NS}" --wait=false
+              }
+              trap "cleanup" EXIT SIGINT
+
               GET_FAILED_JOBS=$(cat <<END
               import json,sys
               r = json.load(sys.stdin)
               # create a list of jobs
               jobs = [ job['metadata']['name'] for job in r['items'] if
-                # no jobs are currently running 
+                # no jobs are currently running
                 ( not 'active' in job['status']) and
                 # if '.status.failed' exists on job
                 'failed' in job['status'] and
@@ -79,7 +78,21 @@ spec:
               print(" ".join(jobs))
               END
               )
-              oc create ns "${NS}"
+
+              # create ns
+              oc create -f - <<EOF
+              apiVersion: v1
+              kind: Namespace
+              metadata:
+                name: "${NS}"
+                managed.openshift.io/sre-build-test: "${JOB_NAME}"
+              EOF
+
+              # wait for sa to be created
+              until oc -n "${NS}" get sa default >/dev/null; do
+                echo "$(date): Waiting for service account to be created"
+                sleep 5
+              done
 
               # run build
               oc -n "${NS}" new-build --name="${JOB_PREFIX}" --binary --strategy source --image-stream openshift/golang
@@ -105,10 +118,12 @@ spec:
                     ;;
                   Failed)
                     echo "$(date): Build Failed" >&2
+                    oc logs -n "${NS}" -c build "${JOB_PREFIX}"
                     exit 1
                     ;;
                   Cancelled)
                     echo "$(date): Build was Cancelled" >&2
+                    oc logs -n "${NS}" -c build "${JOB_PREFIX}"
                     exit 1
                     ;;
                   Complete)
@@ -119,8 +134,14 @@ spec:
 
                     if [[ -n "${JOBS_TO_DELETE}" ]] ; then
                       echo "$(date): Selected jobs for deletion: ${JOBS_TO_DELETE}"
-                      echo "${JOBS_TO_DELETE}" | xargs oc -n "${POD_NS}" delete job
+                      echo "${JOBS_TO_DELETE}" | xargs oc -n "${POD_NS}" delete job --ignore-not-found --wait=false
                     fi
+
+                    # clean up any old namespaces, other than the current one
+                    echo "$(date): Cleaning up old namespaces"
+                    oc delete ns -l "managed.openshift.io/sre-build-test,kubernetes.io/metadata.name!=${NS}" --ignore-not-found --wait=false
+                    # the below is fragile, and can be removed later as the above command will deal with this going forward (once all namespaces have the selector label)
+                    oc get ns -o name | grep -v ${NS} | grep -E '^namespace/openshift-build-test-' | xargs -r oc delete --ignore-not-found --wait=false
                     break
                     ;;
                 esac
