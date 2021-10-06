@@ -3311,87 +3311,6 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: bz2008282-pruning
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-    resourceApplyMode: Sync
-    resources:
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: Role
-      metadata:
-        name: bz2008282-pruning-role
-        namespace: openshift
-      rules:
-      - apiGroups:
-        - ''
-        resources:
-        - secrets
-        verbs:
-        - delete
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: RoleBinding
-      metadata:
-        name: bz2008282-pruning-rolebinding
-        namespace: openshift
-      roleRef:
-        kind: Role
-        name: bz2008282-pruning-role
-        apiGroup: rbac.authorization.k8s.io
-      subjects:
-      - kind: ServiceAccount
-        name: bz2008282-pruning-sa
-        namespace: openshift
-    - apiVersion: v1
-      kind: ServiceAccount
-      metadata:
-        name: bz2008282-pruning-sa
-        namespace: openshift
-    - apiVersion: batch/v1beta1
-      kind: CronJob
-      metadata:
-        name: bz2008282-pruner
-        namespace: openshift
-      spec:
-        failedJobsHistoryLimit: 5
-        successfulJobsHistoryLimit: 3
-        concurrencyPolicy: Replace
-        schedule: '*/7 * * * *'
-        jobTemplate:
-          spec:
-            template:
-              spec:
-                affinity:
-                  nodeAffinity:
-                    preferredDuringSchedulingIgnoredDuringExecution:
-                    - preference:
-                        matchExpressions:
-                        - key: node-role.kubernetes.io/infra
-                          operator: Exists
-                      weight: 1
-                tolerations:
-                - effect: NoSchedule
-                  key: node-role.kubernetes.io/infra
-                  operator: Exists
-                serviceAccountName: bz2008282-pruning-sa
-                restartPolicy: Never
-                containers:
-                - name: bz2008282-pruner
-                  image: quay.io/openshift/origin-cli:4.8
-                  imagePullPolicy: Always
-                  args:
-                  - /bin/bash
-                  - -c
-                  - oc delete secret/samples-registry-credentials --namespace openshift
-                    --ignore-not-found
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    labels:
-      managed.openshift.io/gitHash: ${IMAGE_TAG}
-      managed.openshift.io/gitRepoName: ${REPO_NAME}
-      managed.openshift.io/osd: 'true'
     name: ccs-dedicated-admins
   spec:
     clusterDeploymentSelector:
@@ -10547,14 +10466,9 @@ objects:
                     \      fi\n\n      # clean up any old namespaces, other than the\
                     \ current one\n      echo \"$(date): Cleaning up old namespaces\"\
                     \n      oc delete ns -l \"managed.openshift.io/sre-build-test,kubernetes.io/metadata.name!=${NS}\"\
-                    \ --ignore-not-found --wait=false\n      # the below is fragile,\
-                    \ and can be removed later as the above command will deal with\
-                    \ this going forward (once all namespaces have the selector label)\n\
-                    \      oc get ns -o name | grep -v ${NS} | grep -E '^namespace/openshift-build-test-'\
-                    \ | xargs -r oc delete --ignore-not-found --wait=false\n     \
-                    \ break\n      ;;\n  esac\n  echo \"$(date): Build is ${ST}; checking\
-                    \ build again in 15 seconds, NS=${NS}\"\n  sleep 15\ndone\nexit\
-                    \ 0\n"
+                    \ --ignore-not-found --wait=false\n      break\n      ;;\n  esac\n\
+                    \  echo \"$(date): Build is ${ST}; checking build again in 15\
+                    \ seconds, NS=${NS}\"\n  sleep 15\ndone\nexit 0\n"
     - apiVersion: monitoring.coreos.com/v1
       kind: PrometheusRule
       metadata:
@@ -11420,30 +11334,6 @@ objects:
         - builds
         verbs:
         - delete
-      - apiGroups:
-        - ''
-        resources:
-        - services
-        verbs:
-        - list
-        - get
-        - delete
-      - apiGroups:
-        - monitoring.coreos.com
-        resources:
-        - servicemonitors
-        verbs:
-        - list
-        - get
-        - delete
-      - apiGroups:
-        - user.openshift.io
-        resources:
-        - users
-        verbs:
-        - list
-        - get
-        - delete
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRoleBinding
       metadata:
@@ -11543,81 +11433,6 @@ objects:
                   - --keep-younger-than=24h
                   - --keep-failed=1
                   - --confirm
-    - apiVersion: batch/v1beta1
-      kind: CronJob
-      metadata:
-        name: services-pruner
-        namespace: openshift-sre-pruning
-      spec:
-        failedJobsHistoryLimit: 5
-        successfulJobsHistoryLimit: 3
-        concurrencyPolicy: Replace
-        schedule: '*/7 * * * *'
-        jobTemplate:
-          spec:
-            template:
-              spec:
-                affinity:
-                  nodeAffinity:
-                    preferredDuringSchedulingIgnoredDuringExecution:
-                    - preference:
-                        matchExpressions:
-                        - key: node-role.kubernetes.io/infra
-                          operator: Exists
-                      weight: 1
-                tolerations:
-                - effect: NoSchedule
-                  key: node-role.kubernetes.io/infra
-                  operator: Exists
-                serviceAccountName: sre-pruner-sa
-                restartPolicy: Never
-                containers:
-                - name: services-pruner
-                  image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
-                  imagePullPolicy: Always
-                  args:
-                  - /bin/bash
-                  - -c
-                  - oc delete services/localmetrics-cloud-ingress-operator servicemonitors/localmetrics-cloud-ingress-operator
-                    --namespace openshift-cloud-ingress-operator --ignore-not-found
-    - apiVersion: batch/v1
-      kind: CronJob
-      metadata:
-        name: sre-idp-pruner
-        namespace: openshift-sre-pruning
-      spec:
-        failedJobsHistoryLimit: 5
-        successfulJobsHistoryLimit: 3
-        concurrencyPolicy: Replace
-        schedule: 0 0 * * *
-        jobTemplate:
-          spec:
-            template:
-              spec:
-                affinity:
-                  nodeAffinity:
-                    preferredDuringSchedulingIgnoredDuringExecution:
-                    - preference:
-                        matchExpressions:
-                        - key: node-role.kubernetes.io/infra
-                          operator: Exists
-                      weight: 1
-                tolerations:
-                - effect: NoSchedule
-                  key: node-role.kubernetes.io/infra
-                  operator: Exists
-                serviceAccountName: sre-pruner-sa
-                restartPolicy: Never
-                containers:
-                - name: services-pruner
-                  image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
-                  imagePullPolicy: Always
-                  args:
-                  - /bin/bash
-                  - -c
-                  - "oc get users | grep OpenShift_SRE | awk '{\n  users[i++]=$1;\
-                    \ for(i in users)\n  {\n    print \"oc delete user\", users[i]\
-                    \ \n  }}' | sh"
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
