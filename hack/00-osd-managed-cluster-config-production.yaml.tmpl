@@ -8572,6 +8572,36 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: osd-samples-operator
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/version-major-minor
+        operator: NotIn
+        values:
+        - '4.0'
+        - '4.1'
+        - '4.2'
+        - '4.3'
+        - '4.4'
+        - '4.5'
+    resourceApplyMode: Sync
+    patches:
+    - apiVersion: samples.operator.openshift.io/v1
+      applyMode: AlwaysApply
+      kind: Config
+      name: cluster
+      patchType: merge
+      patch: '{"spec":{"managementState":"Managed"}}'
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: osd-serviceaccounts
   spec:
     clusterDeploymentSelector:
