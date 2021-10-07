@@ -106,7 +106,13 @@ spec:
                       fmt.Println("Hello Openshift SRE :)")
               }
               EOF
-              oc -n "${NS}" start-build "${JOB_PREFIX}" --from-file=/tmp/main.go
+
+              while ! oc -n "${NS}" start-build "${JOB_PREFIX}" --from-file=/tmp/main.go
+              do
+                echo "Failed to start build, retrying in 15 seconds."
+                sleep 15s
+              done
+
               echo "$(date): Waiting for build to complete."
               while :
               do
