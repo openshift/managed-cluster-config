@@ -10420,18 +10420,19 @@ objects:
                     \ source --docker-image registry.redhat.io/ubi8/go-toolset:latest\n\
                     cat <<EOF > /tmp/main.go\npackage main\nimport (\n       \"fmt\"\
                     \n)\n\nfunc main() {\n        fmt.Println(\"Hello Openshift SRE\
-                    \ :)\")\n}\nEOF\noc -n \"${NS}\" start-build \"${JOB_PREFIX}\"\
-                    \ --from-file=/tmp/main.go\necho \"$(date): Waiting for build\
-                    \ to complete.\"\nwhile :\ndo\n  ST=$(oc -n \"${NS}\" get build\
-                    \ -o custom-columns=STATUS:.status.phase --no-headers)\n  case\
-                    \ ${ST} in\n    \"\")\n      # if build status is blank, assume\
-                    \ we are still starting the build\n      ST=\"Starting\"\n   \
-                    \   ;;\n    Failed)\n      echo \"$(date): Build Failed\" >&2\n\
-                    \      oc logs -n \"${NS}\" -c build \"${JOB_PREFIX}\"\n     \
-                    \ exit 1\n      ;;\n    Cancelled)\n      echo \"$(date): Build\
-                    \ was Cancelled\" >&2\n      oc logs -n \"${NS}\" -c build \"\
-                    ${JOB_PREFIX}\"\n      exit 1\n      ;;\n    Complete)\n     \
-                    \ echo \"$(date): Build Complete\"\n      # Get all job names\
+                    \ :)\")\n}\nEOF\n\nwhile ! oc -n \"${NS}\" start-build \"${JOB_PREFIX}\"\
+                    \ --from-file=/tmp/main.go\ndo\n  echo \"Failed to start build,\
+                    \ retrying in 15 seconds.\"\n  sleep 15s\ndone\n\necho \"$(date):\
+                    \ Waiting for build to complete.\"\nwhile :\ndo\n  ST=$(oc -n\
+                    \ \"${NS}\" get build -o custom-columns=STATUS:.status.phase --no-headers)\n\
+                    \  case ${ST} in\n    \"\")\n      # if build status is blank,\
+                    \ assume we are still starting the build\n      ST=\"Starting\"\
+                    \n      ;;\n    Failed)\n      echo \"$(date): Build Failed\"\
+                    \ >&2\n      oc logs -n \"${NS}\" -c build \"${JOB_PREFIX}\"\n\
+                    \      exit 1\n      ;;\n    Cancelled)\n      echo \"$(date):\
+                    \ Build was Cancelled\" >&2\n      oc logs -n \"${NS}\" -c build\
+                    \ \"${JOB_PREFIX}\"\n      exit 1\n      ;;\n    Complete)\n \
+                    \     echo \"$(date): Build Complete\"\n      # Get all job names\
                     \ that have exceeded failed retries\n      JOBS=$(oc -n \"${POD_NS}\"\
                     \ get job -o json)\n      JOBS_TO_DELETE=$(echo \"${JOBS}\" |\
                     \ python -c \"$GET_FAILED_JOBS\")\n\n      if [[ -n \"${JOBS_TO_DELETE}\"\
