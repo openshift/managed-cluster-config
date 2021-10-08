@@ -5269,12 +5269,6 @@ objects:
     clusterDeploymentSelector:
       matchLabels:
         api.openshift.com/managed: 'true'
-        api.openshift.com/legal-entity-id: ${{SREP_LEGAL_ENTITY_ID}}
-      matchExpressions:
-      - key: api.openshift.com/environment
-        operator: In
-        values:
-        - staging
     resourceApplyMode: Sync
     patches:
     - apiVersion: config.openshift.io/v1
@@ -5283,6 +5277,178 @@ objects:
       name: cluster
       patch: '{"spec":{"audit":{"profile":"WriteRequestBodies"}}}'
       patchType: merge
+    resources:
+    - apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: osd-audit-policy
+        namespace: openshift-security
+      data:
+        policy.yaml: "# event rule metrics include the rule number in the label, numbering\
+          \ them here helps debugging\nrules:\n# 1. drop leases, tokenreviews, subjectaccessreviews,\
+          \ user self-lookup (~500k/day)\n- level: None\n  resources:\n  - group:\
+          \ coordination.k8s.io\n    resources: ['leases']\n  - group: authentication.k8s.io\n\
+          \    resources: ['tokenreviews']\n  - group: oauth.openshift.io\n    resources:\
+          \ ['tokenreviews']\n  - group: user.openshift.io\n    resourceNames: ['~']\n\
+          \    resources: ['users']\n  - group: authorization.k8s.io\n    resources:\n\
+          \    - subjectaccessreviews\n    - selfsubjectaccessreviews\n# 2. drop node\
+          \ & control plane read events (~750k/day)\n- level: None\n  users:\n  -\
+          \ system:apiserver\n  - system:kube-apiserver\n  - system:kube-scheduler\n\
+          \  - system:kube-controller-manager\n  verbs:\n  - get\n  - head\n  - list\n\
+          \  - watch\n# 3. drop control plane configmap leases leader updates (~50k/day)\n\
+          - level: None\n  users:\n  - system:kube-scheduler\n  - system:kube-controller-manager\n\
+          \  namespaces:\n  - openshift-kube-*\n  - kube-system\n  resources:\n  -\
+          \ resources: ['configmaps']\n  verbs: ['update']\n# 4. drop common non-resource\
+          \ read requests (~15k/day)\n- level: None\n  nonResourceURLs:\n  - /\n \
+          \ - /api*\n  - /healthz*\n  - /livez*\n  - /openapi/v2*\n  - /readyz*\n\
+          \  - /version\n  - /.well-known*\n  verbs: ['get','head','options']\n# 5.\
+          \ forward system:admin activity\n- level: RequestResponse\n  users: ['system:admin']\n\
+          # 6. drop backplane cronjob events before rule 7 (TODO: move these cronjobs\
+          \ somewhere else)\n- level: None\n  users:\n  - system:serviceaccount:openshift-backplane-srep:osd-delete-ownerrefs-serviceaccounts\n\
+          \  - system:serviceaccount:openshift-backplane:osd-delete-backplane-serviceaccounts\n\
+          # 7. forward backplane activity\n- level: RequestResponse\n  userGroups:\
+          \ ['system:serviceaccounts:openshift-backplane-*']\n# 8. drop openshift-*\
+          \ and kube-* serviceaccount read events (~5M/day)\n- level: None\n  userGroups:\n\
+          \  - system:serviceaccounts:openshift-*\n  - system:serviceaccounts:kube-*\n\
+          \  verbs:\n  - get\n  - list\n  - watch\n# 9. drop events from marketplace,\
+          \ pruning and build tests (~80k/day)\n- level: None\n  namespaces:\n  -\
+          \ openshift-build-test\n  - openshift-build-test-*\n  - openshift-marketplace\n\
+          \  - openshift-sre-pruning\n# 10. drop control plane cronjob activity within\
+          \ -openshift\n- level: None\n  users:\n  - system:apiserver\n  - system:node:*\n\
+          \  - system:kube-controller-manager\n  - system:kube-scheduler\n  - system:serviceaccount:kube-system:*\n\
+          \  resources:\n  - resources:\n    - endpoints\n    - pods/binding\n   \
+          \ - serviceaccounts/token\n  - group: discovery.k8s.io\n    resources: ['endpointslices']\n\
+          \  verbs: ['create','update']\n# 11. forward resources we wish to monitor\n\
+          - level: Request\n  resources:\n  - resources: ['pods']\n  - group: compliance.openshift.io\n\
+          \    resources: ['compliancecheckresults']\n  - group: secscan.quay.redhat.com\n\
+          \    resources: ['imagemanifestvulns']\n  verbs:\n  - create\n  - update\n\
+          \  - patch\n  - delete\n  - deletecollection\n# 12. drop resource status\
+          \ updates (~100k/day)\n- level: None\n  resources:\n  - resources: ['*/status']\n\
+          \  - group: apps\n    resources: ['*/status']\n  - group: batch\n    resources:\
+          \ ['*/status']\n  - group: velero.io\n    resources: ['*/status']\n  - group:\
+          \ autoscaling\n    resources: ['*/status']\n  - group: operators.coreos.com\n\
+          \    resources: ['*/status']\n  - group: config.openshift.io\n    resources:\
+          \ ['*/status']\n  - group: quota.openshift.io\n    resources: ['clusterresourcequotas/status']\n\
+          \  - group: managed.openshift.io\n    resources: ['subjectpermissions/status']\n\
+          \  - group: apiserver.openshift.io\n    resources: ['apirequestcounts/status']\n\
+          \  - group: controlplane.operator.openshift.io\n    resources: ['podnetworkconnectivitychecks/status']\n\
+          \  verbs:\n  - create\n  - update\n  - patch\n# 13. drop olm updates (~50k/day)\n\
+          - level: None\n  users: ['system:serviceaccount:openshift-operator-lifecycle-manager:olm-operator-serviceaccount']\n\
+          \  resources:\n  - resources: ['namespaces']\n  - group: apps\n    resources:\
+          \ ['deployments']\n  - group: rbac.authorization.k8s.io\n    resources:\
+          \ ['clusterroles']\n  - group: operators.coreos.com\n    resources:\n  \
+          \  - operatorgroups\n    - clusterserviceversions\n  verbs:\n  - update\n\
+          \  - patch\n# 14. drop update secret from cmo & prom within openshift-*\
+          \ namespaces (~3k/day)\n- level: None\n  users:\n  - system:serviceaccount:openshift-monitoring:cluster-monitoring-operator\n\
+          \  - system:serviceaccount:openshift-monitoring:prometheus-operator\n  namespaces:\
+          \ ['openshift-*']\n  resources:\n  - resources: ['secrets']\n  verbs: ['update']\n\
+          # 15. drop update route from console-operator (~10k/day)\n- level: None\n\
+          \  users: ['system:serviceaccount:openshift-console-operator:console-operator']\n\
+          \  namespaces: ['openshift-console']\n  resources:\n  - group: route.openshift.io\n\
+          \    resourceNames: ['console','downloads']\n    resources: ['routes','routes/status']\n\
+          \  verbs: ['update','patch']\n# 16. drop clusterrole aggregation updates\
+          \ (~5k/day)\n- level: None\n  users: ['system:serviceaccount:kube-system:clusterrole-aggregation-controller']\n\
+          \  resources:\n  - group: rbac.authorization.k8s.io\n    resources: ['clusterroles']\n\
+          \  verbs: ['update','patch']\n# 17. drop console route updates from cvo\
+          \ (~50k/day)\n- level: None\n  userGroups:\n  - system:serviceaccounts:openshift-cluster-version\n\
+          \  - system:serviceaccounts:openshift-console-operator\n  - system:serviceaccounts:openshift-console\n\
+          \  resources:\n  - group: route.openshift.io\n    resources: ['routes']\n\
+          \  verbs: ['update','patch']\n# 18. drop routine image pruner activity\n\
+          - level: None\n  users: ['system:serviceaccount:openshift-image-registry:pruner']\n\
+          \  resources:\n  - group: image.openshift.io\n  verbs: ['delete']\n# 19.\
+          \ drop openshift ns templates & imagestream and imagestreamimports\n- level:\
+          \ None\n  userGroups:\n  - system:serviceaccounts:openshift-cluster-samples-operator\n\
+          \  - system:serviceaccounts:openshift-cluster-version\n  - system:serviceaccounts:openshift-infra\n\
+          \  namespaces: ['openshift']\n  resources:\n  - resources: ['templates']\n\
+          \    group: template.openshift.io\n  - group: image.openshift.io\n    resources:\n\
+          \    - imagestreams\n    - imagestreamimports\n  verbs: ['create','update']\n\
+          # 20. drop events.events.k8s.io\n- level: None\n  resources:\n  - group:\
+          \ events.k8s.io\n    resources: ['events']\n# field redactions\nredactions:\n\
+          # tokens in request objects\n- group: authentication.k8s.io\n  resources:\n\
+          \  - tokenreviews\n  fields:\n    spec:\n      token: replace\n# tokens\
+          \ in response objects\n- resources:\n  - serviceaccounts/token\n  fields:\n\
+          \    status:\n      token: replace\n# tokens in object names\n- group: oauth.openshift.io\n\
+          \  resources:\n  - oauthaccesstokens\n  - useroauthaccesstokens\n  fields:\n\
+          \    metadata:\n      name: replace\n# tokens in annotations\n- fields:\n\
+          \    metadata:\n      annotations:\n        openshift.io/token-secret.value:\
+          \ replace\n# remove certs from certificate signing requests\n- group: certificates.k8s.io\n\
+          \  resources:\n  - certificatesigningrequests\n  - certificatesigningrequests/status\n\
+          \  fields:\n    spec:\n      request: replace\n    status:\n      certificate:\
+          \ replace\n# remove injected cabundles from webhook\n- group: admissionregistration.k8s.io\n\
+          \  resources:\n  - validatingwebhookconfigurations\n  - mutatingwebhookconfigurations\n\
+          \  fields:\n    webhooks:\n      clientConfig:\n        caBundle: remove\n\
+          # remove certs and ca-bundles from configmaps\n- resources:\n  - configmaps\n\
+          \  fields:\n    data:\n      ca.crt: replace\n      ca-bundle.crt: replace\n\
+          \      service-ca.crt: replace\n      client-ca: replace\n      client-ca-file:\
+          \ replace\n      requestheader-client-ca-file: replace\n# remove machineconfig\
+          \ file source data, including bootstrap token\n- group: machineconfiguration.openshift.io\n\
+          \  resources:\n  - machineconfigs\n  - controllerconfigs\n  fields:\n  \
+          \  spec:\n      rootCAData: replace\n      config:\n        passwd: replace\n\
+          \        storage:\n          files:\n            contents:\n           \
+          \   source: replace\n      kubeAPIServerServingCAData: replace\n# we only\
+          \ really want the cve and severity counts from these\n- group: secscan.quay.redhat.com\n\
+          \  resources: ['imagemanifestvulns']\n  fields:\n    metadata:\n      labels:\
+          \ remove\n    spec:\n      features: remove\n    status:\n      affectedPods:\
+          \ remove\n      lastUpdate: remove\n# remove certain fields from metadata\
+          \ and status\n- fields:\n    metadata:\n      annotations:\n        control-plane.alpha.kubernetes.io/leader:\
+          \ remove\n        kubectl.kubernetes.io/last-applied-configuration: remove\n\
+          \      generation: remove\n      uid: remove\n      selfLink: remove\n \
+          \     managedFields: remove\n      resourceVersion: remove\n      creationTimestamp:\
+          \ remove\n    status:\n      conditions: remove\n      components: remove\n\
+          \      relatedObjects: remove\n      lastSyncTimestamp: remove\n      storageBucket:\n\
+          \        lastSyncTimestamp: remove\n"
+    - apiVersion: apps/v1
+      kind: DaemonSet
+      metadata: &id002
+        labels: &id001
+          app: audit-exporter
+        name: audit-exporter
+        namespace: openshift-security
+      spec:
+        selector:
+          matchLabels: *id001
+        template:
+          metadata: *id002
+          spec:
+            automountServiceAccountToken: false
+            containers:
+            - name: audit-exporter
+              command:
+              - /bin/audit-exporter
+              - --log-file=/var/log/osd-audit/audit.log
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 32Mi
+                limits:
+                  cpu: 50m
+                  memory: 128Mi
+              image: quay.io/app-sre/splunk-audit-exporter@sha256:b5b8ff9869d03a16e017fbc63fcfaf55cfdb06da3aa04cf4893f610171df0b78
+              imagePullPolicy: Always
+              securityContext:
+                privileged: true
+                runAsUser: 0
+              volumeMounts:
+              - mountPath: /config
+                name: config
+              - mountPath: /var/log
+                name: logs
+            nodeSelector:
+              node-role.kubernetes.io/master: ''
+            restartPolicy: Always
+            terminationGracePeriodSeconds: 5
+            tolerations:
+            - operator: Exists
+            volumes:
+            - name: config
+              configMap:
+                name: osd-audit-policy
+            - name: logs
+              hostPath:
+                type: Directory
+                path: /var/log
+        updateStrategy:
+          type: OnDelete
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:

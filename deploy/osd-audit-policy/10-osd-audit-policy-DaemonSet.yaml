@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata: &exporter-metadata
+  labels: &exporter-labels
+    app: audit-exporter
+  name: audit-exporter
+  namespace: openshift-security
+spec:
+  selector:
+    matchLabels: *exporter-labels
+  template:
+    metadata: *exporter-metadata
+    spec:
+      automountServiceAccountToken: false
+      containers:
+      - name: audit-exporter
+        command:
+        - /bin/audit-exporter
+        - --log-file=/var/log/osd-audit/audit.log
+        resources:
+          requests:
+            cpu: 10m
+            memory: 32Mi
+          limits:
+            cpu: 50m
+            memory: 128Mi
+        image: quay.io/app-sre/splunk-audit-exporter@sha256:b5b8ff9869d03a16e017fbc63fcfaf55cfdb06da3aa04cf4893f610171df0b78
+        imagePullPolicy: Always
+        securityContext:
+          privileged: true
+          runAsUser: 0
+        volumeMounts:
+        - mountPath: /config
+          name: config
+        - mountPath: /var/log
+          name: logs
+      nodeSelector:
+        node-role.kubernetes.io/master: ""
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 5
+      tolerations:
+      - operator: Exists
+      volumes:
+      - name: config
+        configMap:
+          name: osd-audit-policy
+      - name: logs
+        hostPath:
+          type: Directory
+          path: /var/log
+  updateStrategy:
+    type: OnDelete
