@@ -2257,6 +2257,60 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: backplane-mkrts-elevated-mkrts
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-impersonate-cluster-admin-mkrts
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - users
+        verbs:
+        - impersonate
+        resourceNames:
+        - backplane-mkrts-admin
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: backplane-impersonate-cluster-admin-mkrts
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: backplane-impersonate-cluster-admin-mkrts
+      subjects:
+      - kind: Group
+        name: system:serviceaccounts:openshift-backplane-rts
+    - apiVersion: user.openshift.io/v1
+      kind: User
+      metadata:
+        name: backplane-mkrts-admin
+    - apiVersion: managed.openshift.io/v1alpha1
+      kind: SubjectPermission
+      metadata:
+        name: backplane-mkrts-admin
+        namespace: openshift-rbac-permissions
+      spec:
+        permissions:
+        - allowFirst: true
+          clusterRoleName: admin
+          namespacesAllowedRegex: (^redhat-managed-kafka-.*|^redhat-kas-fleetshard-.*|^managed-application-services-observability|^kafka-.*)
+        subjectKind: User
+        subjectName: backplane-mkrts-admin
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: backplane-mkrts-redhat-kas-fleetshard-addon-kas-fleetshard-operator
   spec:
     clusterDeploymentSelector:
@@ -2265,16 +2319,50 @@ objects:
         api.openshift.com/addon-kas-fleetshard-operator: 'true'
     resourceApplyMode: Sync
     resources:
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-mkrts-users-project
+      rules:
+      - apiGroups:
+        - '*'
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        - pods/attach
+        verbs:
+        - create
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - ''
+        resources:
+        - replicasets
+        verbs:
+        - delete
+        - deletecollection
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
-        name: backplane-mkrts-admins
+        name: backplane-mkrts-users
         namespace: openshift-rbac-permissions
       spec:
         permissions:
         - allowFirst: true
-          clusterRoleName: admin
-          namespacesAllowedRegex: (^redhat-managed-kafka-.*|^redhat-kas-fleetshard-.*|^managed-application-services-observability)
+          clusterRoleName: backplane-mkrts-users-project
+          namespacesAllowedRegex: (^redhat-managed-kafka-.*|^redhat-kas-fleetshard-.*|^managed-application-services-observability|^kafka-.*)
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-rts
 - apiVersion: hive.openshift.io/v1
@@ -2292,16 +2380,50 @@ objects:
         api.openshift.com/addon-kas-fleetshard-operator-qe: 'true'
     resourceApplyMode: Sync
     resources:
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-mkrts-users-project
+      rules:
+      - apiGroups:
+        - '*'
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        - pods/attach
+        verbs:
+        - create
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - ''
+        resources:
+        - replicasets
+        verbs:
+        - delete
+        - deletecollection
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
-        name: backplane-mkrts-admins
+        name: backplane-mkrts-users
         namespace: openshift-rbac-permissions
       spec:
         permissions:
         - allowFirst: true
-          clusterRoleName: admin
-          namespacesAllowedRegex: (^redhat-managed-kafka-.*|^redhat-kas-fleetshard-.*|^managed-application-services-observability)
+          clusterRoleName: backplane-mkrts-users-project
+          namespacesAllowedRegex: (^redhat-managed-kafka-.*|^redhat-kas-fleetshard-.*|^managed-application-services-observability|^kafka-.*)
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-rts
 - apiVersion: hive.openshift.io/v1
@@ -2319,16 +2441,50 @@ objects:
         api.openshift.com/addon-managed-kafka: 'true'
     resourceApplyMode: Sync
     resources:
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-mkrts-users-project
+      rules:
+      - apiGroups:
+        - '*'
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        - pods/attach
+        verbs:
+        - create
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - ''
+        resources:
+        - replicasets
+        verbs:
+        - delete
+        - deletecollection
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
-        name: backplane-mkrts-admins
+        name: backplane-mkrts-users
         namespace: openshift-rbac-permissions
       spec:
         permissions:
         - allowFirst: true
-          clusterRoleName: admin
-          namespacesAllowedRegex: (^redhat-managed-kafka-.*|^redhat-kas-fleetshard-.*|^managed-application-services-observability)
+          clusterRoleName: backplane-mkrts-users-project
+          namespacesAllowedRegex: (^redhat-managed-kafka-.*|^redhat-kas-fleetshard-.*|^managed-application-services-observability|^kafka-.*)
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-rts
 - apiVersion: hive.openshift.io/v1
@@ -2346,16 +2502,50 @@ objects:
         api.openshift.com/addon-managed-kafka-qe: 'true'
     resourceApplyMode: Sync
     resources:
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-mkrts-users-project
+      rules:
+      - apiGroups:
+        - '*'
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        - pods/attach
+        verbs:
+        - create
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - ''
+        resources:
+        - replicasets
+        verbs:
+        - delete
+        - deletecollection
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
-        name: backplane-mkrts-admins
+        name: backplane-mkrts-users
         namespace: openshift-rbac-permissions
       spec:
         permissions:
         - allowFirst: true
-          clusterRoleName: admin
-          namespacesAllowedRegex: (^redhat-managed-kafka-.*|^redhat-kas-fleetshard-.*|^managed-application-services-observability)
+          clusterRoleName: backplane-mkrts-users-project
+          namespacesAllowedRegex: (^redhat-managed-kafka-.*|^redhat-kas-fleetshard-.*|^managed-application-services-observability|^kafka-.*)
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-rts
 - apiVersion: hive.openshift.io/v1
