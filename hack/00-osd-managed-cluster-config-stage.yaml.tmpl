@@ -10400,25 +10400,15 @@ objects:
                     \ | rev | cut -d- -f2- | rev)\n\n# cleanup traps on exiting, so\
                     \ these always run\ncleanup () {\n  echo \"$(date): Done, deleting\
                     \ build NS=$NS\"\n  oc delete ns \"${NS}\" --wait=false\n}\ntrap\
-                    \ \"cleanup\" EXIT SIGINT\n\nGET_FAILED_JOBS=$(cat <<END\nimport\
-                    \ json,sys\nr = json.load(sys.stdin)\n# create a list of jobs\n\
-                    jobs = [ job['metadata']['name'] for job in r['items'] if\n  #\
-                    \ no jobs are currently running\n  ( not 'active' in job['status'])\
-                    \ and\n  # if '.status.failed' exists on job\n  'failed' in job['status']\
-                    \ and\n  # if job failed count is bigger than backoffLimit\n \
-                    \ #\n  # this check is because the failed tries can be one less\
-                    \ than limit\n  # see code in https://github.com/kubernetes/kubernetes/blob/master/pkg/controller/job/job_controller.go#L509\n\
-                    \  # if this changes we should consider using an easier implementation\n\
-                    \  job['spec']['backoffLimit'] - 1 <= job['status']['failed']]\n\
-                    print(\" \".join(jobs))\nEND\n)\n\n# create ns\noc create -f -\
-                    \ <<EOF\napiVersion: v1\nkind: Namespace\nmetadata:\n  name: \"\
-                    ${NS}\"\n  managed.openshift.io/sre-build-test: \"${JOB_NAME}\"\
-                    \nEOF\n\n# wait for sa to be created\nuntil oc -n \"${NS}\" get\
-                    \ sa default >/dev/null; do\n  echo \"$(date): Waiting for service\
-                    \ account to be created\"\n  sleep 5\ndone\n\n# run build\noc\
-                    \ -n \"${NS}\" new-build --name=\"${JOB_PREFIX}\" --binary --strategy\
-                    \ source --docker-image registry.redhat.io/ubi8/go-toolset:latest\n\
-                    cat <<EOF > /tmp/main.go\npackage main\nimport (\n       \"fmt\"\
+                    \ \"cleanup\" EXIT SIGINT\n\n# create ns\noc create -f - <<EOF\n\
+                    apiVersion: v1\nkind: Namespace\nmetadata:\n  name: \"${NS}\"\n\
+                    \  managed.openshift.io/sre-build-test: \"${JOB_NAME}\"\nEOF\n\
+                    \n# wait for sa to be created\nuntil oc -n \"${NS}\" get sa default\
+                    \ >/dev/null; do\n  echo \"$(date): Waiting for service account\
+                    \ to be created\"\n  sleep 5\ndone\n\n# run build\noc -n \"${NS}\"\
+                    \ new-build --name=\"${JOB_PREFIX}\" --binary --strategy source\
+                    \ --docker-image registry.redhat.io/ubi8/go-toolset:latest\ncat\
+                    \ <<EOF > /tmp/main.go\npackage main\nimport (\n       \"fmt\"\
                     \n)\n\nfunc main() {\n        fmt.Println(\"Hello Openshift SRE\
                     \ :)\")\n}\nEOF\n\nwhile ! oc -n \"${NS}\" start-build \"${JOB_PREFIX}\"\
                     \ --from-file=/tmp/main.go\ndo\n  echo \"Failed to start build,\
@@ -10432,16 +10422,12 @@ objects:
                     \      exit 1\n      ;;\n    Cancelled)\n      echo \"$(date):\
                     \ Build was Cancelled\" >&2\n      oc logs -n \"${NS}\" -c build\
                     \ \"${JOB_PREFIX}\"\n      exit 1\n      ;;\n    Complete)\n \
-                    \     echo \"$(date): Build Complete\"\n      # Get all job names\
-                    \ that have exceeded failed retries\n      JOBS=$(oc -n \"${POD_NS}\"\
-                    \ get job -o json)\n      JOBS_TO_DELETE=$(echo \"${JOBS}\" |\
-                    \ python -c \"$GET_FAILED_JOBS\")\n\n      if [[ -n \"${JOBS_TO_DELETE}\"\
-                    \ ]] ; then\n        echo \"$(date): Selected jobs for deletion:\
-                    \ ${JOBS_TO_DELETE}\"\n        echo \"${JOBS_TO_DELETE}\" | xargs\
-                    \ oc -n \"${POD_NS}\" delete job --ignore-not-found --wait=false\n\
-                    \      fi\n\n      # clean up any old namespaces, other than the\
-                    \ current one\n      echo \"$(date): Cleaning up old namespaces\"\
-                    \n      oc delete ns -l \"managed.openshift.io/sre-build-test,kubernetes.io/metadata.name!=${NS}\"\
+                    \     echo \"$(date): Build Complete\"\n      oc get jobs -n \"\
+                    $POD_NS\" --sort-by=.status.startTime -o custom-columns=\":metadata.name\"\
+                    \ --no-headers | head -n -1 | xargs oc -n \"$POD_NS\" delete job\
+                    \ --ignore-not-found --wait=false\n\n      # clean up any old\
+                    \ namespaces, other than the current one\n      echo \"$(date):\
+                    \ Cleaning up old namespaces\"\n      oc delete ns -l \"managed.openshift.io/sre-build-test,kubernetes.io/metadata.name!=${NS}\"\
                     \ --ignore-not-found --wait=false\n      break\n      ;;\n  esac\n\
                     \  echo \"$(date): Build is ${ST}; checking build again in 15\
                     \ seconds, NS=${NS}\"\n  sleep 15\ndone\nexit 0\n"
