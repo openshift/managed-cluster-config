@@ -10917,15 +10917,15 @@ objects:
                 by the PDB
               description: node drain takes too long and cannot be finished in the
                 given time period during cluster upgrade
-          - alert: UpgradeConfigSyncFailureOver1HrSRE
-            expr: upgradeoperator_upgradeconfig_synced > 0
-            for: 1h
+          - alert: UpgradeConfigSyncFailureOver2HrSRE
+            expr: avg_over_time(upgradeoperator_upgradeconfig_synced[2h]) == 1
+            for: 5m
             labels:
               severity: warning
               namespace: openshift-monitoring
             annotations:
-              summary: UpgradeConfig has not successfully synced in 1 hour.
-              description: This clusters UpgradeConfig has not been synced in 1 hour
+              summary: UpgradeConfig has not successfully synced in 2 hours.
+              description: This clusters UpgradeConfig has not been synced in 2 hours
                 and may be out of date
     - apiVersion: monitoring.coreos.com/v1
       kind: PrometheusRule
