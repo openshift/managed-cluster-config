@@ -1,0 +1,27 @@
+---                                                                                                                                                
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: apischeme-delete-protection.cloudingress.managed.openshift.io
+webhooks:
+- name: apischeme-delete-protection.cloudingress.managed.openshift.io
+  admissionReviewVersions:
+  - v1beta1
+  clientConfig:
+    service:
+      # reach the webhook via the registered aggregated API
+      namespace: default
+      name: kubernetes
+  rules:
+  - operations:
+    - CREATE
+    - DELETE
+    apiGroups:
+    - cloudingress.managed.openshift.io
+    apiVersions:
+    - v1
+    resources:
+    - apischeme
+  failurePolicy: Fail
+  sideEffects: None
+

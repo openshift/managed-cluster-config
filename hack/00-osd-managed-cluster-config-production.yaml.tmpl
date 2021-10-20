@@ -3583,6 +3583,53 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: cloud-ingress-operator-configuration-cio-webhook
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/sts
+        operator: NotIn
+        values:
+        - 'true'
+      - key: api.openshift.com/private-link
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Upsert
+    resources:
+    - apiVersion: admissionregistration.k8s.io/v1
+      kind: ValidatingWebhookConfiguration
+      metadata:
+        name: apischeme-delete-protection.cloudingress.managed.openshift.io
+      webhooks:
+      - name: apischeme-delete-protection.cloudingress.managed.openshift.io
+        admissionReviewVersions:
+        - v1beta1
+        clientConfig:
+          service:
+            namespace: default
+            name: kubernetes
+        rules:
+        - operations:
+          - CREATE
+          - DELETE
+          apiGroups:
+          - cloudingress.managed.openshift.io
+          apiVersions:
+          - v1
+          resources:
+          - apischeme
+        failurePolicy: Fail
+        sideEffects: None
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: cloud-ingress-operator-configuration-routerreplicas-osd-8028
   spec:
     clusterDeploymentSelector:
