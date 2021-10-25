@@ -1,0 +1,42 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: sre-managed-upgrade-operator-alerts-matt
+    role: alert-rules
+  name: sre-managed-upgrade-operator-alerts-matt
+  namespace: openshift-monitoring
+spec:
+  groups:
+  - name: sre-managed-upgrade-operator-alerts-matt
+    rules:
+    - alert: UpgradeClusterCheckFailedMatt
+      # Get alert immediately once the cluster check failed
+      expr: avg_over_time(upgradeoperator_upgradeconfig_synced[5m]) == 1
+      for: 5m
+      labels:
+        severity: critical
+        namespace: openshift-monitoring
+      annotations:
+        summary: "cluster check failed"
+        description: "basic cluster checks failed on either before the upgrade or after the upgrade"
+    - alert: UpgradeClusterCheckFailedOriginal
+      # Get alert immediately once the cluster check failed
+      expr: upgradeoperator_upgradeconfig_synced > 0
+      for: 5m
+      labels:
+        severity: critical
+        namespace: openshift-monitoring
+      annotations:
+        summary: "cluster check failed"
+        description: "basic cluster checks failed on either before the upgrade or after the upgrade"
+    - alert: UpgradeControlPlaneUpgradeTimeoutMatt
+      # Get alert if the control plane upgrade cannot be finished in the expected duration
+      expr: (max without(instance,pod) (upgradeoperator_controlplane_timeout)) > 0
+      for: 5m
+      labels:
+        severity: critical
+        namespace: openshift-monitoring
+      annotations:
+        summary: "Controlplane upgrade timeout for {{ $labels.version }}"
+        description: "controlplane upgrade for {{ $labels.version }} cannot be finished in the given time period"
