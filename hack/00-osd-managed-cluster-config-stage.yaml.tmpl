@@ -11258,6 +11258,49 @@ objects:
             annotations:
               description: Telemeter client is experiencing a high error rate over
                 the past hour
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
+          prometheus: sre-managed-upgrade-operator-alerts-matt
+          role: alert-rules
+        name: sre-managed-upgrade-operator-alerts-matt
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-managed-upgrade-operator-alerts-matt
+          rules:
+          - alert: UpgradeClusterCheckFailedMatt
+            expr: avg_over_time(upgradeoperator_upgradeconfig_synced[5m]) == 1
+            for: 5m
+            labels:
+              severity: critical
+              namespace: openshift-monitoring
+            annotations:
+              summary: cluster check failed
+              description: basic cluster checks failed on either before the upgrade
+                or after the upgrade
+          - alert: UpgradeClusterCheckFailedOriginal
+            expr: upgradeoperator_upgradeconfig_synced > 0
+            for: 5m
+            labels:
+              severity: critical
+              namespace: openshift-monitoring
+            annotations:
+              summary: cluster check failed
+              description: basic cluster checks failed on either before the upgrade
+                or after the upgrade
+          - alert: UpgradeControlPlaneUpgradeTimeoutMatt
+            expr: (max without(instance,pod) (upgradeoperator_controlplane_timeout))
+              > 0
+            for: 5m
+            labels:
+              severity: critical
+              namespace: openshift-monitoring
+            annotations:
+              summary: Controlplane upgrade timeout for {{ $labels.version }}
+              description: controlplane upgrade for {{ $labels.version }} cannot be
+                finished in the given time period
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
