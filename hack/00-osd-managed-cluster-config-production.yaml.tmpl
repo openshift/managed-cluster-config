@@ -10717,6 +10717,9 @@ objects:
           - expr: label_replace(cluster:nodes_roles, "instance", "$1", "node", "(.*)")
               * on(instance) group_left node_memory_MemTotal_bytes
             record: sre:node_roles:memory_total_bytes
+          - expr: label_replace(cluster:nodes_roles, "instance", "$1", "node", "(.*)")
+              * on(instance) group_left instance:node_num_cpu:sum
+            record: sre:node_roles:node_num_cpu
           - expr: count(cluster:nodes_roles{label_node_role_kubernetes_io!~"(master|infra)"})
             record: sre:node_workers:count
           - expr: ( avg(sre:node_roles:memory_total_bytes{label_node_role_kubernetes_io="master"})
@@ -10726,6 +10729,18 @@ objects:
               <= 250 ) OR ( avg(sre:node_roles:memory_total_bytes{label_node_role_kubernetes_io="master"})
               < 64*1024*1024*1024 AND sre:node_workers:count > 250 )
             record: sre:node_masters:need_resize
+          - expr: ( ( avg(sre:node_roles:memory_total_bytes{label_node_role_kubernetes_io="infra"})
+              < 16*1024*1024*1024 OR avg(sre:node_roles:node_num_cpu{label_node_role_kubernetes_io="infra"})
+              <= 4 ) AND sre:node_workers:count > 25 AND sre:node_workers:count <=
+              100 ) OR ( ( avg(sre:node_roles:memory_total_bytes{label_node_role_kubernetes_io="infra"})
+              < 32*1024*1024*1024 OR avg(sre:node_roles:node_num_cpu{label_node_role_kubernetes_io="infra"})
+              <= 8 ) AND sre:node_workers:count > 100 AND sre:node_workers:count <=
+              250 ) OR ( ( avg(sre:node_roles:memory_total_bytes{label_node_role_kubernetes_io="infra"})
+              < 128*1024*1024*1024 OR avg(sre:node_roles:node_num_cpu{label_node_role_kubernetes_io="infra"})
+              <= 16 ) AND sre:node_workers:count > 250 ) OR ( avg(sre:node_roles:memory_total_bytes{label_node_role_kubernetes_io="infra"})
+              < 128*1024*1024*1024 AND avg(sre:node_roles:node_num_cpu{label_node_role_kubernetes_io="infra"})
+              <= 32 AND sre:node_workers:count > 500 )
+            record: sre:node_infras:need_resize
         - name: sre-control-plane-resizing-alerts
           rules:
           - alert: MasterNodesNeedResizingSRE
@@ -10746,6 +10761,16 @@ objects:
               namespace: openshift-monitoring
             annotations:
               message: The cluster's master instance has been undersized for 2 hours
+                and must be vertically scaled to support the existing workers.  See
+                linked SOP for details.
+          - alert: InfraNodesNeedResizingSRE
+            expr: sre:node_infras:need_resize > 0
+            for: 2h
+            labels:
+              severity: warning
+              namespace: openshift-monitoring
+            annotations:
+              message: The cluster's infra instance has been undersized for 2 hours
                 and must be vertically scaled to support the existing workers.  See
                 linked SOP for details.
     - apiVersion: monitoring.coreos.com/v1
