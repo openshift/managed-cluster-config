@@ -5,6 +5,8 @@ import sys
 import json
 import argparse
 import textwrap
+import tempfile
+import os
 import oyaml as yaml
 
 CONFIGMAP_TEMPLATE = """apiVersion: v1
@@ -36,6 +38,51 @@ def get_api_resource_kinds():
         sys.exit(f"Failed to get a list of api-resources: {e}")
 
     return [i.decode("utf-8") for i in r.splitlines()]
+
+
+def collect_ocp_release_namespaces():
+    """
+    Returns a dict of namespaces present in the manifests provided by 'ocm adm release extract'
+    """
+    ocp_namespaces = []
+    with tempfile.TemporaryDirectory() as tmpdir:
+        try:
+            r = subprocess.check_output(
+                ["oc", "adm", "release", "extract", "--to", tmpdir],
+                stderr=subprocess.DEVNULL,
+            )
+        except subprocess.CalledProcessError as e:
+            sys.exit(f"Failed to extract OCP release manifests: {e}")
+        yaml_file_paths = [
+            os.path.join(tmpdir, f) for f in os.listdir(tmpdir) if f.endswith(".yaml")
+        ]
+        for file_path in yaml_file_paths:
+            with open(file_path, "r") as f:
+                manifests = yaml.full_load_all(f)
+                for manifest in manifests:
+                    if manifest is not None and manifest["kind"] == "Namespace":
+                        ocp_namespaces.append(manifest["metadata"]["name"])
+    resources = dict()
+    resources["Resources"] = {}
+    resources["Resources"]["Namespace"] = [{"name": ns} for ns in ocp_namespaces]
+    return resources
+
+
+def collect_addon_namespaces(
+    addons_filepath="../../resources/addons-namespaces/main.yaml",
+):
+    """
+    Returns a dict of namespaces associated with the available addons for OSD
+    """
+    addons_dict = {}
+    with open(addons_filepath, "r") as f:
+        addons_dict = yaml.safe_load(f)
+    resources = dict()
+    resources["Resources"] = {}
+    resources["Resources"]["Namespace"] = [
+        {"name": ns} for ns in addons_dict["addon-namespaces"].values()
+    ]
+    return resources
 
 
 def collect_managed_resources(kinds):
@@ -111,6 +158,21 @@ def remove_backplane_service_account(resource_dict):
     return resource_dict
 
 
+def save_output_to_disk(arguments, file_contents):
+    with open(arguments.path, "w") as f:
+        if arguments.output == "yaml":
+            f.write(file_contents)
+        else:
+            # indent the yaml document into the configmap template
+            f.write(
+                CONFIGMAP_TEMPLATE.format(
+                    arguments.name,
+                    arguments.namespace,
+                    textwrap.indent(file_contents, "    "),
+                )
+            )
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Collects all hive-managed resources from a cluster and outputs them as yaml documents"
@@ -129,9 +191,11 @@ def main():
         help="Output format of managed resource list [required]",
     )
     parser.add_argument(
-        "--all",
-        action="store_true",
-        help="Output ALL managed resources. By default, it only outputs namespaces.",
+        "--source",
+        "-s",
+        required=True,
+        choices=["osd-all", "osd-namespaces", "ocp-namespaces", "addons-namespaces"],
+        help="Choose to output all OSD managed resources, or just the managed namespaces for OSD, OCP, or Add-ons [required]",
     )
     parser.add_argument(
         "--namespace",
@@ -151,25 +215,23 @@ def main():
         sys.exit(
             "Must be logged into an OSD cluster to gather list of managed resources"
         )
-    print("Collecting a list of hive-managed resources from cluster...")
-    if arguments.all:
-        kinds = get_api_resource_kinds()
-    else:
-        kinds = ["namespaces"]
-    managed_resource_dict = collect_managed_resources(kinds)
-    managed_resource_yaml = yaml.dump(managed_resource_dict)
-    with open(arguments.path, "w") as f:
-        if arguments.output == "yaml":
-            f.write(managed_resource_yaml)
+    if arguments.source in ["osd-all", "osd-namespaces"]:
+        print("Collecting a list of hive-managed resources from cluster...")
+        if arguments.source == "osd-all":
+            kinds = get_api_resource_kinds()
         else:
-            # indent the yaml document into the configmap template
-            f.write(
-                CONFIGMAP_TEMPLATE.format(
-                    arguments.name,
-                    arguments.namespace,
-                    textwrap.indent(managed_resource_yaml, "    "),
-                )
-            )
+            kinds = ["namespaces"]
+        managed_resource_dict = collect_managed_resources(kinds)
+        managed_resource_yaml = yaml.dump(managed_resource_dict)
+        save_output_to_disk(arguments, managed_resource_yaml)
+    elif arguments.source == "ocp-namespaces":
+        managed_ocp_resource_dict = collect_ocp_release_namespaces()
+        managed_ocp_resource_yaml = yaml.dump(managed_ocp_resource_dict)
+        save_output_to_disk(arguments, managed_ocp_resource_yaml)
+    elif arguments.source == "addons-namespaces":
+        managed_addon_resource_dict = collect_addon_namespaces()
+        managed_addon_resource_yaml = yaml.dump(managed_addon_resource_dict)
+        save_output_to_disk(arguments, managed_addon_resource_yaml)
 
 
 if __name__ == "__main__":
