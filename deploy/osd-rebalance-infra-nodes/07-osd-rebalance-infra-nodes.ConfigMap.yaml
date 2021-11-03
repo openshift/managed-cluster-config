@@ -8,6 +8,13 @@ data:
   entrypoint: |-
     #!/bin/bash
 
+    CLUSTER_READY=$(oc get job -n openshift-monitoring osd-cluster-ready -o jsonpath='{.status.succeeded}')
+
+    if [ "$CLUSTER_READY" != "1" ]; then
+        echo "INFO: 'osd-cluster-ready' job hasn't succeeded yet, exiting..."
+        exit 0
+    fi
+
     echo "INFO: Attempting infra node pod rebalancing..."
 
     AZ_COUNT=$(oc get nodes -o yaml | grep -E "^\s+failure-domain.beta.kubernetes.io/zone" | sort | uniq | wc -l)
