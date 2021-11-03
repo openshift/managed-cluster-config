@@ -64,6 +64,7 @@ def collect_ocp_release_namespaces():
                         ocp_namespaces.append(manifest["metadata"]["name"])
     resources = dict()
     resources["Resources"] = {}
+    ocp_namespaces.sort()
     resources["Resources"]["Namespace"] = [{"name": ns} for ns in ocp_namespaces]
     return resources
 
@@ -77,11 +78,11 @@ def collect_addon_namespaces(
     addons_dict = {}
     with open(addons_filepath, "r") as f:
         addons_dict = yaml.safe_load(f)
+    # Some addons use the same namespace, so remove duplicates and sort
+    addon_ns_list = sorted(list(set(addons_dict["addon-namespaces"].values())))
     resources = dict()
     resources["Resources"] = {}
-    resources["Resources"]["Namespace"] = [
-        {"name": ns} for ns in addons_dict["addon-namespaces"].values()
-    ]
+    resources["Resources"]["Namespace"] = [{"name": ns} for ns in addon_ns_list]
     return resources
 
 
