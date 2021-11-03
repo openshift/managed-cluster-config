@@ -8379,6 +8379,12 @@ objects:
         - persistentvolumeclaims
         verbs:
         - delete
+      - apiGroups:
+        - batch
+        resources:
+        - jobs
+        verbs:
+        - get
     - kind: RoleBinding
       apiVersion: rbac.authorization.k8s.io/v1
       metadata:
@@ -8427,20 +8433,24 @@ objects:
         name: osd-rebalance-infra-nodes
         namespace: openshift-monitoring
       data:
-        entrypoint: "#!/bin/bash\n\necho \"INFO: Attempting infra node pod rebalancing...\"\
-          \n\nAZ_COUNT=$(oc get nodes -o yaml | grep -E \"^\\s+failure-domain.beta.kubernetes.io/zone\"\
-          \ | sort | uniq | wc -l)\n\necho \"INFO: Number of AZs ${AZ_COUNT}\"\n\n\
-          INFRA_NODE_COUNT=$(oc get nodes -l node-role.kubernetes.io=infra --no-headers\
-          \ | wc -l)\n\necho \"INFO: Number of INFRA NODES ${INFRA_NODE_COUNT}\"\n\
-          \nREBALANCE_PODS=false\nPENDING_PODS=false\n\nrebalancePods() {\n    APP=$1\n\
-          \    NS=$2\n    LABEL=$3\n    VOLUME_NAME=$4\n    ALL_POD_NODES=$(oc get\
-          \ pods -n $NS -l $LABEL=$APP -o wide --no-headers | awk '{print $7}' | sort\
-          \ | wc -l)\n    UNIQUE_POD_NODES=$(oc get pods -n $NS -l $LABEL=$APP -o\
-          \ wide --no-headers | awk '{print $7}' | sort | uniq | wc -l)\n    echo\
-          \ \"INFO: $APP pods needing rebalance: $(( $UNIQUE_POD_NODES == $INFRA_NODE_COUNT\
-          \ ? 0 : ALL_POD_NODES - UNIQUE_POD_NODES ))\"\n\n    LAST_POD_NODE_NAME=\"\
-          \"\n    for POD in $( oc get pods -n $NS -l $LABEL=$APP -o jsonpath='{.items[*].metadata.name}'\
-          \ ) ; do\n        POD_NODE_NAME=$(oc get pod -n $NS $POD -o jsonpath='{.spec.nodeName}')\n\
+        entrypoint: "#!/bin/bash\n\nCLUSTER_READY=$(oc get job -n openshift-monitoring\
+          \ osd-cluster-ready -o jsonpath='{.status.succeeded}')\n\nif [ \"$CLUSTER_READY\"\
+          \ != \"1\" ]; then\n    echo \"INFO: 'osd-cluster-ready' job hasn't succeeded\
+          \ yet, exiting...\"\n    exit 0\nfi\n\necho \"INFO: Attempting infra node\
+          \ pod rebalancing...\"\n\nAZ_COUNT=$(oc get nodes -o yaml | grep -E \"^\\\
+          s+failure-domain.beta.kubernetes.io/zone\" | sort | uniq | wc -l)\n\necho\
+          \ \"INFO: Number of AZs ${AZ_COUNT}\"\n\nINFRA_NODE_COUNT=$(oc get nodes\
+          \ -l node-role.kubernetes.io=infra --no-headers | wc -l)\n\necho \"INFO:\
+          \ Number of INFRA NODES ${INFRA_NODE_COUNT}\"\n\nREBALANCE_PODS=false\n\
+          PENDING_PODS=false\n\nrebalancePods() {\n    APP=$1\n    NS=$2\n    LABEL=$3\n\
+          \    VOLUME_NAME=$4\n    ALL_POD_NODES=$(oc get pods -n $NS -l $LABEL=$APP\
+          \ -o wide --no-headers | awk '{print $7}' | sort | wc -l)\n    UNIQUE_POD_NODES=$(oc\
+          \ get pods -n $NS -l $LABEL=$APP -o wide --no-headers | awk '{print $7}'\
+          \ | sort | uniq | wc -l)\n    echo \"INFO: $APP pods needing rebalance:\
+          \ $(( $UNIQUE_POD_NODES == $INFRA_NODE_COUNT ? 0 : ALL_POD_NODES - UNIQUE_POD_NODES\
+          \ ))\"\n\n    LAST_POD_NODE_NAME=\"\"\n    for POD in $( oc get pods -n\
+          \ $NS -l $LABEL=$APP -o jsonpath='{.items[*].metadata.name}' ) ; do\n  \
+          \      POD_NODE_NAME=$(oc get pod -n $NS $POD -o jsonpath='{.spec.nodeName}')\n\
           \        if [ $UNIQUE_POD_NODES -ne $INFRA_NODE_COUNT ] && [ \"${POD_NODE_NAME}\"\
           \ == \"${LAST_POD_NODE_NAME}\" ]; then\n            if [ ${VOLUME_NAME}\
           \ ] && [ \"${AZ_COUNT}\" != \"1\" ]; then\n                PVC=$(oc get\
@@ -8494,7 +8504,7 @@ objects:
         failedJobsHistoryLimit: 3
         successfulJobsHistoryLimit: 3
         concurrencyPolicy: Replace
-        schedule: 0 0 * * *
+        schedule: '*/15 * * * *'
         jobTemplate:
           spec:
             template:
