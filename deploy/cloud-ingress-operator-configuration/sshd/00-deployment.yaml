@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloud-ingress-operator
+  namespace: openshift-cloud-ingress-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: cloud-ingress-operator
+  template:
+    metadata:
+      labels:
+        name: cloud-ingress-operator
+    spec:
+      serviceAccountName: cloud-ingress-operator
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - preference:
+              matchExpressions:
+              - key: node-role.kubernetes.io/infra
+                operator: Exists
+            weight: 1
+      tolerations:
+      - operator: Exists
+        key: node-role.kubernetes.io/infra
+        effect: NoSchedule
+      containers:
+        - name: cloud-ingress-operator
+          # Replace this with the built image name
+          image: REPLACE_IMAGE
+          command:
+          - cloud-ingress-operator
+          imagePullPolicy: Always
+          env:
+            # "" so that the cache can read objects outside its namespace
+            - name: WATCH_NAMESPACE
+              value: "openshift-sre-sshd,openshift-cloud-ingress-operator,openshift-ingress,openshift-ingress-operator,openshift-kube-apiserver,openshift-machine-api"
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: OPERATOR_NAME
+              value: "cloud-ingress-operator"
+          resources:
+            requests:
+              cpu: "200m"
+            limits:
+              memory: "4G"
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              scheme: HTTP
+              port: 8000
+            initialDelaySeconds: 25
+            periodSeconds: 15

@@ -3598,6 +3598,61 @@ objects:
         - 'true'
     resourceApplyMode: Sync
     resources:
+    - apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: cloud-ingress-operator
+        namespace: openshift-cloud-ingress-operator
+      spec:
+        replicas: 1
+        selector:
+          matchLabels:
+            name: cloud-ingress-operator
+        template:
+          metadata:
+            labels:
+              name: cloud-ingress-operator
+          spec:
+            serviceAccountName: cloud-ingress-operator
+            affinity:
+              nodeAffinity:
+                preferredDuringSchedulingIgnoredDuringExecution:
+                - preference:
+                    matchExpressions:
+                    - key: node-role.kubernetes.io/infra
+                      operator: Exists
+                  weight: 1
+            tolerations:
+            - operator: Exists
+              key: node-role.kubernetes.io/infra
+              effect: NoSchedule
+            containers:
+            - name: cloud-ingress-operator
+              image: REPLACE_IMAGE
+              command:
+              - cloud-ingress-operator
+              imagePullPolicy: Always
+              env:
+              - name: WATCH_NAMESPACE
+                value: openshift-sre-sshd,openshift-cloud-ingress-operator,openshift-ingress,openshift-ingress-operator,openshift-kube-apiserver,openshift-machine-api
+              - name: POD_NAME
+                valueFrom:
+                  fieldRef:
+                    fieldPath: metadata.name
+              - name: OPERATOR_NAME
+                value: cloud-ingress-operator
+              resources:
+                requests:
+                  cpu: 200m
+                limits:
+                  memory: 4G
+              livenessProbe:
+                httpGet:
+                  path: /healthz
+                  scheme: HTTP
+                  port: 8000
+                initialDelaySeconds: 25
+                periodSeconds: 15
     - apiVersion: cloudingress.managed.openshift.io/v1alpha1
       kind: SSHD
       metadata:
@@ -3613,6 +3668,55 @@ objects:
           matchExpressions:
           - key: api.openshift.com/authorized-keys
             operator: Exists
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: cloud-ingress-operator
+        namespace: openshift-sre-sshd
+      subjects:
+      - kind: ServiceAccount
+        name: cloud-ingress-operator
+        namespace: openshift-cloud-ingress-operator
+      roleRef:
+        kind: Role
+        name: cloud-ingress-operator
+        namespace: openshift-sre-sshd
+        apiGroup: rbac.authorization.k8s.io
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: cloud-ingress-operator
+        namespace: openshift-sre-sshd
+      rules:
+      - apiGroups:
+        - cloudingress.managed.openshift.io
+        resources:
+        - '*'
+        verbs:
+        - create
+        - delete
+        - get
+        - list
+        - patch
+        - update
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - services
+        - services/finalizers
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - apps
+        resources:
+        - deployments
+        verbs:
+        - get
+        - list
+        - watch
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
