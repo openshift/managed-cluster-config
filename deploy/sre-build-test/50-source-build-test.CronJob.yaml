@@ -76,7 +76,7 @@ spec:
               done
 
               # run build
-              oc -n "${NS}" new-build --name="${JOB_PREFIX}" --binary --strategy source --docker-image registry.redhat.io/ubi8/go-toolset:latest
+              oc -n "${NS}" new-build --name="${JOB_PREFIX}" --binary --strategy source --docker-image registry.redhat.io/ubi8/go-toolset:1.15.14-18
               cat <<EOF > /tmp/main.go
               package main
               import (
@@ -115,7 +115,11 @@ spec:
                     ;;
                   Complete)
                     echo "$(date): Build Complete"
-                    oc get jobs -n "$POD_NS" --sort-by=.status.startTime -o custom-columns=":metadata.name" --no-headers | head -n -1 | xargs oc -n "$POD_NS" delete job --ignore-not-found --wait=false
+                    JOBS_TO_DELETE=$(oc get jobs -n "${POD_NS}" --sort-by=.status.startTime -o custom-columns=":metadata.name" --no-headers|head -n -1)
+                    if [[ -n "${JOBS_TO_DELETE}" ]] ; then
+                      echo "$(date): Selected jobs for deletion: ${JOBS_TO_DELETE}"
+                      echo "${JOBS_TO_DELETE}" | xargs oc -n "${POD_NS}" delete job --ignore-not-found --wait=false
+                    fi
 
                     # clean up any old namespaces, other than the current one
                     echo "$(date): Cleaning up old namespaces"
