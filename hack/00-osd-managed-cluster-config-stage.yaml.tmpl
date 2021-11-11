@@ -1164,6 +1164,654 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: backplane-cssre-addon-kas-fleetshard-operator
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/addon-kas-fleetshard-operator: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: openshift-backplane-cssre
+    - aggregationRule:
+        clusterRoleSelectors:
+        - matchExpressions:
+          - key: managed.openshift.io/aggregate-to-cssre-admins
+            operator: In
+            values:
+            - cluster
+        - matchExpressions:
+          - key: managed.openshift.io/aggregate-to-dedicated-admins
+            operator: In
+            values:
+            - cluster
+      apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-cssre-admins-cluster
+      rules: []
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: backplane-cssre
+        namespace: openshift-monitoring
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods/portforward
+        verbs:
+        - create
+    - apiVersion: rbac.authorization.k8s.io/v1
+      aggregationRule:
+        clusterRoleSelectors:
+        - matchExpressions:
+          - key: rbac.authorization.k8s.io/aggregate-to-view
+            operator: In
+            values:
+            - 'true'
+        - matchExpressions:
+          - key: managed.openshift.io/aggregate-to-backplane-cssre
+            operator: In
+            values:
+            - 'true'
+      kind: ClusterRole
+      metadata:
+        name: backplane-cssre-readers-cluster
+      rules: []
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: backplane-cssre-admins
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: backplane-cssre-admins-cluster
+      subjects:
+      - kind: Group
+        name: system:serviceaccounts:openshift-backplane-cssre
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: backplane-cssre
+        namespace: openshift-monitoring
+      subjects:
+      - apiGroup: rbac.authorization.k8s.io
+        kind: Group
+        name: system:serviceaccounts:openshift-backplane-cssre
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: backplane-cssre
+        namespace: openshift-monitoring
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: backplane-cssre-readers
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: backplane-cssre-readers-cluster
+      subjects:
+      - kind: Group
+        name: system:serviceaccounts:openshift-backplane-cssre
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: backplane-cssre-addon-kas-fleetshard-operator-qe
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/addon-kas-fleetshard-operator-qe: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: openshift-backplane-cssre
+    - aggregationRule:
+        clusterRoleSelectors:
+        - matchExpressions:
+          - key: managed.openshift.io/aggregate-to-cssre-admins
+            operator: In
+            values:
+            - cluster
+        - matchExpressions:
+          - key: managed.openshift.io/aggregate-to-dedicated-admins
+            operator: In
+            values:
+            - cluster
+      apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-cssre-admins-cluster
+      rules: []
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: backplane-cssre
+        namespace: openshift-monitoring
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods/portforward
+        verbs:
+        - create
+    - apiVersion: rbac.authorization.k8s.io/v1
+      aggregationRule:
+        clusterRoleSelectors:
+        - matchExpressions:
+          - key: rbac.authorization.k8s.io/aggregate-to-view
+            operator: In
+            values:
+            - 'true'
+        - matchExpressions:
+          - key: managed.openshift.io/aggregate-to-backplane-cssre
+            operator: In
+            values:
+            - 'true'
+      kind: ClusterRole
+      metadata:
+        name: backplane-cssre-readers-cluster
+      rules: []
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: backplane-cssre-admins
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: backplane-cssre-admins-cluster
+      subjects:
+      - kind: Group
+        name: system:serviceaccounts:openshift-backplane-cssre
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: backplane-cssre
+        namespace: openshift-monitoring
+      subjects:
+      - apiGroup: rbac.authorization.k8s.io
+        kind: Group
+        name: system:serviceaccounts:openshift-backplane-cssre
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: backplane-cssre
+        namespace: openshift-monitoring
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: backplane-cssre-readers
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: backplane-cssre-readers-cluster
+      subjects:
+      - kind: Group
+        name: system:serviceaccounts:openshift-backplane-cssre
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: backplane-cssre-addon-managed-kafka
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/addon-managed-kafka: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: openshift-backplane-cssre
+    - aggregationRule:
+        clusterRoleSelectors:
+        - matchExpressions:
+          - key: managed.openshift.io/aggregate-to-cssre-admins
+            operator: In
+            values:
+            - cluster
+        - matchExpressions:
+          - key: managed.openshift.io/aggregate-to-dedicated-admins
+            operator: In
+            values:
+            - cluster
+      apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-cssre-admins-cluster
+      rules: []
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: backplane-cssre
+        namespace: openshift-monitoring
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods/portforward
+        verbs:
+        - create
+    - apiVersion: rbac.authorization.k8s.io/v1
+      aggregationRule:
+        clusterRoleSelectors:
+        - matchExpressions:
+          - key: rbac.authorization.k8s.io/aggregate-to-view
+            operator: In
+            values:
+            - 'true'
+        - matchExpressions:
+          - key: managed.openshift.io/aggregate-to-backplane-cssre
+            operator: In
+            values:
+            - 'true'
+      kind: ClusterRole
+      metadata:
+        name: backplane-cssre-readers-cluster
+      rules: []
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: backplane-cssre-admins
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: backplane-cssre-admins-cluster
+      subjects:
+      - kind: Group
+        name: system:serviceaccounts:openshift-backplane-cssre
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: backplane-cssre
+        namespace: openshift-monitoring
+      subjects:
+      - apiGroup: rbac.authorization.k8s.io
+        kind: Group
+        name: system:serviceaccounts:openshift-backplane-cssre
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: backplane-cssre
+        namespace: openshift-monitoring
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: backplane-cssre-readers
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: backplane-cssre-readers-cluster
+      subjects:
+      - kind: Group
+        name: system:serviceaccounts:openshift-backplane-cssre
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: backplane-cssre-addon-managed-kafka-qe
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/addon-managed-kafka-qe: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: openshift-backplane-cssre
+    - aggregationRule:
+        clusterRoleSelectors:
+        - matchExpressions:
+          - key: managed.openshift.io/aggregate-to-cssre-admins
+            operator: In
+            values:
+            - cluster
+        - matchExpressions:
+          - key: managed.openshift.io/aggregate-to-dedicated-admins
+            operator: In
+            values:
+            - cluster
+      apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-cssre-admins-cluster
+      rules: []
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: backplane-cssre
+        namespace: openshift-monitoring
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods/portforward
+        verbs:
+        - create
+    - apiVersion: rbac.authorization.k8s.io/v1
+      aggregationRule:
+        clusterRoleSelectors:
+        - matchExpressions:
+          - key: rbac.authorization.k8s.io/aggregate-to-view
+            operator: In
+            values:
+            - 'true'
+        - matchExpressions:
+          - key: managed.openshift.io/aggregate-to-backplane-cssre
+            operator: In
+            values:
+            - 'true'
+      kind: ClusterRole
+      metadata:
+        name: backplane-cssre-readers-cluster
+      rules: []
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: backplane-cssre-admins
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: backplane-cssre-admins-cluster
+      subjects:
+      - kind: Group
+        name: system:serviceaccounts:openshift-backplane-cssre
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: backplane-cssre
+        namespace: openshift-monitoring
+      subjects:
+      - apiGroup: rbac.authorization.k8s.io
+        kind: Group
+        name: system:serviceaccounts:openshift-backplane-cssre
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: backplane-cssre
+        namespace: openshift-monitoring
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: backplane-cssre-readers
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: backplane-cssre-readers-cluster
+      subjects:
+      - kind: Group
+        name: system:serviceaccounts:openshift-backplane-cssre
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: backplane-cssre-redhat-kas-fleetshard-addon-kas-fleetshard-operator
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/addon-kas-fleetshard-operator: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-cssre-mkafka-project
+      rules:
+      - apiGroups:
+        - '*'
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        - pods/attach
+        verbs:
+        - create
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - ''
+        resources:
+        - replicasets
+        verbs:
+        - delete
+        - deletecollection
+    - apiVersion: managed.openshift.io/v1alpha1
+      kind: SubjectPermission
+      metadata:
+        name: backplane-cssre-mkafka
+        namespace: openshift-rbac-permissions
+      spec:
+        permissions:
+        - allowFirst: true
+          clusterRoleName: backplane-cssre-mkafka-project
+          namespacesAllowedRegex: (^redhat-managed-kafka-.*|^redhat-kas-fleetshard-.*|^managed-application-services-observability|^kafka-.*)
+        subjectKind: Group
+        subjectName: system:serviceaccounts:openshift-backplane-cssre
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: backplane-cssre-redhat-kas-fleetshard-addon-kas-fleetshard-operator-qe
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/addon-kas-fleetshard-operator-qe: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-cssre-mkafka-project
+      rules:
+      - apiGroups:
+        - '*'
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        - pods/attach
+        verbs:
+        - create
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - ''
+        resources:
+        - replicasets
+        verbs:
+        - delete
+        - deletecollection
+    - apiVersion: managed.openshift.io/v1alpha1
+      kind: SubjectPermission
+      metadata:
+        name: backplane-cssre-mkafka
+        namespace: openshift-rbac-permissions
+      spec:
+        permissions:
+        - allowFirst: true
+          clusterRoleName: backplane-cssre-mkafka-project
+          namespacesAllowedRegex: (^redhat-managed-kafka-.*|^redhat-kas-fleetshard-.*|^managed-application-services-observability|^kafka-.*)
+        subjectKind: Group
+        subjectName: system:serviceaccounts:openshift-backplane-cssre
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: backplane-cssre-redhat-kas-fleetshard-addon-managed-kafka
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/addon-managed-kafka: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-cssre-mkafka-project
+      rules:
+      - apiGroups:
+        - '*'
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        - pods/attach
+        verbs:
+        - create
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - ''
+        resources:
+        - replicasets
+        verbs:
+        - delete
+        - deletecollection
+    - apiVersion: managed.openshift.io/v1alpha1
+      kind: SubjectPermission
+      metadata:
+        name: backplane-cssre-mkafka
+        namespace: openshift-rbac-permissions
+      spec:
+        permissions:
+        - allowFirst: true
+          clusterRoleName: backplane-cssre-mkafka-project
+          namespacesAllowedRegex: (^redhat-managed-kafka-.*|^redhat-kas-fleetshard-.*|^managed-application-services-observability|^kafka-.*)
+        subjectKind: Group
+        subjectName: system:serviceaccounts:openshift-backplane-cssre
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: backplane-cssre-redhat-kas-fleetshard-addon-managed-kafka-qe
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/addon-managed-kafka-qe: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-cssre-mkafka-project
+      rules:
+      - apiGroups:
+        - '*'
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        - pods/attach
+        verbs:
+        - create
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - ''
+        resources:
+        - replicasets
+        verbs:
+        - delete
+        - deletecollection
+    - apiVersion: managed.openshift.io/v1alpha1
+      kind: SubjectPermission
+      metadata:
+        name: backplane-cssre-mkafka
+        namespace: openshift-rbac-permissions
+      spec:
+        permissions:
+        - allowFirst: true
+          clusterRoleName: backplane-cssre-mkafka-project
+          namespacesAllowedRegex: (^redhat-managed-kafka-.*|^redhat-kas-fleetshard-.*|^managed-application-services-observability|^kafka-.*)
+        subjectKind: Group
+        subjectName: system:serviceaccounts:openshift-backplane-cssre
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: backplane-cssre-rhmi-addon-rhmi-operator
   spec:
     clusterDeploymentSelector:
@@ -2062,492 +2710,6 @@ objects:
       subjects:
       - kind: User
         name: backplane-cluster-admin
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    labels:
-      managed.openshift.io/gitHash: ${IMAGE_TAG}
-      managed.openshift.io/gitRepoName: ${REPO_NAME}
-      managed.openshift.io/osd: 'true'
-    name: backplane-mkrts-addon-kas-fleetshard-operator
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-        api.openshift.com/addon-kas-fleetshard-operator: 'true'
-    resourceApplyMode: Sync
-    resources:
-    - apiVersion: v1
-      kind: Namespace
-      metadata:
-        name: openshift-backplane-rts
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: backplane-mkrts-readers-cluster
-      aggregationRule:
-        clusterRoleSelectors:
-        - matchExpressions:
-          - key: rbac.authorization.k8s.io/aggregate-to-view
-            operator: In
-            values:
-            - 'true'
-        - matchExpressions:
-          - key: managed.openshift.io/aggregate-to-dedicated-readers
-            operator: In
-            values:
-            - 'true'
-      rules: []
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRoleBinding
-      metadata:
-        name: backplane-mkrts-readers
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: ClusterRole
-        name: backplane-mkrts-readers-cluster
-      subjects:
-      - kind: Group
-        name: system:serviceaccounts:openshift-backplane-rts
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    labels:
-      managed.openshift.io/gitHash: ${IMAGE_TAG}
-      managed.openshift.io/gitRepoName: ${REPO_NAME}
-      managed.openshift.io/osd: 'true'
-    name: backplane-mkrts-addon-kas-fleetshard-operator-qe
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-        api.openshift.com/addon-kas-fleetshard-operator-qe: 'true'
-    resourceApplyMode: Sync
-    resources:
-    - apiVersion: v1
-      kind: Namespace
-      metadata:
-        name: openshift-backplane-rts
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: backplane-mkrts-readers-cluster
-      aggregationRule:
-        clusterRoleSelectors:
-        - matchExpressions:
-          - key: rbac.authorization.k8s.io/aggregate-to-view
-            operator: In
-            values:
-            - 'true'
-        - matchExpressions:
-          - key: managed.openshift.io/aggregate-to-dedicated-readers
-            operator: In
-            values:
-            - 'true'
-      rules: []
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRoleBinding
-      metadata:
-        name: backplane-mkrts-readers
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: ClusterRole
-        name: backplane-mkrts-readers-cluster
-      subjects:
-      - kind: Group
-        name: system:serviceaccounts:openshift-backplane-rts
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    labels:
-      managed.openshift.io/gitHash: ${IMAGE_TAG}
-      managed.openshift.io/gitRepoName: ${REPO_NAME}
-      managed.openshift.io/osd: 'true'
-    name: backplane-mkrts-addon-managed-kafka
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-        api.openshift.com/addon-managed-kafka: 'true'
-    resourceApplyMode: Sync
-    resources:
-    - apiVersion: v1
-      kind: Namespace
-      metadata:
-        name: openshift-backplane-rts
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: backplane-mkrts-readers-cluster
-      aggregationRule:
-        clusterRoleSelectors:
-        - matchExpressions:
-          - key: rbac.authorization.k8s.io/aggregate-to-view
-            operator: In
-            values:
-            - 'true'
-        - matchExpressions:
-          - key: managed.openshift.io/aggregate-to-dedicated-readers
-            operator: In
-            values:
-            - 'true'
-      rules: []
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRoleBinding
-      metadata:
-        name: backplane-mkrts-readers
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: ClusterRole
-        name: backplane-mkrts-readers-cluster
-      subjects:
-      - kind: Group
-        name: system:serviceaccounts:openshift-backplane-rts
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    labels:
-      managed.openshift.io/gitHash: ${IMAGE_TAG}
-      managed.openshift.io/gitRepoName: ${REPO_NAME}
-      managed.openshift.io/osd: 'true'
-    name: backplane-mkrts-addon-managed-kafka-qe
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-        api.openshift.com/addon-managed-kafka-qe: 'true'
-    resourceApplyMode: Sync
-    resources:
-    - apiVersion: v1
-      kind: Namespace
-      metadata:
-        name: openshift-backplane-rts
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: backplane-mkrts-readers-cluster
-      aggregationRule:
-        clusterRoleSelectors:
-        - matchExpressions:
-          - key: rbac.authorization.k8s.io/aggregate-to-view
-            operator: In
-            values:
-            - 'true'
-        - matchExpressions:
-          - key: managed.openshift.io/aggregate-to-dedicated-readers
-            operator: In
-            values:
-            - 'true'
-      rules: []
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRoleBinding
-      metadata:
-        name: backplane-mkrts-readers
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: ClusterRole
-        name: backplane-mkrts-readers-cluster
-      subjects:
-      - kind: Group
-        name: system:serviceaccounts:openshift-backplane-rts
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    labels:
-      managed.openshift.io/gitHash: ${IMAGE_TAG}
-      managed.openshift.io/gitRepoName: ${REPO_NAME}
-      managed.openshift.io/osd: 'true'
-    name: backplane-mkrts-elevated-mkrts
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-    resourceApplyMode: Sync
-    resources:
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: backplane-impersonate-cluster-admin-mkrts
-      rules:
-      - apiGroups:
-        - ''
-        resources:
-        - users
-        verbs:
-        - impersonate
-        resourceNames:
-        - backplane-mkrts-admin
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRoleBinding
-      metadata:
-        name: backplane-impersonate-cluster-admin-mkrts
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: ClusterRole
-        name: backplane-impersonate-cluster-admin-mkrts
-      subjects:
-      - kind: Group
-        name: system:serviceaccounts:openshift-backplane-rts
-    - apiVersion: user.openshift.io/v1
-      kind: User
-      metadata:
-        name: backplane-mkrts-admin
-    - apiVersion: managed.openshift.io/v1alpha1
-      kind: SubjectPermission
-      metadata:
-        name: backplane-mkrts-admin
-        namespace: openshift-rbac-permissions
-      spec:
-        permissions:
-        - allowFirst: true
-          clusterRoleName: admin
-          namespacesAllowedRegex: (^redhat-managed-kafka-.*|^redhat-kas-fleetshard-.*|^managed-application-services-observability|^kafka-.*)
-        subjectKind: User
-        subjectName: backplane-mkrts-admin
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    labels:
-      managed.openshift.io/gitHash: ${IMAGE_TAG}
-      managed.openshift.io/gitRepoName: ${REPO_NAME}
-      managed.openshift.io/osd: 'true'
-    name: backplane-mkrts-redhat-kas-fleetshard-addon-kas-fleetshard-operator
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-        api.openshift.com/addon-kas-fleetshard-operator: 'true'
-    resourceApplyMode: Sync
-    resources:
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: backplane-mkrts-users-project
-      rules:
-      - apiGroups:
-        - '*'
-        resources:
-        - '*'
-        verbs:
-        - get
-        - list
-        - watch
-      - apiGroups:
-        - ''
-        resources:
-        - pods
-        - pods/attach
-        verbs:
-        - create
-      - apiGroups:
-        - ''
-        resources:
-        - pods
-        verbs:
-        - delete
-        - deletecollection
-      - apiGroups:
-        - ''
-        resources:
-        - replicasets
-        verbs:
-        - delete
-        - deletecollection
-    - apiVersion: managed.openshift.io/v1alpha1
-      kind: SubjectPermission
-      metadata:
-        name: backplane-mkrts-users
-        namespace: openshift-rbac-permissions
-      spec:
-        permissions:
-        - allowFirst: true
-          clusterRoleName: backplane-mkrts-users-project
-          namespacesAllowedRegex: (^redhat-managed-kafka-.*|^redhat-kas-fleetshard-.*|^managed-application-services-observability|^kafka-.*)
-        subjectKind: Group
-        subjectName: system:serviceaccounts:openshift-backplane-rts
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    labels:
-      managed.openshift.io/gitHash: ${IMAGE_TAG}
-      managed.openshift.io/gitRepoName: ${REPO_NAME}
-      managed.openshift.io/osd: 'true'
-    name: backplane-mkrts-redhat-kas-fleetshard-addon-kas-fleetshard-operator-qe
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-        api.openshift.com/addon-kas-fleetshard-operator-qe: 'true'
-    resourceApplyMode: Sync
-    resources:
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: backplane-mkrts-users-project
-      rules:
-      - apiGroups:
-        - '*'
-        resources:
-        - '*'
-        verbs:
-        - get
-        - list
-        - watch
-      - apiGroups:
-        - ''
-        resources:
-        - pods
-        - pods/attach
-        verbs:
-        - create
-      - apiGroups:
-        - ''
-        resources:
-        - pods
-        verbs:
-        - delete
-        - deletecollection
-      - apiGroups:
-        - ''
-        resources:
-        - replicasets
-        verbs:
-        - delete
-        - deletecollection
-    - apiVersion: managed.openshift.io/v1alpha1
-      kind: SubjectPermission
-      metadata:
-        name: backplane-mkrts-users
-        namespace: openshift-rbac-permissions
-      spec:
-        permissions:
-        - allowFirst: true
-          clusterRoleName: backplane-mkrts-users-project
-          namespacesAllowedRegex: (^redhat-managed-kafka-.*|^redhat-kas-fleetshard-.*|^managed-application-services-observability|^kafka-.*)
-        subjectKind: Group
-        subjectName: system:serviceaccounts:openshift-backplane-rts
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    labels:
-      managed.openshift.io/gitHash: ${IMAGE_TAG}
-      managed.openshift.io/gitRepoName: ${REPO_NAME}
-      managed.openshift.io/osd: 'true'
-    name: backplane-mkrts-redhat-kas-fleetshard-addon-managed-kafka
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-        api.openshift.com/addon-managed-kafka: 'true'
-    resourceApplyMode: Sync
-    resources:
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: backplane-mkrts-users-project
-      rules:
-      - apiGroups:
-        - '*'
-        resources:
-        - '*'
-        verbs:
-        - get
-        - list
-        - watch
-      - apiGroups:
-        - ''
-        resources:
-        - pods
-        - pods/attach
-        verbs:
-        - create
-      - apiGroups:
-        - ''
-        resources:
-        - pods
-        verbs:
-        - delete
-        - deletecollection
-      - apiGroups:
-        - ''
-        resources:
-        - replicasets
-        verbs:
-        - delete
-        - deletecollection
-    - apiVersion: managed.openshift.io/v1alpha1
-      kind: SubjectPermission
-      metadata:
-        name: backplane-mkrts-users
-        namespace: openshift-rbac-permissions
-      spec:
-        permissions:
-        - allowFirst: true
-          clusterRoleName: backplane-mkrts-users-project
-          namespacesAllowedRegex: (^redhat-managed-kafka-.*|^redhat-kas-fleetshard-.*|^managed-application-services-observability|^kafka-.*)
-        subjectKind: Group
-        subjectName: system:serviceaccounts:openshift-backplane-rts
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    labels:
-      managed.openshift.io/gitHash: ${IMAGE_TAG}
-      managed.openshift.io/gitRepoName: ${REPO_NAME}
-      managed.openshift.io/osd: 'true'
-    name: backplane-mkrts-redhat-kas-fleetshard-addon-managed-kafka-qe
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-        api.openshift.com/addon-managed-kafka-qe: 'true'
-    resourceApplyMode: Sync
-    resources:
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: backplane-mkrts-users-project
-      rules:
-      - apiGroups:
-        - '*'
-        resources:
-        - '*'
-        verbs:
-        - get
-        - list
-        - watch
-      - apiGroups:
-        - ''
-        resources:
-        - pods
-        - pods/attach
-        verbs:
-        - create
-      - apiGroups:
-        - ''
-        resources:
-        - pods
-        verbs:
-        - delete
-        - deletecollection
-      - apiGroups:
-        - ''
-        resources:
-        - replicasets
-        verbs:
-        - delete
-        - deletecollection
-    - apiVersion: managed.openshift.io/v1alpha1
-      kind: SubjectPermission
-      metadata:
-        name: backplane-mkrts-users
-        namespace: openshift-rbac-permissions
-      spec:
-        permissions:
-        - allowFirst: true
-          clusterRoleName: backplane-mkrts-users-project
-          namespacesAllowedRegex: (^redhat-managed-kafka-.*|^redhat-kas-fleetshard-.*|^managed-application-services-observability|^kafka-.*)
-        subjectKind: Group
-        subjectName: system:serviceaccounts:openshift-backplane-rts
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
