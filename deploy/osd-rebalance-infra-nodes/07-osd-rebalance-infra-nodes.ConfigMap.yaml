@@ -44,7 +44,7 @@ data:
                 if [ ${VOLUME_NAME} ] && [ "${AZ_COUNT}" != "1" ]; then
                     PVC=$(oc get pod -n $NS $POD -o jsonpath='{.spec.volumes[?(@.name=="'$VOLUME_NAME'")].persistentVolumeClaim.claimName}')
                     echo "INFO: Deleting PVC $PVC"
-                    oc delete pvc --wait=true -n $NS $PVC
+                    oc delete pvc --wait=false -n $NS $PVC
                 fi
                 echo "INFO: Deleting pod $POD"
                 oc delete pod -n $NS $POD --wait=true
@@ -84,6 +84,9 @@ data:
     echo "INFO: Rebalancing prometheus pods..."
     rebalancePods prometheus openshift-monitoring app prometheus-data
 
+    echo "INFO: Rebalancing UWM prometheus pods..."
+    rebalancePods prometheus openshift-user-workload-monitoring app prometheus-user-workload-db
+
     echo "INFO: Rebalancing alertmanager pods..."
     rebalancePods alertmanager openshift-monitoring app alertmanager-data
 
@@ -100,6 +103,9 @@ data:
     echo "INFO: Check pending prometheus pods..."
     checkPendingPods prometheus openshift-monitoring app
 
+    echo "INFO: Check pending UWM prometheus pods..."
+    checkPendingPods prometheus openshift-user-workload-monitoring app
+
     echo "INFO: Check pending alertmanager pods..."
     checkPendingPods alertmanager openshift-monitoring app
 
@@ -115,6 +121,9 @@ data:
 
     echo "INFO: Wait for running prometheus pods..."
     waitRunningPods prometheus openshift-monitoring app
+
+    echo "INFO: Wait for running UWM prometheus pods..."
+    waitRunningPods prometheus openshift-user-workload-monitoring app
 
     echo "INFO: Wait for running alertmanager pods..."
     waitRunningPods alertmanager openshift-monitoring app
