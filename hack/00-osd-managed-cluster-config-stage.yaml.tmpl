@@ -8609,6 +8609,39 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: Role
       metadata:
+        name: osd-rebalance-infra-nodes-openshift-user-workload-monitoring
+        namespace: openshift-user-workload-monitoring
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - get
+        - list
+        - delete
+      - apiGroups:
+        - ''
+        resources:
+        - persistentvolumeclaims
+        verbs:
+        - delete
+    - kind: RoleBinding
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        name: osd-rebalance-infra-nodes-openshift-user-workload-monitoring
+        namespace: openshift-user-workload-monitoring
+      subjects:
+      - kind: ServiceAccount
+        name: osd-rebalance-infra-nodes
+        namespace: openshift-monitoring
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: osd-rebalance-infra-nodes-openshift-user-workload-monitoring
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
         name: osd-rebalance-infra-nodes-openshift-security
         namespace: openshift-security
       rules:
@@ -8663,9 +8696,9 @@ objects:
           \ ] && [ \"${AZ_COUNT}\" != \"1\" ]; then\n                PVC=$(oc get\
           \ pod -n $NS $POD -o jsonpath='{.spec.volumes[?(@.name==\"'$VOLUME_NAME'\"\
           )].persistentVolumeClaim.claimName}')\n                echo \"INFO: Deleting\
-          \ PVC $PVC\"\n                oc delete pvc --wait=true -n $NS $PVC\n  \
-          \          fi\n            echo \"INFO: Deleting pod $POD\"\n          \
-          \  oc delete pod -n $NS $POD --wait=true\n            REBALANCE_PODS=true\n\
+          \ PVC $PVC\"\n                oc delete pvc --wait=false -n $NS $PVC\n \
+          \           fi\n            echo \"INFO: Deleting pod $POD\"\n         \
+          \   oc delete pod -n $NS $POD --wait=true\n            REBALANCE_PODS=true\n\
           \        fi\n        LAST_POD_NODE_NAME=$POD_NODE_NAME\n    done\n}\n\n\
           checkPendingPods() {\n    APP=$1\n    NS=$2\n    LABEL=$3\n    for POD in\
           \ $( oc get pods -n $NS -l $LABEL=$APP -o jsonpath='{.items[*].metadata.name}'\
@@ -8681,6 +8714,8 @@ objects:
           \ 2>/dev/null)\" != \"Running\" ];\n        do\n            sleep 1\n  \
           \      done\n    done\n}\n\necho \"INFO: Rebalancing prometheus pods...\"\
           \nrebalancePods prometheus openshift-monitoring app prometheus-data\n\n\
+          echo \"INFO: Rebalancing UWM prometheus pods...\"\nrebalancePods prometheus\
+          \ openshift-user-workload-monitoring app prometheus-user-workload-db\n\n\
           echo \"INFO: Rebalancing alertmanager pods...\"\nrebalancePods alertmanager\
           \ openshift-monitoring app alertmanager-data\n\necho \"INFO: Rebalancing\
           \ splunk-heavy-forwarder pods...\"\nrebalancePods splunk-heavy-forwarder\
@@ -8690,15 +8725,18 @@ objects:
           \ jsonpath='{.items[*].metadata.name}' )\n    oc delete pod -n openshift-monitoring\
           \ $OPERATOR_POD --wait=true\n    sleep 10\nfi\n\necho \"INFO: Check pending\
           \ prometheus pods...\"\ncheckPendingPods prometheus openshift-monitoring\
-          \ app\n\necho \"INFO: Check pending alertmanager pods...\"\ncheckPendingPods\
-          \ alertmanager openshift-monitoring app\n\necho \"INFO: Check pending splunk-heavy-forwarder\
-          \ pods...\"\ncheckPendingPods splunk-heavy-forwarder openshift-security\
-          \ name\n\nif $PENDING_PODS; then\n    echo \"INFO: Restarting prometheus\
-          \ operator...\"\n    OPERATOR_POD=$( oc get pod -n openshift-monitoring\
-          \ -l app.kubernetes.io/name=prometheus-operator -o jsonpath='{.items[*].metadata.name}'\
-          \ )\n    oc delete pod -n openshift-monitoring $OPERATOR_POD --wait=true\n\
-          \    sleep 10\nfi\n\necho \"INFO: Wait for running prometheus pods...\"\n\
-          waitRunningPods prometheus openshift-monitoring app\n\necho \"INFO: Wait\
+          \ app\n\necho \"INFO: Check pending UWM prometheus pods...\"\ncheckPendingPods\
+          \ prometheus openshift-user-workload-monitoring app\n\necho \"INFO: Check\
+          \ pending alertmanager pods...\"\ncheckPendingPods alertmanager openshift-monitoring\
+          \ app\n\necho \"INFO: Check pending splunk-heavy-forwarder pods...\"\ncheckPendingPods\
+          \ splunk-heavy-forwarder openshift-security name\n\nif $PENDING_PODS; then\n\
+          \    echo \"INFO: Restarting prometheus operator...\"\n    OPERATOR_POD=$(\
+          \ oc get pod -n openshift-monitoring -l app.kubernetes.io/name=prometheus-operator\
+          \ -o jsonpath='{.items[*].metadata.name}' )\n    oc delete pod -n openshift-monitoring\
+          \ $OPERATOR_POD --wait=true\n    sleep 10\nfi\n\necho \"INFO: Wait for running\
+          \ prometheus pods...\"\nwaitRunningPods prometheus openshift-monitoring\
+          \ app\n\necho \"INFO: Wait for running UWM prometheus pods...\"\nwaitRunningPods\
+          \ prometheus openshift-user-workload-monitoring app\n\necho \"INFO: Wait\
           \ for running alertmanager pods...\"\nwaitRunningPods alertmanager openshift-monitoring\
           \ app\n\necho \"INFO: Wait for running splunk-heavy-forwarder pods...\"\n\
           waitRunningPods splunk-heavy-forwarder openshift-security name"
