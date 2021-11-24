@@ -64,9 +64,36 @@ def collect_ocp_release_namespaces():
                         ocp_namespaces.append(manifest["metadata"]["name"])
     resources = dict()
     resources["Resources"] = {}
+    # Add in clusteroperator relatedobject namespaces
+    co_namespaces = collect_clusteroperator_relatedobjects()
+    ocp_namespaces.extend(co_namespaces)
+    ocp_namespaces = list(set(ocp_namespaces))
     ocp_namespaces.sort()
+
     resources["Resources"]["Namespace"] = [{"name": ns} for ns in ocp_namespaces]
     return resources
+
+
+def collect_clusteroperator_relatedobjects():
+    """
+    Returns a list of every namespace listed as a relatedObject by every clusterOperator. This captures
+    managed namespaces that aren't defined in the OCP manifests.
+    """
+    co_namespaces = []
+    try:
+        result = subprocess.run(["oc", "get", "co", "-o", "name"], capture_output=True)
+    except subprocess.CalledProcessError as e:
+        sys.exit(f"Failed to get list of installed cluster operators: {e}")
+    for n in result.stdout.splitlines():
+        r = subprocess.run(["oc", "get", n, "-o", "json"], capture_output=True)
+        operator_dict = json.loads(r.stdout)
+        related_namespaces = [
+            ns["name"]
+            for ns in operator_dict["status"]["relatedObjects"]
+            if ns["resource"] == "namespaces"
+        ]
+        co_namespaces.extend(related_namespaces)
+    return co_namespaces
 
 
 def collect_addon_namespaces(
