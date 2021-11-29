@@ -9327,6 +9327,15 @@ objects:
     clusterDeploymentSelector:
       matchLabels:
         api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/version-major-minor
+        operator: NotIn
+        values:
+        - '4.5'
+      - key: ext-managed.openshift.io/uwm-disabled
+        operator: NotIn
+        values:
+        - 'true'
     resourceApplyMode: Sync
     resources:
     - apiVersion: rbac.authorization.k8s.io/v1
@@ -9371,6 +9380,17 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: dedicated-admins-user-workload-monitoring-create-cm
+    - apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: user-workload-monitoring-config
+        namespace: openshift-user-workload-monitoring
+      data:
+        config.yaml: "prometheusOperator:\n  nodeSelector:\n    node-role.kubernetes.io/worker:\
+          \ \"\"\nprometheus:\n  retention: 24h\n  resources:\n    requests:\n   \
+          \   cpu: 200m\n      memory: 2Gi\n  nodeSelector:\n    node-role.kubernetes.io/worker:\
+          \ \"\"\nthanosRuler:\n  nodeSelector:\n    node-role.kubernetes.io/worker:\
+          \ \"\"\n"
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
