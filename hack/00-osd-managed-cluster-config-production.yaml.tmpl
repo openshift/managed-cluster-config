@@ -5720,6 +5720,36 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: osd-cluster-acks-4.9
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.8'
+      - key: api.openshift.com/ocp-admin-ack
+        operator: In
+        values:
+        - v4.9
+    resourceApplyMode: Sync
+    patches:
+    - apiVersion: v1
+      kind: ConfigMap
+      name: admin-acks
+      namespace: openshift-config
+      applyMode: AlwaysApply
+      patch: '{"data":{"ack-4.8-kube-1.22-api-removals-in-4.9":"true"}}'
+      patchType: merge
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: osd-cluster-acks-sts-4.9
   spec:
     clusterDeploymentSelector:
