@@ -53,3 +53,5 @@ when creating RBAC, it's worth the time and effort giving the minimal amount of 
 
 ### Make job idempotent
 if there are no resources to delete, do not do any operation and fail fast
+
+testing CODEOWNERS
