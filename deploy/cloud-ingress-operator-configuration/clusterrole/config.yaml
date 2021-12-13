@@ -1,0 +1,12 @@
+deploymentMode: "SelectorSyncSet"
+selectorSyncSet:
+  # Upsert prevents this configuration from being accidentily removed. If removed,
+  # rh-api reachability may be impacted.
+  resourceApplyMode: Sync
+  matchExpressions:
+  - key: api.openshift.com/sts
+    operator: NotIn
+    values: ["true"]
+  - key: api.openshift.com/private-link
+    operator: NotIn
+    values: ["true"]
