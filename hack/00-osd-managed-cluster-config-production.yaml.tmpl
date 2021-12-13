@@ -11060,6 +11060,56 @@ objects:
       kind: PrometheusRule
       metadata:
         labels:
+          prometheus: sre-control-plane-overloading-alerts
+          role: alert-rules
+        name: sre-control-plane-overloading-alerts
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-control-plane-overloading-recording.rules
+          rules:
+          - expr: ( histogram_quantile(0.95, sum(rate(apiserver_request_duration_seconds_bucket{verb!~"WATCH|LIST"}[5m]))
+              by (verb, le)))
+            record: sre:control_plane:durations
+          - expr: 'sum(label_replace(cluster:nodes_roles{label_node_role_kubernetes_io="master"},
+              "instance", "$1", "node", "(.*)") * on(instance) group_left node_memory_MemAvailable_bytes)
+
+              /
+
+              sum(label_replace(cluster:nodes_roles{label_node_role_kubernetes_io="master"},
+              "instance", "$1", "node", "(.*)") * on(instance) group_left node_memory_MemTotal_bytes)
+
+              * 100
+
+              '
+            record: sre:control_plane:memory_utilization
+        - name: sre-control-plane-overloading-alerts
+          rules:
+          - alert: ControlPlaneOverloadingSRE
+            expr: sre:control_plane:memory_utilization > 90
+            for: 10m
+            labels:
+              severity: warning
+              namespace: openshift-monitoring
+              lifecycle: alpha
+            annotations:
+              message: The control plane has been experiencing latency for 10 minutes
+                and must be vertically scaled to ensure availability and performance.
+                See linked SOP for details.
+          - alert: ControlPlaneLeaderElectionFailingSRE
+            expr: leader_election_master_status == 0
+            for: 10m
+            labels:
+              severity: warning
+              lifecycle: alpha
+            annotations:
+              message: Leader election has been failing on the control plane for more
+                then 10 minutes. This can indicate early signs of overloading. Review
+                pod logs and control plane resource utilizatoin.
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
           prometheus: sre-control-plane-resizing-alerts
           role: alert-rules
         name: sre-control-plane-resizing-alerts
