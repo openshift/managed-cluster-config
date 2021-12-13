@@ -113,3 +113,5 @@ You may notice how the results differ in the equasion, we need to compare the sa
 and
 100 * rate(metricsclient_request_send{status_code!="200"}[1h]) / rate(metricsclient_request_send[1h]) > 14.4 * 0.1
 ```
+
+testing CODEOWNERS reviewers
