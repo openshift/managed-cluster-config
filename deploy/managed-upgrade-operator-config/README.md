@@ -30,7 +30,7 @@ Following is the reference for alert silence in different OCP versions:
 ## TIMEOUT WINDOW UPGRADE PROCESS
 ### In reference to OSD-8643, the expected upgrade control plane duration window for MUO was changed from 90 to 120 minutes.
 For SREs to re-evaluate the window timings in future, the following steps can be taken:
- * Reach out to **CCX** team via the ccx slack channel, clearly mentioning the requirements.
+ * Reach out to **CCX** team via the ccx slack channel (@ccx in slack channel #ccx (CoreOS Workspace),clearly mentioning the requirements.
  * The **CCX** team will accordingly guide about accessing the data depending on the team's status and procedure of providing data access to a non-member of CCX team at that time.
  * The data provided by **CCX** (mostly the Jupyter notebook) will help in analysis of potential and suitable window timings for the upgrade timeout.
  * Once the timing has been finalised, upgrade the same on https://github.com/openshift/managed-cluster-config/blob/master/deploy/managed-upgrade-operator-config/10-managed-upgrade-operator-configmap.yaml
