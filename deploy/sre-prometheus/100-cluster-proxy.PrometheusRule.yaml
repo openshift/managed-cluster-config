@@ -1,0 +1,36 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: sre-cluster-proxy-alerts
+    role: alert-rules
+  name: sre-cluster-proxy-alerts
+  namespace: openshift-monitoring
+spec:
+  groups:
+    - name: sre-cluster-proxy-alerts
+      rules:
+        - alert: ClusterProxyCAExpiringSRE
+          expr: cluster_proxy_ca_expiry_timestamp{name="osd_exporter"} - time() < 86400 * 30
+          for: 10m
+          labels:
+            severity: warning
+            namespace: openshift-monitoring
+          annotations:
+            message: "Cluster proxy certificate will expire in {{ $value | humanizeDuration }}. Ensure new certificate is provided prior to expiration to avoid cluster degredation and/or unavailability"
+        - alert: ClusterProxyCAExpiringSRE
+          expr: cluster_proxy_ca_expiry_timestamp{name="osd_exporter"} - time() < 86400 * 15
+          for: 10m
+          labels:
+            severity: critical
+            namespace: openshift-monitoring
+          annotations:
+            message: "Cluster proxy certificate will expire in {{ $value | humanizeDuration }}. Ensure new certificate is provided prior to expiration to avoid cluster degredation and/or unavailability"
+        - alert: ClusterProxyCAInvalidSRE
+          expr: cluster_proxy_ca_valid{name="osd_exporter"} == 0
+          for: 15m
+          labels:
+            severity: warning
+            namespace: openshift-monitoring
+          annotations:
+            message: "Cluster proxy CA has failed validation. Ensure the CA is PEM-encoded X.509."
