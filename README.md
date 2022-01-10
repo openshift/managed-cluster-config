@@ -94,7 +94,7 @@ NOTE that ClusterVersion is being patched to add overrides.  If other overrides 
 
 ## Console Branding
 
-In OSD, managed-cluster-config sets a [key named `branding` to `dedicated`](https://github.com/openshift/managed-cluster-config/blob/master/deploy/osd-console-branding/osd-branding.console.yaml) in the [Console operator](https://github.com/openshift/api/blob/master/operator/v1/types_console.go#L81-L128). This value is in turn read by code that applies the [logo](https://github.com/openshift/console/blob/1572a985cc0753d7e2630984c5163170765e9487/frontend/public/components/masthead.jsx) and [other branding elements](https://github.com/openshift/console/search?p=2&q=dedicated) predefined for that value.
+In OSD, managed-cluster-config sets a [key named `branding` to `dedicated`](https://github.com/openshift/managed-cluster-config/blob/master/deploy/osd-console-branding/osd-branding.console.Patch.yaml) in the [Console operator](https://github.com/openshift/api/blob/master/operator/v1/types_console.go#L89-L135). This value is in turn read by code that applies the [logo](https://github.com/openshift/console/blob/1572a985cc0753d7e2630984c5163170765e9487/frontend/public/components/masthead.jsx) and [other branding elements](https://github.com/openshift/console/search?p=2&q=dedicated) predefined for that value.
 
 ## OAuth Templates
 
@@ -102,7 +102,7 @@ Docs TBA.
 
 ## Resource Quotas
 
-Refer to [deploy/resource/quotas/README.md](deploy/resource/quotas/README.md).
+Refer to [deploy/resource-quotas/README.md](deploy/resource-quotas/README.md).
 
 ## Image Pruning
 
