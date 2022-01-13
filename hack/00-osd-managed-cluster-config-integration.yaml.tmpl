@@ -2736,6 +2736,22 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
+        name: backplane-mtsre-addon-operator-apis-admin
+      rules:
+      - apiGroups:
+        - addons.managed.openshift.io
+        resources:
+        - addonoperators
+        - addons
+        verbs:
+        - get
+        - list
+        - watch
+        - patch
+        - update
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
         name: backplane-mtsre-readers-cluster
       aggregationRule:
         clusterRoleSelectors:
@@ -2758,6 +2774,17 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: ClusterRole
         name: backplane-mtsre-readers-cluster
+      subjects:
+      - kind: Group
+        name: system:serviceaccounts:openshift-backplane-mtsre
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: backplane-mtsre-addon-operator-apis-cluster-role-binding
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: backplane-mtsre-addon-operator-apis-admin
       subjects:
       - kind: Group
         name: system:serviceaccounts:openshift-backplane-mtsre
@@ -2783,50 +2810,19 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-readers-cluster
-      aggregationRule:
-        clusterRoleSelectors:
-        - matchExpressions:
-          - key: rbac.authorization.k8s.io/aggregate-to-view
-            operator: In
-            values:
-            - 'true'
-        - matchExpressions:
-          - key: managed.openshift.io/aggregate-to-dedicated-readers
-            operator: In
-            values:
-            - 'true'
-      rules: []
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRoleBinding
-      metadata:
-        name: backplane-mtsre-readers
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: ClusterRole
-        name: backplane-mtsre-readers-cluster
-      subjects:
-      - kind: Group
-        name: system:serviceaccounts:openshift-backplane-mtsre
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    labels:
-      managed.openshift.io/gitHash: ${IMAGE_TAG}
-      managed.openshift.io/gitRepoName: ${REPO_NAME}
-      managed.openshift.io/osd: 'true'
-    name: backplane-mtsre-addon-reference-addon
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-        api.openshift.com/addon-reference-addon: 'true'
-    resourceApplyMode: Sync
-    resources:
-    - apiVersion: v1
-      kind: Namespace
-      metadata:
-        name: openshift-backplane-mtsre
+        name: backplane-mtsre-addon-operator-apis-admin
+      rules:
+      - apiGroups:
+        - addons.managed.openshift.io
+        resources:
+        - addonoperators
+        - addons
+        verbs:
+        - get
+        - list
+        - watch
+        - patch
+        - update
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
@@ -2852,6 +2848,91 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: ClusterRole
         name: backplane-mtsre-readers-cluster
+      subjects:
+      - kind: Group
+        name: system:serviceaccounts:openshift-backplane-mtsre
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: backplane-mtsre-addon-operator-apis-cluster-role-binding
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: backplane-mtsre-addon-operator-apis-admin
+      subjects:
+      - kind: Group
+        name: system:serviceaccounts:openshift-backplane-mtsre
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: backplane-mtsre-addon-reference-addon
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/addon-reference-addon: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: openshift-backplane-mtsre
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-mtsre-addon-operator-apis-admin
+      rules:
+      - apiGroups:
+        - addons.managed.openshift.io
+        resources:
+        - addonoperators
+        - addons
+        verbs:
+        - get
+        - list
+        - watch
+        - patch
+        - update
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-mtsre-readers-cluster
+      aggregationRule:
+        clusterRoleSelectors:
+        - matchExpressions:
+          - key: rbac.authorization.k8s.io/aggregate-to-view
+            operator: In
+            values:
+            - 'true'
+        - matchExpressions:
+          - key: managed.openshift.io/aggregate-to-dedicated-readers
+            operator: In
+            values:
+            - 'true'
+      rules: []
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: backplane-mtsre-readers
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: backplane-mtsre-readers-cluster
+      subjects:
+      - kind: Group
+        name: system:serviceaccounts:openshift-backplane-mtsre
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: backplane-mtsre-addon-operator-apis-cluster-role-binding
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: backplane-mtsre-addon-operator-apis-admin
       subjects:
       - kind: Group
         name: system:serviceaccounts:openshift-backplane-mtsre
