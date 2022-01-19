@@ -1,0 +1,52 @@
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: file-integrity-operator
+  namespace: openshift-file-integrity
+subjects:
+- kind: ServiceAccount
+  name: file-integrity-operator
+roleRef:
+  kind: Role
+  name: file-integrity-operator
+  apiGroup: rbac.authorization.k8s.io
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: file-integrity-daemon
+  namespace: openshift-file-integrity
+subjects:
+- kind: ServiceAccount
+  name: file-integrity-daemon
+roleRef:
+  kind: Role
+  name: file-integrity-daemon
+  apiGroup: rbac.authorization.k8s.io
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: file-integrity-operator
+subjects:
+- kind: ServiceAccount
+  name: file-integrity-operator
+  namespace: openshift-file-integrity
+roleRef:
+  kind: ClusterRole
+  name: file-integrity-operator
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: prometheus-k8s
+  namespace: openshift-file-integrity
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: prometheus-k8s
+subjects:
+- kind: ServiceAccount
+  name: prometheus-k8s
+  namespace: openshift-monitoring

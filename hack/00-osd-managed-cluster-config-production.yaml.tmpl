@@ -7235,6 +7235,519 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: osd-fr-file-integrity-operator
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/cluster-region
+        operator: In
+        values:
+        - us-gov-west-1
+        - us-gov-east-1
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: Namespace
+      metadata:
+        labels:
+          openshift.io/cluster-monitoring: 'true'
+        name: openshift-file-integrity
+    - apiVersion: apiextensions.k8s.io/v1
+      kind: CustomResourceDefinition
+      metadata:
+        name: fileintegrities.fileintegrity.openshift.io
+      spec:
+        group: fileintegrity.openshift.io
+        names:
+          kind: FileIntegrity
+          listKind: FileIntegrityList
+          plural: fileintegrities
+          singular: fileintegrity
+        scope: Namespaced
+        versions:
+        - name: v1alpha1
+          schema:
+            openAPIV3Schema:
+              description: FileIntegrity is the Schema for the fileintegrities API
+              properties:
+                apiVersion:
+                  description: 'APIVersion defines the versioned schema of this representation
+                    of an object. Servers should convert recognized schemas to the
+                    latest internal value, and may reject unrecognized values. More
+                    info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+                  type: string
+                kind:
+                  description: 'Kind is a string value representing the REST resource
+                    this object represents. Servers may infer this from the endpoint
+                    the client submits requests to. Cannot be updated. In CamelCase.
+                    More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+                  type: string
+                metadata:
+                  type: object
+                spec:
+                  description: FileIntegritySpec defines the desired state of FileIntegrity
+                  properties:
+                    config:
+                      description: FileIntegrityConfig defines the name, namespace,
+                        and data key for an AIDE config to use for integrity checking.
+                      properties:
+                        gracePeriod:
+                          default: 900
+                          description: Time between individual aide scans
+                          type: integer
+                        key:
+                          description: The key that contains the actual AIDE configuration
+                            in a configmap specified by Name and Namespace. Defaults
+                            to aide.conf
+                          type: string
+                        name:
+                          description: Name of a configMap that contains custom AIDE
+                            configuration. A default configuration would be created
+                            if omitted.
+                          type: string
+                        namespace:
+                          description: Namespace of a configMap that contains custom
+                            AIDE configuration. A default configuration would be created
+                            if omitted.
+                          type: string
+                      type: object
+                    debug:
+                      type: boolean
+                    nodeSelector:
+                      additionalProperties:
+                        type: string
+                      type: object
+                    tolerations:
+                      default:
+                      - effect: NoSchedule
+                        key: node-role.kubernetes.io/master
+                        operator: Exists
+                      description: Specifies tolerations for custom taints. Defaults
+                        to allowing scheduling on master nodes.
+                      items:
+                        description: The pod this Toleration is attached to tolerates
+                          any taint that matches the triple <key,value,effect> using
+                          the matching operator <operator>.
+                        properties:
+                          effect:
+                            description: Effect indicates the taint effect to match.
+                              Empty means match all taint effects. When specified,
+                              allowed values are NoSchedule, PreferNoSchedule and
+                              NoExecute.
+                            type: string
+                          key:
+                            description: Key is the taint key that the toleration
+                              applies to. Empty means match all taint keys. If the
+                              key is empty, operator must be Exists; this combination
+                              means to match all values and all keys.
+                            type: string
+                          operator:
+                            description: Operator represents a key's relationship
+                              to the value. Valid operators are Exists and Equal.
+                              Defaults to Equal. Exists is equivalent to wildcard
+                              for value, so that a pod can tolerate all taints of
+                              a particular category.
+                            type: string
+                          tolerationSeconds:
+                            description: TolerationSeconds represents the period of
+                              time the toleration (which must be of effect NoExecute,
+                              otherwise this field is ignored) tolerates the taint.
+                              By default, it is not set, which means tolerate the
+                              taint forever (do not evict). Zero and negative values
+                              will be treated as 0 (evict immediately) by the system.
+                            format: int64
+                            type: integer
+                          value:
+                            description: Value is the taint value the toleration matches
+                              to. If the operator is Exists, the value should be empty,
+                              otherwise just a regular string.
+                            type: string
+                        type: object
+                      type: array
+                  required:
+                  - config
+                  type: object
+                status:
+                  description: FileIntegrityStatus defines the observed state of FileIntegrity
+                  properties:
+                    phase:
+                      type: string
+                  type: object
+              type: object
+          served: true
+          storage: true
+          subresources:
+            status: {}
+    - apiVersion: apiextensions.k8s.io/v1
+      kind: CustomResourceDefinition
+      metadata:
+        name: fileintegritynodestatuses.fileintegrity.openshift.io
+      spec:
+        group: fileintegrity.openshift.io
+        names:
+          kind: FileIntegrityNodeStatus
+          listKind: FileIntegrityNodeStatusList
+          plural: fileintegritynodestatuses
+          singular: fileintegritynodestatus
+        scope: Namespaced
+        versions:
+        - additionalPrinterColumns:
+          - jsonPath: .nodeName
+            name: Node
+            type: string
+          - jsonPath: .lastResult.condition
+            name: Status
+            type: string
+          name: v1alpha1
+          schema:
+            openAPIV3Schema:
+              description: FileIntegrityNodeStatus defines the status of a specific
+                node
+              properties:
+                apiVersion:
+                  description: 'APIVersion defines the versioned schema of this representation
+                    of an object. Servers should convert recognized schemas to the
+                    latest internal value, and may reject unrecognized values. More
+                    info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+                  type: string
+                kind:
+                  description: 'Kind is a string value representing the REST resource
+                    this object represents. Servers may infer this from the endpoint
+                    the client submits requests to. Cannot be updated. In CamelCase.
+                    More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+                  type: string
+                lastResult:
+                  description: FileIntegrityScanResult defines the one-time result
+                    of a scan.
+                  properties:
+                    condition:
+                      type: string
+                    errorMessage:
+                      type: string
+                    filesAdded:
+                      type: integer
+                    filesChanged:
+                      type: integer
+                    filesRemoved:
+                      type: integer
+                    lastProbeTime:
+                      format: date-time
+                      type: string
+                    resultConfigMapName:
+                      type: string
+                    resultConfigMapNamespace:
+                      type: string
+                  required:
+                  - condition
+                  - lastProbeTime
+                  type: object
+                metadata:
+                  type: object
+                nodeName:
+                  type: string
+                results:
+                  items:
+                    description: FileIntegrityScanResult defines the one-time result
+                      of a scan.
+                    properties:
+                      condition:
+                        type: string
+                      errorMessage:
+                        type: string
+                      filesAdded:
+                        type: integer
+                      filesChanged:
+                        type: integer
+                      filesRemoved:
+                        type: integer
+                      lastProbeTime:
+                        format: date-time
+                        type: string
+                      resultConfigMapName:
+                        type: string
+                      resultConfigMapNamespace:
+                        type: string
+                    required:
+                    - condition
+                    - lastProbeTime
+                    type: object
+                  type: array
+              required:
+              - lastResult
+              - nodeName
+              - results
+              type: object
+          served: true
+          storage: true
+          subresources: {}
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: file-integrity-operator
+        namespace: openshift-file-integrity
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: file-integrity-daemon
+        namespace: openshift-file-integrity
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        creationTimestamp: null
+        name: file-integrity-operator
+        namespace: openshift-file-integrity
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        - services
+        - services/finalizers
+        - endpoints
+        - persistentvolumeclaims
+        - events
+        - configmaps
+        - secrets
+        verbs:
+        - '*'
+      - apiGroups:
+        - apps
+        resources:
+        - deployments
+        - daemonsets
+        - replicasets
+        - statefulsets
+        verbs:
+        - '*'
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - servicemonitors
+        verbs:
+        - get
+        - create
+        - update
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - prometheusrules
+        verbs:
+        - create
+      - apiGroups:
+        - apps
+        resourceNames:
+        - file-integrity-operator
+        resources:
+        - deployments/finalizers
+        verbs:
+        - update
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - get
+      - apiGroups:
+        - apps
+        resources:
+        - replicasets
+        verbs:
+        - get
+      - apiGroups:
+        - fileintegrity.openshift.io
+        resources:
+        - '*'
+        verbs:
+        - '*'
+      - apiGroups:
+        - security.openshift.io
+        resourceNames:
+        - privileged
+        resources:
+        - securitycontextconstraints
+        verbs:
+        - use
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: file-integrity-daemon
+        namespace: openshift-file-integrity
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - events
+        - configmaps
+        verbs:
+        - create
+      - apiGroups:
+        - fileintegrity.openshift.io
+        resources:
+        - fileintegrities
+        verbs:
+        - get
+        - watch
+      - apiGroups:
+        - security.openshift.io
+        resourceNames:
+        - privileged
+        resources:
+        - securitycontextconstraints
+        verbs:
+        - use
+      - apiGroups:
+        - events.k8s.io
+        resources:
+        - events
+        verbs:
+        - create
+        - update
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: file-integrity-operator
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - nodes
+        verbs:
+        - get
+        - list
+        - watch
+    - kind: RoleBinding
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        name: file-integrity-operator
+        namespace: openshift-file-integrity
+      subjects:
+      - kind: ServiceAccount
+        name: file-integrity-operator
+      roleRef:
+        kind: Role
+        name: file-integrity-operator
+        apiGroup: rbac.authorization.k8s.io
+    - kind: RoleBinding
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        name: file-integrity-daemon
+        namespace: openshift-file-integrity
+      subjects:
+      - kind: ServiceAccount
+        name: file-integrity-daemon
+      roleRef:
+        kind: Role
+        name: file-integrity-daemon
+        apiGroup: rbac.authorization.k8s.io
+    - kind: ClusterRoleBinding
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        name: file-integrity-operator
+      subjects:
+      - kind: ServiceAccount
+        name: file-integrity-operator
+        namespace: openshift-file-integrity
+      roleRef:
+        kind: ClusterRole
+        name: file-integrity-operator
+        apiGroup: rbac.authorization.k8s.io
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: prometheus-k8s
+        namespace: openshift-file-integrity
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: prometheus-k8s
+      subjects:
+      - kind: ServiceAccount
+        name: prometheus-k8s
+        namespace: openshift-monitoring
+    - apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: file-integrity-operator
+        namespace: openshift-file-integrity
+      spec:
+        replicas: 1
+        selector:
+          matchLabels:
+            name: file-integrity-operator
+        template:
+          metadata:
+            labels:
+              name: file-integrity-operator
+          spec:
+            serviceAccountName: file-integrity-operator
+            containers:
+            - name: file-integrity-operator
+              image: quay.io/file-integrity-operator/file-integrity-operator@sha256:1bc67044834c58884f07c41ce6adbf38346d71dfc28ede40239b13916c678408
+              command:
+              - file-integrity-operator
+              args:
+              - operator
+              imagePullPolicy: Always
+              resources:
+                requests:
+                  memory: 10Mi
+                  cpu: 10m
+                limits:
+                  memory: 200Mi
+                  cpu: 100m
+              env:
+              - name: WATCH_NAMESPACE
+                valueFrom:
+                  fieldRef:
+                    fieldPath: metadata.namespace
+              - name: POD_NAME
+                valueFrom:
+                  fieldRef:
+                    fieldPath: metadata.name
+              - name: OPERATOR_NAME
+                value: file-integrity-operator
+              - name: RELATED_IMAGE_OPERATOR
+                value: quay.io/file-integrity-operator/file-integrity-operator@sha256:1bc67044834c58884f07c41ce6adbf38346d71dfc28ede40239b13916c678408
+              volumeMounts:
+              - name: serving-cert
+                mountPath: /var/run/secrets/serving-cert
+                readOnly: true
+            volumes:
+            - name: serving-cert
+              secret:
+                secretName: file-integrity-operator-serving-cert
+                optional: true
+            nodeSelector:
+              node-role.kubernetes.io/master: ''
+            tolerations:
+            - key: node-role.kubernetes.io/master
+              operator: Exists
+              effect: NoSchedule
+            - key: node.kubernetes.io/unreachable
+              operator: Exists
+              effect: NoExecute
+              tolerationSeconds: 120
+            - key: node.kubernetes.io/not-ready
+              operator: Exists
+              effect: NoExecute
+              tolerationSeconds: 120
+    - apiVersion: fileintegrity.openshift.io/v1alpha1
+      kind: FileIntegrity
+      metadata:
+        name: osd-fileintegrity
+        namespace: openshift-file-integrity
+      spec:
+        debug: false
+        config: {}
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: osd-gcp-ssd-storage
   spec:
     clusterDeploymentSelector:
@@ -8216,13 +8729,13 @@ objects:
           \  - name: openshift-build-test\n  - name: openshift-cloud-ingress-operator\n\
           \  - name: openshift-codeready-workspaces\n  - name: openshift-compliance\n\
           \  - name: openshift-custom-domains-operator\n  - name: openshift-customer-monitoring\n\
-          \  - name: openshift-logging\n  - name: openshift-managed-upgrade-operator\n\
-          \  - name: openshift-must-gather-operator\n  - name: openshift-operators-redhat\n\
-          \  - name: openshift-osd-metrics\n  - name: openshift-rbac-permissions\n\
-          \  - name: openshift-route-monitor-operator\n  - name: openshift-security\n\
-          \  - name: openshift-splunk-forwarder-operator\n  - name: openshift-sre-pruning\n\
-          \  - name: openshift-strimzi\n  - name: openshift-validation-webhook\n \
-          \ - name: openshift-velero\n  - name: openshift-monitoring\n"
+          \  - name: openshift-file-integrity\n  - name: openshift-logging\n  - name:\
+          \ openshift-managed-upgrade-operator\n  - name: openshift-must-gather-operator\n\
+          \  - name: openshift-operators-redhat\n  - name: openshift-osd-metrics\n\
+          \  - name: openshift-rbac-permissions\n  - name: openshift-route-monitor-operator\n\
+          \  - name: openshift-security\n  - name: openshift-splunk-forwarder-operator\n\
+          \  - name: openshift-sre-pruning\n  - name: openshift-strimzi\n  - name:\
+          \ openshift-validation-webhook\n  - name: openshift-velero\n  - name: openshift-monitoring\n"
     - apiVersion: v1
       kind: ConfigMap
       metadata:

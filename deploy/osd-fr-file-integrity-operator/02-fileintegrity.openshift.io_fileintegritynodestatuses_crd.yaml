@@ -1,0 +1,99 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: fileintegritynodestatuses.fileintegrity.openshift.io
+spec:
+  group: fileintegrity.openshift.io
+  names:
+    kind: FileIntegrityNodeStatus
+    listKind: FileIntegrityNodeStatusList
+    plural: fileintegritynodestatuses
+    singular: fileintegritynodestatus
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .nodeName
+      name: Node
+      type: string
+    - jsonPath: .lastResult.condition
+      name: Status
+      type: string
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: FileIntegrityNodeStatus defines the status of a specific node
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          lastResult:
+            description: FileIntegrityScanResult defines the one-time result of a
+              scan.
+            properties:
+              condition:
+                type: string
+              errorMessage:
+                type: string
+              filesAdded:
+                type: integer
+              filesChanged:
+                type: integer
+              filesRemoved:
+                type: integer
+              lastProbeTime:
+                format: date-time
+                type: string
+              resultConfigMapName:
+                type: string
+              resultConfigMapNamespace:
+                type: string
+            required:
+            - condition
+            - lastProbeTime
+            type: object
+          metadata:
+            type: object
+          nodeName:
+            type: string
+          results:
+            items:
+              description: FileIntegrityScanResult defines the one-time result of
+                a scan.
+              properties:
+                condition:
+                  type: string
+                errorMessage:
+                  type: string
+                filesAdded:
+                  type: integer
+                filesChanged:
+                  type: integer
+                filesRemoved:
+                  type: integer
+                lastProbeTime:
+                  format: date-time
+                  type: string
+                resultConfigMapName:
+                  type: string
+                resultConfigMapNamespace:
+                  type: string
+              required:
+              - condition
+              - lastProbeTime
+              type: object
+            type: array
+        required:
+        - lastResult
+        - nodeName
+        - results
+        type: object
+    served: true
+    storage: true
+    subresources: {}
