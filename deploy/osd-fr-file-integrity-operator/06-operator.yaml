@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: file-integrity-operator
+  namespace: openshift-file-integrity
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: file-integrity-operator
+  template:
+    metadata:
+      labels:
+        name: file-integrity-operator
+    spec:
+      serviceAccountName: file-integrity-operator
+      containers:
+        - name: file-integrity-operator
+          image: "quay.io/file-integrity-operator/file-integrity-operator@sha256:1bc67044834c58884f07c41ce6adbf38346d71dfc28ede40239b13916c678408"
+          command:
+          - file-integrity-operator
+          args:
+          - operator
+          imagePullPolicy: Always
+          resources:
+            requests:
+              memory: "10Mi"
+              cpu: "10m"
+            limits:
+              memory: "200Mi"
+              cpu: "100m"
+          env:
+            - name: WATCH_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: OPERATOR_NAME
+              value: "file-integrity-operator"
+            - name: RELATED_IMAGE_OPERATOR
+              value: "quay.io/file-integrity-operator/file-integrity-operator@sha256:1bc67044834c58884f07c41ce6adbf38346d71dfc28ede40239b13916c678408"
+          volumeMounts:
+            - name: serving-cert
+              mountPath: /var/run/secrets/serving-cert
+              readOnly: true
+      volumes:
+        - name: serving-cert
+          secret:
+            secretName: file-integrity-operator-serving-cert
+            optional: true
+      nodeSelector:
+        node-role.kubernetes.io/master: ""
+      tolerations:
+        - key: "node-role.kubernetes.io/master"
+          operator: "Exists"
+          effect: "NoSchedule"
+        - key: "node.kubernetes.io/unreachable"
+          operator: "Exists"
+          effect: "NoExecute"
+          tolerationSeconds: 120
+        - key: "node.kubernetes.io/not-ready"
+          operator: "Exists"
+          effect: "NoExecute"
+          tolerationSeconds: 120

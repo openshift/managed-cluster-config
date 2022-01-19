@@ -1,0 +1,127 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  creationTimestamp: null
+  name: file-integrity-operator
+  namespace: openshift-file-integrity
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - services
+  - services/finalizers
+  - endpoints
+  - persistentvolumeclaims
+  - events
+  - configmaps
+  - secrets
+  verbs:
+  - '*'
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  - daemonsets
+  - replicasets
+  - statefulsets
+  verbs:
+  - '*'
+- apiGroups:
+  - monitoring.coreos.com
+  resources:
+  - servicemonitors
+  verbs:
+  - get
+  - create
+  - update
+- apiGroups:
+  - monitoring.coreos.com
+  resources:
+  - prometheusrules
+  verbs:
+  - create
+- apiGroups:
+  - apps
+  resourceNames:
+  - file-integrity-operator
+  resources:
+  - deployments/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - get
+- apiGroups:
+  - apps
+  resources:
+  - replicasets
+  verbs:
+  - get
+- apiGroups:
+  - fileintegrity.openshift.io
+  resources:
+  - '*'
+  verbs:
+  - '*'
+- apiGroups:
+  - security.openshift.io
+  resourceNames:
+  - privileged
+  resources:
+  - securitycontextconstraints
+  verbs:
+  - use
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: file-integrity-daemon
+  namespace: openshift-file-integrity
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - events
+  - configmaps
+  verbs:
+  - create
+- apiGroups:
+  - "fileintegrity.openshift.io"
+  resources:
+  - fileintegrities
+  verbs:
+  - get
+  - watch
+- apiGroups:
+  - security.openshift.io
+  resourceNames:
+  - privileged
+  resources:
+  - securitycontextconstraints
+  verbs:
+  - use
+- apiGroups:
+  - "events.k8s.io"
+  resources:
+  - events
+  verbs:
+  - create
+  - update
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: file-integrity-operator
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - nodes  # We need to list the nodes to be able to selectively scan
+  verbs:
+  - get
+  - list
+  - watch
