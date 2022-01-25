@@ -27,7 +27,7 @@ spec:
           annotations:
             message: "Cluster proxy certificate will expire in {{ $value | humanizeDuration }}. Ensure new certificate is provided prior to expiration to avoid cluster degredation and/or unavailability"
         - alert: ClusterProxyCAInvalidSRE
-          expr: cluster_proxy_ca_valid{name="osd_exporter"} == 0
+          expr: cluster_proxy_enabled{type="trusted_ca"} > 0 and cluster_proxy_ca_valid{name="osd_exporter"} == 0
           for: 15m
           labels:
             severity: warning
