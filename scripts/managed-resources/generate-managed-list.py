@@ -23,6 +23,7 @@ data:
 # are still being managed by SRE-P.
 ADDITIONAL_MANAGED_NAMESPACES = [
     {"name": "openshift-monitoring"},
+    {"name": "openshift"}
 ]
 
 
