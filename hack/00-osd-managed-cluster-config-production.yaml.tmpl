@@ -6342,7 +6342,6 @@ objects:
       matchLabels:
         api.openshift.com/managed: 'true'
     resourceApplyMode: Sync
-    applyBehavior: CreateOnly
     resources:
     - apiVersion: v1
       kind: ServiceAccount
@@ -6469,6 +6468,21 @@ objects:
       - kind: ServiceAccount
         name: osd-cluster-ready
         namespace: openshift-monitoring
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-cluster-ready-job
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+    resourceApplyMode: Sync
+    applyBehavior: CreateOnly
+    resources:
     - apiVersion: batch/v1
       kind: Job
       metadata:
