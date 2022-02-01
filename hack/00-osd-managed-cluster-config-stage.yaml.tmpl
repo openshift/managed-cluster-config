@@ -9673,13 +9673,38 @@ objects:
                   - -c
                   - "for NS in openshift-cloud-ingress-operator openshift-custom-domains-operator\
                     \ openshift-managed-upgrade-operator openshift-monitoring openshift-rbac-permissions\
-                    \ openshift-splunk-forwarder-operator openshift-velero;\ndo\n\
-                    \  for SA in $(oc -n $NS get serviceaccount --ignore-not-found\
+                    \ openshift-splunk-forwarder-operator openshift-velero openshift-ocm-agent-operator;\n\
+                    do\n  for SA in $(oc -n $NS get serviceaccount --ignore-not-found\
                     \ -o jsonpath='{.items[?(@.metadata.ownerReferences[0].kind==\"\
                     ClusterServiceVersion\")].metadata.name}');\n  do\n    echo \"\
                     Removing owner ref from SA '$SA' in NS '$NS'\"\n    oc -n $NS\
                     \ patch serviceaccount $SA --type=json -p '[{\"op\":\"remove\"\
                     ,\"path\":\"/metadata/ownerReferences\"}]'\n  done\ndone\n"
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-serviceaccounts-oao
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: environment
+        operator: In
+        values:
+        - staging
+        - integration
+    resourceApplyMode: Upsert
+    resources:
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: ocm-agent-operator
+        namespace: openshift-ocm-agent-operator
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -10058,6 +10083,7 @@ objects:
             - openshift-splunk-forwarder-operator
             - openshift-managed-upgrade-operator
             - openshift-velero
+            - openshift-ocm-agent-operator
             - openshift-addon-operator
       apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
@@ -10098,6 +10124,7 @@ objects:
             - openshift-splunk-forwarder-operator
             - openshift-velero
             - openshift-managed-upgrade-operator
+            - openshift-ocm-agent-operator
       apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
