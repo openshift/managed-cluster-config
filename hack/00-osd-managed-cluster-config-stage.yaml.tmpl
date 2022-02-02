@@ -9532,6 +9532,434 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: osd-scanning
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/cluster-region
+        operator: In
+        values:
+        - us-gov-west-1
+        - us-gov-east-1
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: openshift-scanning
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: logger-sa
+        namespace: openshift-scanning
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: scanner-sa
+        namespace: openshift-scanning
+    - kind: SecurityContextConstraints
+      apiVersion: security.openshift.io/v1
+      metadata:
+        name: osd-scanning-scc
+      allowPrivilegedContainer: true
+      allowHostNetwork: false
+      allowedCapabilities:
+      - NET_ADMIN
+      - NET_RAW
+      runAsUser:
+        type: RunAsAny
+      seLinuxContext:
+        type: RunAsAny
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        creationTimestamp: null
+        name: logger-role
+        namespace: openshift-scanning
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - get
+        - list
+      - apiGroups:
+        - ''
+        resources:
+        - secrets
+        - services
+        verbs:
+        - create
+        - delete
+        - get
+        - list
+        - patch
+        - update
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - services
+        verbs:
+        - get
+        - list
+      - apiGroups:
+        - security.openshift.io
+        resources:
+        - securitycontextconstraints
+        verbs:
+        - create
+        - get
+        - update
+        - use
+      - apiGroups:
+        - security.openshift.io
+        resourceNames:
+        - privileged
+        resources:
+        - securitycontextconstraints
+        verbs:
+        - create
+        - get
+        - update
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: logger-rolebinding
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: logger-role
+      subjects:
+      - kind: ServiceAccount
+        name: logger-sa
+        namespace: openshift-scanning
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        creationTimestamp: null
+        name: scanner-role
+        namespace: openshift-scanning
+      rules:
+      - apiGroups:
+        - security.openshift.io
+        resources:
+        - securitycontextconstraints
+        verbs:
+        - create
+        - get
+        - update
+        - use
+      - apiGroups:
+        - security.openshift.io
+        resourceNames:
+        - privileged
+        resources:
+        - securitycontextconstraints
+        verbs:
+        - create
+        - get
+        - update
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: scanner-rolebinding
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: scanner-role
+      subjects:
+      - kind: ServiceAccount
+        name: scanner-sa
+        namespace: openshift-scanning
+    - apiVersion: apps/v1
+      kind: DaemonSet
+      metadata:
+        name: logger
+        namespace: openshift-scanning
+      spec:
+        selector:
+          matchLabels:
+            name: logger
+        template:
+          metadata:
+            labels:
+              name: logger
+          spec:
+            containers:
+            - env:
+              - name: OO_PAUSE_ON_START
+                value: 'false'
+              - name: LOG_WRITER_URL
+                value: http://logger.openshift-scanning.svc:8080/api/log
+              - name: SCAN_LOG_FILE
+                value: /host/var/log/openshift_managed_malware_scan.log
+              - name: POD_LOG_FILE
+                value: /host/var/log/openshift_managed_pod_creation.log
+              image: quay.io/dedgar/pod-logger:v0.0.10
+              name: logger
+              ports:
+              - containerPort: 8080
+                name: logger
+                protocol: TCP
+              resources:
+                limits:
+                  cpu: 100m
+                  memory: 100Mi
+                requests:
+                  cpu: 100m
+                  memory: 50Mi
+              securityContext:
+                privileged: true
+                runAsUser: 0
+              volumeMounts:
+              - mountPath: /secrets
+                name: logger-secrets
+              - mountPath: /host/var/log/
+                name: host-logs
+            nodeSelector:
+              node-role.kubernetes.io/master: ''
+            serviceAccountName: logger-sa
+            tolerations:
+            - operator: Exists
+            volumes:
+            - name: logger-secrets
+              secret:
+                defaultMode: 420
+                secretName: logger-secrets
+            - hostPath:
+                path: /var/log/
+              name: host-logs
+    - apiVersion: v1
+      kind: Service
+      metadata:
+        labels:
+          k8s-app: loggerservice
+          name: loggerservice
+        name: loggerservice
+        namespace: openshift-scanning
+      spec:
+        ports:
+        - name: loggerservice
+          port: 8080
+          protocol: TCP
+          targetPort: 8080
+        selector:
+          name: logger
+    - apiVersion: apps/v1
+      kind: DaemonSet
+      metadata:
+        name: scanner
+        namespace: openshift-scanning
+      spec:
+        selector:
+          matchLabels:
+            name: scanner
+        template:
+          metadata:
+            labels:
+              name: scanner
+          spec:
+            containers:
+            - env:
+              - name: OO_PAUSE_ON_START
+                value: 'false'
+              image: quay.io/dedgar/clamsig-puller:v0.0.4
+              name: clamsig-puller
+              resources:
+                limits:
+                  cpu: 100m
+                  memory: 200Mi
+                requests:
+                  cpu: 100m
+                  memory: 50Mi
+              volumeMounts:
+              - mountPath: /secrets
+                name: clam-secrets
+              - mountPath: /clam
+                name: clam-files
+            - env:
+              - name: OO_PAUSE_ON_START
+                value: 'false'
+              image: quay.io/dedgar/clamd:v0.0.3
+              name: clamd
+              resources:
+                limits:
+                  cpu: 300m
+                  memory: 1Gi
+                requests:
+                  cpu: 100m
+                  memory: 600Mi
+              volumeMounts:
+              - mountPath: /var/lib/clamav
+                name: clam-files
+            - env:
+              - name: OO_PAUSE_ON_START
+                value: 'false'
+              - name: CHROOT_PATH
+                value: /host
+              image: quay.io/dedgar/container-info:v0.0.15
+              name: info
+              resources:
+                limits:
+                  cpu: 100m
+                  memory: 50Mi
+                requests:
+                  cpu: 100m
+                  memory: 20Mi
+              securityContext:
+                privileged: true
+                runAsUser: 0
+              volumeMounts:
+              - mountPath: /clam
+                name: clam-files
+              - mountPath: /host
+                name: host-filesystem
+            - env:
+              - name: OO_PAUSE_ON_START
+                value: 'false'
+              - name: ACTIVE_SCAN
+                value: 'true'
+              - name: CRIO_LOG_URL
+                value: http://loggerservice.openshift-scanning.svc.cluster.local:8080/api/crio/log
+              - name: DOCKER_LOG_URL
+                value: http://loggerservice.openshift-scanning.svc.cluster.local:8080/api/docker/log
+              - name: CLAM_LOG_URL
+                value: http://loggerservice.openshift-scanning.svc.cluster.local:8080/api/clam/scanresult
+              - name: JOURNAL_PATH
+                value: /var/log/journal
+              - name: SCAN_RESULTS_DIR
+              - name: POST_RESULT_URL
+                value: http://loggerservice.openshift-scanning.svc.cluster.local:8080/api/clam/scanresult
+              - name: OUT_FILE
+              - name: SKIP_NAMESPACE_PREFIXES
+                value: openshift-
+              - name: SKIP_NAMESPACES
+                value: openshift-scanning,ci
+              - name: CLAM_SOCKET
+                value: /clam/clamd.sock
+              - name: INFO_SOCKET
+                value: '@rpc.sock'
+              image: quay.io/dedgar/watcher:v0.0.67
+              name: watcher
+              resources:
+                limits:
+                  cpu: 100m
+                  memory: 100Mi
+                requests:
+                  cpu: 100m
+                  memory: 50Mi
+              securityContext:
+                privileged: true
+                runAsUser: 0
+              volumeMounts:
+              - mountPath: /var/log/journal
+                name: watcher-host-journal
+              - mountPath: /host
+                name: host-filesystem
+              - mountPath: /clam
+                name: clam-files
+            - env:
+              - name: OO_PAUSE_ON_START
+                value: 'false'
+              - name: CRIO_LOG_URL
+                value: http://loggerservice.openshift-scanning.svc.cluster.local:8080/api/crio/log
+              - name: DOCKER_LOG_URL
+                value: http://loggerservice.openshift-scanning.svc.cluster.local:8080/api/docker/log
+              - name: CLAM_LOG_URL
+                value: http://loggerservice.openshift-scanning.svc.cluster.local:8080/api/clam/scanresult
+              - name: JOURNAL_PATH
+                value: /var/log/journal
+              - name: SCAN_RESULTS_DIR
+              - name: POST_RESULT_URL
+                value: http://loggerservice.openshift-scanning.svc.cluster.local:8080/api/clam/scanresult
+              - name: OUT_FILE
+              - name: CLAM_SOCKET
+                value: /clam/clamd.sock
+              - name: INFO_SOCKET
+                value: '@rpc.sock'
+              - name: SCHEDULED_SCAN
+                value: 'true'
+              - name: SCHEDULED_SCAN_DAY
+                value: Saturday
+              - name: MIN_CON_DAY
+                value: '0'
+              - name: SKIP_NAMESPACE_PREFIXES
+                value: openshift-
+              - name: SKIP_NAMESPACES
+                value: openshift-scanning
+              - name: HOST_SCAN_DIRS
+                value: /host
+              image: quay.io/dedgar/watcher:v0.0.67
+              name: scheduler
+              resources:
+                limits:
+                  cpu: 100m
+                  memory: 100Mi
+                requests:
+                  cpu: 100m
+                  memory: 50Mi
+              securityContext:
+                privileged: true
+                runAsUser: 0
+              volumeMounts:
+              - mountPath: /var/log/journal
+                name: watcher-host-journal
+              - mountPath: /host
+                name: host-filesystem
+              - mountPath: /clam
+                name: clam-files
+            dnsPolicy: ClusterFirst
+            initContainers:
+            - env:
+              - name: OO_PAUSE_ON_START
+                value: 'false'
+              - name: INIT_CONTAINER
+                value: 'true'
+              image: quay.io/dedgar/clamsig-puller:v0.0.4
+              name: init-clamsig-puller
+              resources:
+                limits:
+                  cpu: 100m
+                  memory: 200Mi
+                requests:
+                  cpu: 100m
+                  memory: 50Mi
+              volumeMounts:
+              - mountPath: /secrets
+                name: clam-secrets
+              - mountPath: /clam
+                name: clam-files
+            nodeSelector:
+              kubernetes.io/os: linux
+            serviceAccountName: logger-sa
+            tolerations:
+            - operator: Exists
+            volumes:
+            - name: clam-secrets
+              secret:
+                defaultMode: 420
+                secretName: clam-secrets
+            - emptyDir: {}
+              name: clam-files
+            - hostPath:
+                path: /
+                type: ''
+              name: host-filesystem
+            - hostPath:
+                path: /var/log/journal
+                type: ''
+              name: watcher-host-journal
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: osd-serviceaccounts
   spec:
     clusterDeploymentSelector:
