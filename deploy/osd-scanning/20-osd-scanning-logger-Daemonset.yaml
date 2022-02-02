@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: logger
+  namespace: openshift-scanning
+spec:
+  selector:
+    matchLabels:
+      name: logger
+  template:
+    metadata:
+      labels:
+        name: logger
+    spec:
+      containers:
+      - env:
+        - name: OO_PAUSE_ON_START
+          value: "false"
+        - name: LOG_WRITER_URL
+          value: http://logger.openshift-scanning.svc:8080/api/log
+        - name: SCAN_LOG_FILE
+          value: /host/var/log/openshift_managed_malware_scan.log
+        - name: POD_LOG_FILE
+          value: /host/var/log/openshift_managed_pod_creation.log
+        image: quay.io/dedgar/pod-logger:v0.0.10
+        name: logger
+        ports:
+        - containerPort: 8080
+          name: logger
+          protocol: TCP
+        resources:
+          limits:
+            cpu: 100m
+            memory: 100Mi
+          requests:
+            cpu: 100m
+            memory: 50Mi
+        securityContext:
+          privileged: true
+          runAsUser: 0
+        volumeMounts:
+        - mountPath: /secrets
+          name: logger-secrets
+        - mountPath: /host/var/log/
+          name: host-logs
+      nodeSelector:
+        node-role.kubernetes.io/master: ""
+      serviceAccountName: logger-sa
+      tolerations:
+      - operator: Exists
+      volumes:
+      - name: logger-secrets
+        secret:
+          defaultMode: 420
+          secretName: logger-secrets
+      - hostPath:
+          path: /var/log/
+        name: host-logs
