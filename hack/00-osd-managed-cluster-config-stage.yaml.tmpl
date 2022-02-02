@@ -7816,6 +7816,68 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: osd-ids-tester
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/cluster-region
+        operator: In
+        values:
+        - us-gov-west-1
+        - us-gov-east-1
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: openshift-suricata
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: ids-test
+        namespace: openshift-suricata
+    - apiVersion: batch/v1
+      kind: CronJob
+      metadata:
+        name: ids-tester
+        namespace: openshift-suricata
+      spec:
+        failedJobsHistoryLimit: 5
+        successfulJobsHistoryLimit: 3
+        concurrencyPolicy: Replace
+        schedule: 05 05 * * 3
+        jobTemplate:
+          spec:
+            template:
+              spec:
+                affinity:
+                  nodeAffinity:
+                    preferredDuringSchedulingIgnoredDuringExecution:
+                    - preference:
+                        matchExpressions:
+                        - key: topology.kubernetes.io/region
+                          operator: In
+                          values:
+                          - us-gov-west-1
+                          - us-gov-east-1
+                      weight: 1
+                serviceAccountName: ids-test-sa
+                restartPolicy: Never
+                containers:
+                - name: ids-tester
+                  image: quay.io/dedgar/ids-tester:v0.0.4
+                  imagePullPolicy: Always
+                  command:
+                  - /usr/local/bin/start.sh
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: osd-ingress
   spec:
     clusterDeploymentSelector:
