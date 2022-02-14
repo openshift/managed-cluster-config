@@ -12387,27 +12387,6 @@ objects:
       kind: PrometheusRule
       metadata:
         labels:
-          prometheus: sre-dns-alerts
-          role: alert-rules
-        name: sre-dns-alerts
-        namespace: openshift-monitoring
-      spec:
-        groups:
-        - name: sre-dns-alerts
-          rules:
-          - alert: DNSErrors05MinSRE
-            expr: rate(dns_failure_failure_total[5m]) > 0
-            for: 5m
-            labels:
-              severity: critical
-              namespace: openshift-monitoring
-            annotations:
-              message: DNS checks have been failing for the past 5 minutes on pod-
-                {{ $labels.pod }}
-    - apiVersion: monitoring.coreos.com/v1
-      kind: PrometheusRule
-      metadata:
-        labels:
           prometheus: sre-elasticsearch-jobs
           role: alert-rules
         name: sre-elasticsearch-jobs
