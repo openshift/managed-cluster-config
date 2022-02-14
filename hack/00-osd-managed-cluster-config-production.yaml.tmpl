@@ -10000,7 +10000,7 @@ objects:
                 name: clam-files
             nodeSelector:
               kubernetes.io/os: linux
-            serviceAccountName: logger-sa
+            serviceAccountName: scanner-sa
             tolerations:
             - operator: Exists
             volumes:
@@ -10372,6 +10372,19 @@ objects:
       metadata:
         name: suricata-sa
         namespace: openshift-suricata
+    - kind: SecurityContextConstraints
+      apiVersion: security.openshift.io/v1
+      metadata:
+        name: osd-suricata-scc
+      allowPrivilegedContainer: true
+      allowHostNetwork: true
+      allowedCapabilities:
+      - NET_ADMIN
+      - NET_RAW
+      runAsUser:
+        type: RunAsAny
+      seLinuxContext:
+        type: RunAsAny
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: Role
       metadata:
@@ -10431,7 +10444,7 @@ objects:
                 value: 'false'
               - name: SURICATA_LOG_FILE
                 value: /host/var/log/openshift_managed_suricata.log
-              image: quay.io/dedgar/suricata:v0.0.4
+              image: quay.io/dedgar/suricata:v0.0.9
               imagePullPolicy: IfNotPresent
               name: suricata
               resources:
@@ -10452,7 +10465,7 @@ objects:
             dnsPolicy: ClusterFirst
             hostNetwork: true
             nodeSelector:
-              beta.kubernetes.io/os: linux
+              kubernetes.io/os: linux
             serviceAccountName: suricata-sa
             tolerations:
             - operator: Exists
