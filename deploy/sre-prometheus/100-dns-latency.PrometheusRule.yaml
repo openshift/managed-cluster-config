@@ -10,11 +10,12 @@ spec:
   groups:
   - name: sre-dns-alerts
     rules:
-    - alert: DNSErrors05MinSRE
-      expr: rate(dns_failure_failure_total[5m]) > 0
-      for: 5m
+    - alert: DNSErrors10MinSRE
+      # If the amount of DNS failures increases by 3 over the span of 10 minutes
+      expr: increase(dns_failure_failure_total[10m]) >= 3
+      for: 10m
       labels:
         severity: critical
         namespace: openshift-monitoring
       annotations:
-        message: DNS checks have been failing for the past 5 minutes on pod- {{ $labels.pod }}
+        message: At least 3 DNS checks have been failing for the past 10 minutes on pod- {{ $labels.pod }}
