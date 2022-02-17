@@ -9767,7 +9767,6 @@ objects:
             volumes:
             - name: logger-secrets
               secret:
-                defaultMode: 420
                 secretName: logger-secrets
             - hostPath:
                 path: /var/log/
@@ -9895,6 +9894,8 @@ objects:
                 privileged: true
                 runAsUser: 0
               volumeMounts:
+              - mountPath: /secrets
+                name: clam-secrets
               - mountPath: /var/log/journal
                 name: watcher-host-journal
               - mountPath: /host
@@ -9980,7 +9981,6 @@ objects:
             volumes:
             - name: clam-secrets
               secret:
-                defaultMode: 420
                 secretName: clam-secrets
             - emptyDir: {}
               name: clam-files
