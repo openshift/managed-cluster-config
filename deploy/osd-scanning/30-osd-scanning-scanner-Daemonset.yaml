@@ -105,6 +105,8 @@ spec:
           privileged: true
           runAsUser: 0
         volumeMounts:
+        - mountPath: /secrets
+          name: clam-secrets
         - mountPath: /var/log/journal
           name: watcher-host-journal
         - mountPath: /host
@@ -190,7 +192,6 @@ spec:
       volumes:
       - name: clam-secrets
         secret:
-          defaultMode: 420
           secretName: clam-secrets
       - emptyDir: {}
         name: clam-files
