@@ -4535,6 +4535,39 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: ocm-agent-custom-resource
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/environment
+        operator: In
+        values:
+        - staging
+        - integration
+    resourceApplyMode: Upsert
+    resources:
+    - apiVersion: ocmagent.managed.openshift.io/v1alpha1
+      kind: OcmAgent
+      metadata:
+        name: ocmagent
+        namespace: openshift-ocm-agent-operator
+      spec:
+        ocmBaseUrl: ${OCM_BASE_URL}
+        replicas: 1
+        services:
+        - service_log
+        tokenSecret: ocm-access-token
+        ocmAgentConfig: ocm-agent-config
+        ocmAgentImage: quay.io/app-sre/ocm-agent:latest
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: osd-6246-flowcontrol-fix
   spec:
     clusterDeploymentSelector:
