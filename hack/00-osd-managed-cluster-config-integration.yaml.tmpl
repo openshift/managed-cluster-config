@@ -4535,7 +4535,7 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: ocm-agent-custom-resource
+    name: ocm-agent-operator-resources
   spec:
     clusterDeploymentSelector:
       matchLabels:
@@ -4546,7 +4546,7 @@ objects:
         values:
         - staging
         - integration
-    resourceApplyMode: Upsert
+    resourceApplyMode: Sync
     resources:
     - apiVersion: ocmagent.managed.openshift.io/v1alpha1
       kind: OcmAgent
@@ -4557,7 +4557,7 @@ objects:
         ocmBaseUrl: ${OCM_BASE_URL}
         replicas: 1
         services:
-        - service_log
+        - service_logs
         tokenSecret: ocm-access-token
         ocmAgentConfig: ocm-agent-config
         ocmAgentImage: quay.io/app-sre/ocm-agent:latest
