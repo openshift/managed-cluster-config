@@ -15,6 +15,22 @@ Following is the reference for alert silence in different OCP versions:
 | ClusterOperatorDegraded | OSD-6330 | Silenced | Silenced | Silenced | Removed|
 | CloudCredentialOperatorDown | BZ 1889540 | Silenced | Silenced | Removed | Removed |
 
+## Procedure to follow when silencing alerts
+
+Important: The goal of OCP upgrades is to eventually be non-disruptive. Alerts which occur during upgrades which are a 'non-action' should be raised as OCP bugs so that silences are not necessary.
+
+Adding alerts to the silenced list may mask real, actionable problems that could be impacting cluster health or SLA.
+
+Before permanently updating the alert silence list, consider:
+
+- Was SRE involvement necessary to address the alert, or did it self-resolve?
+- If it self-resolved, was this alert directly caused by the cluster upgrade, or was it incidental?
+- If it was caused by an upgrade, should OCP upgrade be producing this alert?
+- If OCP upgrades should not be producing this alert, does a Bugzilla ticket already exist to request this alert not occur during upgrades?
+- If OCP should not be producing this alert, then it is valid to add the alert to the list of silenced alerts. SRE should also raise a BZ with the relevant OCP team to address this long-term.
+
+An example of a non-actionable alert occuring during upgrades, which has had a Bugzilla raised to address it, is https://bugzilla.redhat.com/show_bug.cgi?id=1843595. Because there is a BZ raised, this alert is being silenced by the upgrade operator until resolution of the bug.
+
 ## CHANGELOG
 * October 5th 2021
     * ClusterOperatorDown alert silence removed from 4.8 ([OSD-7890](https://issues.redhat.com/browse/OSD-7890))
