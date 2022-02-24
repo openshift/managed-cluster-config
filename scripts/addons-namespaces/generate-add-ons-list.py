@@ -5,7 +5,7 @@ import argparse
 import oyaml as yaml
 
 '''
-This is a script for finding the manespace for each addon operator in managed-tenants repo and outputting them in a yaml file.  
+This is a script for finding the namespace for each addon operator in managed-tenants repo and outputting them in a yaml file.
 '''
 
 def main():
