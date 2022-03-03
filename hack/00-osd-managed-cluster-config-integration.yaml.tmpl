@@ -4427,6 +4427,10 @@ objects:
         - '4.5'
         - '4.6'
         - '4.7'
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
     resourceApplyMode: Upsert
     resources:
     - apiVersion: v1
@@ -4644,6 +4648,10 @@ objects:
         values:
         - staging
         - integration
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
     resourceApplyMode: Sync
     resources:
     - apiVersion: ocmagent.managed.openshift.io/v1alpha1
@@ -9712,6 +9720,11 @@ objects:
     clusterDeploymentSelector:
       matchLabels:
         api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
     resourceApplyMode: Sync
     resources:
     - apiVersion: monitoring.openshift.io/v1alpha1
@@ -10286,6 +10299,11 @@ objects:
       matchLabels:
         api.openshift.com/managed: 'true'
         hive.openshift.io/cluster-platform: aws
+      matchExpressions:
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
     resourceApplyMode: Upsert
     resources:
     - apiVersion: v1
@@ -10397,6 +10415,10 @@ objects:
         values:
         - staging
         - integration
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
     resourceApplyMode: Upsert
     resources:
     - apiVersion: v1
@@ -10419,6 +10441,10 @@ objects:
       matchExpressions:
       - key: api.openshift.com/sts
         operator: In
+        values:
+        - 'true'
+      - key: api.openshift.com/fedramp
+        operator: NotIn
         values:
         - 'true'
     resourceApplyMode: Upsert
