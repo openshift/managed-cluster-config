@@ -1,0 +1,15 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: sre-oauth-server
+    role: recording-rules
+  name: sre-oauth-server
+  namespace: openshift-monitoring
+spec:
+  groups:
+  - name: sre-oauth-server
+    rules:
+      # aggregate the metrics under a new name to make sending these via remoteWrite easier
+    - record: oauth_server_health_checks
+      expr: apiserver_request_total{container="oauth-openshift"}
