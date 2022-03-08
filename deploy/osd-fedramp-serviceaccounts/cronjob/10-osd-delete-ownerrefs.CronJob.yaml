@@ -1,0 +1,45 @@
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: osd-delete-ownerrefs-serviceaccounts
+  namespace: openshift-backplane-srep
+spec:
+  failedJobsHistoryLimit: 3
+  successfulJobsHistoryLimit: 3
+  concurrencyPolicy: Replace
+  schedule: "7,37 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          affinity:
+            nodeAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+              - preference:
+                  matchExpressions:
+                  - key: node-role.kubernetes.io/infra
+                    operator: Exists
+                weight: 1
+          tolerations:
+            - effect: NoSchedule
+              key: node-role.kubernetes.io/infra
+              operator: Exists
+          serviceAccountName: osd-delete-ownerrefs-serviceaccounts
+          restartPolicy: Never
+          containers:
+          - name: osd-delete-ownerrefs-serviceaccounts
+            image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+            imagePullPolicy: Always
+            args:
+            - /bin/bash
+            - -c
+            - |
+              for NS in openshift-cloud-ingress-operator openshift-custom-domains-operator openshift-managed-upgrade-operator openshift-monitoring openshift-rbac-permissions openshift-splunk-forwarder-operator openshift-velero openshift-ocm-agent-operator;
+              do
+                for SA in $(oc -n $NS get serviceaccount --ignore-not-found -o jsonpath='{.items[?(@.metadata.ownerReferences[0].kind=="ClusterServiceVersion")].metadata.name}');
+                do
+                  echo "Removing owner ref from SA '$SA' in NS '$NS'"
+                  oc -n $NS patch serviceaccount $SA --type=json -p '[{"op":"remove","path":"/metadata/ownerReferences"}]'
+                done
+              done
