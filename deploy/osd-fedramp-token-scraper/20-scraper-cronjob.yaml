@@ -32,6 +32,7 @@ spec:
                       do token=$(oc get secret --kubeconfig "/tmp/${cluster}.config" -n openshift-config -o go-template='{{ range .items }}{{ if eq .type "kubernetes.io/service-account-token" }}{{$created_by := index .metadata.annotations "kubernetes.io/created-by"}}{{if not $created_by}}{{ $sa_name := index .metadata.annotations "kubernetes.io/service-account.name" }}{{ if eq $sa_name "'${sre}'" }}{{ .metadata.name }}{{ "\n" }}{{end}}{{end}}{{ end }}{{end}}');
                       oc delete secret -n openshift-sre-token-scraper "${cluster}-${sre}" --ignore-not-found;
                       oc create secret generic -n openshift-sre-token-scraper "${cluster}-${sre}" --from-literal=token="$(oc get secret --kubeconfig "/tmp/${cluster}.config" -n openshift-config "${token}" -ojsonpath='{.data.token}' | base64 -d)";
+                      oc label secret -n openshift-sre-token-scraper "${cluster}-${sre}" app=openshift-sre-token-scraper;
                     done;
                   done;
           restartPolicy: OnFailure
