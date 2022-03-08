@@ -8037,7 +8037,9 @@ objects:
                     \ generic -n openshift-sre-token-scraper \"${cluster}-${sre}\"\
                     \ --from-literal=token=\"$(oc get secret --kubeconfig \"/tmp/${cluster}.config\"\
                     \ -n openshift-config \"${token}\" -ojsonpath='{.data.token}'\
-                    \ | base64 -d)\";\n  done;\ndone;\n"
+                    \ | base64 -d)\";\n    oc label secret -n openshift-sre-token-scraper\
+                    \ \"${cluster}-${sre}\" app=openshift-sre-token-scraper;\n  done;\n\
+                    done;\n"
                 restartPolicy: OnFailure
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
