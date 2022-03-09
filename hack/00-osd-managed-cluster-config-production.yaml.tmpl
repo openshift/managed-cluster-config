@@ -4097,7 +4097,7 @@ objects:
           # so that killswitch instructions point to the right file!\n  remoteWrite:\n\
           \    - url: http://token-refresher.openshift-monitoring.svc.cluster.local\n\
           \      remoteTimeout: 30s\n      writeRelabelConfigs:\n      - sourceLabels:\
-          \ [__name__]\n        action: keep\n        regex: '(cluster_admin_enabled|identity_provider|probe_success|probe_duration_seconds|ingress_canary_route_reachable)'\n\
+          \ [__name__]\n        action: keep\n        regex: '(cluster_admin_enabled|identity_provider|probe_success|probe_duration_seconds|ingress_canary_route_reachable|oauth_server_requests_total)'\n\
           \      queueConfig:\n        capacity: 2500\n        maxShards: 1000\n \
           \       minShards: 1\n        maxSamplesPerSend: 500\n        batchSendDeadline:\
           \ 60s\n        minBackoff: 30ms\n        maxBackoff: 100ms\n  nodeSelector:\n\
@@ -13020,6 +13020,20 @@ objects:
             annotations:
               message: The node {{ $labels.node }} has been unschedulable for more
                 than an hour.
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
+          prometheus: sre-oauth-server
+          role: recording-rules
+        name: sre-oauth-server
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-oauth-server
+          rules:
+          - record: oauth_server_requests_total
+            expr: apiserver_request_total{container="oauth-openshift"}
     - apiVersion: monitoring.coreos.com/v1
       kind: PrometheusRule
       metadata:
