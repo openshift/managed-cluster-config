@@ -6390,15 +6390,15 @@ objects:
         operator: In
         values:
         - '4.9'
-    resourceApplyMode: Sync
-    patches:
+    resourceApplyMode: Upsert
+    resources:
     - apiVersion: v1
+      data:
+        ack-4.8-kube-1.22-api-removals-in-4.9: 'true'
       kind: ConfigMap
-      name: admin-acks
-      namespace: openshift-config
-      applyMode: AlwaysApply
-      patch: '{"data":{"ack-4.8-kube-1.22-api-removals-in-4.9":"true"}}'
-      patchType: merge
+      metadata:
+        name: admin-acks
+        namespace: openshift-config
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
