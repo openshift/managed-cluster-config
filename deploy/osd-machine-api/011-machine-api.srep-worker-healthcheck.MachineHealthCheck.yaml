@@ -5,8 +5,14 @@ metadata:
   namespace: openshift-machine-api
 spec:
   selector:
-    matchLabels:
-      machine.openshift.io/cluster-api-machine-role: worker
+    matchExpressions:
+    - key: machine.openshift.io/cluster-api-machine-role
+      operator: NotIn
+      values:
+      - "infra"
+      - "master"
+    - key: machine.openshift.io/cluster-api-machineset
+      operator: Exists
   unhealthyConditions:
   - type:    "Ready"
     timeout: "480s"
