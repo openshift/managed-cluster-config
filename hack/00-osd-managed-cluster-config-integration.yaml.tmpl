@@ -10932,6 +10932,14 @@ objects:
             - effect: NoSchedule
               key: node-role.kubernetes.io/infra
               operator: Exists
+            volumes:
+            - configMap:
+                defaultMode: 420
+                items:
+                - key: ca-bundle.crt
+                  path: ca-certificates.crt
+                name: token-refresher-trusted-ca-bundle
+              name: token-refresher-trusted-ca-bundle
             containers:
             - args:
               - --oidc.audience=observatorium-telemeter
@@ -10962,6 +10970,10 @@ objects:
               ports:
               - containerPort: 8080
                 name: http
+              volumeMounts:
+              - mountPath: /etc/ssl/certs/
+                name: token-refresher-trusted-ca-bundle
+                readOnly: true
     - apiVersion: v1
       kind: Service
       metadata:
@@ -10999,6 +11011,13 @@ objects:
           - podSelector:
               matchLabels:
                 prometheus: k8s
+    - apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        namespace: openshift-monitoring
+        name: token-refresher-trusted-ca-bundle
+        labels:
+          config.openshift.io/inject-trusted-cabundle: 'true'
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
