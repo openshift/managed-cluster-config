@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: signature-updater
+  namespace: openshift-signature-updater
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: signature-updater
+  template:
+    metadata:
+      labels:
+        name: signature-updater
+    spec:
+      containers:
+      - name: signature-updater 
+        env:
+        - name: OO_PAUSE_ON_START
+          value: "false"
+        - name: SECRET_CONFIG_FILE
+          value: "/secrets/update_secrets.json"
+        - name: CLAM_DB_DIRECTORY
+          value: "/clam/"
+        image: quay.io/dedgar/signature-updater:v0.0.4
+        resources:
+          limits:
+            cpu: 100m
+            memory: 200Mi
+          requests:
+            cpu: 100m
+            memory: 50Mi
+        volumeMounts:
+        - mountPath: /secrets
+          name: update-secrets
+        - mountPath: /clam
+          name: clam-files
+      - name: clamd
+        env:
+        - name: OO_PAUSE_ON_START
+          value: "false"
+        - name: UPDATE_ONLY
+          value: "true"
+        image: quay.io/dedgar/clamd:v0.0.9
+        resources:
+          limits:
+            cpu: 300m
+            memory: 1Gi
+          requests:
+            cpu: 100m
+            memory: 600Mi
+        volumeMounts:
+        - mountPath: /var/lib/clamav
+          name: clam-files
+      nodeSelector:
+        kubernetes.io/os: linux
+      serviceAccountName: signature-updater-sa
+      tolerations:
+      - operator: Exists
+      volumes:
+      - name: update-secrets
+        secret:
+          secretName: update-secrets
+      - emptyDir: {}
+        name: clam-files

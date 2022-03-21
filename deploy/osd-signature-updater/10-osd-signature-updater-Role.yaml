@@ -1,0 +1,22 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  creationTimestamp: null
+  name: signature-updater-role
+  namespace: openshift-signature-updater
+rules:
+- apiGroups:
+  - security.openshift.io
+  resources:
+  - securitycontextconstraints
+  verbs:
+  - get
+- apiGroups:
+  - security.openshift.io
+  resourceNames:
+  - nonroot 
+  resources:
+  - securitycontextconstraints
+  verbs:
+  - use
