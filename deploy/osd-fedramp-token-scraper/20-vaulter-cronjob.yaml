@@ -1,0 +1,56 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: openshift-sre-token-vaulter
+  namespace: openshift-sre-token-scraper
+spec:
+  schedule: "*/30 * * * *"
+  concurrencyPolicy: Replace
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          automountServiceAccountToken: true
+          serviceAccountName: openshift-sre-token-vaulter
+          containers:
+            - name: vaulter
+              image: "quay.io/mshen/openshift-sre-token-vaulter@sha256:db7807beeb4ead02f7b1575899472efb5040d35c7c9f218b9b73948cda6134ec"
+              env:
+                - name: VAULT_APPROLE_ROLE_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: sre-token-scraper-vault-approle-secret
+                      key: "role_id"
+                      optional: false
+                - name: VAULT_APPROLE_SECRET_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: sre-token-scraper-vault-approle-secret
+                      key: "secret_id"
+                      optional: false
+                - name: VAULT_ADDR
+                  value: "https://vault.fedramp.devshift.net"
+              command:
+                - 'bash'
+                - '-c'
+              args:
+                - |
+                  export VAULT_TOKEN="$(vault write auth/approle/login role_id=${VAULT_APPROLE_ROLE_ID} secret_id=${VAULT_APPROLE_SECRET_ID} -format=json | jq -r '.auth.client_token')";
+                  readarray -t tokens < <(oc get secrets -n openshift-sre-token-scraper -l app=openshift-sre-token-scraper -o go-template='{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}');
+                  for token in "${tokens[@]}"; do
+                    readarray -t components < <(echo "${token}" | sed 's/-sre-/\n/g');
+                    CLUSTER="${components[0]}";
+                    SRE="${components[1]}";
+                    API="$(oc get cd -n ${components[0]} -ojson | jq -r '.items[0].status.apiURL')";
+                    SECRET="$(oc get secret -n openshift-sre-token-scraper ${token} -ojson | jq -r '.data.token' | base64 -d)";
+                    vault kv put "osd-fedramp/srep-sa-tokens/${CLUSTER}/${SRE}" api="${API}" token="${SECRET}";
+                    # Spread out calls to Vault
+                    sleep 3;
+                  done;
+          dnsConfig:
+            nameservers:
+              - "10.125.32.103"
+            searches:
+              - "vault.fedramp.devshift.net"
+          dnsPolicy: None
+          restartPolicy: OnFailure

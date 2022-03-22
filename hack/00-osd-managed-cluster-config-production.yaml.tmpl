@@ -7947,6 +7947,18 @@ objects:
       metadata:
         name: openshift-sre-token-scraper
     - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: openshift-sre-token-vaulter
+      rules:
+      - apiGroups:
+        - hive.openshift.io
+        resources:
+        - clusterdeployments
+        verbs:
+        - get
+        - list
+    - apiVersion: rbac.authorization.k8s.io/v1
       kind: Role
       metadata:
         name: openshift-sre-token-replacer
@@ -7989,6 +8001,50 @@ objects:
       kind: ServiceAccount
       metadata:
         name: openshift-sre-token-scraper
+        namespace: openshift-sre-token-scraper
+      automountServiceAccountToken: false
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: openshift-sre-token-vaulter
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: openshift-sre-token-vaulter
+      subjects:
+      - kind: ServiceAccount
+        name: openshift-sre-token-vaulter
+        namespace: openshift-sre-token-scraper
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: openshift-sre-token-vaulter
+        namespace: openshift-sre-token-scraper
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - secrets
+        verbs:
+        - get
+        - list
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: openshift-sre-token-vaulter
+        namespace: openshift-sre-token-scraper
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: openshift-sre-token-vaulter
+      subjects:
+      - kind: ServiceAccount
+        name: openshift-sre-token-vaulter
+        namespace: openshift-sre-token-scraper
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: openshift-sre-token-vaulter
         namespace: openshift-sre-token-scraper
       automountServiceAccountToken: false
     - apiVersion: batch/v1
@@ -8036,6 +8092,62 @@ objects:
                     \ | base64 -d)\";\n    oc label secret -n openshift-sre-token-scraper\
                     \ \"${cluster}-${sre}\" app=openshift-sre-token-scraper;\n  done;\n\
                     done;\n"
+                restartPolicy: OnFailure
+    - apiVersion: batch/v1
+      kind: CronJob
+      metadata:
+        name: openshift-sre-token-vaulter
+        namespace: openshift-sre-token-scraper
+      spec:
+        schedule: '*/30 * * * *'
+        concurrencyPolicy: Replace
+        jobTemplate:
+          spec:
+            template:
+              spec:
+                automountServiceAccountToken: true
+                serviceAccountName: openshift-sre-token-vaulter
+                containers:
+                - name: vaulter
+                  image: quay.io/mshen/openshift-sre-token-vaulter@sha256:db7807beeb4ead02f7b1575899472efb5040d35c7c9f218b9b73948cda6134ec
+                  env:
+                  - name: VAULT_APPROLE_ROLE_ID
+                    valueFrom:
+                      secretKeyRef:
+                        name: sre-token-scraper-vault-approle-secret
+                        key: role_id
+                        optional: false
+                  - name: VAULT_APPROLE_SECRET_ID
+                    valueFrom:
+                      secretKeyRef:
+                        name: sre-token-scraper-vault-approle-secret
+                        key: secret_id
+                        optional: false
+                  - name: VAULT_ADDR
+                    value: https://vault.fedramp.devshift.net
+                  command:
+                  - bash
+                  - -c
+                  args:
+                  - "export VAULT_TOKEN=\"$(vault write auth/approle/login role_id=${VAULT_APPROLE_ROLE_ID}\
+                    \ secret_id=${VAULT_APPROLE_SECRET_ID} -format=json | jq -r '.auth.client_token')\"\
+                    ;\nreadarray -t tokens < <(oc get secrets -n openshift-sre-token-scraper\
+                    \ -l app=openshift-sre-token-scraper -o go-template='{{range .items}}{{.metadata.name}}{{\"\
+                    \\n\"}}{{end}}');\nfor token in \"${tokens[@]}\"; do\n  readarray\
+                    \ -t components < <(echo \"${token}\" | sed 's/-sre-/\\n/g');\n\
+                    \  CLUSTER=\"${components[0]}\";\n  SRE=\"${components[1]}\";\n\
+                    \  API=\"$(oc get cd -n ${components[0]} -ojson | jq -r '.items[0].status.apiURL')\"\
+                    ;\n  SECRET=\"$(oc get secret -n openshift-sre-token-scraper ${token}\
+                    \ -ojson | jq -r '.data.token' | base64 -d)\";\n  vault kv put\
+                    \ \"osd-fedramp/srep-sa-tokens/${CLUSTER}/${SRE}\" api=\"${API}\"\
+                    \ token=\"${SECRET}\";\n  # Spread out calls to Vault\n  sleep\
+                    \ 3;\ndone;\n"
+                dnsConfig:
+                  nameservers:
+                  - 10.125.32.103
+                  searches:
+                  - vault.fedramp.devshift.net
+                dnsPolicy: None
                 restartPolicy: OnFailure
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
