@@ -10,5 +10,8 @@ spec:
   groups:
   - name: sre-build-test-job
     rules:
-    - record: sre-kube-build-test-job-success-rate
-      expr: sum(kube_job_complete{namespace="openshift-build-test"}) + sum(kube_job_failed{namespace="openshift-build-test"}) / sum(kube_job_status_succeeded{namespace="openshift-build-test"})
+    - record: sre_kube_build_test_job_complete_total
+      expr:  kube_job_complete{namespace="openshift-build-test",condition="true"}
+
+    - record: sre_kube_build_test_job_succes_total
+      expr:  kube_job_status_succeeded{namespace="openshift-build-test"}==1
