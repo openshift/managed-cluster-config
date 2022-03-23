@@ -4653,6 +4653,46 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: ocm-agent-operator-managednotifications-config
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/environment
+        operator: In
+        values:
+        - staging
+        - integration
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: ocmagent.managed.openshift.io/v1alpha1
+      kind: ManagedNotification
+      metadata:
+        name: sre-managed-notifications
+        namespace: openshift-ocm-agent-operator
+      spec:
+        notifications:
+        - activeBody: Your cluster requires you to take action as its ElasticSearch
+            cluster logging deployment has been detected as reaching a high disk usage
+            threshold. Red Hat SRE strongly recommends reducing application logging
+            on your cluster to ensure logging continues to function. If logging disk
+            consumption exceeds 95%, data will be at risk of becoming unavailable
+            or lost and the stability of your ElasticSearch deployment may be impacted.
+          name: LoggingVolumeFillingUp
+          resendWait: 24
+          resolvedBody: Your cluster's ElasticSearch deployment is detected as being
+            at safe disk consumption levels and no additional action on this issue
+            is required.
+          severity: Info
+          summary: ElasticSearch reaching disk capacity
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: osd-6246-flowcontrol-fix
   spec:
     clusterDeploymentSelector:
@@ -13476,6 +13516,47 @@ objects:
             labels:
               severity: critical
               namespace: openshift-monitoring
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: sre-prometheus-ocm-agent
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/environment
+        operator: In
+        values:
+        - staging
+        - integration
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
+          prometheus: sre-managed-notification-alerts
+          role: alert-rules
+        name: sre-managed-notification-alerts
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-managed-notification-alerts
+          rules:
+          - alert: LoggingVolumeFillingUpNotificationSRE
+            expr: ALERTS{alertname="KubePersistentVolumeFillingUp", alertstate="firing",
+              namespace="openshift-logging"} == 1
+            for: 30m
+            labels:
+              severity: Info
+              namespace: openshift-logging
+              send_managed_notification: 'true'
+              managed_notification_template: LoggingVolumeFillingUp
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
