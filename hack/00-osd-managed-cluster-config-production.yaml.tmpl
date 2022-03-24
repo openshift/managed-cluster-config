@@ -2854,6 +2854,37 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
+        name: backplane-mtsre-admins-project
+      rules:
+      - apiGroups:
+        - '*'
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - pods/portforward
+        verbs:
+        - create
+      - apiGroups:
+        - addons.managed.openshift.io
+        resources:
+        - addonoperators
+        - addons
+        verbs:
+        - get
+        - list
+        - watch
+        - patch
+        - update
+        - create
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
         name: backplane-mtsre-readers-cluster
       aggregationRule:
         clusterRoleSelectors:
@@ -2868,17 +2899,22 @@ objects:
             values:
             - 'true'
       rules: []
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRoleBinding
+    - apiVersion: managed.openshift.io/v1alpha1
+      kind: SubjectPermission
       metadata:
-        name: backplane-mtsre-readers
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: ClusterRole
-        name: backplane-mtsre-readers-cluster
-      subjects:
-      - kind: Group
-        name: system:serviceaccounts:openshift-backplane-mtsre
+        name: backplane-mtsre
+        namespace: openshift-rbac-permissions
+      spec:
+        clusterPermissions:
+        - backplane-mtsre-admins-project
+        - backplane-mtsre-readers-cluster
+        permissions:
+        - allowFirst: true
+          clusterRoleName: backplane-mtsre-admins-project
+          namespacesAllowedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        subjectKind: Group
+        subjectName: system:serviceaccounts:openshift-backplane-mtsre
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRoleBinding
       metadata:
@@ -2928,6 +2964,37 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
+        name: backplane-mtsre-admins-project
+      rules:
+      - apiGroups:
+        - '*'
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - pods/portforward
+        verbs:
+        - create
+      - apiGroups:
+        - addons.managed.openshift.io
+        resources:
+        - addonoperators
+        - addons
+        verbs:
+        - get
+        - list
+        - watch
+        - patch
+        - update
+        - create
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
         name: backplane-mtsre-readers-cluster
       aggregationRule:
         clusterRoleSelectors:
@@ -2942,17 +3009,22 @@ objects:
             values:
             - 'true'
       rules: []
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRoleBinding
+    - apiVersion: managed.openshift.io/v1alpha1
+      kind: SubjectPermission
       metadata:
-        name: backplane-mtsre-readers
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: ClusterRole
-        name: backplane-mtsre-readers-cluster
-      subjects:
-      - kind: Group
-        name: system:serviceaccounts:openshift-backplane-mtsre
+        name: backplane-mtsre
+        namespace: openshift-rbac-permissions
+      spec:
+        clusterPermissions:
+        - backplane-mtsre-admins-project
+        - backplane-mtsre-readers-cluster
+        permissions:
+        - allowFirst: true
+          clusterRoleName: backplane-mtsre-admins-project
+          namespacesAllowedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        subjectKind: Group
+        subjectName: system:serviceaccounts:openshift-backplane-mtsre
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRoleBinding
       metadata:
@@ -3002,6 +3074,37 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
+        name: backplane-mtsre-admins-project
+      rules:
+      - apiGroups:
+        - '*'
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - pods/portforward
+        verbs:
+        - create
+      - apiGroups:
+        - addons.managed.openshift.io
+        resources:
+        - addonoperators
+        - addons
+        verbs:
+        - get
+        - list
+        - watch
+        - patch
+        - update
+        - create
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
         name: backplane-mtsre-readers-cluster
       aggregationRule:
         clusterRoleSelectors:
@@ -3016,17 +3119,22 @@ objects:
             values:
             - 'true'
       rules: []
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRoleBinding
+    - apiVersion: managed.openshift.io/v1alpha1
+      kind: SubjectPermission
       metadata:
-        name: backplane-mtsre-readers
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: ClusterRole
-        name: backplane-mtsre-readers-cluster
-      subjects:
-      - kind: Group
-        name: system:serviceaccounts:openshift-backplane-mtsre
+        name: backplane-mtsre
+        namespace: openshift-rbac-permissions
+      spec:
+        clusterPermissions:
+        - backplane-mtsre-admins-project
+        - backplane-mtsre-readers-cluster
+        permissions:
+        - allowFirst: true
+          clusterRoleName: backplane-mtsre-admins-project
+          namespacesAllowedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        subjectKind: Group
+        subjectName: system:serviceaccounts:openshift-backplane-mtsre
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRoleBinding
       metadata:
