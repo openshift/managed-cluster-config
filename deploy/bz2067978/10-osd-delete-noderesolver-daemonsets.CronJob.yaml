@@ -1,0 +1,42 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: osd-delete-noderesolver-daemonset-bz2067978
+  namespace: openshift-dns
+spec:
+  failedJobsHistoryLimit: 3
+  successfulJobsHistoryLimit: 3
+  concurrencyPolicy: Replace
+  schedule: "35 * * * *"
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: 120
+      template:
+        spec:
+          affinity:
+            nodeAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+              - preference:
+                  matchExpressions:
+                  - key: node-role.kubernetes.io/infra
+                    operator: Exists
+                weight: 1
+          tolerations:
+            - effect: NoSchedule
+              key: node-role.kubernetes.io/infra
+              operator: Exists
+          serviceAccountName: osd-delete-noderesolver-daemonset-bz2067978
+          restartPolicy: Never
+          containers:
+          - name: osd-delete-noderesolver-daemonset-bz2067978
+            image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+            imagePullPolicy: Always
+            args:
+            - /bin/bash
+            - -c
+            - |
+              if [[ -z "$(oc get daemonset -n openshift-dns --ignore-not-found node-resolver -o jsonpath='{.metadata.ownerReferences[0].name}')" ]]; then
+                oc delete daemonset --ignore-not-found -n openshift-dns node-resolver
+                oc delete pod --ignore-not-found -n openshift-dns-operator -l name=dns-operator
+              fi
