@@ -2838,7 +2838,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-addon-operator-apis-admin
+        name: backplane-mtsre-addon-operator-admin
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -2868,28 +2868,21 @@ objects:
             values:
             - 'true'
       rules: []
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRoleBinding
+    - apiVersion: managed.openshift.io/v1alpha1
+      kind: SubjectPermission
       metadata:
-        name: backplane-mtsre-readers
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: ClusterRole
-        name: backplane-mtsre-readers-cluster
-      subjects:
-      - kind: Group
-        name: system:serviceaccounts:openshift-backplane-mtsre
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRoleBinding
-      metadata:
-        name: backplane-mtsre-addon-operator-apis-cluster-role-binding
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: ClusterRole
-        name: backplane-mtsre-addon-operator-apis-admin
-      subjects:
-      - kind: Group
-        name: system:serviceaccounts:openshift-backplane-mtsre
+        name: backplane-mtsre-addon-operator-admins
+        namespace: openshift-rbac-permissions
+      spec:
+        clusterPermissions:
+        - backplane-mtsre-addon-operator-admin
+        - backplane-mtsre-readers-cluster
+        permissions:
+        - allowFirst: true
+          clusterRoleName: admin
+          namespacesAllowedRegex: (^openshift-addon-operator$)
+        subjectKind: Group
+        subjectName: system:serviceaccounts:openshift-backplane-mtsre
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -2912,7 +2905,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-addon-operator-apis-admin
+        name: backplane-mtsre-addon-operator-admin
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -2942,28 +2935,21 @@ objects:
             values:
             - 'true'
       rules: []
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRoleBinding
+    - apiVersion: managed.openshift.io/v1alpha1
+      kind: SubjectPermission
       metadata:
-        name: backplane-mtsre-readers
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: ClusterRole
-        name: backplane-mtsre-readers-cluster
-      subjects:
-      - kind: Group
-        name: system:serviceaccounts:openshift-backplane-mtsre
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRoleBinding
-      metadata:
-        name: backplane-mtsre-addon-operator-apis-cluster-role-binding
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: ClusterRole
-        name: backplane-mtsre-addon-operator-apis-admin
-      subjects:
-      - kind: Group
-        name: system:serviceaccounts:openshift-backplane-mtsre
+        name: backplane-mtsre-addon-operator-admins
+        namespace: openshift-rbac-permissions
+      spec:
+        clusterPermissions:
+        - backplane-mtsre-addon-operator-admin
+        - backplane-mtsre-readers-cluster
+        permissions:
+        - allowFirst: true
+          clusterRoleName: admin
+          namespacesAllowedRegex: (^openshift-addon-operator$)
+        subjectKind: Group
+        subjectName: system:serviceaccounts:openshift-backplane-mtsre
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -2986,7 +2972,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-addon-operator-apis-admin
+        name: backplane-mtsre-addon-operator-admin
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -3016,28 +3002,21 @@ objects:
             values:
             - 'true'
       rules: []
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRoleBinding
+    - apiVersion: managed.openshift.io/v1alpha1
+      kind: SubjectPermission
       metadata:
-        name: backplane-mtsre-readers
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: ClusterRole
-        name: backplane-mtsre-readers-cluster
-      subjects:
-      - kind: Group
-        name: system:serviceaccounts:openshift-backplane-mtsre
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRoleBinding
-      metadata:
-        name: backplane-mtsre-addon-operator-apis-cluster-role-binding
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: ClusterRole
-        name: backplane-mtsre-addon-operator-apis-admin
-      subjects:
-      - kind: Group
-        name: system:serviceaccounts:openshift-backplane-mtsre
+        name: backplane-mtsre-addon-operator-admins
+        namespace: openshift-rbac-permissions
+      spec:
+        clusterPermissions:
+        - backplane-mtsre-addon-operator-admin
+        - backplane-mtsre-readers-cluster
+        permissions:
+        - allowFirst: true
+          clusterRoleName: admin
+          namespacesAllowedRegex: (^openshift-addon-operator$)
+        subjectKind: Group
+        subjectName: system:serviceaccounts:openshift-backplane-mtsre
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
