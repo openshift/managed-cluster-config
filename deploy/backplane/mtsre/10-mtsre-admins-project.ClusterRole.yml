@@ -3,16 +3,27 @@ kind: ClusterRole
 metadata:
   name: backplane-mtsre-admins-project
 rules:
-# MT-SRE can portforward pods
+# MT-SRE can pods/portforward pods
 - apiGroups:
   - ""
   resources:
   - pods
   - pods/portforward
   verbs:
-  - get
-  - list
-  - create  
+  - "*" 
+# MT-SRE can monitor   
+- apiGroups:
+  - "monitoring.coreos.com"
+  resources:
+  - prometheuses
+  - prometheusrules
+  - servicemonitors
+  - podmonitors
+  - thanosrulers
+  - alertmanagers
+  - alertmanagerconfigs
+  verbs:
+  - "*"  
 # MT-SRE can manage addons resources
 - apiGroups:
   - "addons.managed.openshift.io"
@@ -20,10 +31,5 @@ rules:
   - "addonoperators"
   - "addons"
   verbs:
-  - get
-  - list
-  - watch
-  - patch
-  - update
-  - create
+  - "*"
   
