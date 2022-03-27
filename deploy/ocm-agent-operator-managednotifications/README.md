@@ -1,15 +1,12 @@
-# ocm-agent-operator PrometheusRule
+# ocm-agent-operator ManagedNotifications-CR
 
-This location manages `PrometheusRule` alerts that are intended to be routed to the cluster's OCM Agent, for the purpose of sending Service Logs to customers.
+This location manages the distribution of the OCM Agent Operator `ManagedNotification` CR to the OSD and ROSA fleet.
 
+The purpose of the `ManagedNotification` CR is to define Service Log templates that map to AlertManager alerts, allowing the OCM Agent to build and send Service Logs when it is notified about those alerts.
 
 ## How to make changes
 
 Refer to the [OCM Agent SOP page](https://github.com/openshift/ops-sop/tree/master/v4/knowledge_base/ocm-agent.md) for the workflow of making changes to this resource.
-
-It is important that every alert defined here contains a
-- `send_managed_notification=true` label
-- `managed_notification_template` label that maps to a template defined in the [`ManagedNotification` CR](../../ocm-agent-operator-managednotifications/10-managednotifications-cr.yaml)
 
 ## Links
 
