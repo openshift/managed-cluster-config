@@ -4632,7 +4632,7 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: ocm-agent-operator-managednotifications-config
+    name: ocm-agent-operator-managednotifications
   spec:
     clusterDeploymentSelector:
       matchLabels:
@@ -13424,8 +13424,8 @@ objects:
         - name: sre-managed-notification-alerts
           rules:
           - alert: LoggingVolumeFillingUpNotificationSRE
-            expr: ALERTS{alertname="KubePersistentVolumeFillingUp", alertstate="firing",
-              namespace="openshift-logging"} == 1
+            expr: count(ALERTS{alertname="KubePersistentVolumeFillingUp", alertstate="firing",
+              namespace="openshift-logging"}) >= 1
             for: 30m
             labels:
               severity: Info
