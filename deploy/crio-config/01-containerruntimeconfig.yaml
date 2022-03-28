@@ -1,0 +1,11 @@
+apiVersion: machineconfiguration.openshift.io/v1
+kind: ContainerRuntimeConfig
+metadata:
+  name: custom-crio
+spec:
+  machineConfigPoolSelector:
+    matchExpressions:
+    - key: pools.operator.machineconfiguration.openshift.io/worker
+      operator: Exists
+  containerRuntimeConfig:
+    pidsLimit: 4096
