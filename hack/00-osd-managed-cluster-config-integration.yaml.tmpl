@@ -10351,6 +10351,11 @@ objects:
       metadata:
         name: managed-velero-operator
         namespace: openshift-velero
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: ocm-agent-operator
+        namespace: openshift-ocm-agent-operator
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -10469,35 +10474,6 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: osd-serviceaccounts-oao
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-      matchExpressions:
-      - key: api.openshift.com/environment
-        operator: In
-        values:
-        - staging
-        - integration
-      - key: api.openshift.com/fedramp
-        operator: NotIn
-        values:
-        - 'true'
-    resourceApplyMode: Upsert
-    resources:
-    - apiVersion: v1
-      kind: ServiceAccount
-      metadata:
-        name: ocm-agent-operator
-        namespace: openshift-ocm-agent-operator
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    labels:
-      managed.openshift.io/gitHash: ${IMAGE_TAG}
-      managed.openshift.io/gitRepoName: ${REPO_NAME}
-      managed.openshift.io/osd: 'true'
     name: osd-serviceaccounts-sts
   spec:
     clusterDeploymentSelector:
@@ -10534,6 +10510,11 @@ objects:
       metadata:
         name: splunk-forwarder-operator
         namespace: openshift-splunk-forwarder-operator
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: ocm-agent-operator
+        namespace: openshift-ocm-agent-operator
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
