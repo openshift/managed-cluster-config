@@ -2890,12 +2890,146 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: backplane-mtsre-addon-ocs-consumer
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/addon-ocs-consumer: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: openshift-backplane-mtsre
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-mtsre-addon-operator-admin
+      rules:
+      - apiGroups:
+        - addons.managed.openshift.io
+        resources:
+        - addonoperators
+        - addons
+        verbs:
+        - get
+        - list
+        - watch
+        - patch
+        - update
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-mtsre-readers-cluster
+      aggregationRule:
+        clusterRoleSelectors:
+        - matchExpressions:
+          - key: rbac.authorization.k8s.io/aggregate-to-view
+            operator: In
+            values:
+            - 'true'
+        - matchExpressions:
+          - key: managed.openshift.io/aggregate-to-dedicated-readers
+            operator: In
+            values:
+            - 'true'
+      rules: []
+    - apiVersion: managed.openshift.io/v1alpha1
+      kind: SubjectPermission
+      metadata:
+        name: backplane-mtsre-addon-operator-admins
+        namespace: openshift-rbac-permissions
+      spec:
+        clusterPermissions:
+        - backplane-mtsre-addon-operator-admin
+        - backplane-mtsre-readers-cluster
+        permissions:
+        - allowFirst: true
+          clusterRoleName: admin
+          namespacesAllowedRegex: (^openshift-addon-operator$)
+        subjectKind: Group
+        subjectName: system:serviceaccounts:openshift-backplane-mtsre
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: backplane-mtsre-addon-ocs-converged
   spec:
     clusterDeploymentSelector:
       matchLabels:
         api.openshift.com/managed: 'true'
         api.openshift.com/addon-ocs-converged: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: openshift-backplane-mtsre
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-mtsre-addon-operator-admin
+      rules:
+      - apiGroups:
+        - addons.managed.openshift.io
+        resources:
+        - addonoperators
+        - addons
+        verbs:
+        - get
+        - list
+        - watch
+        - patch
+        - update
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-mtsre-readers-cluster
+      aggregationRule:
+        clusterRoleSelectors:
+        - matchExpressions:
+          - key: rbac.authorization.k8s.io/aggregate-to-view
+            operator: In
+            values:
+            - 'true'
+        - matchExpressions:
+          - key: managed.openshift.io/aggregate-to-dedicated-readers
+            operator: In
+            values:
+            - 'true'
+      rules: []
+    - apiVersion: managed.openshift.io/v1alpha1
+      kind: SubjectPermission
+      metadata:
+        name: backplane-mtsre-addon-operator-admins
+        namespace: openshift-rbac-permissions
+      spec:
+        clusterPermissions:
+        - backplane-mtsre-addon-operator-admin
+        - backplane-mtsre-readers-cluster
+        permissions:
+        - allowFirst: true
+          clusterRoleName: admin
+          namespacesAllowedRegex: (^openshift-addon-operator$)
+        subjectKind: Group
+        subjectName: system:serviceaccounts:openshift-backplane-mtsre
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: backplane-mtsre-addon-ocs-provider
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/addon-ocs-provider: 'true'
     resourceApplyMode: Sync
     resources:
     - apiVersion: v1
@@ -3051,6 +3185,33 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: backplane-mtsre-ocs-consumer
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/addon-ocs-consumer: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: managed.openshift.io/v1alpha1
+      kind: SubjectPermission
+      metadata:
+        name: backplane-mtsre-ocs-consumer-admins
+        namespace: openshift-rbac-permissions
+      spec:
+        permissions:
+        - allowFirst: true
+          clusterRoleName: admin
+          namespacesAllowedRegex: (^openshift-storage$)
+        subjectKind: Group
+        subjectName: system:serviceaccounts:openshift-backplane-mtsre
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: backplane-mtsre-ocs-converged
   spec:
     clusterDeploymentSelector:
@@ -3063,6 +3224,33 @@ objects:
       kind: SubjectPermission
       metadata:
         name: backplane-mtsre-ocs-converged-admins
+        namespace: openshift-rbac-permissions
+      spec:
+        permissions:
+        - allowFirst: true
+          clusterRoleName: admin
+          namespacesAllowedRegex: (^openshift-storage$)
+        subjectKind: Group
+        subjectName: system:serviceaccounts:openshift-backplane-mtsre
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: backplane-mtsre-ocs-provider
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/addon-ocs-provider: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: managed.openshift.io/v1alpha1
+      kind: SubjectPermission
+      metadata:
+        name: backplane-mtsre-ocs-provider-admins
         namespace: openshift-rbac-permissions
       spec:
         permissions:
