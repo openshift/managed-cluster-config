@@ -9,12 +9,11 @@ spec:
     rules:
     - alert: etcdDivergentRevisionsSRE
       annotations:
-        description: etcd is reporting divergent member revisions,
+        message: etcd is reporting divergent member revisions,
           with a standard deviation of {{ $value }}.  Members may be
           stuck or, in extreme circumstances, split brained.
-        runbook_url: https://github.com/openshift/runbooks/blob/master/alerts/cluster-etcd-operator/FIXME
-        summary: etcd is reporting divergent member revisions.
       expr: min_over_time(stddev(max by (pod) (etcd_debugging_mvcc_compact_revision{namespace="openshift-etcd"}))[5m:15s]) > 0
       for: 3m
       labels:
         severity: critical
+        namespace: openshift-monitoring
