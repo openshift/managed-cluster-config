@@ -4170,13 +4170,14 @@ objects:
         groups:
         - name: etcd
           rules:
+          - record: etcd_revision_stddev_sre
+            expr: min_over_time(stddev(max by (pod) (etcd_debugging_mvcc_compact_revision{namespace="openshift-etcd"}))[5m:15s])
           - alert: etcdDivergentRevisionsSRE
             annotations:
               message: etcd is reporting divergent member revisions, with a standard
                 deviation of {{ $value }}.  Members may be stuck or, in extreme circumstances,
                 split brained.
-            expr: min_over_time(stddev(max by (pod) (etcd_debugging_mvcc_compact_revision{namespace="openshift-etcd"}))[5m:15s])
-              > 0
+            expr: etcd_revision_stddev_sre > 0
             for: 3m
             labels:
               severity: critical
