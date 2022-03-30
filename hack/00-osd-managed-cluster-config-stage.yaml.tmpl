@@ -4148,6 +4148,47 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: bz2068601
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.9'
+        - '4.10'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        name: custom-etcd-prometheus-rules
+        namespace: openshift-etcd-operator
+      spec:
+        groups:
+        - name: etcd
+          rules:
+          - alert: etcdDivergentRevisionsSRE
+            annotations:
+              description: etcd is reporting divergent member revisions, with a standard
+                deviation of {{ $value }}.  Members may be stuck or, in extreme circumstances,
+                split brained.
+              runbook_url: https://github.com/openshift/runbooks/blob/master/alerts/cluster-etcd-operator/FIXME
+              summary: etcd is reporting divergent member revisions.
+            expr: min_over_time(stddev(max by (pod) (etcd_debugging_mvcc_compact_revision{namespace="openshift-etcd"}))[5m:15s])
+              > 0
+            for: 3m
+            labels:
+              severity: critical
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: ccs-dedicated-admins
   spec:
     clusterDeploymentSelector:
