@@ -4199,7 +4199,7 @@ objects:
           # so that killswitch instructions point to the right file!\n  remoteWrite:\n\
           \    - url: http://token-refresher.openshift-monitoring.svc.cluster.local\n\
           \      remoteTimeout: 30s\n      writeRelabelConfigs:\n      - sourceLabels:\
-          \ [__name__]\n        action: keep\n        regex: '(cluster_admin_enabled|identity_provider|probe_success|probe_duration_seconds|ingress_canary_route_reachable|oauth_server_requests_total|imageregistry_http_requests_total)'\n\
+          \ [__name__]\n        action: keep\n        regex: '(cluster_admin_enabled|identity_provider|probe_success|probe_duration_seconds|ingress_canary_route_reachable|oauth_server_requests_total|imageregistry_http_requests_total|sre_kube_build_test_job_complete_total|sre_kube_build_test_job_succes_total)'\n\
           \      queueConfig:\n        capacity: 2500\n        maxShards: 1000\n \
           \       minShards: 1\n        maxSamplesPerSend: 500\n        batchSendDeadline:\
           \ 60s\n        minBackoff: 30ms\n        maxBackoff: 100ms\n  nodeSelector:\n\
@@ -13273,6 +13273,22 @@ objects:
             labels:
               severity: critical
               namespace: openshift-monitoring
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
+          prometheus: null
+          role: recording-rules
+        name: sre-build-test-job
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-build-test-job
+          rules:
+          - record: sre_kube_build_test_job_complete_total
+            expr: kube_job_complete{namespace="openshift-build-test"}
+          - record: sre_kube_build_test_job_succes_total
+            expr: kube_job_status_succeeded{namespace="openshift-build-test"}==1
     - apiVersion: monitoring.coreos.com/v1
       kind: PrometheusRule
       metadata:
