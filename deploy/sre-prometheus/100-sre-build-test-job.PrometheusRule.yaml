@@ -1,0 +1,17 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus:
+    role: recording-rules
+  name: sre-build-test-job
+  namespace: openshift-monitoring
+spec:
+  groups:
+  - name: sre-build-test-job
+    rules:
+    - record: sre_kube_build_test_job_complete_total
+      expr:  kube_job_complete{namespace="openshift-build-test"}
+
+    - record: sre_kube_build_test_job_succes_total
+      expr:  kube_job_status_succeeded{namespace="openshift-build-test"}==1
