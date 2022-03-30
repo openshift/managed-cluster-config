@@ -3834,6 +3834,129 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: bz2067978
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.8'
+        - '4.9'
+        - '4.10'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: osd-delete-noderesolver-daemonset-bz2067978
+        namespace: openshift-dns
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: osd-delete-noderesolver-daemonset-bz2067978
+        namespace: openshift-dns-operator
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - get
+        - list
+        - delete
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: osd-delete-noderesolver-daemonset-bz2067978
+        namespace: openshift-dns
+      rules:
+      - apiGroups:
+        - apps
+        resources:
+        - daemonsets
+        verbs:
+        - get
+        - list
+        - delete
+    - kind: RoleBinding
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        name: osd-delete-noderesolver-daemonset-bz2067978
+        namespace: openshift-dns-operator
+      subjects:
+      - kind: ServiceAccount
+        name: osd-delete-noderesolver-daemonset-bz2067978
+        namespace: openshift-dns
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: osd-delete-noderesolver-daemonset-bz2067978
+        namespace: openshift-dns-operator
+    - kind: RoleBinding
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        name: osd-delete-noderesolver-daemonset-bz2067978
+        namespace: openshift-dns
+      subjects:
+      - kind: ServiceAccount
+        name: osd-delete-noderesolver-daemonset-bz2067978
+        namespace: openshift-dns
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: osd-delete-noderesolver-daemonset-bz2067978
+        namespace: openshift-dns
+    - apiVersion: batch/v1
+      kind: CronJob
+      metadata:
+        name: osd-delete-noderesolver-daemonset-bz2067978
+        namespace: openshift-dns
+      spec:
+        failedJobsHistoryLimit: 3
+        successfulJobsHistoryLimit: 3
+        concurrencyPolicy: Replace
+        schedule: 35 * * * *
+        jobTemplate:
+          spec:
+            ttlSecondsAfterFinished: 120
+            template:
+              spec:
+                affinity:
+                  nodeAffinity:
+                    preferredDuringSchedulingIgnoredDuringExecution:
+                    - preference:
+                        matchExpressions:
+                        - key: node-role.kubernetes.io/infra
+                          operator: Exists
+                      weight: 1
+                tolerations:
+                - effect: NoSchedule
+                  key: node-role.kubernetes.io/infra
+                  operator: Exists
+                serviceAccountName: osd-delete-noderesolver-daemonset-bz2067978
+                restartPolicy: Never
+                containers:
+                - name: osd-delete-noderesolver-daemonset-bz2067978
+                  image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+                  imagePullPolicy: Always
+                  args:
+                  - /bin/bash
+                  - -c
+                  - "if [[ -z \"$(oc get daemonset -n openshift-dns --ignore-not-found\
+                    \ node-resolver -o jsonpath='{.metadata.ownerReferences[0].name}')\"\
+                    \ ]]; then\n  oc delete daemonset --ignore-not-found -n openshift-dns\
+                    \ node-resolver\n  oc delete pod --ignore-not-found -n openshift-dns-operator\
+                    \ -l name=dns-operator\nfi\n"
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: ccs-dedicated-admins
   spec:
     clusterDeploymentSelector:
