@@ -1,0 +1,14 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus:
+    role: recording-rules
+  name: sre-router-available
+  namespace: openshift-monitoring
+spec:
+  groups:
+  - name: sre-router-available
+    rules:
+    - record: sre_router_default_available
+      expr: kube_deployment_status_replicas_available{namespace="openshift-ingress",deployment="router-default"} > bool 0
