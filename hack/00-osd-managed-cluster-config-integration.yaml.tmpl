@@ -4456,14 +4456,14 @@ objects:
           \    - url: http://token-refresher.openshift-monitoring.svc.cluster.local\n\
           \      remoteTimeout: 30s\n      writeRelabelConfigs:\n      - sourceLabels:\
           \ [__name__]\n        action: keep\n        regex: '(cluster_admin_enabled|identity_provider|probe_success|probe_duration_seconds|ingress_canary_route_reachable|oauth_server_requests_total|imageregistry_http_requests_total|kube_job_complete{namespace=\"\
-          openshift-build-test\"}|sre_kube_build_test_job_succes_total| kube_job_status_succeeded{namespace=\"\
-          openshift-build-test\"})'\n      queueConfig:\n        capacity: 2500\n\
-          \        maxShards: 1000\n        minShards: 1\n        maxSamplesPerSend:\
-          \ 500\n        batchSendDeadline: 60s\n        minBackoff: 30ms\n      \
-          \  maxBackoff: 100ms\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
-          \ \"\"\n  tolerations:\n    - effect: NoSchedule\n      key: node-role.kubernetes.io/infra\n\
-          \      operator: Exists\n  retention: 11d\n  volumeClaimTemplate:\n    metadata:\n\
-          \      name: prometheus-data\n    spec:\n      resources:\n        requests:\n\
+          openshift-build-test\"}|kube_job_status_succeeded{namespace=\"openshift-build-test\"\
+          })'\n      queueConfig:\n        capacity: 2500\n        maxShards: 1000\n\
+          \        minShards: 1\n        maxSamplesPerSend: 500\n        batchSendDeadline:\
+          \ 60s\n        minBackoff: 30ms\n        maxBackoff: 100ms\n  nodeSelector:\n\
+          \    node-role.kubernetes.io/infra: \"\"\n  tolerations:\n    - effect:\
+          \ NoSchedule\n      key: node-role.kubernetes.io/infra\n      operator:\
+          \ Exists\n  retention: 11d\n  volumeClaimTemplate:\n    metadata:\n    \
+          \  name: prometheus-data\n    spec:\n      resources:\n        requests:\n\
           \          storage: 100Gi\nalertmanagerMain:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
           \ \"\"\n  tolerations:\n    - effect: NoSchedule\n      key: node-role.kubernetes.io/infra\n\
           \      operator: Exists\n  volumeClaimTemplate:\n    metadata:\n      name:\
