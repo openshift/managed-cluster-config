@@ -3336,6 +3336,57 @@ objects:
         api.openshift.com/addon-ocs-consumer: 'true'
     resourceApplyMode: Sync
     resources:
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-mtsre-ocs-consumer-cr-admins
+      rules:
+      - apiGroups:
+        - ocs.openshift.io
+        resources:
+        - storageclassclaims
+        - storageconsumers
+        verbs:
+        - get
+        - list
+        - watch
+        - patch
+        - update
+      - apiGroups:
+        - noobaa.io
+        resources:
+        - noobaaaccounts
+        verbs:
+        - get
+        - list
+        - watch
+        - patch
+        - update
+      - apiGroups:
+        - ceph.rook.io
+        resources:
+        - cephbucketnotifications
+        - cephbuckettopics
+        - cephfilesystemsubvolumegroups
+        verbs:
+        - get
+        - list
+        - watch
+        - patch
+        - update
+      - apiGroups:
+        - csiaddons.openshift.io
+        resources:
+        - csiaddonsnodes
+        - networkfences
+        - reclaimspacecronjobs
+        - reclaimspacejobs
+        verbs:
+        - get
+        - list
+        - watch
+        - patch
+        - update
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -3345,6 +3396,9 @@ objects:
         permissions:
         - allowFirst: true
           clusterRoleName: admin
+          namespacesAllowedRegex: (^openshift-storage$)
+        - allowFirst: true
+          clusterRoleName: backplane-mtsre-ocs-consumer-cr-admins
           namespacesAllowedRegex: (^openshift-storage$)
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-mtsre
@@ -3390,6 +3444,57 @@ objects:
         api.openshift.com/addon-ocs-provider: 'true'
     resourceApplyMode: Sync
     resources:
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-mtsre-ocs-provider-cr-admins
+      rules:
+      - apiGroups:
+        - ocs.openshift.io
+        resources:
+        - storageclassclaims
+        - storageconsumers
+        verbs:
+        - get
+        - list
+        - watch
+        - patch
+        - update
+      - apiGroups:
+        - noobaa.io
+        resources:
+        - noobaaaccounts
+        verbs:
+        - get
+        - list
+        - watch
+        - patch
+        - update
+      - apiGroups:
+        - ceph.rook.io
+        resources:
+        - cephbucketnotifications
+        - cephbuckettopics
+        - cephfilesystemsubvolumegroups
+        verbs:
+        - get
+        - list
+        - watch
+        - patch
+        - update
+      - apiGroups:
+        - csiaddons.openshift.io
+        resources:
+        - csiaddonsnodes
+        - networkfences
+        - reclaimspacecronjobs
+        - reclaimspacejobs
+        verbs:
+        - get
+        - list
+        - watch
+        - patch
+        - update
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -3399,6 +3504,9 @@ objects:
         permissions:
         - allowFirst: true
           clusterRoleName: admin
+          namespacesAllowedRegex: (^openshift-storage$)
+        - allowFirst: true
+          clusterRoleName: backplane-mtsre-ocs-provider-cr-admins
           namespacesAllowedRegex: (^openshift-storage$)
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-mtsre
