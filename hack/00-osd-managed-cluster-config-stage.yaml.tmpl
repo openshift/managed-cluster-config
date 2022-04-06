@@ -13961,22 +13961,6 @@ objects:
         - builds
         verbs:
         - delete
-      - apiGroups:
-        - ''
-        resources:
-        - services
-        verbs:
-        - list
-        - get
-        - delete
-      - apiGroups:
-        - monitoring.coreos.com
-        resources:
-        - servicemonitors
-        verbs:
-        - list
-        - get
-        - delete
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRoleBinding
       metadata:
@@ -14076,43 +14060,6 @@ objects:
                   - --keep-younger-than=24h
                   - --keep-failed=1
                   - --confirm
-    - apiVersion: batch/v1beta1
-      kind: CronJob
-      metadata:
-        name: services-pruner
-        namespace: openshift-sre-pruning
-      spec:
-        failedJobsHistoryLimit: 5
-        successfulJobsHistoryLimit: 3
-        concurrencyPolicy: Replace
-        schedule: '*/7 * * * *'
-        jobTemplate:
-          spec:
-            template:
-              spec:
-                affinity:
-                  nodeAffinity:
-                    preferredDuringSchedulingIgnoredDuringExecution:
-                    - preference:
-                        matchExpressions:
-                        - key: node-role.kubernetes.io/infra
-                          operator: Exists
-                      weight: 1
-                tolerations:
-                - effect: NoSchedule
-                  key: node-role.kubernetes.io/infra
-                  operator: Exists
-                serviceAccountName: sre-pruner-sa
-                restartPolicy: Never
-                containers:
-                - name: services-pruner
-                  image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
-                  imagePullPolicy: Always
-                  args:
-                  - /bin/bash
-                  - -c
-                  - oc delete services/ocm-agent-operator-metrics servicemonitors/ocm-agent-operator-metrics
-                    --namespace openshift-ocm-agent-operator --ignore-not-found
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
