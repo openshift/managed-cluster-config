@@ -10975,6 +10975,149 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: osd-set-token-refresher-proxy
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: osd-set-token-refresher-proxy
+        namespace: openshift-monitoring
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: osd-set-token-refresher-proxy
+      rules:
+      - apiGroups:
+        - config.openshift.io
+        resources:
+        - proxies
+        verbs:
+        - get
+        - list
+    - kind: ClusterRoleBinding
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        name: osd-set-token-refresher-proxy
+      subjects:
+      - kind: ServiceAccount
+        name: osd-set-token-refresher-proxy
+        namespace: openshift-monitoring
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: osd-set-token-refresher-proxy
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: osd-set-token-refresher-proxy-openshift-monitoring
+        namespace: openshift-monitoring
+      rules:
+      - apiGroups:
+        - apps
+        resources:
+        - deployments
+        verbs:
+        - get
+        - list
+        - patch
+        - update
+    - kind: RoleBinding
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        name: osd-set-token-refresher-proxy-openshift-monitoring
+        namespace: openshift-monitoring
+      subjects:
+      - kind: ServiceAccount
+        name: osd-set-token-refresher-proxy
+        namespace: openshift-monitoring
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: osd-set-token-refresher-proxy-openshift-monitoring
+        namespace: openshift-monitoring
+    - apiVersion: batch/v1beta1
+      kind: CronJob
+      metadata:
+        name: osd-set-token-refresher-proxy
+        namespace: openshift-monitoring
+      spec:
+        failedJobsHistoryLimit: 3
+        successfulJobsHistoryLimit: 3
+        concurrencyPolicy: Replace
+        schedule: '*/15 * * * *'
+        jobTemplate:
+          spec:
+            activeDeadlineSeconds: 900
+            template:
+              spec:
+                affinity:
+                  nodeAffinity:
+                    requiredDuringSchedulingIgnoredDuringExecution:
+                      nodeSelectorTerms:
+                      - matchExpressions:
+                        - key: node-role.kubernetes.io/infra
+                          operator: Exists
+                tolerations:
+                - operator: Exists
+                  key: node-role.kubernetes.io/infra
+                  effect: NoSchedule
+                serviceAccountName: osd-set-token-refresher-proxy
+                restartPolicy: Never
+                containers:
+                - name: osd-set-token-refresher-proxy
+                  image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+                  imagePullPolicy: Always
+                  env:
+                  - name: POD_NAME
+                    valueFrom:
+                      fieldRef:
+                        fieldPath: metadata.name
+                  - name: POD_NS
+                    valueFrom:
+                      fieldRef:
+                        fieldPath: metadata.namespace
+                  command:
+                  - /bin/bash
+                  - -c
+                  - '# ensure we fail if something exits non-zero
+
+                    set -o errexit
+
+                    set -o nounset
+
+
+                    # extract currently set proxy from the cluster or empty string
+                    if not set
+
+                    HTTP_PROXY=$(oc get proxy cluster -o jsonpath=''{.status.httpProxy}'')
+
+                    HTTPS_PROXY=$(oc get proxy cluster -o jsonpath=''{.status.httpsProxy}'')
+
+                    NO_PROXY=$(oc get proxy cluster -o jsonpath=''{.status.noProxy}'')
+
+
+                    echo "$(date): Setting proxy env to HTTP_PROXY=''${HTTP_PROXY}''
+                    HTTPS_PROXY=''${HTTPS_PROXY}'' NO_PROXY=''${NO_PROXY}''"
+
+                    oc set env -n openshift-monitoring deploy/token-refresher --containers="token-refresher"
+                    HTTP_PROXY="${HTTP_PROXY}" HTTPS_PROXY="${HTTPS_PROXY}" NO_PROXY="${NO_PROXY}"
+
+
+                    exit 0
+
+                    '
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: osd-strimzi-operator
   spec:
     clusterDeploymentSelector:
