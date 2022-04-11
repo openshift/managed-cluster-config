@@ -13274,16 +13274,6 @@ objects:
               summary: cluster check failed
               description: basic cluster checks failed on either before the upgrade
                 or after the upgrade
-          - alert: UpgradeNodeScalingFailedSRE
-            expr: avg_over_time(upgradeoperator_scaling_failed[10m]) == 1
-            for: 10m
-            labels:
-              severity: critical
-              namespace: openshift-monitoring
-            annotations:
-              summary: node scaling failed
-              description: The extra machine/node was not ready before the upgrade
-                started
           - alert: UpgradeControlPlaneUpgradeTimeoutSRE
             expr: avg_over_time(upgradeoperator_controlplane_timeout[10m]) == 1
             for: 10m
