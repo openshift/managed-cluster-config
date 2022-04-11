@@ -30,16 +30,6 @@ spec:
       annotations:
         summary: "cluster check failed"
         description: "basic cluster checks failed on either before the upgrade or after the upgrade"
-    - alert: UpgradeNodeScalingFailedSRE
-      # Alert if the cluster has set its compute capacity scaling failure metric for a ten-minute average window
-      expr: avg_over_time(upgradeoperator_scaling_failed[10m]) == 1
-      for: 10m
-      labels:
-        severity: critical
-        namespace: openshift-monitoring
-      annotations:
-        summary: "node scaling failed"
-        description: "The extra machine/node was not ready before the upgrade started"
     - alert: UpgradeControlPlaneUpgradeTimeoutSRE
       # Alert if the control plane timeout metric has been set for a ten-minute average window
       expr: avg_over_time(upgradeoperator_controlplane_timeout[10m]) == 1
