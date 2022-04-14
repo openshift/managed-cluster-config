@@ -1,0 +1,20 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: openshift-sre-token-scraper
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - namespaces
+      - secrets
+    verbs:
+      - get
+      - list
+  - apiGroups:
+      - "hive.openshift.io"
+    resources:
+      - "clusterdeployments"
+    verbs:
+      - get
+      - list
