@@ -8434,6 +8434,13 @@ objects:
         verbs:
         - get
         - list
+      - apiGroups:
+        - hive.openshift.io
+        resources:
+        - clusterdeployments
+        verbs:
+        - get
+        - list
     - apiVersion: v1
       kind: Namespace
       metadata:
@@ -8507,8 +8514,9 @@ objects:
                   args:
                   - "readarray -t clusters < <(oc get ns -l \"hive.openshift.io/managed=true\"\
                     \ -o go-template='{{range .items}}{{.metadata.name}}{{\"\\n\"\
-                    }}{{end}}');\nfor cluster in \"${clusters[@]}\";\n  do oc get\
-                    \ secret -n \"${cluster}\" -l \"hive.openshift.io/secret-type=kubeconfig\"\
+                    }}{{end}}');\nfor cluster in \"${clusters[@]}\";\n  apiurl=\"\
+                    $(oc get cd -n ${cluster} -ojson | jq -r '.items[0].status.apiURL')\"\
+                    ;\n  do oc get secret -n \"${cluster}\" -l \"hive.openshift.io/secret-type=kubeconfig\"\
                     \ -o jsonpath='{.items[0].data.kubeconfig}' | base64 -d > \"/tmp/${cluster}.config\"\
                     ;\n  readarray -t sres < <(oc get sa --kubeconfig \"/tmp/${cluster}.config\"\
                     \ -n openshift-config -l app=sre-cluster-admin -o go-template='{{range\
@@ -8523,11 +8531,11 @@ objects:
                     \ end }}{{end}}');\n    oc delete secret -n openshift-sre-token-scraper\
                     \ \"${cluster}-${sre}\" --ignore-not-found;\n    oc create secret\
                     \ generic -n openshift-sre-token-scraper \"${cluster}-${sre}\"\
-                    \ --from-literal=token=\"$(oc get secret --kubeconfig \"/tmp/${cluster}.config\"\
-                    \ -n openshift-config \"${token}\" -ojsonpath='{.data.token}'\
-                    \ | base64 -d)\";\n    oc label secret -n openshift-sre-token-scraper\
-                    \ \"${cluster}-${sre}\" app=openshift-sre-token-scraper;\n  done;\n\
-                    done;\n"
+                    \ --from-literal=apiserver=\"${apiurl}\" --from-literal=token=\"\
+                    $(oc get secret --kubeconfig \"/tmp/${cluster}.config\" -n openshift-config\
+                    \ \"${token}\" -ojsonpath='{.data.token}' | base64 -d)\";\n  \
+                    \  oc label secret -n openshift-sre-token-scraper \"${cluster}-${sre}\"\
+                    \ app=openshift-sre-token-scraper;\n  done;\ndone;\n"
                 restartPolicy: OnFailure
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet

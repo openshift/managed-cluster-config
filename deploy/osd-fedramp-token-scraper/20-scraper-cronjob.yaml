@@ -26,12 +26,13 @@ spec:
                 - |
                   readarray -t clusters < <(oc get ns -l "hive.openshift.io/managed=true" -o go-template='{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}');
                   for cluster in "${clusters[@]}";
+                    apiurl="$(oc get cd -n ${cluster} -ojson | jq -r '.items[0].status.apiURL')";
                     do oc get secret -n "${cluster}" -l "hive.openshift.io/secret-type=kubeconfig" -o jsonpath='{.items[0].data.kubeconfig}' | base64 -d > "/tmp/${cluster}.config";
                     readarray -t sres < <(oc get sa --kubeconfig "/tmp/${cluster}.config" -n openshift-config -l app=sre-cluster-admin -o go-template='{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}');
                     for sre in "${sres[@]}";
                       do token=$(oc get secret --kubeconfig "/tmp/${cluster}.config" -n openshift-config -o go-template='{{ range .items }}{{ if eq .type "kubernetes.io/service-account-token" }}{{$created_by := index .metadata.annotations "kubernetes.io/created-by"}}{{if not $created_by}}{{ $sa_name := index .metadata.annotations "kubernetes.io/service-account.name" }}{{ if eq $sa_name "'${sre}'" }}{{ .metadata.name }}{{ "\n" }}{{end}}{{end}}{{ end }}{{end}}');
                       oc delete secret -n openshift-sre-token-scraper "${cluster}-${sre}" --ignore-not-found;
-                      oc create secret generic -n openshift-sre-token-scraper "${cluster}-${sre}" --from-literal=token="$(oc get secret --kubeconfig "/tmp/${cluster}.config" -n openshift-config "${token}" -ojsonpath='{.data.token}' | base64 -d)";
+                      oc create secret generic -n openshift-sre-token-scraper "${cluster}-${sre}" --from-literal=apiserver="${apiurl}" --from-literal=token="$(oc get secret --kubeconfig "/tmp/${cluster}.config" -n openshift-config "${token}" -ojsonpath='{.data.token}' | base64 -d)";
                       oc label secret -n openshift-sre-token-scraper "${cluster}-${sre}" app=openshift-sre-token-scraper;
                     done;
                   done;
