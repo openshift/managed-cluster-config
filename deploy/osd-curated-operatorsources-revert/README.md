@@ -1,2 +1,0 @@
-This removes the override for OperatorHub.  It does not remove the curated OperatorSource CRs.
-There is not a way to remove a file from hive at this time.  And the existance of the shipped and curated OperatorSources works fine.
