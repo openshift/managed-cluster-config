@@ -6,37 +6,19 @@ parameters:
 - name: REPO_NAME
   value: REPLACED_BY_SCRIPT
   required: true
-- name: IDENTITY_ATTR_EMAIL
-  required: true
-- name: IDENTITY_ATTR_ID
-  required: true
-- name: IDENTITY_ATTR_NAME
-  required: true
-- name: IDENTITY_ATTR_PREFERRED_USERNAME
-  required: true
-- name: IDENTITY_BIND_DN
-  required: true
-- name: IDENTITY_URL
-  required: true
-- name: IDENTITY_SRE_GOOGLE_CLIENTID
-  required: true
-- name: IDENTITY_NAME
-  required: true
-- name: IDENTITY_MAPPING_METHOD
-  required: true
 - name: TELEMETER_SERVER_URL
   required: true
 - name: OCM_BASE_URL
+  required: true
+- name: CONSOLE_BASE_URL
   required: true
 - name: SREP_LEGAL_ENTITY_ID
   required: true
 - name: DPTP_LEGAL_ENTITY_ID
   required: true
-- name: OBSERVATORIUM_LEGALENTITY_IDS
-  required: true
 - name: ALLOWED_CIDR_BLOCKS
   required: true
-- name: ENABLE_MANAGEMENT_API_SERVER_INGRESS
+- name: ROUTER_REPLICA_CLUSTER_IDS
   required: true
 metadata:
   name: selectorsyncset-template
@@ -600,6 +582,10 @@ objects:
         operator: In
         values:
         - "true"
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+          - "true"
     resourceApplyMode: Sync
     secretMappings:
     - sourceRef:

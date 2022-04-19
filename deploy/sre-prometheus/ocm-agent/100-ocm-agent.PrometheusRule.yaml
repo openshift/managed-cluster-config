@@ -1,0 +1,21 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: sre-managed-notification-alerts
+    role: alert-rules 
+  name: sre-managed-notification-alerts
+  namespace: openshift-monitoring
+spec:
+  groups:
+  - name: sre-managed-notification-alerts
+    rules:
+    - alert: LoggingVolumeFillingUpNotificationSRE
+    # KubePersistentVolumeFillingUp alert firing in openshift-logging Namespace.
+      expr: count(ALERTS{alertname="KubePersistentVolumeFillingUp", alertstate="firing", namespace="openshift-logging"}) >= 1
+      for: 30m
+      labels:
+        severity: Info
+        namespace: openshift-logging
+        send_managed_notification: "true"
+        managed_notification_template: "LoggingVolumeFillingUp"

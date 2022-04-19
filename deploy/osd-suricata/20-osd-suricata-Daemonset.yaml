@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: suricata
+  namespace: openshift-suricata
+spec:
+  selector:
+    matchLabels:
+      name: suricata
+  template:
+    metadata:
+      labels:
+        name: suricata
+    spec:
+      containers:
+      - env:
+        - name: OO_PAUSE_ON_START
+          value: "false"
+        image: quay.io/app-sre/suricata@sha256:7c1814dca83c2c36726e7d71376165fb57b4043ba09bac83823e378fd5cedb5c
+        imagePullPolicy: IfNotPresent
+        name: suricata
+        resources:
+          limits:
+            cpu: 900m
+            memory: 900Mi
+          requests:
+            cpu: 100m
+            memory: 50Mi
+        securityContext:
+          privileged: true
+          runAsUser: 0
+        volumeMounts:
+        - mountPath: /host/
+          name: host-filesystem
+      dnsPolicy: ClusterFirst
+      hostNetwork: true
+      nodeSelector:
+        kubernetes.io/os: linux
+      serviceAccountName: suricata-sa
+      tolerations:
+      - operator: Exists
+      volumes:
+      - hostPath:
+          path: /
+        name: host-filesystem

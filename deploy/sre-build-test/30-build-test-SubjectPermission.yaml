@@ -1,0 +1,12 @@
+apiVersion: managed.openshift.io/v1alpha1
+kind: SubjectPermission
+metadata:
+  name: sre-build-test
+  namespace: openshift-rbac-permissions
+spec:
+  permissions:
+  - allowFirst: true
+    clusterRoleName: admin
+    namespacesAllowedRegex: "^openshift-build-test-.*$"
+  subjectKind: User
+  subjectName: system:serviceaccount:openshift-build-test:sre-build-test

@@ -1,0 +1,15 @@
+apiVersion: ocmagent.managed.openshift.io/v1alpha1
+kind: ManagedNotification
+metadata:
+  name: sre-managed-notifications
+  namespace: openshift-ocm-agent-operator
+spec:
+  notifications:
+    - activeBody: |-
+        Your cluster requires you to take action as its ElasticSearch cluster logging deployment has been detected as reaching a high disk usage threshold. Red Hat SRE strongly recommends reducing application logging on your cluster to ensure logging continues to function. If logging disk consumption exceeds 95%, data will be at risk of becoming unavailable or lost and the stability of your ElasticSearch deployment may be impacted.
+      name: LoggingVolumeFillingUp
+      resendWait: 24
+      resolvedBody: |-
+        Your cluster's ElasticSearch deployment is detected as being at safe disk consumption levels and no additional action on this issue is required.
+      severity: Info
+      summary: "ElasticSearch reaching disk capacity" 

@@ -32,6 +32,14 @@ spec:
         - effect: NoSchedule
           key: node-role.kubernetes.io/infra
           operator: Exists
+      volumes:
+      - configMap:
+          defaultMode: 420
+          items:
+            - key: ca-bundle.crt
+              path: ca-certificates.crt
+          name: token-refresher-trusted-ca-bundle
+        name: token-refresher-trusted-ca-bundle
       containers:
       - args:
         - --oidc.audience=observatorium-telemeter
@@ -57,8 +65,12 @@ spec:
               key: receiver-url
         - name: ISSUER_URL
           value: "https://sso.redhat.com/auth/realms/redhat-external"
-        image: quay.io/observatorium/token-refresher:master-2021-02-24-1e01b9c
+        image: quay.io/observatorium/token-refresher@sha256:6ce9b80cd1d907cb6c9ed2a18612f386f7503257772d1d88155a4a2e6773fd00
         name: token-refresher
         ports:
         - containerPort: 8080
           name: http
+        volumeMounts:
+        - mountPath: /etc/ssl/certs/
+          name: token-refresher-trusted-ca-bundle
+          readOnly: true
