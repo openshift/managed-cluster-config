@@ -13550,7 +13550,9 @@ objects:
               description: node drain takes too long and cannot be finished in the
                 given time period during cluster upgrade
           - alert: UpgradeConfigSyncFailureOver4HrSRE
-            expr: avg_over_time(upgradeoperator_upgradeconfig_synced[4h]) == 1
+            expr: avg_over_time(upgradeoperator_upgradeconfig_synced[4h]) * on(pod)
+              kube_pod_container_status_ready{container="managed-upgrade-operator",
+              namespace="openshift-managed-upgrade-operator"}
             for: 2m
             labels:
               severity: critical
