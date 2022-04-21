@@ -13552,7 +13552,7 @@ objects:
           - alert: UpgradeConfigSyncFailureOver4HrSRE
             expr: avg_over_time(upgradeoperator_upgradeconfig_synced[4h]) * on(pod)
               kube_pod_container_status_ready{container="managed-upgrade-operator",
-              namespace="openshift-managed-upgrade-operator"}
+              namespace="openshift-managed-upgrade-operator"} == 1
             for: 2m
             labels:
               severity: critical
