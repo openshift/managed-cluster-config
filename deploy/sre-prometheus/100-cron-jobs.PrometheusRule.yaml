@@ -1,0 +1,21 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: sre-cron-jobs
+    role: alert-rules
+  name: sre-cron-jobs
+  namespace: openshift-monitoring
+spec:
+  groups:
+  - name: sre-cron-jobs
+    rules:
+    - alert: KubeCronJobFailingSRE
+      expr: max by (namespace, owner_name) (kube_job_status_completion_time{namespace=~"(openshift-.*|kube-.*|default)"} * on (job_name) group_left(owner_name) max by (namespace, owner_name, job_name) (kube_job_owner{owner_kind="CronJob"})) - max by (namespace, owner_name) (kube_job_status_start_time{namespace=~"(openshift-.*|kube-.*|default)"} * on (job_name) group_left(owner_name) max by (namespace, owner_name, job_name) (kube_job_owner{owner_kind="CronJob"}))<0 unless max by (namespace, owner_name) (kube_cronjob_status_active)
+      for: 30m
+      labels:
+        severity: critical
+        namespace: "{{ $labels.namespace }}"
+      annotations:
+        message: SRE Cron Job {{ $labels.cronjob }} in namespace {{ $labels.namespace }}
+          is taking more than thirty minutes to complete.
