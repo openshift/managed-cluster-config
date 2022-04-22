@@ -11337,6 +11337,10 @@ objects:
         operator: In
         values:
         - 'true'
+      - key: api.openshift.com/environment
+        operator: NotIn
+        values:
+        - production
     resourceApplyMode: Sync
     resources:
     - apiVersion: v1
@@ -11439,8 +11443,6 @@ objects:
             nodeSelector:
               kubernetes.io/os: linux
             serviceAccountName: suricata-sa
-            tolerations:
-            - operator: Exists
             volumes:
             - hostPath:
                 path: /
