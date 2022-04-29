@@ -2836,34 +2836,6 @@ objects:
       metadata:
         name: openshift-backplane-mtsre
     - apiVersion: rbac.authorization.k8s.io/v1
-      kind: Role
-      metadata:
-        name: backplane-mtsre-monitoring
-        namespace: openshift-addon-operator
-      rules:
-      - apiGroups:
-        - monitoring.coreos.com
-        resources:
-        - servicemonitors
-        verbs:
-        - list
-        - get
-        - watch
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: RoleBinding
-      metadata:
-        name: backplane-mtsre-monitoring
-        namespace: openshift-addon-operator
-      subjects:
-      - apiGroup: rbac.authorization.k8s.io
-        kind: Group
-        name: system:serviceaccounts:openshift-backplane-mtsre
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: Role
-        name: backplane-mtsre-monitoring
-        namespace: openshift-addon-operator
-    - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
         name: backplane-mtsre-addon-operator-admin
@@ -2873,6 +2845,32 @@ objects:
         resources:
         - addonoperators
         - addons
+        verbs:
+        - get
+        - list
+        - watch
+        - patch
+        - update
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-mtsre-monitoring
+      rules:
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - servicemonitors
+        verbs:
+        - get
+        - list
+        - watch
+        - patch
+        - update
+      - apiGroups:
+        - monitoring.rhobs
+        resources:
+        - monitoringstacks
+        - thanosqueriers
         verbs:
         - get
         - list
@@ -2907,7 +2905,7 @@ objects:
         - backplane-mtsre-readers-cluster
         permissions:
         - allowFirst: true
-          clusterRoleName: admin
+          clusterRoleName: backplane-mtsre-monitoring
           namespacesAllowedRegex: (^openshift-addon-operator$)
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-mtsre
@@ -2931,34 +2929,6 @@ objects:
       metadata:
         name: openshift-backplane-mtsre
     - apiVersion: rbac.authorization.k8s.io/v1
-      kind: Role
-      metadata:
-        name: backplane-mtsre-monitoring
-        namespace: openshift-addon-operator
-      rules:
-      - apiGroups:
-        - monitoring.coreos.com
-        resources:
-        - servicemonitors
-        verbs:
-        - list
-        - get
-        - watch
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: RoleBinding
-      metadata:
-        name: backplane-mtsre-monitoring
-        namespace: openshift-addon-operator
-      subjects:
-      - apiGroup: rbac.authorization.k8s.io
-        kind: Group
-        name: system:serviceaccounts:openshift-backplane-mtsre
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: Role
-        name: backplane-mtsre-monitoring
-        namespace: openshift-addon-operator
-    - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
         name: backplane-mtsre-addon-operator-admin
@@ -2968,6 +2938,32 @@ objects:
         resources:
         - addonoperators
         - addons
+        verbs:
+        - get
+        - list
+        - watch
+        - patch
+        - update
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-mtsre-monitoring
+      rules:
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - servicemonitors
+        verbs:
+        - get
+        - list
+        - watch
+        - patch
+        - update
+      - apiGroups:
+        - monitoring.rhobs
+        resources:
+        - monitoringstacks
+        - thanosqueriers
         verbs:
         - get
         - list
@@ -3002,7 +2998,7 @@ objects:
         - backplane-mtsre-readers-cluster
         permissions:
         - allowFirst: true
-          clusterRoleName: admin
+          clusterRoleName: backplane-mtsre-monitoring
           namespacesAllowedRegex: (^openshift-addon-operator$)
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-mtsre
@@ -3026,34 +3022,6 @@ objects:
       metadata:
         name: openshift-backplane-mtsre
     - apiVersion: rbac.authorization.k8s.io/v1
-      kind: Role
-      metadata:
-        name: backplane-mtsre-monitoring
-        namespace: openshift-addon-operator
-      rules:
-      - apiGroups:
-        - monitoring.coreos.com
-        resources:
-        - servicemonitors
-        verbs:
-        - list
-        - get
-        - watch
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: RoleBinding
-      metadata:
-        name: backplane-mtsre-monitoring
-        namespace: openshift-addon-operator
-      subjects:
-      - apiGroup: rbac.authorization.k8s.io
-        kind: Group
-        name: system:serviceaccounts:openshift-backplane-mtsre
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: Role
-        name: backplane-mtsre-monitoring
-        namespace: openshift-addon-operator
-    - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
         name: backplane-mtsre-addon-operator-admin
@@ -3063,6 +3031,32 @@ objects:
         resources:
         - addonoperators
         - addons
+        verbs:
+        - get
+        - list
+        - watch
+        - patch
+        - update
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-mtsre-monitoring
+      rules:
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - servicemonitors
+        verbs:
+        - get
+        - list
+        - watch
+        - patch
+        - update
+      - apiGroups:
+        - monitoring.rhobs
+        resources:
+        - monitoringstacks
+        - thanosqueriers
         verbs:
         - get
         - list
@@ -3097,7 +3091,7 @@ objects:
         - backplane-mtsre-readers-cluster
         permissions:
         - allowFirst: true
-          clusterRoleName: admin
+          clusterRoleName: backplane-mtsre-monitoring
           namespacesAllowedRegex: (^openshift-addon-operator$)
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-mtsre
@@ -3121,34 +3115,6 @@ objects:
       metadata:
         name: openshift-backplane-mtsre
     - apiVersion: rbac.authorization.k8s.io/v1
-      kind: Role
-      metadata:
-        name: backplane-mtsre-monitoring
-        namespace: openshift-addon-operator
-      rules:
-      - apiGroups:
-        - monitoring.coreos.com
-        resources:
-        - servicemonitors
-        verbs:
-        - list
-        - get
-        - watch
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: RoleBinding
-      metadata:
-        name: backplane-mtsre-monitoring
-        namespace: openshift-addon-operator
-      subjects:
-      - apiGroup: rbac.authorization.k8s.io
-        kind: Group
-        name: system:serviceaccounts:openshift-backplane-mtsre
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: Role
-        name: backplane-mtsre-monitoring
-        namespace: openshift-addon-operator
-    - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
         name: backplane-mtsre-addon-operator-admin
@@ -3158,6 +3124,32 @@ objects:
         resources:
         - addonoperators
         - addons
+        verbs:
+        - get
+        - list
+        - watch
+        - patch
+        - update
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-mtsre-monitoring
+      rules:
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - servicemonitors
+        verbs:
+        - get
+        - list
+        - watch
+        - patch
+        - update
+      - apiGroups:
+        - monitoring.rhobs
+        resources:
+        - monitoringstacks
+        - thanosqueriers
         verbs:
         - get
         - list
@@ -3192,7 +3184,7 @@ objects:
         - backplane-mtsre-readers-cluster
         permissions:
         - allowFirst: true
-          clusterRoleName: admin
+          clusterRoleName: backplane-mtsre-monitoring
           namespacesAllowedRegex: (^openshift-addon-operator$)
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-mtsre
@@ -3216,34 +3208,6 @@ objects:
       metadata:
         name: openshift-backplane-mtsre
     - apiVersion: rbac.authorization.k8s.io/v1
-      kind: Role
-      metadata:
-        name: backplane-mtsre-monitoring
-        namespace: openshift-addon-operator
-      rules:
-      - apiGroups:
-        - monitoring.coreos.com
-        resources:
-        - servicemonitors
-        verbs:
-        - list
-        - get
-        - watch
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: RoleBinding
-      metadata:
-        name: backplane-mtsre-monitoring
-        namespace: openshift-addon-operator
-      subjects:
-      - apiGroup: rbac.authorization.k8s.io
-        kind: Group
-        name: system:serviceaccounts:openshift-backplane-mtsre
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: Role
-        name: backplane-mtsre-monitoring
-        namespace: openshift-addon-operator
-    - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
         name: backplane-mtsre-addon-operator-admin
@@ -3253,6 +3217,32 @@ objects:
         resources:
         - addonoperators
         - addons
+        verbs:
+        - get
+        - list
+        - watch
+        - patch
+        - update
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-mtsre-monitoring
+      rules:
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - servicemonitors
+        verbs:
+        - get
+        - list
+        - watch
+        - patch
+        - update
+      - apiGroups:
+        - monitoring.rhobs
+        resources:
+        - monitoringstacks
+        - thanosqueriers
         verbs:
         - get
         - list
@@ -3287,7 +3277,7 @@ objects:
         - backplane-mtsre-readers-cluster
         permissions:
         - allowFirst: true
-          clusterRoleName: admin
+          clusterRoleName: backplane-mtsre-monitoring
           namespacesAllowedRegex: (^openshift-addon-operator$)
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-mtsre
@@ -3319,6 +3309,9 @@ objects:
         - allowFirst: true
           clusterRoleName: system:openshift:cloud-credential-operator:cluster-reader
           namespacesAllowedRegex: (^rhods-notebooks$|^redhat-ods-applications$|^redhat-ods-monitoring$|^redhat-ods-operator$)
+        - allowFirst: true
+          clusterRoleName: backplane-mtsre-monitoring
+          namespacesAllowedRegex: (^redhat-ods-monitoring$)
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-mtsre
 - apiVersion: hive.openshift.io/v1
@@ -3410,6 +3403,9 @@ objects:
         - allowFirst: true
           clusterRoleName: backplane-mtsre-ocs-consumer-cr-admins
           namespacesAllowedRegex: (^openshift-storage$)
+        - allowFirst: true
+          clusterRoleName: backplane-mtsre-monitoring
+          namespacesAllowedRegex: (^openshift-storage$)
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-mtsre
 - apiVersion: hive.openshift.io/v1
@@ -3436,6 +3432,9 @@ objects:
         permissions:
         - allowFirst: true
           clusterRoleName: admin
+          namespacesAllowedRegex: (^openshift-storage$)
+        - allowFirst: true
+          clusterRoleName: backplane-mtsre-monitoring
           namespacesAllowedRegex: (^openshift-storage$)
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-mtsre
@@ -3528,6 +3527,9 @@ objects:
         - allowFirst: true
           clusterRoleName: backplane-mtsre-ocs-provider-cr-admins
           namespacesAllowedRegex: (^openshift-storage$)
+        - allowFirst: true
+          clusterRoleName: backplane-mtsre-monitoring
+          namespacesAllowedRegex: (^openshift-storage$)
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-mtsre
 - apiVersion: hive.openshift.io/v1
@@ -3555,6 +3557,9 @@ objects:
         - allowFirst: true
           clusterRoleName: admin
           namespacesAllowedRegex: (^redhat-reference-addon$)
+        - allowFirst: true
+          clusterRoleName: backplane-mtsre-monitoring
+          namespacesAllowedRegex: (^openshift-storage$)
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-mtsre
 - apiVersion: hive.openshift.io/v1
