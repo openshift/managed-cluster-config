@@ -10,7 +10,7 @@ In the basic implementation a couple of questions need to be asked:
 * How much budget can we burn worst case until we're alerted?
 * How fast do we want to recover?
 
-The combinaiton of the first and the last question hints that we always want to be implementing at least a short
+The combination of the first and the last question hints that we always want to be implementing at least a short
 and a long window.
 
 We want to avoid flapping alerts therefore a good time period to chose for a condition to exist
