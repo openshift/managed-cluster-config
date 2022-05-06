@@ -5031,15 +5031,15 @@ objects:
         name: managed-upgrade-operator-config
         namespace: openshift-managed-upgrade-operator
       data:
-        config.yaml: "configManager:\n  source: OCM\n  ocmBaseUrl: ${OCM_BASE_URL}\n\
-          \  watchInterval: 60\nmaintenance:\n  controlPlaneTime: 130\n  ignoredAlerts:\n\
-          \    controlPlaneCriticals:\n    # ClusterOperatorDown - https://bugzilla.redhat.com/show_bug.cgi?id=1955300\n\
-          \    - ClusterOperatorDown\nscale:\n  timeOut: 30\nupgradeWindow:\n  delayTrigger:\
-          \ 30\n  timeOut: 120\nnodeDrain:\n  timeOut: 45\n  expectedNodeDrainTime:\
-          \ 8\nhealthCheck:\n  ignoredCriticals:\n  - DNSErrors05MinSRE\n  - MetricsClientSendFailingSRE\n\
-          \  - UpgradeNodeScalingFailedSRE\n  - UpgradeClusterCheckFailedSRE\n  -\
-          \ PruningCronjobErrorSRE\n  - PrometheusRuleFailures\n  - CannotRetrieveUpdates\n\
-          \  - FluentdNodeDown\n  # https://bugzilla.redhat.com/show_bug.cgi?id=1986981\n\
+        config.yaml: "upgradeType: OSD\nconfigManager:\n  source: OCM\n  ocmBaseUrl:\
+          \ ${OCM_BASE_URL}\n  watchInterval: 60\nmaintenance:\n  controlPlaneTime:\
+          \ 130\n  ignoredAlerts:\n    controlPlaneCriticals:\n    # ClusterOperatorDown\
+          \ - https://bugzilla.redhat.com/show_bug.cgi?id=1955300\n    - ClusterOperatorDown\n\
+          scale:\n  timeOut: 30\nupgradeWindow:\n  delayTrigger: 30\n  timeOut: 120\n\
+          nodeDrain:\n  timeOut: 45\n  expectedNodeDrainTime: 8\nhealthCheck:\n  ignoredCriticals:\n\
+          \  - DNSErrors05MinSRE\n  - MetricsClientSendFailingSRE\n  - UpgradeNodeScalingFailedSRE\n\
+          \  - UpgradeClusterCheckFailedSRE\n  - PruningCronjobErrorSRE\n  - PrometheusRuleFailures\n\
+          \  - CannotRetrieveUpdates\n  - FluentdNodeDown\n  # https://bugzilla.redhat.com/show_bug.cgi?id=1986981\n\
           \  - PrometheusRemoteWriteBehind\n  - KubePersistentVolumeErrors\n  - PrometheusBadConfig\n\
           \  - PrometheusRemoteStorageFailures\n  - AlertmanagerMembersInconsistent\n\
           \  - AlertmanagerClusterFailedToSendAlerts\n  - AlertmanagerConfigInconsistent\n\
@@ -5075,23 +5075,24 @@ objects:
         name: managed-upgrade-operator-config
         namespace: openshift-managed-upgrade-operator
       data:
-        config.yaml: "configManager:\n  source: OCM\n  ocmBaseUrl: ${OCM_BASE_URL}\n\
-          \  watchInterval: 60\nmaintenance:\n  controlPlaneTime: 90\n  ignoredAlerts:\n\
-          \    controlPlaneCriticals:\n    # etcdMembersDown - OSD-6138\n    - etcdMembersDown\n\
-          \    # ClusterOperatorDown - OSD-6330\n    - ClusterOperatorDown\n    #\
-          \ ClusterOperatorDegraded - OSD-6330\n    - ClusterOperatorDegraded\n  \
-          \  # CloudCredentialOperatorDown - BZ 1889540\n    - CloudCredentialOperatorDown\n\
-          scale:\n  timeOut: 30\nupgradeWindow:\n  delayTrigger: 30\n  timeOut: 120\n\
-          nodeDrain:\n  timeOut: 45\n  expectedNodeDrainTime: 8\nhealthCheck:\n  ignoredCriticals:\n\
-          \  - DNSErrors05MinSRE\n  - MetricsClientSendFailingSRE\n  - UpgradeNodeScalingFailedSRE\n\
-          \  - UpgradeClusterCheckFailedSRE\n  - PruningCronjobErrorSRE\n  - PrometheusRuleFailures\n\
-          \  - CannotRetrieveUpdates\n  - FluentdNodeDown\n  ignoredNamespaces:\n\
-          \  - openshift-logging\n  - openshift-redhat-marketplace\n  - openshift-operators\n\
-          \  - openshift-customer-monitoring\n  - openshift-cnv\n  - openshift-route-monitoring-operator\n\
-          \  - openshift-user-workload-monitoring\n  - openshift-pipelines\nextDependencyAvailabilityChecks:\n\
-          \  http:\n    timeout: 10\n    urls:\n      - ${OCM_BASE_URL}\nverification:\n\
-          \  ignoredNamespaces:\n  - openshift-logging\n  namespacePrefixesToCheck:\n\
-          \  - openshift\n  - kube\n  - default\n"
+        config.yaml: "upgradeType: OSD\nconfigManager:\n  source: OCM\n  ocmBaseUrl:\
+          \ ${OCM_BASE_URL}\n  watchInterval: 60\nmaintenance:\n  controlPlaneTime:\
+          \ 90\n  ignoredAlerts:\n    controlPlaneCriticals:\n    # etcdMembersDown\
+          \ - OSD-6138\n    - etcdMembersDown\n    # ClusterOperatorDown - OSD-6330\n\
+          \    - ClusterOperatorDown\n    # ClusterOperatorDegraded - OSD-6330\n \
+          \   - ClusterOperatorDegraded\n    # CloudCredentialOperatorDown - BZ 1889540\n\
+          \    - CloudCredentialOperatorDown\nscale:\n  timeOut: 30\nupgradeWindow:\n\
+          \  delayTrigger: 30\n  timeOut: 120\nnodeDrain:\n  timeOut: 45\n  expectedNodeDrainTime:\
+          \ 8\nhealthCheck:\n  ignoredCriticals:\n  - DNSErrors05MinSRE\n  - MetricsClientSendFailingSRE\n\
+          \  - UpgradeNodeScalingFailedSRE\n  - UpgradeClusterCheckFailedSRE\n  -\
+          \ PruningCronjobErrorSRE\n  - PrometheusRuleFailures\n  - CannotRetrieveUpdates\n\
+          \  - FluentdNodeDown\n  ignoredNamespaces:\n  - openshift-logging\n  - openshift-redhat-marketplace\n\
+          \  - openshift-operators\n  - openshift-customer-monitoring\n  - openshift-cnv\n\
+          \  - openshift-route-monitoring-operator\n  - openshift-user-workload-monitoring\n\
+          \  - openshift-pipelines\nextDependencyAvailabilityChecks:\n  http:\n  \
+          \  timeout: 10\n    urls:\n      - ${OCM_BASE_URL}\nverification:\n  ignoredNamespaces:\n\
+          \  - openshift-logging\n  namespacePrefixesToCheck:\n  - openshift\n  -\
+          \ kube\n  - default\n"
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -5117,14 +5118,15 @@ objects:
         name: managed-upgrade-operator-config
         namespace: openshift-managed-upgrade-operator
       data:
-        config.yaml: "configManager:\n  source: OCM\n  ocmBaseUrl: ${OCM_BASE_URL}\n\
-          \  watchInterval: 60\nmaintenance:\n  controlPlaneTime: 90\n  ignoredAlerts:\n\
-          \    controlPlaneCriticals:\n    # ClusterOperatorDown - OSD-6330\n    -\
-          \ ClusterOperatorDown\n    # ClusterOperatorDegraded - OSD-6330\n    - ClusterOperatorDegraded\n\
-          \    # CloudCredentialOperatorDown - BZ 1889540\n    - CloudCredentialOperatorDown\n\
-          scale:\n  timeOut: 30\nupgradeWindow:\n  delayTrigger: 30\n  timeOut: 120\n\
-          nodeDrain:\n  timeOut: 45\n  expectedNodeDrainTime: 8\nhealthCheck:\n  ignoredCriticals:\n\
-          \  - DNSErrors05MinSRE\n  - MetricsClientSendFailingSRE\n  - UpgradeNodeScalingFailedSRE\n\
+        config.yaml: "upgradeType: OSD\nconfigManager:\n  source: OCM\n  ocmBaseUrl:\
+          \ ${OCM_BASE_URL}\n  watchInterval: 60\nmaintenance:\n  controlPlaneTime:\
+          \ 90\n  ignoredAlerts:\n    controlPlaneCriticals:\n    # ClusterOperatorDown\
+          \ - OSD-6330\n    - ClusterOperatorDown\n    # ClusterOperatorDegraded -\
+          \ OSD-6330\n    - ClusterOperatorDegraded\n    # CloudCredentialOperatorDown\
+          \ - BZ 1889540\n    - CloudCredentialOperatorDown\nscale:\n  timeOut: 30\n\
+          upgradeWindow:\n  delayTrigger: 30\n  timeOut: 120\nnodeDrain:\n  timeOut:\
+          \ 45\n  expectedNodeDrainTime: 8\nhealthCheck:\n  ignoredCriticals:\n  -\
+          \ DNSErrors05MinSRE\n  - MetricsClientSendFailingSRE\n  - UpgradeNodeScalingFailedSRE\n\
           \  - UpgradeClusterCheckFailedSRE\n  - PruningCronjobErrorSRE\n  - PrometheusRuleFailures\n\
           \  - CannotRetrieveUpdates\n  - FluentdNodeDown\n  ignoredNamespaces:\n\
           \  - openshift-logging\n  - openshift-redhat-marketplace\n  - openshift-operators\n\
@@ -5158,15 +5160,16 @@ objects:
         name: managed-upgrade-operator-config
         namespace: openshift-managed-upgrade-operator
       data:
-        config.yaml: "configManager:\n  source: OCM\n  ocmBaseUrl: ${OCM_BASE_URL}\n\
-          \  watchInterval: 60\nmaintenance:\n  controlPlaneTime: 90\n  ignoredAlerts:\n\
-          \    controlPlaneCriticals:\n    # ClusterOperatorDown - OSD-6330\n    -\
-          \ ClusterOperatorDown\n    # ClusterOperatorDegraded - OSD-6330\n    - ClusterOperatorDegraded\n\
-          scale:\n  timeOut: 30\nupgradeWindow:\n  delayTrigger: 30\n  timeOut: 120\n\
-          nodeDrain:\n  timeOut: 45\n  expectedNodeDrainTime: 8\nhealthCheck:\n  ignoredCriticals:\n\
-          \  - DNSErrors05MinSRE\n  - MetricsClientSendFailingSRE\n  - UpgradeNodeScalingFailedSRE\n\
-          \  - UpgradeClusterCheckFailedSRE\n  - PruningCronjobErrorSRE\n  - PrometheusRuleFailures\n\
-          \  - CannotRetrieveUpdates\n  - FluentdNodeDown\n  # https://bugzilla.redhat.com/show_bug.cgi?id=1986981\n\
+        config.yaml: "upgradeType: OSD\nconfigManager:\n  source: OCM\n  ocmBaseUrl:\
+          \ ${OCM_BASE_URL}\n  watchInterval: 60\nmaintenance:\n  controlPlaneTime:\
+          \ 90\n  ignoredAlerts:\n    controlPlaneCriticals:\n    # ClusterOperatorDown\
+          \ - OSD-6330\n    - ClusterOperatorDown\n    # ClusterOperatorDegraded -\
+          \ OSD-6330\n    - ClusterOperatorDegraded\nscale:\n  timeOut: 30\nupgradeWindow:\n\
+          \  delayTrigger: 30\n  timeOut: 120\nnodeDrain:\n  timeOut: 45\n  expectedNodeDrainTime:\
+          \ 8\nhealthCheck:\n  ignoredCriticals:\n  - DNSErrors05MinSRE\n  - MetricsClientSendFailingSRE\n\
+          \  - UpgradeNodeScalingFailedSRE\n  - UpgradeClusterCheckFailedSRE\n  -\
+          \ PruningCronjobErrorSRE\n  - PrometheusRuleFailures\n  - CannotRetrieveUpdates\n\
+          \  - FluentdNodeDown\n  # https://bugzilla.redhat.com/show_bug.cgi?id=1986981\n\
           \  - PrometheusRemoteWriteBehind\n  - KubePersistentVolumeErrors\n  - PrometheusBadConfig\n\
           \  - PrometheusRemoteStorageFailures\n  - AlertmanagerMembersInconsistent\n\
           \  - AlertmanagerClusterFailedToSendAlerts\n  - AlertmanagerConfigInconsistent\n\
