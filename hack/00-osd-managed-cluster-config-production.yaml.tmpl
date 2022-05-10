@@ -12688,56 +12688,6 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: rbac-rotate-certs
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-      matchExpressions:
-      - key: hive.openshift.io/version-major-minor
-        operator: In
-        values:
-        - '4.5'
-        - '4.6'
-    resourceApplyMode: Sync
-    resources:
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: Role
-      metadata:
-        name: dedicated-admins-cert-secret
-        namespace: openshift-kube-apiserver-operator
-      rules:
-      - apiGroups:
-        - ''
-        resources:
-        - secrets
-        verbs:
-        - get
-        - patch
-        resourceNames:
-        - kube-apiserver-to-kubelet-signer
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: RoleBinding
-      metadata:
-        name: dedicated-admins-cert-secret
-        namespace: openshift-kube-apiserver-operator
-      subjects:
-      - apiGroup: rbac.authorization.k8s.io
-        kind: Group
-        name: dedicated-admins
-      - kind: Group
-        name: system:serviceaccounts:dedicated-admin
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: Role
-        name: dedicated-admins-cert-secret
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    labels:
-      managed.openshift.io/gitHash: ${IMAGE_TAG}
-      managed.openshift.io/gitRepoName: ${REPO_NAME}
-      managed.openshift.io/osd: 'true'
     name: resource-quotas
   spec:
     clusterDeploymentSelector:
