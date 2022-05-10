@@ -3898,15 +3898,34 @@ objects:
       metadata:
         name: backplane-srep-readers-cluster
       rules: []
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: backplane-srep-admins-cluster
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: backplane-srep-admins-cluster
+      subjects:
+      - kind: Group
+        name: system:serviceaccounts:openshift-backplane-srep
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: backplane-srep-readers-cluster
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: backplane-srep-readers-cluster
+      subjects:
+      - kind: Group
+        name: system:serviceaccounts:openshift-backplane-srep
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
         name: backplane-srep
         namespace: openshift-rbac-permissions
       spec:
-        clusterPermissions:
-        - backplane-srep-admins-cluster
-        - backplane-srep-readers-cluster
         permissions:
         - allowFirst: true
           clusterRoleName: backplane-srep-admins-project
