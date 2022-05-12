@@ -1,0 +1,33 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: scan-tester
+  namespace: scan-tester
+spec:
+  failedJobsHistoryLimit: 5
+  successfulJobsHistoryLimit: 3
+  concurrencyPolicy: Replace
+  schedule: "04 04 * * 4"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          affinity:
+            nodeAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+              - preference:
+                  matchExpressions:
+                  - key: topology.kubernetes.io/region
+                    operator: In
+                    values:
+                    - us-gov-west-1
+                    - us-gov-east-1
+                weight: 1
+          serviceAccountName: scan-tester-sa
+          restartPolicy: Never
+          containers:
+          - name: scan-tester
+            image: quay.io/dedgar/scan-tester:v0.0.1
+            imagePullPolicy: Always
+            command: ["/usr/local/bin/start.sh"]
