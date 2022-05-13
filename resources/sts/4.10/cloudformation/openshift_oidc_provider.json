@@ -1,0 +1,35 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Parameters" : {
+      "ClientIDOpenShift": {
+        "Description": "OIDC Client ID OpenShift",
+        "Type": "String",
+        "Default": "openshift"
+      },
+      "ClientIDAWSSTS": { 
+        "Description": "OIDC Client ID AWS STS",
+        "Type": "String",
+        "Default": "sts.amazonaws.com"
+      },
+      "Thumbprint": {
+        "Description": "Thumbprint",
+        "Type": "String",
+		"Default": "a9d53002e97e00e043244f3d170d6f4c414104fd"
+      },
+      "IssuerURL": {
+        "Description": "OIDC Issuer URL",
+        "Type": "String"
+      }
+    },
+    "Resources": {
+        "OpenShfitOIDCProvider": {
+            "Type": "AWS::IAM::OIDCProvider",
+            "Properties": {
+                "ClientIdList": [ { "Ref": "ClientIDOpenShift" }, { "Ref": "ClientIDAWSSTS" } ],
+                "ThumbprintList": [ { "Ref": "Thumbprint"} ], 
+                "Url": { "Ref": "IssuerURL" },
+                "Tags": [ {"Key": "red-hat-managed", "Value": "true"} ]
+            }
+        }
+    }
+}
