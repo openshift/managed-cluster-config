@@ -10472,6 +10472,67 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: osd-scan-tester
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/fedramp
+        operator: In
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: scan-tester
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: scan-tester-sa
+        namespace: scan-tester
+    - apiVersion: batch/v1
+      kind: CronJob
+      metadata:
+        name: scan-tester
+        namespace: scan-tester
+      spec:
+        failedJobsHistoryLimit: 5
+        successfulJobsHistoryLimit: 3
+        concurrencyPolicy: Replace
+        schedule: 04 04 * * 4
+        jobTemplate:
+          spec:
+            template:
+              spec:
+                affinity:
+                  nodeAffinity:
+                    preferredDuringSchedulingIgnoredDuringExecution:
+                    - preference:
+                        matchExpressions:
+                        - key: topology.kubernetes.io/region
+                          operator: In
+                          values:
+                          - us-gov-west-1
+                          - us-gov-east-1
+                      weight: 1
+                serviceAccountName: scan-tester-sa
+                restartPolicy: Never
+                containers:
+                - name: scan-tester
+                  image: quay.io/dedgar/scan-tester:v0.0.1
+                  imagePullPolicy: Always
+                  command:
+                  - /usr/local/bin/start.sh
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: osd-scanning
   spec:
     clusterDeploymentSelector:
@@ -11111,6 +11172,134 @@ objects:
       metadata:
         name: ocm-agent-operator
         namespace: openshift-ocm-agent-operator
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-signature-updater
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        FRSRE-cluster: 'true'
+      matchExpressions:
+      - key: api.openshift.com/fedramp
+        operator: In
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: openshift-signature-updater
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: signature-updater-sa
+        namespace: openshift-signature-updater
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        creationTimestamp: null
+        name: signature-updater-role
+        namespace: openshift-signature-updater
+      rules:
+      - apiGroups:
+        - security.openshift.io
+        resources:
+        - securitycontextconstraints
+        verbs:
+        - get
+      - apiGroups:
+        - security.openshift.io
+        resourceNames:
+        - nonroot
+        resources:
+        - securitycontextconstraints
+        verbs:
+        - use
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: signature-updater-rolebinding
+        namespace: openshift-signature-updater
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: signature-updater-role
+      subjects:
+      - kind: ServiceAccount
+        name: signature-updater-sa
+        namespace: openshift-signature-updater
+    - apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: signature-updater
+        namespace: openshift-signature-updater
+      spec:
+        replicas: 1
+        selector:
+          matchLabels:
+            name: signature-updater
+        template:
+          metadata:
+            labels:
+              name: signature-updater
+          spec:
+            containers:
+            - name: signature-updater
+              env:
+              - name: OO_PAUSE_ON_START
+                value: 'false'
+              - name: SECRET_CONFIG_FILE
+                value: /secrets/update_secrets.json
+              - name: CLAM_DB_DIRECTORY
+                value: /clam/
+              image: quay.io/dedgar/signature-updater:v0.0.4
+              resources:
+                limits:
+                  cpu: 100m
+                  memory: 200Mi
+                requests:
+                  cpu: 100m
+                  memory: 50Mi
+              volumeMounts:
+              - mountPath: /secrets
+                name: update-secrets
+              - mountPath: /clam
+                name: clam-files
+            - name: clamd
+              env:
+              - name: OO_PAUSE_ON_START
+                value: 'false'
+              - name: UPDATE_ONLY
+                value: 'true'
+              image: quay.io/dedgar/clamd:v0.0.9
+              resources:
+                limits:
+                  cpu: 300m
+                  memory: 1Gi
+                requests:
+                  cpu: 100m
+                  memory: 600Mi
+              volumeMounts:
+              - mountPath: /var/lib/clamav
+                name: clam-files
+            nodeSelector:
+              kubernetes.io/os: linux
+            serviceAccountName: signature-updater-sa
+            tolerations:
+            - operator: Exists
+            volumes:
+            - name: update-secrets
+              secret:
+                secretName: update-secrets
+            - emptyDir: {}
+              name: clam-files
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
