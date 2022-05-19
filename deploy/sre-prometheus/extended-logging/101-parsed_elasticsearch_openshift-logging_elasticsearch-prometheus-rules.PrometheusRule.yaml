@@ -15,12 +15,12 @@
 # ```
 # created this file via
 # ```
-# A=$(curl -sSLo- https://github.com/openshift/elasticsearch-operator/raw/b5e329a3d9967a4933d94e61a32479407911755d/files/prometheus_alerts.yml) yq '.spec = env(A) | .spec.groups[].rules[].alert += "SRE"' ../../../resources/prometheusrules/elasticsearch_openshift-logging_elasticsearch-prometheus-rules.PrometheusRule.yaml | yq -P > 101-parsed_elasticsearch_openshift-logging_elasticsearch-prometheus-rules.PrometheusRule.yaml
+# A=$(curl -sSLo- https://github.com/openshift/elasticsearch-operator/raw/b5e329a3d9967a4933d94e61a32479407911755d/files/prometheus_alerts.yml) yq '.spec = env(A) | .spec.groups[].rules[].alert += "SRE" | .metadata.name += "-sre"' ../../../resources/prometheusrules/elasticsearch_openshift-logging_elasticsearch-prometheus-rules.PrometheusRule.yaml | yq -P > 101-parsed_elasticsearch_openshift-logging_elasticsearch-prometheus-rules.PrometheusRule.yaml
 # ```
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
-  name: elasticsearch-prometheus-rules
+  name: elasticsearch-prometheus-rules-sre
   namespace: openshift-logging
 spec:
   groups:
@@ -170,7 +170,7 @@ spec:
             severity: warning
         - alert: ElasticsearchOperatorCSVNotSuccessfulSRE
           annotations:
-            message: Elasticsearch Operator CSV has not reconciled successfully.
+            message: Elasticsearch Operator CSV has not reconciled succesfully.
             summary: Elasticsearch Operator CSV Not Successful
           expr: |
             csv_succeeded{name =~ "elasticsearch-operator.*"} == 0

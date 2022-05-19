@@ -15,12 +15,12 @@
 # ```
 # created this file via
 # ```
-# A=$(curl -sSLo- https://github.com/openshift/cluster-logging-operator/raw/b26497cce95e7737a4b66b5ff6b822b80a16bc3a/files/fluentd/fluentd_prometheus_alerts.yaml) yq '.spec = env(A) | .spec.groups[].rules[].alert += "SRE" | .spec.groups[].rules[].labels.namespace = "openshift-logging"' ../../../resources/prometheusrules/fluentd_openshift-logging_collector.PrometheusRule.yaml | yq -P > 101-parsed_fluentd_openshift-logging_collector.PrometheusRule.yaml
-# ```#
+# A=$(curl -sSLo- https://github.com/openshift/cluster-logging-operator/raw/b26497cce95e7737a4b66b5ff6b822b80a16bc3a/files/fluentd/fluentd_prometheus_alerts.yaml) yq '.spec = env(A) | .spec.groups[].rules[].alert += "SRE" | .spec.groups[].rules[].labels.namespace = "openshift-logging" | .metadata.name += "-sre"' ../../../resources/prometheusrules/fluentd_openshift-logging_collector.PrometheusRule.yaml | yq -P > 101-parsed_fluentd_openshift-logging_collector.PrometheusRule.yaml
+# ```
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
-  name: collector
+  name: collector-sre
   namespace: openshift-logging
 spec:
   groups:

@@ -7,7 +7,7 @@ And [./config.yaml](config.yaml) where we specify the deployment of the alerts o
 
 ## file kinds
 we have here 
-### resoruces files
+### resources files
 these are extracted from a sample cluster.
 
 [../../../resources/prometheusrules/README.md](see the files here)
