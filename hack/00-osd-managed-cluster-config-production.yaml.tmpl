@@ -13927,6 +13927,51 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: sre-prometheus-fedramp
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/fedramp
+        operator: In
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
+          prometheus: sre-fr-alerts-low-disk-space
+          role: alert-rules
+        name: sre-fr-alerts-low-disk-space
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-fr-alerts-low-disk-space
+          rules:
+          - alert: FedRAMPNodeFilesystemSpaceFillingUp
+            expr: round(sum(node_filesystem_avail_bytes{job="node-exporter",fstype!="",mountpoint=~"/"}
+              / node_filesystem_size_bytes{job="node-exporter",fstype!="",mountpoint=~"/"}
+              *  on(instance) group_left(label_node_role_kubernetes_io) label_replace(cluster:nodes_roles{label_node_role_kubernetes_io=~"master|infra"},
+              "instance","$1","node", "(.+)")) by (label_node_role_kubernetes_io,
+              instance, mountpoint) * 100 < 15)
+            for: 30m
+            labels:
+              severity: critical
+              namespace: openshift-monitoring
+            annotations:
+              message: Critical - node file system almost full on {{ $labels.label_node_role_kubernetes_io
+                }} node, instance {{ $labels.instance }}.  {{ $labels.instance }}
+                is only {{ $value }}% free.
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: sre-prometheus-ocm-agent
   spec:
     clusterDeploymentSelector:
