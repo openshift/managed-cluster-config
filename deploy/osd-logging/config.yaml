@@ -4,14 +4,8 @@ selectorSyncSet:
   resourceApplyMode: "Upsert"
 
   matchExpressions:
-  # Ensure SRE does not get alerts for in-cluster logging on ROSA clusters
-  # https://issues.redhat.com/browse/OSD-6322
-  - key: api.openshift.com/product
-    operator: NotIn
-    values: ["rosa"]
-
-  # Disable routing in-cluster logging alerts to SRE PD for OCP 4.7+
-  # https://issues.redhat.com/browse/OSD-6324
-  - key: hive.openshift.io/version-major-minor
+  # Enable in-cluster logging alerts for those clusters that already have logging installed
+  # https://issues.redhat.com/browse/OSD-7564
+  - key: ext-managed.openshift.io/extended-logging-support
     operator: In
-    values: ["4.4","4.5","4.6"]
+    values: ["true"]
