@@ -97,23 +97,6 @@ def collect_clusteroperator_relatedobjects():
     return co_namespaces
 
 
-def collect_addon_namespaces(
-    addons_filepath="../../resources/addons-namespaces/main.yaml",
-):
-    """
-    Returns a dict of namespaces associated with the available addons for OSD
-    """
-    addons_dict = {}
-    with open(addons_filepath, "r") as f:
-        addons_dict = yaml.safe_load(f)
-    # Some addons use the same namespace, so remove duplicates and sort
-    addon_ns_list = sorted(list(set(addons_dict["addon-namespaces"].values())))
-    resources = dict()
-    resources["Resources"] = {}
-    resources["Resources"]["Namespace"] = [{"name": ns} for ns in addon_ns_list]
-    return resources
-
-
 def collect_managed_resources(kinds):
     """
     Given a list of resource kinds, returns a dictionary of the managed resources for each kind
@@ -220,13 +203,6 @@ def main():
         help="Output format of managed resource list [required]",
     )
     parser.add_argument(
-        "--source",
-        "-s",
-        required=True,
-        choices=["osd-all", "osd-namespaces", "ocp-namespaces", "addons-namespaces"],
-        help="Choose to output all OSD managed resources, or just the managed namespaces for OSD, OCP, or Add-ons [required]",
-    )
-    parser.add_argument(
         "--namespace",
         "-ns",
         default="openshift-monitoring",
@@ -257,10 +233,6 @@ def main():
         managed_ocp_resource_dict = collect_ocp_release_namespaces()
         managed_ocp_resource_yaml = yaml.dump(managed_ocp_resource_dict)
         save_output_to_disk(arguments, managed_ocp_resource_yaml)
-    elif arguments.source == "addons-namespaces":
-        managed_addon_resource_dict = collect_addon_namespaces()
-        managed_addon_resource_yaml = yaml.dump(managed_addon_resource_dict)
-        save_output_to_disk(arguments, managed_addon_resource_yaml)
 
 
 if __name__ == "__main__":
