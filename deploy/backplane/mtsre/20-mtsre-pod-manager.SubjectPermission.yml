@@ -1,0 +1,12 @@
+apiVersion: managed.openshift.io/v1alpha1
+kind: SubjectPermission
+metadata:
+  name: backplane-mtsre-pod-managers
+  namespace: openshift-rbac-permissions
+spec:
+  permissions:
+  - allowFirst: true
+    clusterRoleName: backplane-mtsre-pod-manager
+    namespacesAllowedRegex: (^openshift-backplane-mtsre$)
+  subjectKind: Group
+  subjectName: system:serviceaccounts:openshift-backplane-mtsre
