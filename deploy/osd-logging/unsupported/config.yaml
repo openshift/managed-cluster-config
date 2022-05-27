@@ -1,0 +1,12 @@
+deploymentMode: "SelectorSyncSet"
+selectorSyncSet:
+  # if we ever remove this, do not remove the resources
+  resourceApplyMode: "Upsert"
+  matchExpressions:
+  # Disable in-cluster logging alerts for those clusters that do not already have logging installed
+  # We removed the version check because that would conflict with this check here for clusters that
+  # are granted the support exception and do upgrade their cluster.
+  # https://issues.redhat.com/browse/OSD-7564
+  - key: ext-managed.openshift.io/extended-logging-support
+    operator: NotIn
+    values: ["true"]
