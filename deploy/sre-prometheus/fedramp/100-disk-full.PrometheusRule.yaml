@@ -12,7 +12,7 @@ spec:
     rules:
     - alert: FedRAMPNodeFilesystemSpaceFillingUp
       expr: round(sum(node_filesystem_avail_bytes{job="node-exporter",fstype!="",mountpoint=~"/"} / node_filesystem_size_bytes{job="node-exporter",fstype!="",mountpoint=~"/"} *  on(instance) group_left(label_node_role_kubernetes_io) label_replace(cluster:nodes_roles{label_node_role_kubernetes_io=~"master|infra"}, "instance","$1","node", "(.+)")) by (label_node_role_kubernetes_io, instance, mountpoint) * 100 < 15)
-      for: 30m
+      for: 5m
       labels:
         severity: critical
         namespace: openshift-monitoring
