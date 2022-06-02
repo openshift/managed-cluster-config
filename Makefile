@@ -22,13 +22,14 @@ $(error GEN_TEMPLATE is not set; check project.mk file)
 endif
 
 CONTAINER_ENGINE?=$(shell command -v docker 2>/dev/null || command -v podman 2>/dev/null)
+CONTAINER_RUN_FLAGS=--rm -v `pwd -P`:`pwd -P`:z -w=`pwd` --platform linux/amd64
 
 ifeq ($(CONTAINER_ENGINE),)
 # Running already in a container
 OC := oc --dry-run=true --kubeconfig=.kubeconfig
 else
 # Run the oc inside container
-OC := $(CONTAINER_ENGINE) run --rm -v `pwd -P`:`pwd -P`:z -w=`pwd` quay.io/openshift/origin-cli:4.10.0 oc --dry-run=client --kubeconfig=.kubeconfig
+OC := $(CONTAINER_ENGINE) run $(CONTAINER_RUN_FLAGS) quay.io/openshift/origin-cli:4.10.0 oc --dry-run=client --kubeconfig=.kubeconfig
 endif
 
 .PHONY: default
@@ -52,7 +53,7 @@ generate-rosa-brand-logo:
 generate-hive-templates: generate-oauth-templates
 	if [ -z ${IN_CONTAINER} ]; then \
 		$(CONTAINER_ENGINE) pull quay.io/app-sre/python:3 && $(CONTAINER_ENGINE) tag quay.io/app-sre/python:3 python:3 || true; \
-		$(CONTAINER_ENGINE) run --rm -v `pwd -P`:`pwd -P`:z python:3 /bin/sh -c "cd `pwd -P`; pip install oyaml; ${GEN_TEMPLATE}"; \
+		$(CONTAINER_ENGINE) run $(CONTAINER_RUN_FLAGS) python:3 /bin/sh -c "cd `pwd -P`; pip install oyaml; ${GEN_TEMPLATE}"; \
 	else \
 		${GEN_TEMPLATE}; \
 	fi
