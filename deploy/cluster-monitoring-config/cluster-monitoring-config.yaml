@@ -5,7 +5,7 @@ metadata:
   namespace: openshift-monitoring
 data:
   config.yaml: |
-    enableUserWorkload: true 
+    enableUserWorkload: true
     prometheusK8s:
     # If the location of this config changes,
     # make sure to adjust https://github.com/openshift/ops-sop/blob/master/v4/howto/o11m_mst_killswitch.md
@@ -96,16 +96,7 @@ data:
         - effect: NoSchedule
           key: node-role.kubernetes.io/infra
           operator: Exists
-    # https://access.redhat.com/solutions/5685771
-    # https://bugzilla.redhat.com/show_bug.cgi?id=1906496
     thanosQuerier:
-      resources:
-        limits:
-          cpu: 500m
-          memory: 2048Mi
-        requests:
-          cpu: 5m
-          memory: 125Mi
       nodeSelector:
         node-role.kubernetes.io/infra: ""
       tolerations:
