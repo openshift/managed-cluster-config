@@ -4987,15 +4987,16 @@ objects:
           nodeDrain:\n  timeOut: 45\n  expectedNodeDrainTime: 8\nhealthCheck:\n  ignoredCriticals:\n\
           \  - DNSErrors05MinSRE\n  - MetricsClientSendFailingSRE\n  - UpgradeNodeScalingFailedSRE\n\
           \  - UpgradeClusterCheckFailedSRE\n  - PruningCronjobErrorSRE\n  - PrometheusRuleFailures\n\
-          \  - CannotRetrieveUpdates\n  - FluentdNodeDown\n  # https://bugzilla.redhat.com/show_bug.cgi?id=1986981\n\
-          \  - PrometheusRemoteWriteBehind\n  - KubePersistentVolumeErrors\n  - PrometheusBadConfig\n\
-          \  - PrometheusRemoteStorageFailures\n  - AlertmanagerMembersInconsistent\n\
-          \  - AlertmanagerClusterFailedToSendAlerts\n  - AlertmanagerConfigInconsistent\n\
-          \  - AlertmanagerClusterDown\n  - KubeStateMetricsListErrors\n  - KubeStateMetricsWatchErrors\n\
-          \  - ThanosRuleSenderIsFailingAlerts\n  - ThanosRuleHighRuleEvaluationFailures\n\
-          \  - ThanosNoRuleEvaluations\n  ignoredNamespaces:\n  - openshift-logging\n\
-          \  - openshift-redhat-marketplace\n  - openshift-operators\n  - openshift-customer-monitoring\n\
-          \  - openshift-cnv\n  - openshift-route-monitoring-operator\n  - openshift-user-workload-monitoring\n\
+          \  - CannotRetrieveUpdates\n  - FluentdNodeDown\n  # OSD-11927\n  - ClusterProxyCAExpiringSRE\n\
+          \  # https://bugzilla.redhat.com/show_bug.cgi?id=1986981\n  - PrometheusRemoteWriteBehind\n\
+          \  - KubePersistentVolumeErrors\n  - PrometheusBadConfig\n  - PrometheusRemoteStorageFailures\n\
+          \  - AlertmanagerMembersInconsistent\n  - AlertmanagerClusterFailedToSendAlerts\n\
+          \  - AlertmanagerConfigInconsistent\n  - AlertmanagerClusterDown\n  - KubeStateMetricsListErrors\n\
+          \  - KubeStateMetricsWatchErrors\n  - ThanosRuleSenderIsFailingAlerts\n\
+          \  - ThanosRuleHighRuleEvaluationFailures\n  - ThanosNoRuleEvaluations\n\
+          \  ignoredNamespaces:\n  - openshift-logging\n  - openshift-redhat-marketplace\n\
+          \  - openshift-operators\n  - openshift-customer-monitoring\n  - openshift-cnv\n\
+          \  - openshift-route-monitoring-operator\n  - openshift-user-workload-monitoring\n\
           \  - openshift-pipelines\nextDependencyAvailabilityChecks:\n  http:\n  \
           \  timeout: 10\n    urls:\n      - ${OCM_BASE_URL}\n"
 - apiVersion: hive.openshift.io/v1
@@ -5034,13 +5035,13 @@ objects:
           \ 8\nhealthCheck:\n  ignoredCriticals:\n  - DNSErrors05MinSRE\n  - MetricsClientSendFailingSRE\n\
           \  - UpgradeNodeScalingFailedSRE\n  - UpgradeClusterCheckFailedSRE\n  -\
           \ PruningCronjobErrorSRE\n  - PrometheusRuleFailures\n  - CannotRetrieveUpdates\n\
-          \  - FluentdNodeDown\n  ignoredNamespaces:\n  - openshift-logging\n  - openshift-redhat-marketplace\n\
-          \  - openshift-operators\n  - openshift-customer-monitoring\n  - openshift-cnv\n\
-          \  - openshift-route-monitoring-operator\n  - openshift-user-workload-monitoring\n\
-          \  - openshift-pipelines\nextDependencyAvailabilityChecks:\n  http:\n  \
-          \  timeout: 10\n    urls:\n      - ${OCM_BASE_URL}\nverification:\n  ignoredNamespaces:\n\
-          \  - openshift-logging\n  namespacePrefixesToCheck:\n  - openshift\n  -\
-          \ kube\n  - default\n"
+          \  - FluentdNodeDown\n  # OSD-11927\n  - ClusterProxyCAExpiringSRE\n  ignoredNamespaces:\n\
+          \  - openshift-logging\n  - openshift-redhat-marketplace\n  - openshift-operators\n\
+          \  - openshift-customer-monitoring\n  - openshift-cnv\n  - openshift-route-monitoring-operator\n\
+          \  - openshift-user-workload-monitoring\n  - openshift-pipelines\nextDependencyAvailabilityChecks:\n\
+          \  http:\n    timeout: 10\n    urls:\n      - ${OCM_BASE_URL}\nverification:\n\
+          \  ignoredNamespaces:\n  - openshift-logging\n  namespacePrefixesToCheck:\n\
+          \  - openshift\n  - kube\n  - default\n"
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -5076,13 +5077,14 @@ objects:
           \ 45\n  expectedNodeDrainTime: 8\nhealthCheck:\n  ignoredCriticals:\n  -\
           \ DNSErrors05MinSRE\n  - MetricsClientSendFailingSRE\n  - UpgradeNodeScalingFailedSRE\n\
           \  - UpgradeClusterCheckFailedSRE\n  - PruningCronjobErrorSRE\n  - PrometheusRuleFailures\n\
-          \  - CannotRetrieveUpdates\n  - FluentdNodeDown\n  ignoredNamespaces:\n\
-          \  - openshift-logging\n  - openshift-redhat-marketplace\n  - openshift-operators\n\
-          \  - openshift-customer-monitoring\n  - openshift-cnv\n  - openshift-route-monitoring-operator\n\
-          \  - openshift-user-workload-monitoring\n  - openshift-pipelines\nextDependencyAvailabilityChecks:\n\
-          \  http:\n    timeout: 10\n    urls:\n      - ${OCM_BASE_URL}\nverification:\n\
-          \  ignoredNamespaces:\n  - openshift-logging\n  namespacePrefixesToCheck:\n\
-          \  - openshift\n  - kube\n  - default\n"
+          \  - CannotRetrieveUpdates\n  - FluentdNodeDown\n  # OSD-11927\n  - ClusterProxyCAExpiringSRE\n\
+          \  ignoredNamespaces:\n  - openshift-logging\n  - openshift-redhat-marketplace\n\
+          \  - openshift-operators\n  - openshift-customer-monitoring\n  - openshift-cnv\n\
+          \  - openshift-route-monitoring-operator\n  - openshift-user-workload-monitoring\n\
+          \  - openshift-pipelines\nextDependencyAvailabilityChecks:\n  http:\n  \
+          \  timeout: 10\n    urls:\n      - ${OCM_BASE_URL}\nverification:\n  ignoredNamespaces:\n\
+          \  - openshift-logging\n  namespacePrefixesToCheck:\n  - openshift\n  -\
+          \ kube\n  - default\n"
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -5117,15 +5119,16 @@ objects:
           \ 8\nhealthCheck:\n  ignoredCriticals:\n  - DNSErrors05MinSRE\n  - MetricsClientSendFailingSRE\n\
           \  - UpgradeNodeScalingFailedSRE\n  - UpgradeClusterCheckFailedSRE\n  -\
           \ PruningCronjobErrorSRE\n  - PrometheusRuleFailures\n  - CannotRetrieveUpdates\n\
-          \  - FluentdNodeDown\n  # https://bugzilla.redhat.com/show_bug.cgi?id=1986981\n\
-          \  - PrometheusRemoteWriteBehind\n  - KubePersistentVolumeErrors\n  - PrometheusBadConfig\n\
-          \  - PrometheusRemoteStorageFailures\n  - AlertmanagerMembersInconsistent\n\
-          \  - AlertmanagerClusterFailedToSendAlerts\n  - AlertmanagerConfigInconsistent\n\
-          \  - AlertmanagerClusterDown\n  - KubeStateMetricsListErrors\n  - KubeStateMetricsWatchErrors\n\
-          \  - ThanosRuleSenderIsFailingAlerts\n  - ThanosRuleHighRuleEvaluationFailures\n\
-          \  - ThanosNoRuleEvaluations\n  ignoredNamespaces:\n  - openshift-logging\n\
-          \  - openshift-redhat-marketplace\n  - openshift-operators\n  - openshift-customer-monitoring\n\
-          \  - openshift-cnv\n  - openshift-route-monitoring-operator\n  - openshift-user-workload-monitoring\n\
+          \  - FluentdNodeDown\n  # OSD-11927\n  - ClusterProxyCAExpiringSRE\n  #\
+          \ https://bugzilla.redhat.com/show_bug.cgi?id=1986981\n  - PrometheusRemoteWriteBehind\n\
+          \  - KubePersistentVolumeErrors\n  - PrometheusBadConfig\n  - PrometheusRemoteStorageFailures\n\
+          \  - AlertmanagerMembersInconsistent\n  - AlertmanagerClusterFailedToSendAlerts\n\
+          \  - AlertmanagerConfigInconsistent\n  - AlertmanagerClusterDown\n  - KubeStateMetricsListErrors\n\
+          \  - KubeStateMetricsWatchErrors\n  - ThanosRuleSenderIsFailingAlerts\n\
+          \  - ThanosRuleHighRuleEvaluationFailures\n  - ThanosNoRuleEvaluations\n\
+          \  ignoredNamespaces:\n  - openshift-logging\n  - openshift-redhat-marketplace\n\
+          \  - openshift-operators\n  - openshift-customer-monitoring\n  - openshift-cnv\n\
+          \  - openshift-route-monitoring-operator\n  - openshift-user-workload-monitoring\n\
           \  - openshift-pipelines\nextDependencyAvailabilityChecks:\n  http:\n  \
           \  timeout: 10\n    urls:\n      - ${OCM_BASE_URL}\n"
 - apiVersion: hive.openshift.io/v1
