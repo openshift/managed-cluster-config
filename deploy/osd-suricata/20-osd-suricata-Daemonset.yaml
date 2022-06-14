@@ -16,7 +16,7 @@ spec:
       - env:
         - name: OO_PAUSE_ON_START
           value: "false"
-        image: quay.io/app-sre/suricata@sha256:577fc9bc4816cf9298d12911d000b953dd4e7df4cf6502d4aa5e78219ba0357b
+        image: quay.io/anatale/suricata@sha256:00432ce3abb8173c13f55f32f591ddcf77c3bd0003e769cbca281ec8a007483a
         imagePullPolicy: IfNotPresent
         name: suricata
         resources:
@@ -32,6 +32,11 @@ spec:
         volumeMounts:
         - mountPath: /host/
           name: host-filesystem
+      - name: log-cleaner
+        image: quay.io/anatale/log-cleaner@sha256:dc8a66cfd2b55f7423835c962b687c5aadf3f2c7caef3d049c3b26da9e41da7f
+        volumeMounts:
+        - mountPath: /host/
+          name: host-filesystem        
       dnsPolicy: ClusterFirst
       hostNetwork: true
       nodeSelector:
