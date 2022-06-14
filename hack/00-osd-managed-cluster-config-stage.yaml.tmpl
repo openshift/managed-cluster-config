@@ -4877,6 +4877,38 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: insights-staging
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/environment
+        operator: In
+        values:
+        - staging
+        - integration
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: Secret
+      metadata:
+        name: support
+        namespace: openshift-config
+      type: Opaque
+      data:
+        endpoint: aHR0cHM6Ly9jbG91ZC5zdGFnZS5yZWRoYXQuY29tL2FwaS9pbmdyZXNzL3YxL3VwbG9hZA==
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: kubelet-config-version-major-minor
   spec:
     clusterDeploymentSelector:
