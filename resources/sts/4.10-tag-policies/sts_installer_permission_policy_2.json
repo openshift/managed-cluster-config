@@ -55,6 +55,20 @@
       ]
     },
     {
+      "Effect": "Allow",
+      "Action": [
+        "ec2:DeleteVpc"
+      ],
+      "Resource": [
+        "arn:aws:ec2:*:*:vpc/*"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "aws:ResourceTag/red-hat-managed": "true"
+        }
+      }
+    },
+    {
       "Sid": "CreateSubnet",
       "Effect": "Allow",
       "Action": [
@@ -63,6 +77,20 @@
       "Resource": [
         "arn:aws:ec2:*:*:subnet/*"
       ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ec2:DeleteSubnet"
+      ],
+      "Resource": [
+        "arn:aws:ec2:*:*:subnet/*"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "aws:ResourceTag/red-hat-managed": "true"
+        }
+      }
     },
     {
       "Sid": "CreateSubnetResource",
@@ -163,57 +191,6 @@
       "Resource": [
         "arn:aws:ec2:*:*:internet-gateway/*",
         "arn:aws:ec2:*:*:instance/*"
-      ],
-      "Condition": {
-        "StringEquals": {
-          "aws:ResourceTag/red-hat-managed": "true"
-        }
-      }
-    },
-    {
-      "Sid": "CreateDhcpOptions",
-      "Effect": "Allow",
-      "Action": [
-        "ec2:CreateDhcpOptions"
-      ],
-      "Resource": [
-        "arn:aws:ec2:*:*:dhcp-options/*"
-      ]
-    },
-    {
-      "Sid": "CreateInternetGateway",
-      "Effect": "Allow",
-      "Action": [
-        "ec2:CreateInternetGateway"
-      ],
-      "Resource": [
-        "arn:aws:ec2:*:*:internet-gateway/*"
-      ]
-    },
-    {
-      "Sid": "CreateNatGateway",
-      "Effect": "Allow",
-      "Action": [
-        "ec2:CreateNatGateway"
-      ],
-      "Resource": [
-        "arn:aws:ec2:*:*:natgateway/*"
-      ],
-      "Condition": {
-        "StringEquals": {
-          "aws:RequestTag/red-hat-managed": "true"
-        }
-      }
-    },
-    {
-      "Sid": "CreateNatGatewayInSubnetAndEip",
-      "Effect": "Allow",
-      "Action": [
-        "ec2:CreateNatGateway"
-      ],
-      "Resource": [
-        "arn:aws:ec2:*:*:subnet/*",
-        "arn:aws:ec2:*:*:elastic-ip/*"
       ],
       "Condition": {
         "StringEquals": {
@@ -328,53 +305,6 @@
       }
     },
     {
-      "Sid": "CreateVpcEndpoint",
-      "Effect": "Allow",
-      "Action": [
-        "ec2:CreateVpcEndpoint"
-      ],
-      "Resource": [
-        "arn:aws:ec2:*:*:vpc-endpoint/*"
-      ],
-      "Condition": {
-        "StringEquals": {
-          "aws:RequestTag/red-hat-managed": "true"
-        }
-      }
-    },
-    {
-      "Sid": "CreateVpcEndpointInVpc",
-      "Effect": "Allow",
-      "Action": [
-        "ec2:CreateVpcEndpoint"
-      ],
-      "Resource": [
-        "arn:aws:ec2:*:*:vpc/*",
-        "arn:aws:ec2:*:*:subnet/*",
-        "arn:aws:ec2:*:*:route-table/*"
-      ],
-      "Condition": {
-        "StringEquals": {
-          "aws:ResourceTag/red-hat-managed": "true"
-        }
-      }
-    },
-    {
-      "Sid": "CreateVpcEndpointServiceConfiguration",
-      "Effect": "Allow",
-      "Action": [
-        "ec2:CreateVpcEndpointServiceConfiguration"
-      ],
-      "Resource": [
-        "arn:aws:ec2:*:*:vpc-endpoint-service/*"
-      ],
-      "Condition": {
-        "StringEquals": {
-          "aws:RequestTag/red-hat-managed": "true"
-        }
-      }
-    },
-    {
       "Sid": "GetConsoleOutput",
       "Effect": "Allow",
       "Action": [
@@ -418,16 +348,6 @@
           "aws:ResourceTag/red-hat-managed": "true"
         }
       }
-    },
-    {
-      "Sid": "ModifyVpcAttribute",
-      "Effect": "Allow",
-      "Action": [
-        "ec2:ModifyVpcAttribute"
-      ],
-      "Resource": [
-        "arn:aws:ec2:*:*:vpc/*"
-      ]
     },
     {
       "Sid": "AuthorizeSecurityGroupEgress",
