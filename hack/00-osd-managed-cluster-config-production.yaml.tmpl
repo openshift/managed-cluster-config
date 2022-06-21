@@ -5296,34 +5296,60 @@ objects:
             is required.
           severity: Info
           summary: ElasticSearch reaching disk capacity
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: ocm-agent-operator-managednotifications-unsupported-logging
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: ext-managed.openshift.io/extended-logging-support
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: ocmagent.managed.openshift.io/v1alpha1
+      kind: ManagedNotification
+      metadata:
+        name: sre-elasticsearch-managed-notifications
+        namespace: openshift-ocm-agent-operator
+      spec:
+        notifications:
         - activeBody: 'Your cluster requires you to take action as its ElasticSearch
             cluster has hit the high watermark due to low free disk space. Some shards
             will be re-allocated to different nodes if possible.  Please consult the
-            following documentation for reference: https://docs.openshift.com/container-platform/latest/logging/troubleshooting/cluster-logging-troubleshooting-for-critical-alerts.html#Elasticsearch-Node-Disk-High-Watermark-Reached'
+            following documentation for reference: https://docs.openshift.com/container-platform/latest/logging/troubleshooting/cluster-logging-troubleshooting-for-critical-alerts.html#elasticsearch-node-disk-high-watermark-reached'
           name: ElasticsearchNodeDiskWatermarkReached
           resendWait: 24
-          resolvedBody: Your cluster has no more ElasticsearchNodeDiskWatermarkReached
-            alert and no additional action on this issue is required.
+          resolvedBody: Your cluster's ElasticSearch cluster is no longer breaching
+            its node disk high watermark. No additional action on this issue is required.
           severity: Info
           summary: ElasticSearch Disk High Watermark Reached
         - activeBody: 'Your cluster requires you to take action as its ElasticSearch
             cluster is predicted to be out of disk space within the next 6 hours based
             on current disk usage. Please consult the following documentation for
-            reference: https://docs.openshift.com/container-platform/latest/logging/troubleshooting/cluster-logging-troubleshooting-for-critical-alerts.html#Elasticsearch-Disk-Space-is-Running-Low'
+            reference: https://docs.openshift.com/container-platform/latest/logging/troubleshooting/cluster-logging-troubleshooting-for-critical-alerts.html#elasticsearch-disk-space-is-running-low'
           name: ElasticsearchDiskSpaceRunningLow
           resendWait: 24
-          resolvedBody: Your cluster has no more ElasticsearchDiskSpaceRunningLow
-            alert and no additional action on this issue is required.
+          resolvedBody: Your cluster's ElasticSearch cluster is no longer at risk
+            of imminently running out of disk space, and no additional action on this
+            issue is required.
           severity: Info
           summary: ElasticSearch Cluster low on disk space
         - activeBody: 'Your cluster requires you to take action as its ElasticSearch
-            cluster health status has been RED for at least couple of minutes. The
-            cluster does not accept writes, shards may be missing, or the master node
-            has not been elected yet. Please consult the following documentation for
-            reference: https://docs.openshift.com/container-platform/4.10/logging/troubleshooting/cluster-logging-troubleshooting-for-critical-alerts.html#Elasticsearch-Cluster-Health-is-Red'
+            cluster health status has been detected as RED. The cluster does not accept
+            writes, shards may be missing, or the master node has not been elected
+            yet. Please consult the following documentation for reference: https://docs.openshift.com/container-platform/4.10/logging/troubleshooting/cluster-logging-troubleshooting-for-critical-alerts.html#elasticsearch-cluster-health-is-red'
           name: ElasticsearchClusterNotHealthy
           resendWait: 24
-          resolvedBody: Your cluster's ElasticSearch cluster health is detected good
+          resolvedBody: Your cluster's ElasticSearch cluster health is no longer unhealthy
             and no additional action on this issue is required.
           severity: Error
           summary: ElasticSearch Cluster health status is RED
@@ -13733,7 +13759,38 @@ objects:
               namespace: openshift-logging
               send_managed_notification: 'true'
               managed_notification_template: LoggingVolumeFillingUp
-          - alert: ElasticsearchNodeDiskWatermarkReachedSRE
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: sre-prometheus-ocm-agent-unsupported-logging
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: ext-managed.openshift.io/extended-logging-support
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
+          prometheus: sre-managed-notification-alerts
+          role: alert-rules
+        name: sre-elasticsearch-managed-notification-alerts
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-elasticsearch-managed-notification-alerts
+          rules:
+          - alert: ElasticsearchNodeDiskWatermarkReachedNotificationSRE
             expr: count(ALERTS{alertname="ElasticsearchNodeDiskWatermarkReached",
               alertstate="firing", namespace="openshift-logging", severity="critical"})
               >= 1
@@ -13743,7 +13800,7 @@ objects:
               namespace: openshift-logging
               send_managed_notification: 'true'
               managed_notification_template: ElasticsearchNodeDiskWatermarkReached
-          - alert: ElasticsearchDiskSpaceRunningLowSRE
+          - alert: ElasticsearchDiskSpaceRunningLowNotificationSRE
             expr: count(ALERTS{alertname="ElasticsearchDiskSpaceRunningLow", alertstate="firing",
               namespace="openshift-logging"}) >= 1
             for: 30m
@@ -13752,7 +13809,7 @@ objects:
               namespace: openshift-logging
               send_managed_notification: 'true'
               managed_notification_template: ElasticsearchDiskSpaceRunningLow
-          - alert: ElasticsearchClusterNotHealthySRE
+          - alert: ElasticsearchClusterNotHealthyNotificationSRE
             expr: count(ALERTS{alertname="ElasticsearchClusterNotHealthy", alertstate="firing",
               namespace="openshift-logging", severity="critical"}) >= 1
             for: 10m
