@@ -13675,6 +13675,39 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: sre-prometheus-centralized-observability
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
+          prometheus: sre-telemetry-managed-labels-recording-rules
+          role: recording-rules
+        name: sre-telemetry-managed-labels-recording-rules
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-telemetry-managed-labels.rules
+          rules:
+          - expr: sum by (_id, provider, region, version, sre) ( label_replace(cluster_id,
+              "sre", "true", "", "") * on (sre) group_left(provider, region, version)
+              ( label_replace(cluster_version{type="current"}, "sre", "true", "",
+              "") ) * on (sre) group_left(provider, region) label_replace(sum without
+              (type) (label_replace(cluster_infrastructure_provider, "provider", "$1",
+              "type", "(.*)")), "sre", "true", "", "") )
+            record: sre:telemetry:managed_labels
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: sre-prometheus-extended-logging
   spec:
     clusterDeploymentSelector:

@@ -1,0 +1,30 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: sre-telemetry-managed-labels-recording-rules
+    role: recording-rules
+  name: sre-telemetry-managed-labels-recording-rules
+  namespace: openshift-monitoring
+spec:
+  groups:
+    - name: sre-telemetry-managed-labels.rules
+      rules:
+        - expr:
+            # Add a label of sre="true"
+            # join metrics on sre="true"
+            # sum by the labels we care about at the most outer level
+            sum by (_id, provider, region, version, sre)
+            (
+            label_replace(cluster_id, "sre", "true", "", "")
+            * on (sre) group_left(provider, region, version)
+            (
+            label_replace(cluster_version{type="current"}, "sre", "true", "", "")
+            )
+            * on (sre) group_left(provider, region)
+            label_replace(sum without (type) (label_replace(cluster_infrastructure_provider, "provider", "$1", "type", "(.*)")), "sre", "true", "", "")
+            )
+            # sre:telemetry:managed_labels{_id="not-a-real-cluster-id", provider="AWS", region="ap-southeast-2", sre="true", version="4.10.18"} => 1654679854 @[1655873133.121]
+          record: sre:telemetry:managed_labels
+            # Any metric being sent to centralized observability service needs to include this standardized data for drill down querying.
+            # Please see INSERT_ME.md for details regarding standardized data.
