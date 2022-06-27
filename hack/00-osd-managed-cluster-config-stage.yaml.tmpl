@@ -4443,44 +4443,6 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: cloud-ingress-operator-configuration-sshd
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-      matchExpressions:
-      - key: ext-managed.openshift.io/hive-shard
-        operator: In
-        values:
-        - 'true'
-      - key: api.openshift.com/fedramp
-        operator: NotIn
-        values:
-        - 'true'
-    resourceApplyMode: Sync
-    resources:
-    - apiVersion: cloudingress.managed.openshift.io/v1alpha1
-      kind: SSHD
-      metadata:
-        name: rh-ssh
-        namespace: openshift-sre-sshd
-        labels:
-          managed.openshift.io/version: v49-1fde8e5
-      spec:
-        dnsName: rh-ssh
-        allowedCIDRBlocks: ${{ALLOWED_CIDR_BLOCKS}}
-        image: quay.io/app-sre/sre-ssh-proxy@sha256:67ecbf78aa15cc991d92643675d0c947fe4efea1e7a30d743d34e21f84cc2ed8
-        configMapSelector:
-          matchExpressions:
-          - key: api.openshift.com/authorized-keys
-            operator: Exists
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    labels:
-      managed.openshift.io/gitHash: ${IMAGE_TAG}
-      managed.openshift.io/gitRepoName: ${REPO_NAME}
-      managed.openshift.io/osd: 'true'
     name: cluster-ingress
   spec:
     clusterDeploymentSelector:
