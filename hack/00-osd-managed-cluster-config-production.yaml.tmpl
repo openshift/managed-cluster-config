@@ -4839,6 +4839,31 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: fedramp-operatorhub
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/fedramp
+        operator: In
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    patches:
+    - apiVersion: config.openshift.io/v1
+      applyMode: AlwaysApply
+      kind: OperatorHub
+      name: cluster
+      patch: '{"spec":{"disableAllDefaultSources":true}}'
+      patchType: merge
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: insights-staging
   spec:
     clusterDeploymentSelector:
@@ -7317,6 +7342,10 @@ objects:
         operator: NotIn
         values:
         - 'false'
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
     resourceApplyMode: Sync
     patches:
     - apiVersion: config.openshift.io/v1
