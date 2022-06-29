@@ -12,4 +12,11 @@ _Fixes #_
 ### Pre-checks (if applicable):
 - [ ] Tested latest changes against a cluster
 - [ ] Included documentation changes with PR
+- [ ] If this is a new object that is not intended for the FedRAMP environment (if unsure, please reach out to team FedRAMP), please exclude it with:
 
+    ```yaml
+    matchExpressions:
+    - key: api.openshift.com/fedramp
+      operator: NotIn
+      values: ["true"]
+    ```
