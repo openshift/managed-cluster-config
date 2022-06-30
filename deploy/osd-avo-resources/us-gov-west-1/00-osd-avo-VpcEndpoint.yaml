@@ -1,0 +1,16 @@
+apiVersion: avo.openshift.io/v1alpha1
+kind: VpcEndpoint
+metadata:
+  name: splunk
+  namespace: openshift-aws-vpce-operator
+spec:
+  subdomainName: splunk
+  serviceName: com.amazonaws.vpce.us-gov-west-1.vpce-svc-06225ed6e3620e8e1
+  securityGroup:
+    ingressRules:
+      - fromPort: 9997
+        toPort: 9997
+        protocol: tcp
+  externalNameService:
+    name: indexer
+    namespace: openshift-security
