@@ -5935,6 +5935,84 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: osd-avo-resources-us-gov-east-1
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/fedramp
+        operator: In
+        values:
+        - 'true'
+      - key: hive.openshift.io/cluster-region
+        operator: In
+        values:
+        - us-gov-east-1
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: avo.openshift.io/v1alpha1
+      kind: VpcEndpoint
+      metadata:
+        name: splunk
+        namespace: openshift-aws-vpce-operator
+      spec:
+        subdomainName: splunk
+        serviceName: com.amazonaws.vpce.us-gov-east-1.vpce-svc-0838533cd2d6d2b8b
+        securityGroup:
+          ingressRules:
+          - fromPort: 9997
+            toPort: 9997
+            protocol: tcp
+        externalNameService:
+          name: indexer
+          namespace: openshift-security
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-avo-resources-us-gov-west-1
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/fedramp
+        operator: In
+        values:
+        - 'true'
+      - key: hive.openshift.io/cluster-region
+        operator: In
+        values:
+        - us-gov-west-1
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: avo.openshift.io/v1alpha1
+      kind: VpcEndpoint
+      metadata:
+        name: splunk
+        namespace: openshift-aws-vpce-operator
+      spec:
+        subdomainName: splunk
+        serviceName: com.amazonaws.vpce.us-gov-west-1.vpce-svc-06225ed6e3620e8e1
+        securityGroup:
+          ingressRules:
+          - fromPort: 9997
+            toPort: 9997
+            protocol: tcp
+        externalNameService:
+          name: indexer
+          namespace: openshift-security
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: osd-backplane-managed-scripts
   spec:
     clusterDeploymentSelector:
