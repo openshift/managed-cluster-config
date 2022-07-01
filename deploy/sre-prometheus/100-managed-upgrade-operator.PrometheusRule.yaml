@@ -64,7 +64,7 @@ spec:
       # Alert if MUO has been unable to successfully sync with its upgrade policy provider for a four-hour window
       # It will also be used for detecting the connection/authentication between cluster and OCM
       # Should be moved to OCM Agent service eventually
-      expr: avg_over_time(upgradeoperator_upgradeconfig_synced[4h]) * on(pod) kube_pod_container_status_ready{container="managed-upgrade-operator", namespace="openshift-managed-upgrade-operator"} == 1
+      expr: absent_over_time(upgradeoperator_upgradeconfig_sync_timestamp[4h]) or time() - upgradeoperator_upgradeconfig_sync_timestamp > 14400
       for: 2m
       labels:
         severity: critical
