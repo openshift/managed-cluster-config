@@ -1,0 +1,20 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: sre-avo-pendingacceptance
+    role: alert-rules
+  name: sre-avo-pendingacceptance
+  namespace: openshift-monitoring
+spec:
+  groups:
+  - name: sre-avo-pendingacceptance
+    rules:
+    - alert: VpcEndpointPendingAcceptance
+      expr: sum(aws_vpce_operator_vpce_pendingAcceptance) > 0
+      for: 5m
+      labels:
+        severity: critical
+        namespace: "{{ $labels.namespace }}"
+      annotations:
+        message: "The VPC Endpoint {{ $labels.namespace }}/{{ $labels.name }} has been in a pendingAcceptance state for 5m and requires SRE action."
