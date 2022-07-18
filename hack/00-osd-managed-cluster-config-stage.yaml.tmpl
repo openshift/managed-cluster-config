@@ -13669,6 +13669,24 @@ objects:
       kind: PrometheusRule
       metadata:
         labels:
+          prometheus: sre-slo-recording-rules
+          role: recording-rules
+        name: sre-slo-recording-rules
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-slo.rules
+          rules:
+          - expr: sre:telemetry:managed_labels * on (sre) group_left(probe_url) label_replace(probe_success{probe_url=~".+api.+"},
+              "sre", "true", "", "")
+            record: sre:slo:probe_success_api
+          - expr: sre:telemetry:managed_labels * on (sre) group_left(probe_url) label_replace(probe_success{probe_url=~".+console.+"},
+              "sre", "true", "", "")
+            record: sre:slo:probe_success_console
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
           prometheus: sre-telemetry-managed-labels-recording-rules
           role: recording-rules
         name: sre-telemetry-managed-labels-recording-rules
