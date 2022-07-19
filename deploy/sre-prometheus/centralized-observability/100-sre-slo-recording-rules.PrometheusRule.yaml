@@ -14,3 +14,7 @@ spec:
           record: sre:slo:probe_success_api
         - expr: sre:telemetry:managed_labels * on (sre) group_left(probe_url) label_replace(probe_success{probe_url=~".+console.+"}, "sre", "true", "", "")
           record: sre:slo:probe_success_console
+        - expr: label_replace(sum by (code, method) (imageregistry_http_requests_total), "sre", "true", "", "") * on (sre) group_left(_id,provider,region,version) sre:telemetry:managed_labels
+          record: sre:slo:imageregistry_http_requests_total
+        - expr: label_replace(sum by (code, verb, subresource) (oauth_server_requests_total), "sre", "true", "", "") * on (sre) group_left(_id,provider,region,version) sre:telemetry:managed_labels
+          record: sre:slo:oauth_server_requests_total
