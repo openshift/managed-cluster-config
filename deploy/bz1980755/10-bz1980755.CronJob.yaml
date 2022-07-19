@@ -1,0 +1,74 @@
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: bz1980755
+  namespace: openshift-sre-pruning
+spec:
+  failedJobsHistoryLimit: 3
+  successfulJobsHistoryLimit: 3
+  concurrencyPolicy: Replace
+  schedule: "25 3 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          affinity:
+            nodeAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+              - preference:
+                  matchExpressions:
+                  - key: node-role.kubernetes.io/infra
+                    operator: Exists
+                weight: 1
+          tolerations:
+            - effect: NoSchedule
+              key: node-role.kubernetes.io/infra
+              operator: Exists
+          serviceAccountName: bz1980755
+          restartPolicy: Never
+          containers:
+          - name: bz1980755
+            image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+            imagePullPolicy: Always
+            args:
+            - /bin/bash
+            - -c
+            - |
+              set -e
+              set -o nounset
+              set -o pipefail
+
+              TEMPDIR=$(mktemp -d)
+              for ns in `oc get namespace -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' | grep "^openshift[-]"`; do
+                  echo "Checking namespace ${ns}"
+                  for sub in `oc get subscriptions.operators.coreos.com -l 'hive.openshift.io/managed=true' -n ${ns} -o jsonpath="{.items[*].metadata.name}"`; do
+                      echo "Checking subscription ${sub}"
+
+                      NEEDS_REPLACE=$(oc get subscriptions.operators.coreos.com -n "${ns}" "${sub}" -o jsonpath="{.status.conditions[?(@.reason == 'ConstraintsNotSatisfiable')].status}")
+                      if [[ "${NEEDS_REPLACE}" != "True" ]]; then
+                          continue
+                      fi
+
+                      echo "Will re-install subscription ${ns}/${sub}"
+                      oc get subscriptions.operators.coreos.com -n "${ns}" "${sub}" -ojson | grep -v "kubectl.kubernetes.io/last-applied-configuration" > ${TEMPDIR}/${sub}.yaml
+
+                      for ip in `oc get installplans.operators.coreos.com -n "${ns}" -o jsonpath="{.items[?(@.metadata.ownerReferences[*].name=='${sub}')].metadata.name}"`; do
+                          echo "Removing installplan ${ip}"
+                          oc delete installplans.operators.coreos.com -n "${ns}" $ip
+                      done
+
+                      for csv in `oc get clusterserviceversions.operators.coreos.com -n "${ns}" -o jsonpath="{.items[*].metadata.name}"`; do
+                          if [[ "${csv}" =~ ^${sub}.* ]]; then
+                              echo "Removing CSV ${csv}"
+                              oc delete clusterserviceversions.operators.coreos.com -n "${ns}" "${csv}"
+                          fi
+                      done
+
+                      echo "Removing subscription ${sub}"
+                      oc delete subscriptions.operators.coreos.com  -n "${ns}" "${sub}"
+
+                      echo "Recreating subscription ${sub}"
+                      oc create -f ${TEMPDIR}/${sub}.yaml
+                  done
+              done
