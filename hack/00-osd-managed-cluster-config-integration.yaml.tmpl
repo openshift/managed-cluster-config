@@ -6013,7 +6013,6 @@ objects:
       kind: VpcEndpoint
       metadata:
         name: splunk
-        namespace: openshift-aws-vpce-operator
       spec:
         subdomainName: splunk
         serviceName: com.amazonaws.vpce.us-gov-east-1.vpce-svc-0838533cd2d6d2b8b
@@ -6060,7 +6059,6 @@ objects:
       kind: VpcEndpoint
       metadata:
         name: splunk
-        namespace: openshift-aws-vpce-operator
       spec:
         subdomainName: splunk
         serviceName: com.amazonaws.vpce.us-gov-west-1.vpce-svc-06225ed6e3620e8e1
@@ -14082,10 +14080,10 @@ objects:
             for: 5m
             labels:
               severity: critical
-              namespace: '{{ $labels.namespace }}'
+              namespace: openshift-aws-vpce-operator
             annotations:
-              message: The VPC Endpoint {{ $labels.namespace }}/{{ $labels.name }}
-                has been in a pendingAcceptance state for 5m and requires SRE action.
+              message: The VPC Endpoint {{ $labels.vpce_id }} created by {{ $labels.name
+                }} has been in a pendingAcceptance state for 5m and requires SRE action.
     - apiVersion: monitoring.coreos.com/v1
       kind: PrometheusRule
       metadata:
