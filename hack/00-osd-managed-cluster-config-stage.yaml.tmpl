@@ -8793,31 +8793,6 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: osd-ingress
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-      matchExpressions:
-      - key: ext-managed.openshift.io/hive-shard
-        operator: In
-        values:
-        - 'true'
-    resourceApplyMode: Sync
-    resources:
-    - apiVersion: v1
-      kind: Namespace
-      metadata:
-        name: openshift-sre-sshd
-        labels:
-          managed.openshift.io/service-lb-quota-exempt: 'true'
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    labels:
-      managed.openshift.io/gitHash: ${IMAGE_TAG}
-      managed.openshift.io/gitRepoName: ${REPO_NAME}
-      managed.openshift.io/osd: 'true'
     name: osd-ingress-controller
   spec:
     clusterDeploymentSelector:
