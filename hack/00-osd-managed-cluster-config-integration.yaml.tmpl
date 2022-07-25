@@ -13616,47 +13616,6 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: sre-prometheus-bz1980755
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-    resourceApplyMode: Sync
-    resources:
-    - apiVersion: monitoring.coreos.com/v1
-      kind: PrometheusRule
-      metadata:
-        labels:
-          prometheus: k8s
-          role: alert-rules
-        name: sre-bz1980755
-        namespace: openshift-monitoring
-      spec:
-        groups:
-        - name: sre-bz1980755
-          rules:
-          - expr: subscription_sync_total * on(name) group_right label_replace(catalogsource_ready,
-              "name", "$1", "name", "(.*)-(registry|catalog)")
-            record: sre:subscription_sync_total
-          - alert: HighSubscriptionSyncRateSRE
-            annotations:
-              message: The sync rate for the {{ $labels.name }} operator Subscription
-                is high and may indicate it has not installed successfully.
-            expr: 'rate(sre:subscription_sync_total{exported_namespace=~"openshift.*",exported_namespace!~"openshift-(operators|marketplace).*"}[30m])
-              * 100 > 10
-
-              '
-            for: 5m
-            labels:
-              severity: warning
-              namespace: openshift-monitoring
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    labels:
-      managed.openshift.io/gitHash: ${IMAGE_TAG}
-      managed.openshift.io/gitRepoName: ${REPO_NAME}
-      managed.openshift.io/osd: 'true'
     name: sre-prometheus-centralized-observability
   spec:
     clusterDeploymentSelector:
