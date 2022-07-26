@@ -22,6 +22,8 @@ Resources:
     name: sre-stuck-ebs-vols-code
   - namespace: openshift-monitoring
     name: sre-stuck-ebs-vols-trusted-ca-bundle
+  - namespace: openshift-monitoring
+    name: token-refresher-trusted-ca-bundle
   - namespace: openshift-security
     name: osd-audit-policy
   - namespace: openshift-validation-webhook
@@ -51,6 +53,7 @@ Resources:
   - name: openshift-codeready-workspaces
   - name: openshift-custom-domains-operator
   - name: openshift-customer-monitoring
+  - name: openshift-managed-node-metadata-operator
   - name: openshift-managed-upgrade-operator
   - name: openshift-must-gather-operator
   - name: openshift-ocm-agent-operator
@@ -61,12 +64,12 @@ Resources:
   - name: openshift-security
   - name: openshift-splunk-forwarder-operator
   - name: openshift-sre-pruning
-  - name: openshift-sre-sshd
   - name: openshift-strimzi
   - name: openshift-validation-webhook
   - name: openshift-velero
   - name: openshift-monitoring
   - name: openshift
+  - name: openshift-cluster-version
   ReplicationController:
   - namespace: openshift-monitoring
     name: sre-ebs-iops-reporter-1
@@ -136,6 +139,7 @@ Resources:
   - name: sre-pod-validation
   - name: sre-regular-user-validation
   - name: sre-scc-validation
+  - name: sre-techpreviewnoupgrade-validation
   DaemonSet:
   - namespace: openshift-monitoring
     name: sre-dns-latency-exporter
@@ -157,13 +161,14 @@ Resources:
   - name: backplane-cee-readers
   - name: backplane-cluster-admin
   - name: backplane-impersonate-cluster-admin
+  - name: backplane-srep-admins-cluster
+  - name: backplane-srep-readers-cluster
   - name: configure-alertmanager-operator-prom
   - name: dedicated-admins-cluster
   - name: dedicated-admins-registry-cas-cluster
   - name: openshift-backplane-managed-scripts-reader
   - name: osd-cluster-ready
   - name: osd-delete-backplane-script-resources
-  - name: osd-delete-ownerrefs-bz1906584
   - name: osd-delete-ownerrefs-serviceaccounts
   - name: osd-patch-subscription-source
   - name: osd-rebalance-infra-nodes
@@ -195,7 +200,6 @@ Resources:
   - name: osd-custom-domains-dedicated-admin-cluster
   - name: osd-delete-backplane-script-resources
   - name: osd-delete-backplane-serviceaccounts
-  - name: osd-delete-ownerrefs-bz1906584
   - name: osd-delete-ownerrefs-serviceaccounts
   - name: osd-get-namespace
   - name: osd-netnamespaces-dedicated-admin-cluster
@@ -236,15 +240,15 @@ Resources:
     name: publishingstrategy
   EndpointSlice:
   - namespace: openshift-monitoring
-    name: sre-dns-latency-exporter-xhgmr
+    name: sre-dns-latency-exporter-c2pcv
   - namespace: openshift-monitoring
-    name: sre-ebs-iops-reporter-74w46
+    name: sre-ebs-iops-reporter-cl89c
   - namespace: openshift-monitoring
-    name: sre-stuck-ebs-vols-fblh4
+    name: sre-stuck-ebs-vols-lxjdv
   - namespace: openshift-monitoring
-    name: token-refresher-fv6ms
+    name: token-refresher-5mv6s
   - namespace: openshift-validation-webhook
-    name: validation-webhook-nc646
+    name: validation-webhook-6v98z
   MachineHealthCheck:
   - namespace: openshift-machine-api
     name: srep-infra-healthcheck
@@ -252,9 +256,11 @@ Resources:
     name: srep-worker-healthcheck
   MachineSet:
   - namespace: openshift-machine-api
-    name: tnierman2-p7x4n-infra-us-west-1a
+    name: pebrown-mcc-kq6gt-infra-ap-southeast-2a
   - namespace: openshift-machine-api
-    name: tnierman2-p7x4n-worker-us-west-1a
+    name: pebrown-mcc-kq6gt-worker-ap-southeast-2a
+  ContainerRuntimeConfig:
+  - name: custom-crio
   KubeletConfig:
   - name: custom-kubelet
   SubjectPermission:
@@ -286,6 +292,13 @@ Resources:
   NetworkPolicy:
   - namespace: openshift-monitoring
     name: token-refresher
+  ManagedNotification:
+  - namespace: openshift-ocm-agent-operator
+    name: sre-elasticsearch-managed-notifications
+  - namespace: openshift-ocm-agent-operator
+    name: sre-managed-notifications
+  - namespace: openshift-ocm-agent-operator
+    name: sre-proxy-managed-notifications
   OcmAgent:
   - namespace: openshift-ocm-agent-operator
     name: ocmagent
@@ -296,6 +309,8 @@ Resources:
     name: cloud-ingress-operator-registry
   - namespace: openshift-custom-domains-operator
     name: custom-domains-operator-registry
+  - namespace: openshift-managed-node-metadata-operator
+    name: managed-node-metadata-operator-registry
   - namespace: openshift-managed-upgrade-operator
     name: managed-upgrade-operator-catalog
   - namespace: openshift-monitoring
@@ -327,6 +342,8 @@ Resources:
     name: custom-domains-operator
   - namespace: openshift-customer-monitoring
     name: openshift-customer-monitoring
+  - namespace: openshift-managed-node-metadata-operator
+    name: managed-node-metadata-operator
   - namespace: openshift-managed-upgrade-operator
     name: managed-upgrade-operator-og
   - namespace: openshift-must-gather-operator
@@ -352,6 +369,8 @@ Resources:
     name: cloud-ingress-operator
   - namespace: openshift-custom-domains-operator
     name: custom-domains-operator
+  - namespace: openshift-managed-node-metadata-operator
+    name: managed-node-metadata-operator
   - namespace: openshift-managed-upgrade-operator
     name: managed-upgrade-operator
   - namespace: openshift-monitoring
@@ -371,30 +390,32 @@ Resources:
   - namespace: openshift-velero
     name: managed-velero-operator
   PackageManifest:
-  - namespace: openshift-must-gather-operator
-    name: must-gather-operator
-  - namespace: openshift-custom-domains-operator
-    name: custom-domains-operator
-  - namespace: openshift-rbac-permissions
-    name: rbac-permissions-operator
   - namespace: openshift-route-monitor-operator
     name: route-monitor-operator
-  - namespace: openshift-splunk-forwarder-operator
-    name: splunk-forwarder-operator
-  - namespace: openshift-osd-metrics
-    name: osd-metrics-exporter
-  - namespace: openshift-monitoring
-    name: configure-alertmanager-operator
-  - namespace: openshift-velero
-    name: managed-velero-operator
-  - namespace: openshift-cloud-ingress-operator
-    name: cloud-ingress-operator
-  - namespace: openshift-addon-operator
-    name: addon-operator
   - namespace: openshift-ocm-agent-operator
     name: ocm-agent-operator
+  - namespace: openshift-splunk-forwarder-operator
+    name: splunk-forwarder-operator
+  - namespace: openshift-rbac-permissions
+    name: rbac-permissions-operator
+  - namespace: openshift-must-gather-operator
+    name: must-gather-operator
+  - namespace: openshift-monitoring
+    name: configure-alertmanager-operator
+  - namespace: openshift-osd-metrics
+    name: osd-metrics-exporter
   - namespace: openshift-managed-upgrade-operator
     name: managed-upgrade-operator
+  - namespace: openshift-cloud-ingress-operator
+    name: cloud-ingress-operator
+  - namespace: openshift-managed-node-metadata-operator
+    name: managed-node-metadata-operator
+  - namespace: openshift-velero
+    name: managed-velero-operator
+  - namespace: openshift-custom-domains-operator
+    name: custom-domains-operator
+  - namespace: openshift-addon-operator
+    name: addon-operator
   Status:
   - {}
   Project:
@@ -410,6 +431,7 @@ Resources:
   - name: openshift-codeready-workspaces
   - name: openshift-custom-domains-operator
   - name: openshift-customer-monitoring
+  - name: openshift-managed-node-metadata-operator
   - name: openshift-managed-upgrade-operator
   - name: openshift-must-gather-operator
   - name: openshift-ocm-agent-operator
@@ -420,7 +442,6 @@ Resources:
   - name: openshift-security
   - name: openshift-splunk-forwarder-operator
   - name: openshift-sre-pruning
-  - name: openshift-sre-sshd
   - name: openshift-strimzi
   - name: openshift-validation-webhook
   - name: openshift-velero

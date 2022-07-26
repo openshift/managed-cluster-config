@@ -23,7 +23,8 @@ data:
 # are still being managed by SRE-P.
 ADDITIONAL_MANAGED_NAMESPACES = [
     {"name": "openshift-monitoring"},
-    {"name": "openshift"}
+    {"name": "openshift"},
+    {"name": "openshift-cluster-version"}
 ]
 
 
@@ -57,6 +58,9 @@ def collect_ocp_release_namespaces():
         yaml_file_paths = [
             os.path.join(tmpdir, f) for f in os.listdir(tmpdir) if f.endswith(".yaml")
         ]
+        # make sure a bare = sign doesn't break our loader
+        # temporary fix for https://github.com/yaml/pyyaml/issues/89
+        yaml.FullLoader.yaml_implicit_resolvers.pop('=')
         for file_path in yaml_file_paths:
             with open(file_path, "r") as f:
                 manifests = yaml.full_load_all(f)
@@ -201,6 +205,13 @@ def main():
         required=True,
         choices=["yaml", "configmap"],
         help="Output format of managed resource list [required]",
+    )
+    parser.add_argument(
+        "--source",
+        "-s",
+        required=True,
+        choices=["osd-all", "osd-namespaces", "ocp-namespaces"],
+        help="Choose to output all OSD managed resources, or just the managed namespaces for OSD or OCP [required]",
     )
     parser.add_argument(
         "--namespace",
