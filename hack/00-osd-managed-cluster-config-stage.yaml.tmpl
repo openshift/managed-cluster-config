@@ -20,6 +20,8 @@ parameters:
   required: true
 - name: ROUTER_REPLICA_CLUSTER_IDS
   required: true
+- name: SEGMENT_API_KEY
+  required: true
 metadata:
   name: selectorsyncset-template
 objects:
@@ -7439,6 +7441,40 @@ objects:
       name: cluster
       patchType: merge
       patch: '{"spec":{"managementState":"Managed","route":null,"customization":{"brand":"dedicated","documentationBaseURL":"https://docs.openshift.com/dedicated/4/","customProductName":null,"customLogoFile":null}}}'
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-console-branding-telemetry
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/product
+        operator: NotIn
+        values:
+        - rosa
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+      - key: api.openshift.com/environment
+        operator: In
+        values:
+        - staging
+        - integration
+    resourceApplyMode: Sync
+    patches:
+    - apiVersion: operator.openshift.io/v1
+      applyMode: AlwaysApply
+      kind: Console
+      name: cluster
+      patchType: merge
+      patch: '{"metadata":{"annotations":{"telemetry.console.openshift.io/CLUSTER_TYPE":"OSD","telemetry.console.openshift.io/SEGMENT_API_KEY":"${SEGMENT_API_KEY}"}}}'
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
