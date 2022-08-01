@@ -59,7 +59,7 @@ spec:
                       done
 
                       for csv in `oc get clusterserviceversions.operators.coreos.com -n "${ns}" -o jsonpath="{.items[*].metadata.name}"`; do
-                          if [[ "${csv}" =~ ^${sub}.* ]]; then
+                          if [[ "${csv}" =~ ^${sub}.* || "openshift-${csv}" =~ ^${sub}.* ]]; then
                               echo "Removing CSV ${csv}"
                               oc delete clusterserviceversions.operators.coreos.com -n "${ns}" "${csv}"
                           fi
