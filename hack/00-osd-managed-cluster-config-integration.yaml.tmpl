@@ -8743,6 +8743,46 @@ objects:
               mode: 420
               overwrite: true
               path: /etc/chrony.conf
+    - apiVersion: machineconfiguration.openshift.io/v1
+      kind: MachineConfig
+      metadata:
+        labels:
+          machineconfiguration.openshift.io/role: master
+        name: 99-master-ssh-cipher-config
+      spec:
+        config:
+          ignition:
+            version: 3.2.0
+          storage:
+            files:
+            - contents:
+                source: data:,Ciphers%20aes256-gcm%40openssh.com%2Caes256-ctr%2Caes128-gcm%40openssh.com%2Caes128-ctr
+              overwrite: true
+              path: /etc/ssh/ssh_config.d/10-fedramp-cipher.conf
+            - contents:
+                source: data:,%23%09%24OpenBSD%3A%20sshd_config%2Cv%201.103%202018/04/09%2020%3A41%3A22%20tj%20Exp%20%24%0A%23%20This%20config%20has%20been%20modified%20by%20MCO%20to%20adjust%20the%20allowed%20ciphers%20in%20FedRAMP%0A%0AHostKey%20/etc/ssh/ssh_host_rsa_key%0AHostKey%20/etc/ssh/ssh_host_ecdsa_key%0AHostKey%20/etc/ssh/ssh_host_ed25519_key%0A%0ASyslogFacility%20AUTHPRIV%0A%0APermitRootLogin%20no%0A%0AAuthorizedKeysFile%09.ssh/authorized_keys%0A%0APasswordAuthentication%20no%0A%0AChallengeResponseAuthentication%20no%0A%0AGSSAPIAuthentication%20yes%0AGSSAPICleanupCredentials%20no%0A%0AUsePAM%20yes%0A%0AX11Forwarding%20yes%0A%0APrintMotd%20no%0A%0AClientAliveInterval%20180%0A%0AAcceptEnv%20LANG%20LC_CTYPE%20LC_NUMERIC%20LC_TIME%20LC_COLLATE%20LC_MONETARY%20LC_MESSAGES%0AAcceptEnv%20LC_PAPER%20LC_NAME%20LC_ADDRESS%20LC_TELEPHONE%20LC_MEASUREMENT%0AAcceptEnv%20LC_IDENTIFICATION%20LC_ALL%20LANGUAGE%0AAcceptEnv%20XMODIFIERS%0A%0ASubsystem%09sftp%09/usr/libexec/openssh/sftp-server%0ACiphers%20aes256-gcm%40openssh.com%2Caes256-ctr%2Caes128-gcm%40openssh.com%2Caes128-ctr
+              overwrite: true
+              path: /etc/ssh/sshd_config
+    - apiVersion: machineconfiguration.openshift.io/v1
+      kind: MachineConfig
+      metadata:
+        labels:
+          machineconfiguration.openshift.io/role: worker
+        name: 99-worker-ssh-cipher-config
+      spec:
+        config:
+          ignition:
+            version: 3.2.0
+          storage:
+            files:
+            - contents:
+                source: data:,Ciphers%20aes256-gcm%40openssh.com%2Caes256-ctr%2Caes128-gcm%40openssh.com%2Caes128-ctr
+              overwrite: true
+              path: /etc/ssh/ssh_config.d/10-fedramp-cipher.conf
+            - contents:
+                source: data:,%23%09%24OpenBSD%3A%20sshd_config%2Cv%201.103%202018/04/09%2020%3A41%3A22%20tj%20Exp%20%24%0A%23%20This%20config%20has%20been%20modified%20by%20MCO%20to%20adjust%20the%20allowed%20ciphers%20in%20FedRAMP%0A%0AHostKey%20/etc/ssh/ssh_host_rsa_key%0AHostKey%20/etc/ssh/ssh_host_ecdsa_key%0AHostKey%20/etc/ssh/ssh_host_ed25519_key%0A%0ASyslogFacility%20AUTHPRIV%0A%0APermitRootLogin%20no%0A%0AAuthorizedKeysFile%09.ssh/authorized_keys%0A%0APasswordAuthentication%20no%0A%0AChallengeResponseAuthentication%20no%0A%0AGSSAPIAuthentication%20yes%0AGSSAPICleanupCredentials%20no%0A%0AUsePAM%20yes%0A%0AX11Forwarding%20yes%0A%0APrintMotd%20no%0A%0AClientAliveInterval%20180%0A%0AAcceptEnv%20LANG%20LC_CTYPE%20LC_NUMERIC%20LC_TIME%20LC_COLLATE%20LC_MONETARY%20LC_MESSAGES%0AAcceptEnv%20LC_PAPER%20LC_NAME%20LC_ADDRESS%20LC_TELEPHONE%20LC_MEASUREMENT%0AAcceptEnv%20LC_IDENTIFICATION%20LC_ALL%20LANGUAGE%0AAcceptEnv%20XMODIFIERS%0A%0ASubsystem%09sftp%09/usr/libexec/openssh/sftp-server%0ACiphers%20aes256-gcm%40openssh.com%2Caes256-ctr%2Caes128-gcm%40openssh.com%2Caes128-ctr
+              overwrite: true
+              path: /etc/ssh/sshd_config
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
