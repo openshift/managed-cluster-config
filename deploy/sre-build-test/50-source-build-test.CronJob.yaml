@@ -77,7 +77,13 @@ spec:
 
               # run build
               oc -n "${NS}" new-build --name="${JOB_PREFIX}" --binary --strategy source --docker-image registry.redhat.io/ubi8/go-toolset:1.17.7-13
-              cat <<EOF > /tmp/main.go
+              mkdir -p /tmp/build
+              cat <<EOF > /tmp/build/go.mod
+              module openshift/managed-cluster-config/sre-build-test
+
+              go 1.17
+              EOF
+              cat <<EOF > /tmp/build/main.go
               package main
               import (
                      "fmt"
@@ -88,7 +94,7 @@ spec:
               }
               EOF
 
-              while ! oc -n "${NS}" start-build "${JOB_PREFIX}" --from-file=/tmp/main.go
+              while ! oc -n "${NS}" start-build "${JOB_PREFIX}" --from-dir=/tmp/build
               do
                 echo "Failed to start build, retrying in 15 seconds."
                 sleep 15s
