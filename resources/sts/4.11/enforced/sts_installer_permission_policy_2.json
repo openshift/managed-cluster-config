@@ -199,24 +199,30 @@
       }
     },
     {
-      "Sid": "CreateNetworkInterface",
-      "Effect": "Allow",
-      "Action": [
-        "ec2:CreateNetworkInterface"
-      ],
-      "Resource": [
-        "arn:aws:ec2:*:*:network-interface/*"
-      ]
-    },
-    {
       "Sid": "CreateNetworkInterfaceInSubnetAndSg",
       "Effect": "Allow",
       "Action": [
         "ec2:CreateNetworkInterface"
       ],
       "Resource": [
+        "arn:aws:ec2:*:*:network-interface/*",
         "arn:aws:ec2:*:*:subnet/*",
         "arn:aws:ec2:*:*:security-group/*"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "aws:ResourceTag/red-hat-managed": "true"
+        }
+      }
+    },
+    {
+      "Sid": "DeleteNetworkInterface",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:DeleteNetworkInterface"
+      ],
+      "Resource": [
+        "arn:aws:ec2:*:*:network-interface/*"
       ],
       "Condition": {
         "StringEquals": {
@@ -237,6 +243,20 @@
         "StringEquals": {
           "aws:ResourceTag/red-hat-managed": "true"
         }
+     },
+     {
+      "Sid": "DeleteRoute",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:DeleteRoute"
+      ],
+      "Resource": [
+        "arn:aws:ec2:*:*:route-table/*"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "aws:ResourceTag/red-hat-managed": "true"
+        }
       }
     },
     {
@@ -247,7 +267,27 @@
       ],
       "Resource": [
         "arn:aws:ec2:*:*:route-table/*"
-      ]
+      ],
+      "Condition": {
+        "StringEquals": {
+          "aws:ResourceTag/red-hat-managed": "true"
+        }
+      }
+    },
+    {
+      "Sid": "DeleteRouteTable",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:DeleteRouteTable"
+      ],
+      "Resource": [
+        "arn:aws:ec2:*:*:route-table/*"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "aws:ResourceTag/red-hat-managed": "true"
+        }
+      }
     },
     {
       "Sid": "CreateRouteTableInVpc",
@@ -290,10 +330,40 @@
       }
     },
     {
+      "Sid": "DeleteSecurityGroupInVpc",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:DeleteSecurityGroup"
+      ],
+      "Resource": [
+        "arn:aws:ec2:*:*:vpc/*"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "aws:ResourceTag/red-hat-managed": "true"
+        }
+      }
+    },
+    {
       "Sid": "CreateVolume",
       "Effect": "Allow",
       "Action": [
         "ec2:CreateVolume"
+      ],
+      "Resource": [
+        "arn:aws:ec2:*:*:volume/*"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "aws:RequestTag/red-hat-managed": "true"
+        }
+      }
+    },
+    {
+      "Sid": "DeleteVolume",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:DeleteVolume"
       ],
       "Resource": [
         "arn:aws:ec2:*:*:volume/*"
@@ -361,6 +431,35 @@
       "Condition": {
         "StringEquals": {
           "aws:RequestTag/red-hat-managed": "true"
+        }
+      }
+    },
+    {
+      "Sid": "RevokeSecurityGroupEgress",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:RevokeSecurityGroupEgress"
+      ],
+      "Resource": [
+        "arn:aws:ec2:*:*:security-group-rule/*"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "aws:RequestTag/red-hat-managed": "true"
+        }
+      }
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ec2:DeleteSnapshot"
+      ],
+      "Resource": [
+        "arn:aws:ec2:*::snapshot/*"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "aws:ResourceTag/red-hat-managed": "true"
         }
       }
     }
