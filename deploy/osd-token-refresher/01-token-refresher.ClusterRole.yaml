@@ -1,0 +1,21 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: token-refresher
+rules:
+- apiGroups:
+    - config.openshift.io
+  resources:
+    - proxies
+  verbs:
+    - get
+    - list
+- apiGroups:
+    - ""               
+  resources:           
+    - secrets             
+  verbs:
+  - get
+  - update         
+  - create
+  - patch

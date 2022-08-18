@@ -32,6 +32,7 @@ spec:
         - effect: NoSchedule
           key: node-role.kubernetes.io/infra
           operator: Exists
+      serviceAccountName: token-refresher
       volumes:
       - configMap:
           defaultMode: 420
@@ -40,6 +41,28 @@ spec:
               path: ca-certificates.crt
           name: token-refresher-trusted-ca-bundle
         name: token-refresher-trusted-ca-bundle
+      initContainers:
+      - name: proxy-setup
+        image: image-registry.openshift-image-registry.svc:5000/openshift/tools:latest
+        args:
+        - /bin/bash
+        - -c
+        - |
+          set -o nounset
+          set -o pipefail
+
+          HTTP_PROXY_VAL=""
+          HTTPS_PROXY_VAL=""
+          NO_PROXY_VAL=""
+
+          PROXY=$(oc get proxy cluster -o json)
+          if [[ $? == 0 && ! -z "${PROXY}" ]]; then
+            HTTP_PROXY_VAL=$(echo ${PROXY} | jq -r '.status.httpProxy | values')
+            HTTPS_PROXY_VAL=$(echo ${PROXY} | jq -r '.status.httpsProxy | values')
+            NO_PROXY_VAL=$(echo ${PROXY} | jq -r '.status.noProxy | values')
+          fi
+
+          oc create secret generic -n openshift-monitoring token-refresher-proxy --from-literal=HTTP_PROXY=${HTTP_PROXY_VAL} --from-literal=HTTPS_PROXY=${HTTPS_PROXY_VAL} --from-literal=NO_PROXY=${NO_PROXY_VAL} -o json --dry-run=client | oc apply -f-
       containers:
       - args:
         - --oidc.audience=observatorium-telemeter
@@ -65,6 +88,21 @@ spec:
               key: receiver-url
         - name: ISSUER_URL
           value: "https://sso.redhat.com/auth/realms/redhat-external"
+        - name: HTTP_PROXY
+          valueFrom:
+            secretKeyRef:
+              name: token-refresher-proxy
+              key: HTTP_PROXY
+        - name: HTTPS_PROXY
+          valueFrom:
+            secretKeyRef:
+              name: token-refresher-proxy
+              key: HTTPS_PROXY
+        - name: NO_PROXY
+          valueFrom:
+            secretKeyRef:
+              name: token-refresher-proxy
+              key: NO_PROXY
         image: quay.io/observatorium/token-refresher@sha256:6ce9b80cd1d907cb6c9ed2a18612f386f7503257772d1d88155a4a2e6773fd00
         name: token-refresher
         ports:
