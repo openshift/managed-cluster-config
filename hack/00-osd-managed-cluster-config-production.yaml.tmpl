@@ -13532,6 +13532,39 @@ objects:
         - 'true'
     resourceApplyMode: Sync
     resources:
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: token-refresher
+      rules:
+      - apiGroups:
+        - config.openshift.io
+        resources:
+        - proxies
+        verbs:
+        - get
+        - list
+      - apiGroups:
+        - ''
+        resources:
+        - secrets
+        verbs:
+        - get
+        - update
+        - create
+        - patch
+    - kind: ClusterRoleBinding
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        name: token-refresher
+      subjects:
+      - kind: ServiceAccount
+        name: token-refresher
+        namespace: openshift-monitoring
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: token-refresher
     - apiVersion: apps/v1
       kind: Deployment
       metadata:
@@ -13566,6 +13599,7 @@ objects:
             - effect: NoSchedule
               key: node-role.kubernetes.io/infra
               operator: Exists
+            serviceAccountName: token-refresher
             volumes:
             - configMap:
                 defaultMode: 420
@@ -13574,6 +13608,21 @@ objects:
                   path: ca-certificates.crt
                 name: token-refresher-trusted-ca-bundle
               name: token-refresher-trusted-ca-bundle
+            initContainers:
+            - name: proxy-setup
+              image: image-registry.openshift-image-registry.svc:5000/openshift/tools:latest
+              args:
+              - /bin/bash
+              - -c
+              - "set -o nounset\nset -o pipefail\n\nHTTP_PROXY_VAL=\"\"\nHTTPS_PROXY_VAL=\"\
+                \"\nNO_PROXY_VAL=\"\"\n\nPROXY=$(oc get proxy cluster -o json)\nif\
+                \ [[ $? == 0 && ! -z \"${PROXY}\" ]]; then\n  HTTP_PROXY_VAL=$(echo\
+                \ ${PROXY} | jq -r '.status.httpProxy | values')\n  HTTPS_PROXY_VAL=$(echo\
+                \ ${PROXY} | jq -r '.status.httpsProxy | values')\n  NO_PROXY_VAL=$(echo\
+                \ ${PROXY} | jq -r '.status.noProxy | values')\nfi\n\noc create secret\
+                \ generic -n openshift-monitoring token-refresher-proxy --from-literal=HTTP_PROXY=${HTTP_PROXY_VAL}\
+                \ --from-literal=HTTPS_PROXY=${HTTPS_PROXY_VAL} --from-literal=NO_PROXY=${NO_PROXY_VAL}\
+                \ -o json --dry-run=client | oc apply -f-\n"
             containers:
             - args:
               - --oidc.audience=observatorium-telemeter
@@ -13599,6 +13648,21 @@ objects:
                     key: receiver-url
               - name: ISSUER_URL
                 value: https://sso.redhat.com/auth/realms/redhat-external
+              - name: HTTP_PROXY
+                valueFrom:
+                  secretKeyRef:
+                    name: token-refresher-proxy
+                    key: HTTP_PROXY
+              - name: HTTPS_PROXY
+                valueFrom:
+                  secretKeyRef:
+                    name: token-refresher-proxy
+                    key: HTTPS_PROXY
+              - name: NO_PROXY
+                valueFrom:
+                  secretKeyRef:
+                    name: token-refresher-proxy
+                    key: NO_PROXY
               image: quay.io/observatorium/token-refresher@sha256:6ce9b80cd1d907cb6c9ed2a18612f386f7503257772d1d88155a4a2e6773fd00
               name: token-refresher
               ports:
@@ -13608,6 +13672,11 @@ objects:
               - mountPath: /etc/ssl/certs/
                 name: token-refresher-trusted-ca-bundle
                 readOnly: true
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: token-refresher
+        namespace: openshift-monitoring
     - apiVersion: v1
       kind: Service
       metadata:
