@@ -4279,6 +4279,14 @@ objects:
         verbs:
         - get
         - list
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - get
+        - list
+        - delete
     - kind: ClusterRoleBinding
       apiVersion: rbac.authorization.k8s.io/v1
       metadata:
@@ -4321,38 +4329,39 @@ objects:
                 restartPolicy: Never
                 containers:
                 - name: bz1980755
-                  image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+                  image: image-registry.openshift-image-registry.svc:5000/openshift/tools:latest
                   imagePullPolicy: Always
                   args:
                   - /bin/bash
                   - -c
                   - "set -e\nset -o nounset\nset -o pipefail\n\nTEMPDIR=$(mktemp -d)\n\
-                    for ns in `oc get namespace -o jsonpath='{range .items[*]}{.metadata.name}{\"\
-                    \\n\"}{end}' | grep \"^openshift[-]\"`; do\n    echo \"Checking\
-                    \ namespace ${ns}\"\n    for sub in `oc get subscriptions.operators.coreos.com\
-                    \ -l 'hive.openshift.io/managed=true' -n ${ns} -o jsonpath=\"\
-                    {.items[*].metadata.name}\"`; do\n        echo \"Checking subscription\
-                    \ ${sub}\"\n\n        NEEDS_REPLACE=$(oc get subscriptions.operators.coreos.com\
-                    \ -n \"${ns}\" \"${sub}\" -o jsonpath=\"{.status.conditions[?(@.reason\
-                    \ == 'ConstraintsNotSatisfiable')].status}\")\n        if [[ \"\
-                    ${NEEDS_REPLACE}\" != \"True\" ]]; then\n            continue\n\
-                    \        fi\n\n        echo \"Will re-install subscription ${ns}/${sub}\"\
-                    \n        oc get subscriptions.operators.coreos.com -n \"${ns}\"\
-                    \ \"${sub}\" -ojson | grep -v \"kubectl.kubernetes.io/last-applied-configuration\"\
-                    \ > ${TEMPDIR}/${sub}.yaml\n\n        for ip in `oc get installplans.operators.coreos.com\
+                    \necho \"Checking for impacted subscriptions..\"\nIMPACTED_SUBS=$(oc\
+                    \ get sub -A -l 'hive.openshift.io/managed=true' -o json | jq\
+                    \ -r '.items[] | select(.status.conditions[].reason == \"ConstraintsNotSatisfiable\"\
+                    ) | \"\\(.metadata.namespace),\\(.metadata.name)\"')\n\nif [[\
+                    \ -z \"${IMPACTED_SUBS}\" ]]; then\n   echo \"No impacted subscriptions\
+                    \ found.\"\n   exit 0\nfi\n\nwhile read subAndNS; do\n\n    ns=$(echo\
+                    \ \"${subAndNS}\" | cut -d, -f 1)\n    sub=$(echo \"${subAndNS}\"\
+                    \ | cut -d, -f 2)\n\n    if [[ -z \"${ns}\" || -z \"${sub}\" ]];\
+                    \ then\n        continue\n    fi\n\n    echo \"Will re-install\
+                    \ subscription ${ns}/${sub}\"\n    oc get subscriptions.operators.coreos.com\
+                    \ -n \"${ns}\" \"${sub}\" -ojson | grep -v \"kubectl.kubernetes.io/last-applied-configuration\"\
+                    \ > ${TEMPDIR}/${sub}.yaml\n\n    for ip in `oc get installplans.operators.coreos.com\
                     \ -n \"${ns}\" -o jsonpath=\"{.items[?(@.metadata.ownerReferences[*].name=='${sub}')].metadata.name}\"\
-                    `; do\n            echo \"Removing installplan ${ip}\"\n     \
-                    \       oc delete installplans.operators.coreos.com -n \"${ns}\"\
-                    \ $ip\n        done\n\n        for csv in `oc get clusterserviceversions.operators.coreos.com\
+                    `; do\n        echo \"Removing installplan ${ip}\"\n        oc\
+                    \ delete installplans.operators.coreos.com -n \"${ns}\" $ip\n\
+                    \    done\n\n    for csv in `oc get clusterserviceversions.operators.coreos.com\
                     \ -n \"${ns}\" -o jsonpath=\"{.items[*].metadata.name}\"`; do\n\
-                    \            if [[ \"${csv}\" =~ ^${sub}.* || \"openshift-${csv}\"\
-                    \ =~ ^${sub}.* ]]; then\n                echo \"Removing CSV ${csv}\"\
-                    \n                oc delete clusterserviceversions.operators.coreos.com\
-                    \ -n \"${ns}\" \"${csv}\"\n            fi\n        done\n\n  \
-                    \      echo \"Removing subscription ${sub}\"\n        oc delete\
-                    \ subscriptions.operators.coreos.com  -n \"${ns}\" \"${sub}\"\n\
-                    \n        echo \"Recreating subscription ${sub}\"\n        oc\
-                    \ create -f ${TEMPDIR}/${sub}.yaml\n    done\ndone\n"
+                    \        if [[ \"${csv}\" =~ ^${sub}.* || \"openshift-${csv}\"\
+                    \ =~ ^${sub}.* ]]; then\n            echo \"Removing CSV ${csv}\"\
+                    \n            oc delete clusterserviceversions.operators.coreos.com\
+                    \ -n \"${ns}\" \"${csv}\"\n        fi\n    done\n\n    echo \"\
+                    Removing subscription ${sub}\"\n    oc delete subscriptions.operators.coreos.com\
+                    \  -n \"${ns}\" \"${sub}\"\n\n    echo \"Restarting catalog-operator\
+                    \ to clear cache\"\n    oc delete pod -n openshift-operator-lifecycle-manager\
+                    \ -l app=catalog-operator --wait=true\n\n    echo \"Recreating\
+                    \ subscription ${sub}\"\n    oc create -f ${TEMPDIR}/${sub}.yaml\n\
+                    \ndone <<< \"${IMPACTED_SUBS}\"\n"
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
