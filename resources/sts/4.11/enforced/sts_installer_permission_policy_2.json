@@ -154,6 +154,16 @@
           "aws:ResourceTag/red-hat-managed": "true"
         }
       }
+     },
+     {
+      "Sid": "CreateNetworkInterfaceInSubnetAndSgother",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:CreateNetworkInterface"
+      ],
+      "Resource": [
+        "arn:aws:ec2:*:*:network-interface/*"
+      ]
     },
     {
       "Sid": "CreateNetworkInterfaceInSubnetAndSg",
@@ -162,7 +172,6 @@
         "ec2:CreateNetworkInterface"
       ],
       "Resource": [
-        "arn:aws:ec2:*:*:network-interface/*",
         "arn:aws:ec2:*:*:subnet/*",
         "arn:aws:ec2:*:*:security-group/*"
       ],
@@ -225,12 +234,7 @@
       ],
       "Resource": [
         "arn:aws:ec2:*:*:route-table/*"
-      ],
-      "Condition": {
-        "StringEquals": {
-          "aws:ResourceTag/red-hat-managed": "true"
-        }
-      }
+      ]
     },
     {
       "Sid": "DeleteRouteTable",
@@ -240,12 +244,7 @@
       ],
       "Resource": [
         "arn:aws:ec2:*:*:route-table/*"
-      ],
-      "Condition": {
-        "StringEquals": {
-          "aws:ResourceTag/red-hat-managed": "true"
-        }
-      }
+      ]
     },
     {
       "Sid": "CreateRouteTableInVpc",

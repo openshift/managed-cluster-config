@@ -2,6 +2,16 @@
   "Version": "2012-10-17",
   "Statement": [
     {
+      "Sid": "RunInstancesNotTaggedTest",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:RunInstances"
+      ],
+      "Resource": [
+        "*"
+      ]
+    },
+    {
       "Sid": "RunInstancesRequest",
       "Effect": "Allow",
       "Action": [
@@ -103,36 +113,6 @@
         }
       }
      },
-     {
-      "Sid": "AuthorizeSecurityGroupEgress",
-      "Effect": "Allow",
-      "Action": [
-        "ec2:AuthorizeSecurityGroupEgress"
-      ],
-      "Resource": [
-        "arn:aws:ec2:*:*:security-group-rule/*"
-      ],
-      "Condition": {
-        "StringEquals": {
-          "aws:RequestTag/red-hat-managed": "true"
-        }
-      }
-    },
-    {
-      "Sid": "RevokeSecurityGroupEgress",
-      "Effect": "Allow",
-      "Action": [
-        "ec2:RevokeSecurityGroupEgress"
-      ],
-      "Resource": [
-        "arn:aws:ec2:*:*:security-group-rule/*"
-      ],
-      "Condition": {
-        "StringEquals": {
-          "aws:RequestTag/red-hat-managed": "true"
-        }
-      }
-    },
 	{
       "Sid": "CreateSecurityGroup",
       "Effect": "Allow",
@@ -151,12 +131,7 @@
       ],
       "Resource": [
         "arn:aws:ec2:*:*:vpc/*"
-      ],
-      "Condition": {
-        "StringEquals": {
-          "aws:ResourceTag/red-hat-managed": "true"
-        }
-      }
+      ]
     },
     {
       "Sid": "DeleteSecurityGroupInVpc",
@@ -165,11 +140,11 @@
         "ec2:DeleteSecurityGroup"
       ],
       "Resource": [
-        "arn:aws:ec2:*:*:vpc/*"
+        "arn:aws:ec2:*:*:security-group/*"
       ],
       "Condition": {
         "StringEquals": {
-          "aws:ResourceTag/red-hat-managed": "true"
+         "aws:ResourceTag/red-hat-managed": "true"
         }
       }
 	  },
