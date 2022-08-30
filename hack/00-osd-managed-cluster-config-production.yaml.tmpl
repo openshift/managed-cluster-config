@@ -10948,6 +10948,56 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: osd-fedramp-managed-upgrade-operator-config
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/version-major-minor
+        operator: NotIn
+        values:
+        - '4.5'
+        - '4.6'
+        - '4.7'
+      - key: api.openshift.com/fedramp
+        operator: In
+        values:
+        - 'true'
+    resourceApplyMode: Upsert
+    resources:
+    - apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: managed-upgrade-operator-config
+        namespace: openshift-managed-upgrade-operator
+      data:
+        config.yaml: "upgradeType: OSD\nconfigManager:\n  source: LOCAL\n  localConfigName:\
+          \ managed-upgrade-config\n  watchInterval: 60\nmaintenance:\n  controlPlaneTime:\
+          \ 130\n  ignoredAlerts:\n    controlPlaneCriticals:\n    # ClusterOperatorDown\
+          \ - https://bugzilla.redhat.com/show_bug.cgi?id=1955300\n    - ClusterOperatorDown\n\
+          scale:\n  timeOut: 30\nupgradeWindow:\n  delayTrigger: 30\n  timeOut: 120\n\
+          nodeDrain:\n  timeOut: 45\n  expectedNodeDrainTime: 8\nhealthCheck:\n  ignoredCriticals:\n\
+          \  - DNSErrors05MinSRE\n  - MetricsClientSendFailingSRE\n  - UpgradeNodeScalingFailedSRE\n\
+          \  - UpgradeClusterCheckFailedSRE\n  - PruningCronjobErrorSRE\n  - PrometheusRuleFailures\n\
+          \  - CannotRetrieveUpdates\n  - FluentdNodeDown\n  # OSD-11927\n  - ClusterProxyCAExpiringSRE\n\
+          \  # https://bugzilla.redhat.com/show_bug.cgi?id=1986981\n  - PrometheusRemoteWriteBehind\n\
+          \  - KubePersistentVolumeErrors\n  - PrometheusBadConfig\n  - PrometheusRemoteStorageFailures\n\
+          \  - AlertmanagerMembersInconsistent\n  - AlertmanagerClusterFailedToSendAlerts\n\
+          \  - AlertmanagerConfigInconsistent\n  - AlertmanagerClusterDown\n  - KubeStateMetricsListErrors\n\
+          \  - KubeStateMetricsWatchErrors\n  - ThanosRuleSenderIsFailingAlerts\n\
+          \  - ThanosRuleHighRuleEvaluationFailures\n  - ThanosNoRuleEvaluations\n\
+          \  ignoredNamespaces:\n  - openshift-logging\n  - openshift-redhat-marketplace\n\
+          \  - openshift-operators\n  - openshift-customer-monitoring\n  - openshift-cnv\n\
+          \  - openshift-route-monitoring-operator\n  - openshift-user-workload-monitoring\n\
+          \  - openshift-pipelines\nenvironment:\n  fedramp: true\n"
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: osd-fedramp-motd
   spec:
     clusterDeploymentSelector:
