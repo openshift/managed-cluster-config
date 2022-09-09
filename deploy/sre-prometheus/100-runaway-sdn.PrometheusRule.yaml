@@ -1,0 +1,22 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: sre-runaway-sdn-preventing-container-creation
+    role: alert-rules
+  name: sre-runaway-sdn-preventing-container-creation
+  namespace: openshift-monitoring
+spec:
+  groups:
+  - name: sre-runaway-sdn-preventing-container-creation
+    rules:
+    - alert: RunawaySDNPreventingContainerCreationSRE
+      # OSD-13103: This is an attempt to catch an issue where SDN has no memory limits and can cause pods to be stuck in ContainerCreating on 
+      # worker nodes due to memory exhaustion. It should be fixed in OCPBUGS-773
+      expr: sum(sum(kube_pod_container_status_waiting_reason{reason="ContainerCreating"}) by (pod,namespace) * on (pod,namespace) group_right kube_pod_info) by (node) > 0 and sum(container_memory_usage_bytes{namespace="openshift-sdn"} > 1000000000) by (node) 
+      for: 10m
+      labels:
+        severity: critical
+        namespace: openshift-monitoring
+      annotations:
+        description: "SDN is consuming excessive memory rendering {{ $labels.node }} unusable. The node needs to be replaced until OCPBUGS-773 is addressed."
