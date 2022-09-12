@@ -103,7 +103,7 @@ spec:
               echo "$(date): Waiting for build to complete."
               while :
               do
-                ST=$(oc -n "${NS}" get build -o custom-columns=STATUS:.status.phase --no-headers | tail -1)
+                ST=$(oc -n "${NS}" get build -o custom-columns=STATUS:.status.phase --sort-by=.status.startTimestamp --no-headers | tail -1)
                 case ${ST} in
                   "")
                     # if build status is blank, assume we are still starting the build
