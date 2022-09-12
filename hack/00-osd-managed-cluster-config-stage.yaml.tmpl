@@ -15857,9 +15857,9 @@ objects:
                     \ to start build, retrying in 15 seconds.\"\n  sleep 15s\ndone\n\
                     \necho \"$(date): Waiting for build to complete.\"\nwhile :\n\
                     do\n  ST=$(oc -n \"${NS}\" get build -o custom-columns=STATUS:.status.phase\
-                    \ --no-headers)\n  case ${ST} in\n    \"\")\n      # if build\
-                    \ status is blank, assume we are still starting the build\n  \
-                    \    ST=\"Starting\"\n      ;;\n    Failed)\n      echo \"$(date):\
+                    \ --no-headers | tail -1)\n  case ${ST} in\n    \"\")\n      #\
+                    \ if build status is blank, assume we are still starting the build\n\
+                    \      ST=\"Starting\"\n      ;;\n    Failed)\n      echo \"$(date):\
                     \ Build Failed\" >&2\n      oc logs -n \"${NS}\" -c build \"${JOB_PREFIX}\"\
                     \n      exit 1\n      ;;\n    Cancelled)\n      echo \"$(date):\
                     \ Build was Cancelled\" >&2\n      oc logs -n \"${NS}\" -c build\
