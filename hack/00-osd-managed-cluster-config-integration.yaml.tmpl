@@ -17171,10 +17171,11 @@ objects:
             for: 5m
             labels:
               severity: critical
-              namespace: openshift-aws-vpce-operator
+              namespace: '{{ $labels.namespace }}'
             annotations:
-              message: The VPC Endpoint {{ $labels.vpce_id }} created by {{ $labels.name
-                }} has been in a pendingAcceptance state for 5m and requires SRE action.
+              message: The VPC Endpoint {{ $labels.vpce_id }} created by {{ $labels.namespace
+                }}/{{ $labels.name }} has been in a pendingAcceptance state for 5m
+                and requires SRE action.
     - apiVersion: monitoring.coreos.com/v1
       kind: PrometheusRule
       metadata:
