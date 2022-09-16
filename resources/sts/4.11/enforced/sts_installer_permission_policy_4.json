@@ -1,15 +1,41 @@
 {
   "Version": "2012-10-17",
   "Statement": [
-    {
-      "Sid": "RunInstancesNotTaggedTest",
+     {
+      "Sid": "CreateTagsNetwork",
       "Effect": "Allow",
       "Action": [
-        "ec2:RunInstances"
+        "ec2:CreateTags"
       ],
       "Resource": [
-        "*"
+        "arn:aws:ec2:*:*:route-table/*",
+        "arn:aws:ec2:*:*:internet-gateway/*"
       ]
+    },
+    {
+      "Sid": "RunInstancesTags",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:CreateTags"
+      ],
+      "Resource": [
+        "arn:aws:ec2:*:*:instance/*",
+        "arn:aws:ec2:*:*:network-interface/*",
+        "arn:aws:ec2:*:*:volume/*",
+		"arn:aws:ec2:*:*:route-table/*",
+		"arn:aws:ec2:*:*:security-group/*"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "ec2:CreateAction": [
+              "RunInstances",
+              "CreateVolume",
+              "CreateSecurityGroup",
+              "CreateNetworkInterface",
+              "CreateRouteTable"
+          ]
+        }
+      }
     },
     {
       "Sid": "RunInstancesRequest",
@@ -29,28 +55,17 @@
       }
     },
     {
-      "Sid": "RunInstancesResource",
+      "Sid": "RunInstancesNoCondition",
       "Effect": "Allow",
       "Action": [
         "ec2:RunInstances"
       ],
       "Resource": [
+        "arn:aws:ec2:*:*:key-pair/*",
         "arn:aws:ec2:*:*:subnet/*",
-        "arn:aws:ec2:*:*:security-group/*"
-      ],
-      "Condition": {
-        "StringEquals": {
-          "aws:ResourceTag/red-hat-managed": "true"
-        }
-      }
-    },
-    {
-      "Sid": "RunInstancesNotTagged",
-      "Effect": "Allow",
-      "Action": [
-        "ec2:RunInstances"
-      ],
-      "Resource": [
+        "arn:aws:ec2:*:*:security-group/*",
+        "arn:aws:ec2:*:*:snpshot/*",
+        "arn:aws:ec2:*:*:network-interface/*",
         "arn:aws:ec2:*::image/*"
       ]
     },
@@ -80,7 +95,7 @@
       ],
       "Condition": {
         "StringEquals": {
-          "aws:RequestTag/red-hat-managed": "true"
+          "aws:ResourceTag/red-hat-managed": "true"
         }
       }
     },
@@ -121,17 +136,19 @@
       ],
       "Resource": [
         "arn:aws:ec2:*:*:security-group/*"
-      ]
+      ],
+      "Condition": {
+        "StringEquals": {
+          "aws:RequestTag/red-hat-managed": "true"
+        }
+      }
     },
     {
-      "Sid": "CreateSecurityGroupInVpc",
-      "Effect": "Allow",
-      "Action": [
-        "ec2:CreateSecurityGroup"
-      ],
-      "Resource": [
-        "arn:aws:ec2:*:*:vpc/*"
-      ]
+		"Action": [
+			"ec2:CreateSecurityGroup"
+	],
+	"Effect": "Allow",
+	"Resource": "arn:aws:ec2:*:*:vpc/*"
     },
     {
       "Sid": "DeleteSecurityGroupInVpc",
@@ -177,6 +194,21 @@
           "aws:ResourceTag/red-hat-managed": "true"
         }
       }
+    },
+    {
+       "Sid": "PassRoleAutoscalingRequestEC2",
+       "Effect": "Allow",
+       "Action": [
+         "iam:PassRole"
+       ],
+       "Resource": "*",
+       "Condition": {
+         "StringEquals": {
+             "iam:PassedToService": [
+                 "ec2.amazonaws.com"
+             ]
+         }
+       }
     }
   ]
 }

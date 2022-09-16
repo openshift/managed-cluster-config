@@ -2,14 +2,29 @@
   "Version": "2012-10-17",
   "Statement": [
     {
+      "Sid": "CreateVpcTags",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:CreateTags"
+      ],
+      "Resource": [
+        "arn:aws:ec2:*:*:vpc/*"
+      ]
+    },
+    {
       "Sid": "CreateVpc",
       "Effect": "Allow",
       "Action": [
         "ec2:CreateVpc"
       ],
       "Resource": [
-        "arn:aws:ec2:*:*:vpc/*"
-      ]
+        "*"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "aws:RequestTag/red-hat-managed": "true"
+        }
+      }
     },
     {
       "Effect": "Allow",
@@ -24,6 +39,16 @@
           "aws:ResourceTag/red-hat-managed": "true"
         }
       }
+    },
+    {
+      "Sid": "CreateSubnetTags",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:CreateTags"
+      ],
+      "Resource": [
+        "arn:aws:ec2:*:*:subnet/*"
+      ]
     },
     {
       "Sid": "CreateSubnet",
@@ -227,16 +252,6 @@
       }
     },
     {
-      "Sid": "CreateRouteTable",
-      "Effect": "Allow",
-      "Action": [
-        "ec2:CreateRouteTable"
-      ],
-      "Resource": [
-        "arn:aws:ec2:*:*:route-table/*"
-      ]
-    },
-    {
       "Sid": "DeleteRouteTable",
       "Effect": "Allow",
       "Action": [
@@ -244,7 +259,12 @@
       ],
       "Resource": [
         "arn:aws:ec2:*:*:route-table/*"
-      ]
+      ],
+      "Condition": {
+        "StringEquals": {
+          "aws:ResourceTag/red-hat-managed": "true"
+        }
+      }
     },
     {
       "Sid": "CreateRouteTableInVpc",
@@ -253,13 +273,22 @@
         "ec2:CreateRouteTable"
       ],
       "Resource": [
-        "arn:aws:ec2:*:*:vpc/*"
+        "arn:aws:ec2:*:*:route-table/*"
       ],
       "Condition": {
         "StringEquals": {
-          "aws:ResourceTag/red-hat-managed": "true"
+          "aws:RequestTag/red-hat-managed": "true"
         }
       }
+     },
+     {
+      "Effect": "Allow",
+      "Action": [
+        "ec2:CreateRouteTable"
+      ],
+      "Resource": [
+        "arn:aws:ec2:*:*:vpc/*"
+      ]
     }
   ]
 }

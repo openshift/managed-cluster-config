@@ -4,9 +4,7 @@
         {
             "Effect": "Allow",
             "Action": [
-                "ec2:CreateTags",
                 "ec2:Describe*",
-                "elasticloadbalancing:AddTags",
                 "elasticloadbalancing:AttachLoadBalancerToSubnets",
                 "elasticloadbalancing:ApplySecurityGroupsToLoadBalancer",
                 "elasticloadbalancing:CreateListener",
@@ -32,6 +30,34 @@
                 "kms:DescribeKey"
             ],
             "Resource": "*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "elasticloadbalancing:AddTags"
+            ],
+            "Resource": [
+                "*"
+            ],
+            "Condition": {
+                "StringEquals": {
+                    "aws:RequestTag/red-hat-managed": "true"
+                }
+            }
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "ec2:CreateTags"
+            ],
+            "Resource": [
+                "arn:aws:ec2:*:*:security-group/*"
+            ],
+            "Condition": {
+                "StringEquals": {
+                    "aws:ResourceTag/red-hat-managed": "true"
+                }
+            }
         },
         {
             "Effect": "Allow",

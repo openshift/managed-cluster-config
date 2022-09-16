@@ -171,11 +171,26 @@
       "Sid": "CreateDhcpOptions",
       "Effect": "Allow",
       "Action": [
-        "ec2:CreateDhcpOptions"
+        "ec2:CreateTags"
       ],
       "Resource": [
         "arn:aws:ec2:*:*:dhcp-options/*"
       ]
+    },
+    {
+      "Sid": "CreateDhcpOptionsTag",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:CreateDhcpOptions"
+      ],
+      "Resource": [
+        "*"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "aws:RequestTag/red-hat-managed": "true"
+        }
+      }
     },
     {
       "Effect": "Allow",
@@ -198,8 +213,13 @@
         "ec2:CreateInternetGateway"
       ],
       "Resource": [
-        "arn:aws:ec2:*:*:internet-gateway/*"
-      ]
+        "*"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "aws:RequestTag/red-hat-managed": "true"
+        }
+      }
     },
     {
       "Effect": "Allow",
