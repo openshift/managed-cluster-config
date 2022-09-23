@@ -54,8 +54,10 @@
                 "arn:aws:ec2:*:*:security-group/*"
             ],
             "Condition": {
-                "StringEquals": {
-                    "aws:ResourceTag/red-hat-managed": "true"
+                "ForAnyValue:StringLike": {
+                  "aws:TagKeys": [
+                    "kubernetes.io/cluster/*"
+                  ]
                 }
             }
         },

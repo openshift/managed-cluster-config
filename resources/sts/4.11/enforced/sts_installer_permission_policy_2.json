@@ -97,7 +97,12 @@
       ],
       "Resource": [
         "arn:aws:ec2:*:*:elastic-ip/*"
-      ]
+      ],
+      "Condition": {
+        "StringEquals": {
+          "aws:RequestTag/red-hat-managed": "true"
+        }
+      }
     },
     {
       "Sid": "AssociateAddress",
@@ -265,6 +270,16 @@
           "aws:ResourceTag/red-hat-managed": "true"
         }
       }
+    },
+    {
+      "Sid": "DeleteRouteTableVpc",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:DeleteRouteTable"
+      ],
+      "Resource": [
+        "arn:aws:ec2:*:*:vpc/*"
+      ]
     },
     {
       "Sid": "CreateRouteTableInVpc",
