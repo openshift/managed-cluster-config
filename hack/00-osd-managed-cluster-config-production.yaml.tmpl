@@ -15886,6 +15886,12 @@ objects:
         - get
         - list
         - watch
+      - apiGroups:
+        - ''
+        resources:
+        - serviceaccounts
+        verbs:
+        - get
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRoleBinding
       metadata:
@@ -15990,11 +15996,11 @@ objects:
                     \ \"cleanup\" EXIT SIGINT\n\n# create ns\noc create -f - <<EOF\n\
                     apiVersion: v1\nkind: Namespace\nmetadata:\n  name: \"${NS}\"\n\
                     \  managed.openshift.io/sre-build-test: \"${JOB_NAME}\"\nEOF\n\
-                    \n# wait for sa to be created\nuntil oc -n \"${NS}\" get sa default\
-                    \ >/dev/null; do\n  echo \"$(date): Waiting for service account\
-                    \ to be created\"\n  sleep 5\ndone\n\n# run build\noc -n \"${NS}\"\
-                    \ new-build --name=\"${JOB_PREFIX}\" --binary --strategy source\
-                    \ --docker-image registry.redhat.io/ubi8/go-toolset:1.17.7-13\n\
+                    \n# wait for serviceaccount to be created\nuntil oc -n \"${NS}\"\
+                    \ get serviceaccounts default >/dev/null; do\n  echo \"$(date):\
+                    \ Waiting for service account to be created\"\n  sleep 5\ndone\n\
+                    \n# run build\noc -n \"${NS}\" new-build --name=\"${JOB_PREFIX}\"\
+                    \ --binary --strategy source --docker-image registry.redhat.io/ubi8/go-toolset:1.17.7-13\n\
                     mkdir -p /tmp/build\ncat <<EOF > /tmp/build/go.mod\nmodule openshift/managed-cluster-config/sre-build-test\n\
                     \ngo 1.17\nEOF\ncat <<EOF > /tmp/build/main.go\npackage main\n\
                     import (\n       \"fmt\"\n)\n\nfunc main() {\n        fmt.Println(\"\
