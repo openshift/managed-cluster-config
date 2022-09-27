@@ -2,29 +2,14 @@
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Sid": "CreateVpcTags",
-      "Effect": "Allow",
-      "Action": [
-        "ec2:CreateTags"
-      ],
-      "Resource": [
-        "arn:aws:ec2:*:*:vpc/*"
-      ]
-    },
-    {
-      "Sid": "CreateVpc",
+      "Sid": "CreateVpcVpc",
       "Effect": "Allow",
       "Action": [
         "ec2:CreateVpc"
       ],
       "Resource": [
         "*"
-      ],
-      "Condition": {
-        "StringEquals": {
-          "aws:RequestTag/red-hat-managed": "true"
-        }
-      }
+      ]
     },
     {
       "Effect": "Allow",
@@ -120,6 +105,16 @@
       }
     },
     {
+      "Sid": "CreateDhcpOptions",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:CreateDhcpOptions"
+      ],
+      "Resource": [
+          "*"
+      ]
+    },
+    {
       "Sid": "AssociateDhcpOptions",
       "Effect": "Allow",
       "Action": [
@@ -128,12 +123,7 @@
       "Resource": [
         "arn:aws:ec2:*:*:dhcp-options/*",
         "arn:aws:ec2:*:*:vpc/*"
-      ],
-      "Condition": {
-        "StringEquals": {
-          "aws:ResourceTag/red-hat-managed": "true"
-        }
-      }
+      ]
     },
     {
       "Sid": "AssociateRouteTable",
