@@ -8368,19 +8368,6 @@ objects:
     clusterDeploymentSelector:
       matchLabels:
         api.openshift.com/managed: 'true'
-      matchExpressions:
-      - key: api.openshift.com/environment
-        operator: In
-        values:
-        - staging
-        - integration
-      - key: hive.openshift.io/version-major-minor
-        operator: In
-        values:
-        - '4.8'
-        - '4.9'
-        - '4.10'
-        - '4.11'
     resourceApplyMode: Sync
     resources:
     - kind: ServiceAccount
@@ -8435,6 +8422,32 @@ objects:
       - kind: ServiceAccount
         name: sre-pod-network-connectivity-check-pruner
         namespace: openshift-network-diagnostics
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: ocpbugs-1341-pod-network-connectivity-check-leak-no-seccomp
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/environment
+        operator: In
+        values:
+        - staging
+        - integration
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.8'
+        - '4.9'
+        - '4.10'
+    resourceApplyMode: Sync
+    resources:
     - apiVersion: batch/v1
       kind: CronJob
       metadata:
@@ -8480,6 +8493,93 @@ objects:
                       drop:
                       - ALL
                     runAsNonRoot: true
+                  command:
+                  - /bin/bash
+                  args:
+                  - -c
+                  - "set -euo pipefail\nset -x\ncomm -23 \\\n    <(oc -n openshift-network-diagnostics\
+                    \ get -o name podnetworkconnectivitychecks.controlplane.operator.openshift.io\
+                    \ | sed -n 's|.*/\\(.*network-check-target.*\\)|\\1|p' | grep\
+                    \ -v service-cluster | sort) \\\n    <(oc get -o json nodes |\
+                    \ jq -r '([.items[].metadata.name | split(\".\")[0]]) as $nodes\
+                    \ | $nodes[] | . as $a | $nodes[] | . as $b | [[$a,$b],[$b,$a]][]\
+                    \ | \"network-check-source-\" + .[0] + \"-to-network-check-target-\"\
+                    \ + .[1]' | sort) | \\\n  xargs -n10 --no-run-if-empty oc -n openshift-network-diagnostics\
+                    \ delete podnetworkconnectivitychecks.controlplane.operator.openshift.io\n"
+                serviceAccountName: sre-pod-network-connectivity-check-pruner
+                automountServiceAccountToken: true
+                restartPolicy: Never
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: ocpbugs-1341-pod-network-connectivity-check-leak-seccomp
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/environment
+        operator: In
+        values:
+        - staging
+        - integration
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.11'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: batch/v1
+      kind: CronJob
+      metadata:
+        name: sre-pod-network-connectivity-check-pruner
+        namespace: openshift-network-diagnostics
+        annotations:
+          kubernetes.io/description: Mitigate https://issues.redhat.com/browse/OCPBUGS-1341
+            by pruning leaked PodNetworkConnectivityChecks.
+      spec:
+        schedule: 0 1 * * *
+        concurrencyPolicy: Replace
+        jobTemplate:
+          spec:
+            backoffLimit: 0
+            ttlSecondsAfterFinished: 86400
+            template:
+              metadata:
+                name: sre-pod-network-connectivity-check-pruner
+                namespace: openshift-network-diagnostics
+                annotations:
+                  kubernetes.io/description: Mitigate https://issues.redhat.com/browse/OCPBUGS-1341
+                    by pruning leaked PodNetworkConnectivityChecks.
+              spec:
+                affinity:
+                  nodeAffinity:
+                    preferredDuringSchedulingIgnoredDuringExecution:
+                    - preference:
+                        matchExpressions:
+                        - key: node-role.kubernetes.io/infra
+                          operator: Exists
+                      weight: 1
+                tolerations:
+                - effect: NoSchedule
+                  key: node-role.kubernetes.io/infra
+                  operator: Exists
+                containers:
+                - name: pod-network-connectivity-check-pruner
+                  image: image-registry.openshift-image-registry.svc.cluster.local:5000/openshift/tools:latest
+                  imagePullPolicy: Always
+                  securityContext:
+                    allowPrivilegeEscalation: false
+                    capabilities:
+                      drop:
+                      - ALL
+                    runAsNonRoot: true
+                    seccompProfile:
+                      type: RuntimeDefault
                   command:
                   - /bin/bash
                   args:
