@@ -26,16 +26,6 @@
       }
     },
     {
-      "Sid": "CreateSubnetTags",
-      "Effect": "Allow",
-      "Action": [
-        "ec2:CreateTags"
-      ],
-      "Resource": [
-        "arn:aws:ec2:*:*:subnet/*"
-      ]
-    },
-    {
       "Sid": "CreateSubnet",
       "Effect": "Allow",
       "Action": [
@@ -43,7 +33,13 @@
       ],
       "Resource": [
         "arn:aws:ec2:*:*:subnet/*"
-      ]
+      ],
+      "Condition": {
+        "StringEquals": {
+          "aws:RequestTag/red-hat-managed": "true"
+        }
+      }
+
     },
     {
       "Effect": "Allow",
@@ -112,7 +108,12 @@
       ],
       "Resource": [
           "*"
-      ]
+      ],
+      "Condition": {
+        "StringEquals": {
+          "aws:RequestTag/red-hat-managed": "true"
+        }
+      }
     },
     {
       "Sid": "AssociateDhcpOptions",
@@ -123,7 +124,12 @@
       "Resource": [
         "arn:aws:ec2:*:*:dhcp-options/*",
         "arn:aws:ec2:*:*:vpc/*"
-      ]
+      ],
+      "Condition": {
+        "StringEquals": {
+          "aws:ResourceTag/red-hat-managed": "true"
+        }
+      }
     },
     {
       "Sid": "AssociateRouteTable",
@@ -183,7 +189,12 @@
       ],
       "Resource": [
         "arn:aws:ec2:*:*:network-interface/*"
-      ]
+      ],
+      "Condition": {
+        "StringEquals": {
+          "aws:RequestTag/red-hat-managed": "true"
+        }
+      }
     },
     {
       "Sid": "CreateNetworkInterfaceInSubnetAndSg",
@@ -254,12 +265,7 @@
       ],
       "Resource": [
         "arn:aws:ec2:*:*:route-table/*"
-      ],
-      "Condition": {
-        "StringEquals": {
-          "aws:ResourceTag/red-hat-managed": "true"
-        }
-      }
+      ]
     },
     {
       "Sid": "DeleteRouteTableVpc",

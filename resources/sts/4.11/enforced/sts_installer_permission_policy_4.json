@@ -1,32 +1,23 @@
 {
   "Version": "2012-10-17",
   "Statement": [
-     {
-      "Sid": "CreateTagsNetwork",
-      "Effect": "Allow",
-      "Action": [
-        "ec2:CreateTags"
-      ],
-      "Resource": [
-        "arn:aws:ec2:*:*:route-table/*",
-        "arn:aws:ec2:*:*:internet-gateway/*"
-      ]
-    },
     {
-      "Sid": "RunInstancesTags",
+      "Sid": "CreateTagsDependentAction",
       "Effect": "Allow",
       "Action": [
         "ec2:CreateTags"
       ],
       "Resource": [
-        "arn:aws:ec2:*:*:instance/*",
+        "arn:aws:ec2:*:*:dhcp-options/*",
         "arn:aws:ec2:*:*:elastic-ip/*",
-        "arn:aws:ec2:*:*:network-interface/*",
+        "arn:aws:ec2:*:*:internet-gateway/*",
+        "arn:aws:ec2:*:*:instance/*",
         "arn:aws:ec2:*:*:natgateway/*",
-        "arn:aws:ec2:*:*:volume/*",
+        "arn:aws:ec2:*:*:network-interface/*",
         "arn:aws:ec2:*:*:route-table/*",
         "arn:aws:ec2:*:*:security-group/*",
         "arn:aws:ec2:*:*:subnet/*",
+        "arn:aws:ec2:*:*:volume/*",
         "arn:aws:ec2:*:*:vpc/*",
         "arn:aws:ec2:*:*:vpc-endpoint/*"
       ],
@@ -34,14 +25,17 @@
         "StringEquals": {
           "ec2:CreateAction": [
               "AllocateAddress",
-              "RunInstances",
-              "CreateVolume",
-              "CreateSecurityGroup",
+              "CreateDhcpOptions",
+              "CreateInternetGateway",
               "CreateNatGateway",
               "CreateNetworkInterface",
+              "CreateRouteTable",
+              "CreateSecurityGroup",
+              "CreateSubnet",
+              "CreateVolume",
               "CreateVpc",
               "CreateVpcEndpoint",
-              "CreateRouteTable"
+              "RunInstances"
           ]
         }
       }
@@ -70,12 +64,12 @@
         "ec2:RunInstances"
       ],
       "Resource": [
+        "arn:aws:ec2:*::image/*",
         "arn:aws:ec2:*:*:key-pair/*",
         "arn:aws:ec2:*:*:subnet/*",
-        "arn:aws:ec2:*:*:security-group/*",
-        "arn:aws:ec2:*:*:snpshot/*",
         "arn:aws:ec2:*:*:network-interface/*",
-        "arn:aws:ec2:*::image/*"
+        "arn:aws:ec2:*:*:security-group/*",
+        "arn:aws:ec2:*:*:snpshot/*"
       ]
     },
     {
@@ -153,11 +147,11 @@
       }
     },
     {
-		"Action": [
-			"ec2:CreateSecurityGroup"
-	],
-	"Effect": "Allow",
-	"Resource": "arn:aws:ec2:*:*:vpc/*"
+		    "Action": [
+			    "ec2:CreateSecurityGroup"
+	      ],
+	      "Effect": "Allow",
+	      "Resource": "arn:aws:ec2:*:*:vpc/*"
     },
     {
       "Sid": "DeleteSecurityGroupInVpc",
