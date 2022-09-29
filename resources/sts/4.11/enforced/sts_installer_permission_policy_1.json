@@ -66,6 +66,7 @@
         "elasticloadbalancing:RegisterTargets",
         "elasticloadbalancing:SetLoadBalancerPoliciesOfListener",
         "iam:AddRoleToInstanceProfile",
+        "iam:RemoveRoleFromInstanceProfile",
         "iam:CreateInstanceProfile",
         "iam:DeleteInstanceProfile",
         "iam:GetInstanceProfile",
@@ -79,7 +80,6 @@
         "iam:ListRoles",
         "iam:ListUserPolicies",
         "iam:ListUsers",
-        "iam:RemoveRoleFromInstanceProfile",
         "iam:SimulatePrincipalPolicy",
         "iam:TagRole",
         "iam:UntagRole",
@@ -194,6 +194,21 @@
       ],
       "Resource": [
         "arn:aws:s3:::*-image-registry-*"
+      ]
+    },
+    {
+      "Sid": "PermissionsToCreateAndManageInstanceProfiles",
+      "Effect": "Allow",
+      "Action": [
+        "iam:RemoveRoleFromInstanceProfile",
+        "iam:CreateInstanceProfile",
+        "iam:DeleteInstanceProfile",
+        "iam:GetInstanceProfile"
+      ],
+      "Resource": [
+        "arn:aws:iam::*:instance-profile/*-bootstrap-profile",
+        "arn:aws:iam::*:instance-profile/*-worker-profile",
+        "arn:aws:iam::*:instance-profile/*-master-profile"
       ]
     }
   ]
