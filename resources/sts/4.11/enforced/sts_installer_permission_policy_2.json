@@ -2,13 +2,13 @@
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Sid": "CreateVpcVpc",
+      "Sid": "CreateVpc",
       "Effect": "Allow",
       "Action": [
         "ec2:CreateVpc"
       ],
       "Resource": [
-        "*"
+        "arn:aws:ec2:*:*:vpc/*"
       ]
     },
     {
@@ -36,7 +36,7 @@
       ],
       "Condition": {
         "StringEquals": {
-          "aws:RequestTag/red-hat-managed": "true"
+          "aws:ResourceTag/red-hat-managed": "true"
         }
       }
 
@@ -81,7 +81,7 @@
       ],
       "Condition": {
         "StringEquals": {
-          "aws:RequestTag/red-hat-managed": "true"
+          "aws:ResourceTag/red-hat-managed": "true"
         }
       }
     },
@@ -97,21 +97,6 @@
       "Condition": {
         "StringEquals": {
           "aws:ResourceTag/red-hat-managed": "true"
-        }
-      }
-    },
-    {
-      "Sid": "CreateDhcpOptions",
-      "Effect": "Allow",
-      "Action": [
-        "ec2:CreateDhcpOptions"
-      ],
-      "Resource": [
-          "*"
-      ],
-      "Condition": {
-        "StringEquals": {
-          "aws:RequestTag/red-hat-managed": "true"
         }
       }
     },
@@ -188,7 +173,7 @@
         "ec2:CreateNetworkInterface"
       ],
       "Resource": [
-        "arn:aws:ec2:*:*:network-interface/*"
+        "*"
       ],
       "Condition": {
         "StringEquals": {
@@ -258,6 +243,16 @@
       }
     },
     {
+      "Sid": "CreateRouteTable",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:CreateRouteTable"
+      ],
+      "Resource": [
+        "arn:aws:ec2:*:*:route-table/*"
+      ]
+    },
+    {
       "Sid": "DeleteRouteTable",
       "Effect": "Allow",
       "Action": [
@@ -268,38 +263,19 @@
       ]
     },
     {
-      "Sid": "DeleteRouteTableVpc",
-      "Effect": "Allow",
-      "Action": [
-        "ec2:DeleteRouteTable"
-      ],
-      "Resource": [
-        "arn:aws:ec2:*:*:vpc/*"
-      ]
-    },
-    {
       "Sid": "CreateRouteTableInVpc",
       "Effect": "Allow",
       "Action": [
         "ec2:CreateRouteTable"
       ],
       "Resource": [
-        "arn:aws:ec2:*:*:route-table/*"
+        "arn:aws:ec2:*:*:vpc/*"
       ],
       "Condition": {
         "StringEquals": {
-          "aws:RequestTag/red-hat-managed": "true"
+          "aws:ResourceTag/red-hat-managed": "true"
         }
       }
-     },
-     {
-      "Effect": "Allow",
-      "Action": [
-        "ec2:CreateRouteTable"
-      ],
-      "Resource": [
-        "arn:aws:ec2:*:*:vpc/*"
-      ]
     }
   ]
 }
