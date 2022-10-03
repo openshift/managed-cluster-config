@@ -8,22 +8,8 @@
         "ec2:CreateVpc"
       ],
       "Resource": [
-        "arn:aws:ec2:*:*:vpc/*"
+        "*"
       ]
-    },
-    {
-      "Effect": "Allow",
-      "Action": [
-        "ec2:DeleteVpc"
-      ],
-      "Resource": [
-        "arn:aws:ec2:*:*:vpc/*"
-      ],
-      "Condition": {
-        "StringEquals": {
-          "aws:ResourceTag/red-hat-managed": "true"
-        }
-      }
     },
     {
       "Sid": "CreateSubnet",
@@ -32,14 +18,9 @@
         "ec2:CreateSubnet"
       ],
       "Resource": [
-        "arn:aws:ec2:*:*:subnet/*"
-      ],
-      "Condition": {
-        "StringEquals": {
-          "aws:ResourceTag/red-hat-managed": "true"
-        }
-      }
-
+        "arn:aws:ec2:*:*:subnet/*",
+        "arn:aws:ec2:*:*:vpc/*"
+      ]
     },
     {
       "Effect": "Allow",
@@ -47,7 +28,8 @@
         "ec2:DeleteSubnet"
       ],
       "Resource": [
-        "arn:aws:ec2:*:*:subnet/*"
+        "arn:aws:ec2:*:*:subnet/*",
+        "arn:aws:ec2:*:*:vpc/*"
       ],
       "Condition": {
         "StringEquals": {
@@ -56,10 +38,9 @@
       }
     },
     {
-      "Sid": "CreateSubnetResource",
       "Effect": "Allow",
       "Action": [
-        "ec2:CreateSubnet"
+        "ec2:DeleteVpc"
       ],
       "Resource": [
         "arn:aws:ec2:*:*:vpc/*"
@@ -270,12 +251,7 @@
       ],
       "Resource": [
         "arn:aws:ec2:*:*:vpc/*"
-      ],
-      "Condition": {
-        "StringEquals": {
-          "aws:ResourceTag/red-hat-managed": "true"
-        }
-      }
+      ]
     }
   ]
 }
