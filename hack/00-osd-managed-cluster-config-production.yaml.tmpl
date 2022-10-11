@@ -13794,12 +13794,16 @@ objects:
                 value: 'false'
               - name: CLAM_DB_DIRECTORY
                 value: /clam
-              image: quay.io/app-sre/clamsig-puller@sha256:afb6cb240d67398bb4d6bb404372867d2f46571e542b427a0de0eb7c489b9ffa
+              - name: CLAM_SECRETS_FILE
+                value: /secrets/clam_update_config.json
+              - name: DEBUG_SECRETS
+                value: 'false'
+              image: quay.io/app-sre/clamsig-puller@sha256:7e9b4ba25e97f4a05003f419949039ebdcf7143e4714310a83025971cb657202
               name: clamsig-puller
               resources:
                 limits:
                   cpu: 100m
-                  memory: 200Mi
+                  memory: 2Gi
                 requests:
                   cpu: 100m
                   memory: 50Mi
@@ -13816,10 +13820,10 @@ objects:
               resources:
                 limits:
                   cpu: 300m
-                  memory: 1Gi
+                  memory: 3Gi
                 requests:
                   cpu: 100m
-                  memory: 600Mi
+                  memory: 800Mi
               volumeMounts:
               - mountPath: /var/lib/clamav
                 name: clam-files
@@ -13950,12 +13954,16 @@ objects:
                 value: 'true'
               - name: CLAM_DB_DIRECTORY
                 value: /clam
-              image: quay.io/app-sre/clamsig-puller@sha256:afb6cb240d67398bb4d6bb404372867d2f46571e542b427a0de0eb7c489b9ffa
+              - name: CLAM_SECRETS_FILE
+                value: /secrets/clam_update_config.json
+              - name: DEBUG_SECRETS
+                value: 'false'
+              image: quay.io/app-sre/clamsig-puller@sha256:7e9b4ba25e97f4a05003f419949039ebdcf7143e4714310a83025971cb657202
               name: init-clamsig-puller
               resources:
                 limits:
                   cpu: 100m
-                  memory: 200Mi
+                  memory: 2Gi
                 requests:
                   cpu: 100m
                   memory: 50Mi
