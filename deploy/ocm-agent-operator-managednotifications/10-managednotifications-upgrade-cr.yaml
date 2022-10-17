@@ -1,0 +1,31 @@
+apiVersion: ocmagent.managed.openshift.io/v1alpha1
+kind: ManagedNotification
+metadata:
+  name: sre-upgrade-managed-notifications
+  namespace: openshift-ocm-agent-operator
+spec:
+  notifications:
+    - name: UpgradeControlPlaneUpgradeTimeout
+      severity: Error
+      summary: "Control plane upgrade timeout"
+      activeBody: |-
+        SRE has observed that controlplane cannot be finished in the given time period, SRE will take action on the resolution. 
+      resendWait: 12
+      resolvedBody: |-
+        Your cluster has been upgraded successfully. No further action on this issue is required.
+    - name: UpgradeNodeUpgradeTimeout
+      severity: Error
+      summary: "Node upgrade timeout"
+      activeBody: |-
+        SRE has observed that nodes upgrade cannot be finished in the given time period, SRE will take action on the resolution.
+      resendWait: 12
+      resolvedBody: |-
+        Your cluster has been upgraded successfully. No further action on this issue is required.
+    - name: UpgradeNodeDrainFailed
+      severity: Error
+      summary: "Node drain failed for upgrading"
+      activeBody: |-
+       SRE has observed that node drain takes too long and cannot be finished in the given time period during cluster upgrade, SRE will take action on the resolution.
+      resendWait: 12
+      resolvedBody: |-
+        Your cluster has been upgraded successfully. No further action on this issue is required.
