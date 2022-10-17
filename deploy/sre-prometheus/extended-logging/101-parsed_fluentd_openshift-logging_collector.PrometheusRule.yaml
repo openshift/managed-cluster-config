@@ -31,7 +31,7 @@ spec:
             message: Prometheus could not scrape fluentd {{ $labels.instance }} for more than 10m.
             summary: Fluentd cannot be scraped
           expr: |
-            absent(up{job="collector"} == 1) or absent(up{job="fluentd"} == 1)
+            absent(up{job="collector"} == 1) and absent(up{job="fluentd"} == 1)
           for: 10m
           labels:
             service: fluentd
