@@ -9025,6 +9025,38 @@ objects:
           resendWait: 24
           resolvedBody: Your cluster's cluster-wide proxy is no longer raising any
             errors concerning network egress. No further action on this issue is required.
+    - apiVersion: ocmagent.managed.openshift.io/v1alpha1
+      kind: ManagedNotification
+      metadata:
+        name: sre-upgrade-managed-notifications
+        namespace: openshift-ocm-agent-operator
+      spec:
+        notifications:
+        - name: UpgradeControlPlaneUpgradeTimeout
+          severity: Error
+          summary: Control plane upgrade timeout
+          activeBody: 'SRE has observed that controlplane cannot be finished in the
+            given time period, SRE will take action on the resolution. '
+          resendWait: 12
+          resolvedBody: Your cluster has been upgraded successfully. No further action
+            on this issue is required.
+        - name: UpgradeNodeUpgradeTimeout
+          severity: Error
+          summary: Node upgrade timeout
+          activeBody: SRE has observed that nodes upgrade cannot be finished in the
+            given time period, SRE will take action on the resolution.
+          resendWait: 12
+          resolvedBody: Your cluster has been upgraded successfully. No further action
+            on this issue is required.
+        - name: UpgradeNodeDrainFailed
+          severity: Error
+          summary: Node drain failed for upgrading
+          activeBody: SRE has observed that node drain takes too long and cannot be
+            finished in the given time period during cluster upgrade, SRE will take
+            action on the resolution.
+          resendWait: 12
+          resolvedBody: Your cluster has been upgraded successfully. No further action
+            on this issue is required.
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -18577,6 +18609,55 @@ objects:
             annotations:
               message: Cluster proxy is failing network readiness endpoint checks
                 and may be misconfigured or not running.
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
+          prometheus: sre-upgrade-managed-notification-alerts
+          role: alert-rules
+        name: sre-upgrade-send-managed-notification-alerts
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-upgrade-managed-notification-alerts
+          rules:
+          - alert: UpgradeControlPlaneUpgradeTimeoutSRE
+            expr: avg_over_time(upgradeoperator_controlplane_timeout[10m]) == 1
+            for: 10m
+            labels:
+              severity: critical
+              namespace: openshift-monitoring
+              managed_notification_template: UpgradeControlPlaneUpgradeTimeout
+              send_managed_notification: 'true'
+            annotations:
+              summary: Controlplane upgrade timeout for {{ $labels.version }}
+              description: controlplane upgrade for {{ $labels.version }} cannot be
+                finished in the given time period
+          - alert: UpgradeNodeUpgradeTimeoutSRE
+            expr: avg_over_time(upgradeoperator_worker_timeout[10m]) == 1
+            for: 10m
+            labels:
+              severity: critical
+              namespace: openshift-monitoring
+              managed_notification_template: UpgradeNodeUpgradeTimeout
+              send_managed_notification: 'true'
+            annotations:
+              summary: Nodes upgrade timeout for {{ $labels.version }}
+              description: nodes upgrade for {{ $labels.version }} cannot be finished
+                after the silence expired
+          - alert: UpgradeNodeDrainFailedSRE
+            expr: avg_over_time(upgradeoperator_node_drain_timeout[10m]) == 1
+            for: 10m
+            labels:
+              severity: critical
+              namespace: openshift-monitoring
+              managed_notification_template: UpgradeNodeDrainFailed
+              send_managed_notification: 'true'
+            annotations:
+              summary: Node drain failed in the given time period which is not caused
+                by the PDB
+              description: node drain takes too long and cannot be finished in the
+                given time period during cluster upgrade
     - apiVersion: monitoring.coreos.com/v1
       kind: PrometheusRule
       metadata:
