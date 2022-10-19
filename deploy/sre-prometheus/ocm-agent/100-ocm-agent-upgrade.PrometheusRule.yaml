@@ -10,33 +10,33 @@ spec:
   groups:
   - name: sre-upgrade-managed-notification-alerts
     rules:
-    - alert: UpgradeControlPlaneUpgradeTimeoutSRE
-      expr: avg_over_time(upgradeoperator_controlplane_timeout[10m]) == 1
-      for: 10m
+    - alert: UpgradeControlPlaneUpgradeTimeoutNotificationSRE
+      expr: count(ALERTS{alertname="UpgradeControlPlaneUpgradeTimeoutSRE", alertstate="firing"}) >= 1
+      for: 5m
       labels:
-        severity: critical
+        severity: info
         namespace: openshift-monitoring
         managed_notification_template: "UpgradeControlPlaneUpgradeTimeout"
         send_managed_notification: "true"
       annotations:
         summary: "Controlplane upgrade timeout for {{ $labels.version }}"
         description: "controlplane upgrade for {{ $labels.version }} cannot be finished in the given time period"
-    - alert: UpgradeNodeUpgradeTimeoutSRE
-      expr: avg_over_time(upgradeoperator_worker_timeout[10m]) == 1
-      for: 10m
+    - alert: UpgradeNodeUpgradeTimeoutNotificationSRE
+      expr: count(ALERTS{alertname="UpgradeNodeUpgradeTimeoutSRE", alertstate="firing"}) >= 1
+      for: 5m
       labels:
-        severity: critical
+        severity: info
         namespace: openshift-monitoring
         managed_notification_template: "UpgradeNodeUpgradeTimeout"
-        send_managed_notification: "true"        
+        send_managed_notification: "true"
       annotations:
         summary: "Nodes upgrade timeout for {{ $labels.version }}"
         description: "nodes upgrade for {{ $labels.version }} cannot be finished after the silence expired"
-    - alert: UpgradeNodeDrainFailedSRE
-      expr: avg_over_time(upgradeoperator_node_drain_timeout[10m]) == 1
-      for: 10m
+    - alert: UpgradeNodeDrainFailedNotificationSRE
+      expr: count(ALERTS{alertname="UpgradeNodeDrainFailedSRE", alertstate="firing"}) >= 1
+      for: 5m
       labels:
-        severity: critical
+        severity: info
         namespace: openshift-monitoring
         managed_notification_template: "UpgradeNodeDrainFailed"
         send_managed_notification: "true"
