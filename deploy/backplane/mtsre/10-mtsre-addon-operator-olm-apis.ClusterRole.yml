@@ -1,17 +1,18 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: backplane-mtsre-addon-operator-admin
+  name: backplane-mtsre-addon-operator-olm-admin
 rules:
   - apiGroups:
-    - "addons.managed.openshift.io"
+    - operators.coreos.com
     resources:
-      - "addonoperators"
-      - "addons"
+    - clusterserviceversions
+    - installplans
+    - subscriptions
     verbs:
       - get
       - list
       - watch
       - patch
       - update
-
+      - delete
