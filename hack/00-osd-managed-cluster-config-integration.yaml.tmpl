@@ -9037,26 +9037,8 @@ objects:
           summary: Control plane upgrade completion delayed
           activeBody: There has been a delay observed in the anticipated completion
             time of your cluster's Control Plane upgrade. Red Hat SRE has been notified
-            and will commence the investigation.
-          resendWait: 12
-          resolvedBody: Your cluster has been upgraded successfully. No further action
-            on this issue is required.
-        - name: UpgradeNodeUpgradeTimeout
-          severity: Error
-          summary: Node upgrade completion delayed
-          activeBody: There has been a delay observed in the anticipated completion
-            time of your cluster's Nodes upgrade. Red Hat SRE has been notified and
-            will commence the investigation.
-          resendWait: 12
-          resolvedBody: Your cluster has been upgraded successfully. No further action
-            on this issue is required.
-        - name: UpgradeNodeDrainFailed
-          severity: Error
-          summary: Node drain failed for upgrading
-          activeBody: There has been a delay observed in the anticipated completion
-            time of your Nodes' drain for upgrade, Red Hat SRE has been notified and
-            will commence the investigation.
-          resendWait: 12
+            of the situation.
+          resendWait: 72
           resolvedBody: Your cluster has been upgraded successfully. No further action
             on this issue is required.
 - apiVersion: hive.openshift.io/v1
@@ -18626,7 +18608,7 @@ objects:
           - alert: UpgradeControlPlaneUpgradeTimeoutNotificationSRE
             expr: count(ALERTS{alertname="UpgradeControlPlaneUpgradeTimeoutSRE", alertstate="firing"})
               >= 1
-            for: 5m
+            for: 30m
             labels:
               severity: info
               namespace: openshift-monitoring
@@ -18636,33 +18618,6 @@ objects:
               summary: Controlplane upgrade timeout for {{ $labels.version }}
               description: controlplane upgrade for {{ $labels.version }} cannot be
                 finished in the given time period
-          - alert: UpgradeNodeUpgradeTimeoutNotificationSRE
-            expr: count(ALERTS{alertname="UpgradeNodeUpgradeTimeoutSRE", alertstate="firing"})
-              >= 1
-            for: 5m
-            labels:
-              severity: info
-              namespace: openshift-monitoring
-              managed_notification_template: UpgradeNodeUpgradeTimeout
-              send_managed_notification: 'true'
-            annotations:
-              summary: Nodes upgrade timeout for {{ $labels.version }}
-              description: nodes upgrade for {{ $labels.version }} cannot be finished
-                after the silence expired
-          - alert: UpgradeNodeDrainFailedNotificationSRE
-            expr: count(ALERTS{alertname="UpgradeNodeDrainFailedSRE", alertstate="firing"})
-              >= 1
-            for: 5m
-            labels:
-              severity: info
-              namespace: openshift-monitoring
-              managed_notification_template: UpgradeNodeDrainFailed
-              send_managed_notification: 'true'
-            annotations:
-              summary: Node drain failed in the given time period which is not caused
-                by the PDB
-              description: node drain takes too long and cannot be finished in the
-                given time period during cluster upgrade
     - apiVersion: monitoring.coreos.com/v1
       kind: PrometheusRule
       metadata:

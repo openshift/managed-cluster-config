@@ -12,7 +12,7 @@ spec:
     rules:
     - alert: UpgradeControlPlaneUpgradeTimeoutNotificationSRE
       expr: count(ALERTS{alertname="UpgradeControlPlaneUpgradeTimeoutSRE", alertstate="firing"}) >= 1
-      for: 5m
+      for: 30m
       labels:
         severity: info
         namespace: openshift-monitoring
@@ -21,25 +21,3 @@ spec:
       annotations:
         summary: "Controlplane upgrade timeout for {{ $labels.version }}"
         description: "controlplane upgrade for {{ $labels.version }} cannot be finished in the given time period"
-    - alert: UpgradeNodeUpgradeTimeoutNotificationSRE
-      expr: count(ALERTS{alertname="UpgradeNodeUpgradeTimeoutSRE", alertstate="firing"}) >= 1
-      for: 5m
-      labels:
-        severity: info
-        namespace: openshift-monitoring
-        managed_notification_template: "UpgradeNodeUpgradeTimeout"
-        send_managed_notification: "true"
-      annotations:
-        summary: "Nodes upgrade timeout for {{ $labels.version }}"
-        description: "nodes upgrade for {{ $labels.version }} cannot be finished after the silence expired"
-    - alert: UpgradeNodeDrainFailedNotificationSRE
-      expr: count(ALERTS{alertname="UpgradeNodeDrainFailedSRE", alertstate="firing"}) >= 1
-      for: 5m
-      labels:
-        severity: info
-        namespace: openshift-monitoring
-        managed_notification_template: "UpgradeNodeDrainFailed"
-        send_managed_notification: "true"
-      annotations:
-        summary: "Node drain failed in the given time period which is not caused by the PDB"
-        description: "node drain takes too long and cannot be finished in the given time period during cluster upgrade"
