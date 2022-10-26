@@ -81,6 +81,28 @@ data:
         done
     }
 
+    # kubeDaemonsetMisscheduled deletes pods running on infra nodes even though the daemonset doesn't tolerate
+    # the infra node taint due to a race condition on how infra nodes are created
+    kubeDaemonsetMisscheduled() {
+      NODE_TAINT="node-role.kubernetes.io=infra"
+      NS=$1
+      LABEL=$2
+
+      readarray -t nodes < <(oc get no -l "${NODE_TAINT}" -o go-template='{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}');
+      for node in "${nodes[@]}"; do
+        misscheduled_pods="$(oc get po -n "${NS}" -l "${LABEL}" -o go-template="{{range .items}}{{if eq .spec.nodeName \"${node}\"}}{{.metadata.name}}{{\"\n\"}}{{end}}{{end}}")";
+        for pod in "${misscheduled_pods[@]}"; do
+          if [[ -n "${pod}" ]]; then
+            echo "Deleting misscheduled pod ${pod} running on ${node}"
+            oc delete po -n "${NS}" "${pod}"
+          fi
+        done
+      done
+    }
+
+    echo "INFO: Rebalancing openshift-dns/dns-default Daemonset..."
+    kubeDaemonsetMisscheduled "openshift-dns" "dns.operator.openshift.io/daemonset-dns=default"
+
     echo "INFO: Rebalancing prometheus pods..."
     rebalancePods prometheus openshift-monitoring app prometheus-data
 

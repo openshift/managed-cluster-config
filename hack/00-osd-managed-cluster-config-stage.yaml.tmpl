@@ -13814,6 +13814,34 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: Role
       metadata:
+        name: osd-rebalance-infra-nodes-openshift-dns
+        namespace: openshift-dns
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - get
+        - list
+        - delete
+    - kind: RoleBinding
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        name: osd-rebalance-infra-nodes-openshift-dns
+        namespace: openshift-dns
+      subjects:
+      - kind: ServiceAccount
+        name: osd-rebalance-infra-nodes
+        namespace: openshift-monitoring
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: osd-rebalance-infra-nodes-openshift-dns
+        namespace: openshift-dns
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
         name: osd-rebalance-infra-nodes-openshift-monitoring
         namespace: openshift-monitoring
       rules:
@@ -13957,17 +13985,29 @@ objects:
           \     while [ ! -z \"$(oc get pod -n $NS $POD -o jsonpath='{.status.phase}'\
           \ 2>/dev/null)\" ] && [ \"$(oc get pod -n $NS $POD -o jsonpath='{.status.phase}'\
           \ 2>/dev/null)\" != \"Running\" ];\n        do\n            sleep 1\n  \
-          \      done\n    done\n}\n\necho \"INFO: Rebalancing prometheus pods...\"\
-          \nrebalancePods prometheus openshift-monitoring app prometheus-data\n\n\
-          echo \"INFO: Rebalancing UWM prometheus pods...\"\nrebalancePods prometheus\
-          \ openshift-user-workload-monitoring app prometheus-user-workload-db\n\n\
-          echo \"INFO: Rebalancing alertmanager pods...\"\nrebalancePods alertmanager\
-          \ openshift-monitoring app alertmanager-data\n\necho \"INFO: Rebalancing\
-          \ splunk-heavy-forwarder pods...\"\nrebalancePods splunk-heavy-forwarder\
-          \ openshift-security name\n\nif $REBALANCE_PODS; then\n    echo \"INFO:\
-          \ Restarting prometheus operator...\"\n    OPERATOR_POD=$( oc get pod -n\
-          \ openshift-monitoring -l app.kubernetes.io/name=prometheus-operator -o\
-          \ jsonpath='{.items[*].metadata.name}' )\n    oc delete pod -n openshift-monitoring\
+          \      done\n    done\n}\n\n# kubeDaemonsetMisscheduled deletes pods running\
+          \ on infra nodes even though the daemonset doesn't tolerate\n# the infra\
+          \ node taint due to a race condition on how infra nodes are created\nkubeDaemonsetMisscheduled()\
+          \ {\n  NODE_TAINT=\"node-role.kubernetes.io=infra\"\n  NS=$1\n  LABEL=$2\n\
+          \n  readarray -t nodes < <(oc get no -l \"${NODE_TAINT}\" -o go-template='{{range\
+          \ .items}}{{.metadata.name}}{{\"\\n\"}}{{end}}');\n  for node in \"${nodes[@]}\"\
+          ; do\n    misscheduled_pods=\"$(oc get po -n \"${NS}\" -l \"${LABEL}\" -o\
+          \ go-template=\"{{range .items}}{{if eq .spec.nodeName \\\"${node}\\\"}}{{.metadata.name}}{{\\\
+          \"\\n\\\"}}{{end}}{{end}}\")\";\n    for pod in \"${misscheduled_pods[@]}\"\
+          ; do\n      if [[ -n \"${pod}\" ]]; then\n        echo \"Deleting misscheduled\
+          \ pod ${pod} running on ${node}\"\n        oc delete po -n \"${NS}\" \"\
+          ${pod}\"\n      fi\n    done\n  done\n}\n\necho \"INFO: Rebalancing openshift-dns/dns-default\
+          \ Daemonset...\"\nkubeDaemonsetMisscheduled \"openshift-dns\" \"dns.operator.openshift.io/daemonset-dns=default\"\
+          \n\necho \"INFO: Rebalancing prometheus pods...\"\nrebalancePods prometheus\
+          \ openshift-monitoring app prometheus-data\n\necho \"INFO: Rebalancing UWM\
+          \ prometheus pods...\"\nrebalancePods prometheus openshift-user-workload-monitoring\
+          \ app prometheus-user-workload-db\n\necho \"INFO: Rebalancing alertmanager\
+          \ pods...\"\nrebalancePods alertmanager openshift-monitoring app alertmanager-data\n\
+          \necho \"INFO: Rebalancing splunk-heavy-forwarder pods...\"\nrebalancePods\
+          \ splunk-heavy-forwarder openshift-security name\n\nif $REBALANCE_PODS;\
+          \ then\n    echo \"INFO: Restarting prometheus operator...\"\n    OPERATOR_POD=$(\
+          \ oc get pod -n openshift-monitoring -l app.kubernetes.io/name=prometheus-operator\
+          \ -o jsonpath='{.items[*].metadata.name}' )\n    oc delete pod -n openshift-monitoring\
           \ $OPERATOR_POD --wait=true\n    sleep 10\nfi\n\necho \"INFO: Check pending\
           \ prometheus pods...\"\ncheckPendingPods prometheus openshift-monitoring\
           \ app\n\necho \"INFO: Check pending UWM prometheus pods...\"\ncheckPendingPods\
