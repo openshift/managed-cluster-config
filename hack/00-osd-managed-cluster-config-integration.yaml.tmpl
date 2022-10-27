@@ -9884,54 +9884,7 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: osd-avo-resources-fedramp-vpce-acceptance
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-      matchExpressions:
-      - key: api.openshift.com/fedramp
-        operator: In
-        values:
-        - 'true'
-      - key: ext-managed.openshift.io/hive-shard
-        operator: In
-        values:
-        - 'true'
-    resourceApplyMode: Sync
-    resources:
-    - apiVersion: avo.openshift.io/v1alpha1
-      kind: VpcEndpointAcceptance
-      metadata:
-        name: osd-fr-splunk-acceptance
-        namespace: openshift-aws-vpce-operator
-      spec:
-        id: ${FR_SPLUNK_GOVEAST_VPCE_SERVICE_ID}
-        assumeRoleArn: ${FR_SPLUNK_VPCE_ACCEPTANCE_ARN}
-        region: us-gov-east-1
-        acceptanceCriteria:
-          awsAccountOperatorAccount:
-            namespace: aws-account-operator
-    - apiVersion: avo.openshift.io/v1alpha1
-      kind: VpcEndpointAcceptance
-      metadata:
-        name: osd-fr-splunk-acceptance
-        namespace: openshift-aws-vpce-operator
-      spec:
-        id: ${FR_SPLUNK_GOVWEST_VPCE_SERVICE_ID}
-        assumeRoleArn: ${FR_SPLUNK_VPCE_ACCEPTANCE_ARN}
-        region: us-gov-west-1
-        acceptanceCriteria:
-          awsAccountOperatorAccount:
-            namespace: aws-account-operator
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    labels:
-      managed.openshift.io/gitHash: ${IMAGE_TAG}
-      managed.openshift.io/gitRepoName: ${REPO_NAME}
-      managed.openshift.io/osd: 'true'
-    name: osd-avo-resources-us-gov-east-1
+    name: osd-avo-resources-fedramp-vpc-endpoints-us-gov-east-1
   spec:
     clusterDeploymentSelector:
       matchLabels:
@@ -9973,7 +9926,7 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: osd-avo-resources-us-gov-west-1
+    name: osd-avo-resources-fedramp-vpc-endpoints-us-gov-west-1
   spec:
     clusterDeploymentSelector:
       matchLabels:
@@ -10008,6 +9961,53 @@ objects:
             protocol: tcp
         externalNameService:
           name: indexer
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-avo-resources-fedramp-vpce-acceptance
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/fedramp
+        operator: In
+        values:
+        - 'true'
+      - key: ext-managed.openshift.io/hive-shard
+        operator: In
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: avo.openshift.io/v1alpha1
+      kind: VpcEndpointAcceptance
+      metadata:
+        name: osd-fr-splunk-acceptance
+        namespace: openshift-aws-vpce-operator
+      spec:
+        id: ${FR_SPLUNK_GOVEAST_VPCE_SERVICE_ID}
+        assumeRoleArn: ${FR_SPLUNK_VPCE_ACCEPTANCE_ARN}
+        region: us-gov-east-1
+        acceptanceCriteria:
+          awsAccountOperatorAccount:
+            namespace: aws-account-operator
+    - apiVersion: avo.openshift.io/v1alpha1
+      kind: VpcEndpointAcceptance
+      metadata:
+        name: osd-fr-splunk-acceptance
+        namespace: openshift-aws-vpce-operator
+      spec:
+        id: ${FR_SPLUNK_GOVWEST_VPCE_SERVICE_ID}
+        assumeRoleArn: ${FR_SPLUNK_VPCE_ACCEPTANCE_ARN}
+        region: us-gov-west-1
+        acceptanceCriteria:
+          awsAccountOperatorAccount:
+            namespace: aws-account-operator
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
