@@ -54,7 +54,7 @@ direct:
 
 ## SelectorSyncSet Deployment
 
-In the `config.yaml` file you define a top level property `selectorSyncSet`.  Within this configuration is supported for `matchLaels`, `matchExpressions`, `matchLabelsApplyMode`, `resourceApplyMode`, and `applyBehavior`.
+In the `config.yaml` file you define a top level property `selectorSyncSet`.  Within this configuration is supported for `matchLabels`, `matchExpressions`, `matchLabelsApplyMode`, `resourceApplyMode`, and `applyBehavior`.
 
 * `matchLabels` (optional, default: `{}`) - adds additional `matchLabels` conditions to the SelectorSyncSet's `clusterDeploymentSelector`
 * `matchExpressions` (optional, default: `[]`) - adds `matchExpressions` conditions to the SelectoSyncSet's `clusterDeploymentSelector`
