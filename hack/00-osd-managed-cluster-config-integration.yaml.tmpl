@@ -18281,6 +18281,56 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: sre-prometheus-hypershift-management-cluster
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+      - key: api.openshift.com/managed
+        operator: In
+        values:
+        - 'true'
+      - key: ext-hypershift.openshift.io/cluster-type
+        operator: In
+        values:
+        - management-cluster
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
+          prometheus: sre-hcp-pods
+          role: alert-rules
+        name: sre-hcp-pods
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-hcp-pods
+          rules:
+          - alert: HCPKubeApiserverNotAlive
+            annotations:
+              message: No lively kube-apiserver- pods for at least 15min
+            expr: (group by (namespace) (kube_pod_info{namespace=~"clusters-.*", pod=~"kube-apiserver-.*"}))
+              unless on(namespace) (group by (namespace) (prober_probe_total{probe_type="Liveness",
+              namespace=~"clusters-.*", pod=~"kube-apiserver-.*"}))
+            for: 15m
+            labels:
+              namespace: openshift-monitoring
+              prometheus: openshift-monitoring/k8s
+              severity: critical
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: sre-prometheus-ocm-agent
   spec:
     clusterDeploymentSelector:
