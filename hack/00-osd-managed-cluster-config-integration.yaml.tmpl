@@ -17879,6 +17879,11 @@ objects:
               "sre", "true", "", "") * on (sre) group_left(_id,provider,region,version)
               sre:telemetry:managed_labels
             record: sre:slo:oauth_server_requests_total
+          - expr: sre:telemetry:managed_labels * on (sre) group_left(probe_url) label_replace(count((sum(rate(apiserver_request_total{job="apiserver",
+              code=~"(400|5..)"}[5m]))/sum(rate(apiserver_request_total{job="apiserver",
+              code=~"([1-5]..)"}[5m]))) == 1) or (sum(absent_over_time(apiserver_request_total{job="apiserver"}[5m]))*(count(sum(sum_over_time(sre:slo:probe_success_api{}[5m]))
+              == 0))) or vector(0), "sre", "true", "", "")
+            record: sre:sla:outage_5_minutes
     - apiVersion: monitoring.coreos.com/v1
       kind: PrometheusRule
       metadata:
