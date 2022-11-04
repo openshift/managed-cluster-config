@@ -100,6 +100,25 @@ data:
       done
     }
 
+    # infraPodsMisscheduled finds pods from openshift- namespaces which are not scheduled on infra node 
+    #    but have nodeaffinity preferredDuringSchedulingIgnoredDuringExecution for infra nodes
+    # Notes: this is done as a response to an escalation in https://issues.redhat.com/browse/OSD-13621 
+    # A long term fix will follow 
+    infraPodsMisscheduled(){
+        NODE_TAINT="node-role.kubernetes.io=infra"
+        # The 'none' at the end accounts for pods which are currently being scheduled.
+        # we do not want to reschedule them before knowing where they landed
+        # the output will look like "<node1>|<node2>|none"
+        infranodes_regexp="$(oc get no -l "${NODE_TAINT}" -o go-template='{{range .items}}{{.metadata.name}}{{"|"}}{{end}}')none"
+        
+        # the output will look something like
+        # <namespace> | <pod> | <affinity> | <node>
+        # each pod on the list needs to be rescheduled
+        misscheduled_pods=`for ns in $@; do oc -n $ns get po -o go-template='{{range .items}}{{$isjob := index .metadata.labels "job-name"}}{{$namespace := .metadata.namespace}}{{$name := .metadata.name}}{{$affinity := .spec.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution }}{{if not $isjob}}{{if $affinity}}{{- $namespace }} | {{$name}} | {{$affinity}} | {{.spec.nodeName}} {{"\n" -}} {{end}}{{end}}{{end}}';done |grep "node-role.kubernetes.io/infra" |grep -vE ${infranodes_regexp}`
+    
+        while read line ; do cmd=`echo $line|awk -F'|' '{print "oc -n " $1 " delete po " $2}'`;echo "INFO: $cmd"; eval $cmd;done <<< "$misscheduled_pods"
+    }
+
     echo "INFO: Rebalancing openshift-dns/dns-default Daemonset..."
     kubeDaemonsetMisscheduled "openshift-dns" "dns.operator.openshift.io/daemonset-dns=default"
 
@@ -152,3 +171,6 @@ data:
 
     echo "INFO: Wait for running splunk-heavy-forwarder pods..."
     waitRunningPods splunk-heavy-forwarder openshift-security name
+
+    echo "INFO: Rebalancing misscheduled pods from openshift- namespaces"
+    infraPodsMisscheduled  openshift-cloud-ingress-operator openshift-custom-domains-operator openshift-image-registry openshift-managed-node-metadata-operator openshift-monitoring openshift-must-gather-operator openshift-network-operator openshift-ocm-agent-operator openshift-osd-metrics openshift-rbac-permissions openshift-route-monitor-operator openshift-splunk-forwarder-operator openshift-velero
