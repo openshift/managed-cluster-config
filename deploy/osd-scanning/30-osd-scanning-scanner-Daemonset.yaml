@@ -18,11 +18,11 @@ spec:
           value: "false"
         - name: CLAM_DB_DIRECTORY
           value: "/clam"
-        - name: CLAM_SECRETS_FILE
-          value: /secrets/clam_update_config.json
         - name: DEBUG_SECRETS
           value: "false"
-        image: quay.io/app-sre/clamsig-puller@sha256:7e9b4ba25e97f4a05003f419949039ebdcf7143e4714310a83025971cb657202
+        - name: CLAM_SECRETS_FILE
+          value: "/secrets/clam_update_config.json"
+        image: quay.io/app-sre/clamsig-puller@sha256:7ee9d8b9cf659491ba3e70fa0b659ec805aac0455ee03dd4081c7473dd39a391
         name: clamsig-puller
         resources:
           limits:
@@ -30,7 +30,7 @@ spec:
             memory: 2Gi
           requests:
             cpu: 100m
-            memory: 50Mi
+            memory: 500Mi
         volumeMounts:
         - mountPath: /secrets
           name: clam-secrets
@@ -48,6 +48,11 @@ spec:
           requests:
             cpu: 100m
             memory: 800Mi
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
         volumeMounts:
         - mountPath: /var/lib/clamav
           name: clam-files
@@ -56,7 +61,7 @@ spec:
           value: "false"
         - name: CHROOT_PATH
           value: /host
-        image: quay.io/app-sre/container-info@sha256:919a2a36e901b28a972426d2a42765ba1050692c6f7692aa3b5d4a22a04e9c95
+        image: quay.io/app-sre/container-info@sha256:f06c9dbad72d53680c10a0d689b6626ba41f35a8bb0753308168f2ca65eb9c24 
         name: info
         resources:
           limits:
@@ -98,7 +103,7 @@ spec:
           value: /clam/clamd.sock
         - name: INFO_SOCKET
           value: '@rpc.sock'
-        image: quay.io/app-sre/watcher@sha256:e73968685dc471bc062b31230a10a875e4f42cc3a8658cf22b021654d7537d03
+        image: quay.io/app-sre/watcher@sha256:0c03730792a49ac0cbf330a396a286b83f705789bb0955a8ba2b5c25519319ef
         name: watcher
         resources:
           limits:
@@ -150,7 +155,7 @@ spec:
           value: openshift-scanning
         - name: HOST_SCAN_DIRS
           value: /host
-        image: quay.io/app-sre/watcher@sha256:e73968685dc471bc062b31230a10a875e4f42cc3a8658cf22b021654d7537d03
+        image: quay.io/app-sre/watcher@sha256:0c03730792a49ac0cbf330a396a286b83f705789bb0955a8ba2b5c25519319ef
         name: scheduler
         resources:
           limits:
@@ -178,11 +183,11 @@ spec:
           value: "true"
         - name: CLAM_DB_DIRECTORY
           value: "/clam"
-        - name: CLAM_SECRETS_FILE
-          value: /secrets/clam_update_config.json
         - name: DEBUG_SECRETS
           value: "false"
-        image: quay.io/app-sre/clamsig-puller@sha256:7e9b4ba25e97f4a05003f419949039ebdcf7143e4714310a83025971cb657202
+        - name: CLAM_SECRETS_FILE
+          value: "/secrets/clam_update_config.json"
+        image: quay.io/app-sre/clamsig-puller@sha256:7ee9d8b9cf659491ba3e70fa0b659ec805aac0455ee03dd4081c7473dd39a391
         name: init-clamsig-puller
         resources:
           limits:
