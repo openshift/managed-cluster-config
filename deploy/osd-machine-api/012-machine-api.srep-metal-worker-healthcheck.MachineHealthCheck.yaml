@@ -1,7 +1,7 @@
 apiVersion: machine.openshift.io/v1beta1
 kind: MachineHealthCheck
 metadata:
-  name: srep-worker-healthcheck
+  name: srep-metal-worker-healthcheck
   namespace: openshift-machine-api
 spec:
   selector:
@@ -14,7 +14,7 @@ spec:
     - key: machine.openshift.io/cluster-api-machineset
       operator: Exists
     - key: machine.openshift.io/instance-type
-      operator: NotIn
+      operator: In
       values:
       - "m5.metal"
       - "m5d.metal"
@@ -43,4 +43,4 @@ spec:
     timeout: "480s"
     status: "Unknown"
   maxUnhealthy: 3
-  nodeStartupTimeout: 25m
+  nodeStartupTimeout: 40m
