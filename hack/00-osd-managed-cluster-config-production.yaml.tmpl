@@ -13356,6 +13356,28 @@ objects:
             - master
           - key: machine.openshift.io/cluster-api-machineset
             operator: Exists
+          - key: machine.openshift.io/instance-type
+            operator: NotIn
+            values:
+            - m5.metal
+            - m5d.metal
+            - m5n.metal
+            - m5dn.metal
+            - m5zn.metal
+            - m6i.metal
+            - r5.metal
+            - r5d.metal
+            - r5n.metal
+            - r5dn.metal
+            - r6i.metal
+            - x2iezn.metal
+            - z1d.metal
+            - c5.metal
+            - c5d.metal
+            - c5n.metal
+            - c6i.metal
+            - i3.metal
+            - i3en.metal
         unhealthyConditions:
         - type: Ready
           timeout: 480s
@@ -13364,7 +13386,53 @@ objects:
           timeout: 480s
           status: Unknown
         maxUnhealthy: 3
-        nodeStartupTimeout: 30m
+        nodeStartupTimeout: 25m
+    - apiVersion: machine.openshift.io/v1beta1
+      kind: MachineHealthCheck
+      metadata:
+        name: srep-metal-worker-healthcheck
+        namespace: openshift-machine-api
+      spec:
+        selector:
+          matchExpressions:
+          - key: machine.openshift.io/cluster-api-machine-role
+            operator: NotIn
+            values:
+            - infra
+            - master
+          - key: machine.openshift.io/cluster-api-machineset
+            operator: Exists
+          - key: machine.openshift.io/instance-type
+            operator: In
+            values:
+            - m5.metal
+            - m5d.metal
+            - m5n.metal
+            - m5dn.metal
+            - m5zn.metal
+            - m6i.metal
+            - r5.metal
+            - r5d.metal
+            - r5n.metal
+            - r5dn.metal
+            - r6i.metal
+            - x2iezn.metal
+            - z1d.metal
+            - c5.metal
+            - c5d.metal
+            - c5n.metal
+            - c6i.metal
+            - i3.metal
+            - i3en.metal
+        unhealthyConditions:
+        - type: Ready
+          timeout: 480s
+          status: 'False'
+        - type: Ready
+          timeout: 480s
+          status: Unknown
+        maxUnhealthy: 3
+        nodeStartupTimeout: 40m
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
