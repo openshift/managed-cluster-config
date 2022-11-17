@@ -13274,6 +13274,110 @@ objects:
         kind: Role
         name: osd-rebalance-infra-nodes-openshift-security
         namespace: openshift-security
+    - kind: RoleBinding
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        name: osd-rebalance-infra-nodes-openshift-pod-rebalance
+        namespace: openshift-custom-domains-operator
+      subjects:
+      - kind: ServiceAccount
+        name: osd-rebalance-infra-nodes
+        namespace: openshift-monitoring
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: osd-rebalance-infra-nodes-openshift-pod-rebalance
+    - kind: RoleBinding
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        name: osd-rebalance-infra-nodes-openshift-pod-rebalance
+        namespace: openshift-image-registry
+      subjects:
+      - kind: ServiceAccount
+        name: osd-rebalance-infra-nodes
+        namespace: openshift-monitoring
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: osd-rebalance-infra-nodes-openshift-pod-rebalance
+    - kind: RoleBinding
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        name: osd-rebalance-infra-nodes-openshift-pod-rebalance
+        namespace: openshift-monitoring
+      subjects:
+      - kind: ServiceAccount
+        name: osd-rebalance-infra-nodes
+        namespace: openshift-monitoring
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: osd-rebalance-infra-nodes-openshift-pod-rebalance
+    - kind: RoleBinding
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        name: osd-rebalance-infra-nodes-openshift-pod-rebalance
+        namespace: openshift-must-gather-operator
+      subjects:
+      - kind: ServiceAccount
+        name: osd-rebalance-infra-nodes
+        namespace: openshift-monitoring
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: osd-rebalance-infra-nodes-openshift-pod-rebalance
+    - kind: RoleBinding
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        name: osd-rebalance-infra-nodes-openshift-pod-rebalance
+        namespace: openshift-network-operator
+      subjects:
+      - kind: ServiceAccount
+        name: osd-rebalance-infra-nodes
+        namespace: openshift-monitoring
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: osd-rebalance-infra-nodes-openshift-pod-rebalance
+    - kind: RoleBinding
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        name: osd-rebalance-infra-nodes-openshift-pod-rebalance
+        namespace: openshift-rbac-permissions
+      subjects:
+      - kind: ServiceAccount
+        name: osd-rebalance-infra-nodes
+        namespace: openshift-monitoring
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: osd-rebalance-infra-nodes-openshift-pod-rebalance
+    - kind: RoleBinding
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        name: osd-rebalance-infra-nodes-openshift-pod-rebalance
+        namespace: openshift-route-monitor-operator
+      subjects:
+      - kind: ServiceAccount
+        name: osd-rebalance-infra-nodes
+        namespace: openshift-monitoring
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: osd-rebalance-infra-nodes-openshift-pod-rebalance
+    - kind: RoleBinding
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        name: osd-rebalance-infra-nodes-openshift-pod-rebalance
+        namespace: openshift-splunk-forwarder-operator
+      subjects:
+      - kind: ServiceAccount
+        name: osd-rebalance-infra-nodes
+        namespace: openshift-monitoring
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: osd-rebalance-infra-nodes-openshift-pod-rebalance
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
@@ -13518,8 +13622,10 @@ objects:
           \ }}{{if not $isjob}}{{if $affinity}}{{- $namespace }} | {{$name}} | {{$affinity}}\
           \ | {{.spec.nodeName}} {{\"\\n\" -}} {{end}}{{end}}{{end}}';done |grep \"\
           node-role.kubernetes.io/infra\" |grep -vE ${infranodes_regexp}`\n\n    if\
-          \ [ ! -z  \"$misscheduled_pods\" ]; then\n        while read line ; do cmd=`echo\
-          \ $line|awk -F'|' '{print \"oc -n \" $1 \" delete po \" $2}'`;echo \"INFO:\
+          \ [ ! -z  \"$misscheduled_pods\" ]; then\n        # --ignore-not-found=true\
+          \ so that for STS clusters this doesn't fail when this can't find CIO or\
+          \ velero pods\n        while read line ; do cmd=`echo $line|awk -F'|' '{print\
+          \ \"oc -n \" $1 \" delete po --ignore-not-found=true \" $2}'`;echo \"INFO:\
           \ $cmd\"; eval $cmd;done <<< \"$misscheduled_pods\"\n    else\n        echo\
           \ \"INFO: no misscheduled pods in openshift-* namespaces\"\n    fi\n}\n\n\
           echo \"INFO: Rebalancing openshift-dns/dns-default Daemonset...\"\nkubeDaemonsetMisscheduled\
@@ -13608,7 +13714,65 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: osd-rebalance-infra-nodes-non-sts
+    name: osd-rebalance-infra-nodes-non-fr
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Upsert
+    resources:
+    - kind: RoleBinding
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        name: osd-rebalance-infra-nodes-openshift-pod-rebalance
+        namespace: openshift-managed-node-metadata-operator
+      subjects:
+      - kind: ServiceAccount
+        name: osd-rebalance-infra-nodes
+        namespace: openshift-monitoring
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: osd-rebalance-infra-nodes-openshift-pod-rebalance
+    - kind: RoleBinding
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        name: osd-rebalance-infra-nodes-openshift-pod-rebalance
+        namespace: openshift-ocm-agent-operator
+      subjects:
+      - kind: ServiceAccount
+        name: osd-rebalance-infra-nodes
+        namespace: openshift-monitoring
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: osd-rebalance-infra-nodes-openshift-pod-rebalance
+    - kind: RoleBinding
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        name: osd-rebalance-infra-nodes-openshift-pod-rebalance
+        namespace: openshift-osd-metrics
+      subjects:
+      - kind: ServiceAccount
+        name: osd-rebalance-infra-nodes
+        namespace: openshift-monitoring
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: osd-rebalance-infra-nodes-openshift-pod-rebalance
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-rebalance-infra-nodes-non-fr-sts
   spec:
     clusterDeploymentSelector:
       matchLabels:
@@ -13623,6 +13787,46 @@ objects:
         values:
         - 'true'
     resourceApplyMode: Upsert
+    resources:
+    - kind: RoleBinding
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        name: osd-rebalance-infra-nodes-openshift-pod-rebalance
+        namespace: openshift-velero
+      subjects:
+      - kind: ServiceAccount
+        name: osd-rebalance-infra-nodes
+        namespace: openshift-monitoring
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: osd-rebalance-infra-nodes-openshift-pod-rebalance
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-rebalance-infra-nodes-non-fr-sts-privatelink
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/sts
+        operator: NotIn
+        values:
+        - 'true'
+      - key: api.openshift.com/private-link
+        operator: NotIn
+        values:
+        - 'true'
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
     resources:
     - kind: RoleBinding
       apiVersion: rbac.authorization.k8s.io/v1
