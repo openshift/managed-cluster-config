@@ -5,18 +5,6 @@ metadata:
   labels:
     managed.openshift.io/aggregate-to-cssre-admins: "cluster"
 rules:
-# CS SRE can manage projects
-- apiGroups:
-  - config.openshift.io
-  resources:
-  - projects
-  verbs:
-  - create
-  - get
-  - list
-  - patch
-  - update
-  - watch
 # CS SRE can get infrastructure details (cluster)
 - apiGroups:
   - config.openshift.io
@@ -25,34 +13,6 @@ rules:
   - oauths
   verbs:
   - 'get'
-- apiGroups:
-  - project.openshift.io
-  resources:
-  - projects
-  verbs:
-  - '*'
-# CS SRE can manage namespaces
-- apiGroups:
-  - ""
-  resources:
-  - namespaces
-  - namespaces/finalize
-  verbs:
-  - create
-  - get
-  - list
-  - patch
-  - update
-  - watch
-# CS SRE can update existing groups (enables break glass)
-- apiGroups:
-  - user.openshift.io
-  resources:
-  - groups
-  verbs:
-  - patch
-  - update
-  - get
 # CS SRE can interact with RHMI ClusterResourceQuotas (Only for LA)
 - apiGroups:
   - quota.openshift.io
@@ -81,7 +41,7 @@ rules:
   verbs:
   - create
   - get
-  - list 
-  - patch 
-  - update 
+  - list
+  - patch
+  - update
   - watch

@@ -1,7 +1,10 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: backplane-addon-connectors-readers-cluster
+  name: backplane-readers-cluster
+  labels:
+    managed.openshift.io/aggregate-to-backplane-readers-cluster: "true"
+rules: []
 aggregationRule:
   clusterRoleSelectors:
     # aggregate all "view" scope rbac
@@ -10,9 +13,10 @@ aggregationRule:
           operator: In
           values:
             - "true"
+        - key: kubernetes.io/bootstrapping
+          operator: DoesNotExist
     - matchExpressions:
         - key: managed.openshift.io/aggregate-to-dedicated-readers
           operator: In
           values:
             - "true"
-rules: []

@@ -2,16 +2,15 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: backplane-srep-admins-project
+aggregationRule:
+  clusterRoleSelectors:
+    # aggregate all "view" scope rbac
+    - matchExpressions:
+        - key: rbac.authorization.k8s.io/aggregate-to-view
+          operator: In
+          values:
+            - "true"
 rules:
-# SRE can get, list, and watch all resources
-- apiGroups:
-  - '*'
-  resources:
-  - '*'
-  verbs:
-  - get
-  - list
-  - watch
 # SRE can evict pods
 - apiGroups:
   - ""
@@ -178,10 +177,3 @@ rules:
   - subscriptions
   verbs:
   - delete
-# SRE can update configmaps
-- apiGroups:
-  - ""
-  resources:
-  - configmaps
-  verbs:
-  - patch
