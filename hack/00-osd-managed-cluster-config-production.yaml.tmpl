@@ -617,6 +617,117 @@ objects:
         - 'true'
     resourceApplyMode: Sync
     resources:
+    - apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: openshift-mananged-rbac-policies
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: acm-policies-ccs-dedicated-admin
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: ext-hypershift.openshift.io/cluster-type
+        operator: In
+        values:
+        - service-cluster
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: Policy
+      metadata:
+        annotations:
+          policy.open-cluster-management.io/categories: CM Configuration Management
+          policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/standards: NIST SP 800-53
+        name: ccs-dedicated-admin
+        namespace: openshift-managed-rbac-policies
+      spec:
+        disabled: false
+        policy-templates:
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+              name: ccs-dedicated-admin
+            spec:
+              object-templates:
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: ClusterRole
+                  metadata:
+                    labels:
+                      managed.openshift.io/aggregate-to-dedicated-admins: project
+                    name: dedicated-admins-manage-operators
+                  rules:
+                  - apiGroups:
+                    - operators.coreos.com
+                    resources:
+                    - '*'
+                    verbs:
+                    - '*'
+              remediationAction: enforce
+              severity: low
+    - apiVersion: apps.open-cluster-management.io/v1
+      kind: PlacementRule
+      metadata:
+        name: placement-ccs-dedicated-admin
+        namespace: openshift-managed-rbac-policies
+      spec:
+        clusterSelector:
+          matchExpressions:
+          - key: hypershift.open-cluster-management.io/hosted-cluster
+            operator: In
+            values:
+            - 'true'
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: PlacementBinding
+      metadata:
+        name: binding-ccs-dedicated-admin
+        namespace: openshift-managed-rbac-policies
+      placementRef:
+        apiGroup: apps.open-cluster-management.io
+        kind: PlacementRule
+        name: placement-ccs-dedicated-admin
+      subjects:
+      - apiGroup: policy.open-cluster-management.io
+        kind: Policy
+        name: ccs-dedicated-admin
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: acm-policies-cluster-admin
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: ext-hypershift.openshift.io/cluster-type
+        operator: In
+        values:
+        - service-cluster
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
     - apiVersion: policy.open-cluster-management.io/v1
       kind: Policy
       metadata:
@@ -677,6 +788,172 @@ objects:
       - apiGroup: policy.open-cluster-management.io
         kind: Policy
         name: cluster-admin
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: acm-policies-customer-registry-cas
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: ext-hypershift.openshift.io/cluster-type
+        operator: In
+        values:
+        - service-cluster
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: Policy
+      metadata:
+        annotations:
+          policy.open-cluster-management.io/categories: CM Configuration Management
+          policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/standards: NIST SP 800-53
+        name: customer-registry-cas
+        namespace: openshift-managed-rbac-policies
+      spec:
+        disabled: false
+        policy-templates:
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+              name: customer-registry-cas
+            spec:
+              object-templates:
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: ClusterRole
+                  metadata:
+                    name: dedicated-admins-registry-cas-cluster
+                  rules:
+                  - apiGroups:
+                    - config.openshift.io
+                    resourceNames:
+                    - cluster
+                    resources:
+                    - images
+                    verbs:
+                    - get
+                    - list
+                    - watch
+                    - patch
+                    - update
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: Role
+                  metadata:
+                    name: dedicated-admins-registry-cas-project
+                    namespace: openshift-config
+                  rules:
+                  - apiGroups:
+                    - ''
+                    resources:
+                    - configmaps
+                    verbs:
+                    - create
+                  - apiGroups:
+                    - ''
+                    resourceNames:
+                    - registry-cas
+                    resources:
+                    - configmaps
+                    verbs:
+                    - '*'
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: ClusterRoleBinding
+                  metadata:
+                    name: dedicated-admins-registry-cas-cluster
+                  roleRef:
+                    apiGroup: rbac.authorization.k8s.io
+                    kind: ClusterRole
+                    name: dedicated-admins-registry-cas-cluster
+                  subjects:
+                  - apiGroup: rbac.authorization.k8s.io
+                    kind: Group
+                    name: dedicated-admins
+                  - kind: Group
+                    name: system:serviceaccounts:dedicated-admin
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: RoleBinding
+                  metadata:
+                    name: dedicated-admins-registry-cas-project
+                    namespace: openshift-config
+                  roleRef:
+                    apiGroup: rbac.authorization.k8s.io
+                    kind: Role
+                    name: dedicated-admins-registry-cas-project
+                  subjects:
+                  - apiGroup: rbac.authorization.k8s.io
+                    kind: Group
+                    name: dedicated-admins
+                  - kind: Group
+                    name: system:serviceaccounts:dedicated-admin
+              remediationAction: enforce
+              severity: low
+    - apiVersion: apps.open-cluster-management.io/v1
+      kind: PlacementRule
+      metadata:
+        name: placement-customer-registry-cas
+        namespace: openshift-managed-rbac-policies
+      spec:
+        clusterSelector:
+          matchExpressions:
+          - key: hypershift.open-cluster-management.io/hosted-cluster
+            operator: In
+            values:
+            - 'true'
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: PlacementBinding
+      metadata:
+        name: binding-customer-registry-cas
+        namespace: openshift-managed-rbac-policies
+      placementRef:
+        apiGroup: apps.open-cluster-management.io
+        kind: PlacementRule
+        name: placement-customer-registry-cas
+      subjects:
+      - apiGroup: policy.open-cluster-management.io
+        kind: Policy
+        name: customer-registry-cas
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: acm-policies-dedicated-admin
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: ext-hypershift.openshift.io/cluster-type
+        operator: In
+        values:
+        - service-cluster
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
     - apiVersion: policy.open-cluster-management.io/v1
       kind: Policy
       metadata:
@@ -1685,10 +1962,253 @@ objects:
       - apiGroup: policy.open-cluster-management.io
         kind: Policy
         name: dedicated-admin-rbac
-    - apiVersion: v1
-      kind: Namespace
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: acm-policies-osd-openshift-operators-redhat
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: ext-hypershift.openshift.io/cluster-type
+        operator: In
+        values:
+        - service-cluster
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: Policy
       metadata:
-        name: openshift-mananged-rbac-policies
+        annotations:
+          policy.open-cluster-management.io/categories: CM Configuration Management
+          policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/standards: NIST SP 800-53
+        name: osd-openshift-operators-redhat
+        namespace: openshift-managed-rbac-policies
+      spec:
+        disabled: false
+        policy-templates:
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+              name: osd-openshift-operators-redhat
+            spec:
+              object-templates:
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: v1
+                  kind: Namespace
+                  metadata:
+                    name: openshift-operators-redhat
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: RoleBinding
+                  metadata:
+                    name: admin-dedicated-admins
+                    namespace: openshift-operators-redhat
+                  roleRef:
+                    apiGroup: rbac.authorization.k8s.io
+                    kind: ClusterRole
+                    name: admin
+                  subjects:
+                  - apiGroup: rbac.authorization.k8s.io
+                    kind: Group
+                    name: dedicated-admins
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: RoleBinding
+                  metadata:
+                    name: admin-system:serviceaccounts:dedicated-admin
+                    namespace: openshift-operators-redhat
+                  roleRef:
+                    apiGroup: rbac.authorization.k8s.io
+                    kind: ClusterRole
+                    name: admin
+                  subjects:
+                  - apiGroup: rbac.authorization.k8s.io
+                    kind: Group
+                    name: system:serviceaccounts:dedicated-admin
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: RoleBinding
+                  metadata:
+                    name: openshift-operators-redhat-dedicated-admins
+                    namespace: openshift-operators-redhat
+                  roleRef:
+                    apiGroup: rbac.authorization.k8s.io
+                    kind: ClusterRole
+                    name: dedicated-admins-project
+                  subjects:
+                  - apiGroup: rbac.authorization.k8s.io
+                    kind: Group
+                    name: dedicated-admins
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: RoleBinding
+                  metadata:
+                    name: openshift-operators-redhat:serviceaccounts:dedicated-admin
+                    namespace: openshift-operators-redhat
+                  roleRef:
+                    apiGroup: rbac.authorization.k8s.io
+                    kind: ClusterRole
+                    name: dedicated-admins-project
+                  subjects:
+                  - apiGroup: rbac.authorization.k8s.io
+                    kind: Group
+                    name: system:serviceaccounts:dedicated-admin
+              remediationAction: enforce
+              severity: low
+    - apiVersion: apps.open-cluster-management.io/v1
+      kind: PlacementRule
+      metadata:
+        name: placement-osd-openshift-operators-redhat
+        namespace: openshift-managed-rbac-policies
+      spec:
+        clusterSelector:
+          matchExpressions:
+          - key: hypershift.open-cluster-management.io/hosted-cluster
+            operator: In
+            values:
+            - 'true'
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: PlacementBinding
+      metadata:
+        name: binding-osd-openshift-operators-redhat
+        namespace: openshift-managed-rbac-policies
+      placementRef:
+        apiGroup: apps.open-cluster-management.io
+        kind: PlacementRule
+        name: placement-osd-openshift-operators-redhat
+      subjects:
+      - apiGroup: policy.open-cluster-management.io
+        kind: Policy
+        name: osd-openshift-operators-redhat
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: acm-policies-osd-pcap-collector
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: ext-hypershift.openshift.io/cluster-type
+        operator: In
+        values:
+        - service-cluster
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: Policy
+      metadata:
+        annotations:
+          policy.open-cluster-management.io/categories: CM Configuration Management
+          policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/standards: NIST SP 800-53
+        name: osd-pcap-collector
+        namespace: openshift-managed-rbac-policies
+      spec:
+        disabled: false
+        policy-templates:
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+              name: osd-pcap-collector
+            spec:
+              object-templates:
+              - complianceType: musthave
+                objectDefinition:
+                  allowHostNetwork: false
+                  allowPrivilegedContainer: false
+                  allowedCapabilities:
+                  - NET_ADMIN
+                  - NET_RAW
+                  apiVersion: security.openshift.io/v1
+                  kind: SecurityContextConstraints
+                  metadata:
+                    name: pcap-dedicated-admins
+                  runAsUser:
+                    type: RunAsAny
+                  seLinuxContext:
+                    type: RunAsAny
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: ClusterRole
+                  metadata:
+                    name: pcap-dedicated-admins
+                  rules:
+                  - apiGroups:
+                    - security.openshift.io
+                    resourceNames:
+                    - pcap-dedicated-admins
+                    resources:
+                    - securitycontextconstraints
+                    verbs:
+                    - use
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: ClusterRoleBinding
+                  metadata:
+                    name: pcap-dedicated-admins
+                  roleRef:
+                    apiGroup: rbac.authorization.k8s.io
+                    kind: ClusterRole
+                    name: pcap-dedicated-admins
+                  subjects:
+                  - kind: Group
+                    name: dedicated-admins
+              remediationAction: enforce
+              severity: low
+    - apiVersion: apps.open-cluster-management.io/v1
+      kind: PlacementRule
+      metadata:
+        name: placement-osd-pcap-collector
+        namespace: openshift-managed-rbac-policies
+      spec:
+        clusterSelector:
+          matchExpressions:
+          - key: hypershift.open-cluster-management.io/hosted-cluster
+            operator: In
+            values:
+            - 'true'
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: PlacementBinding
+      metadata:
+        name: binding-osd-pcap-collector
+        namespace: openshift-managed-rbac-policies
+      placementRef:
+        apiGroup: apps.open-cluster-management.io
+        kind: PlacementRule
+        name: placement-osd-pcap-collector
+      subjects:
+      - apiGroup: policy.open-cluster-management.io
+        kind: Policy
+        name: osd-pcap-collector
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
