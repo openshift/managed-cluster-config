@@ -1696,6 +1696,118 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: acm-policies-osd-pcap-collector
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: ext-hypershift.openshift.io/cluster-type
+        operator: In
+        values:
+        - service-cluster
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: Policy
+      metadata:
+        annotations:
+          policy.open-cluster-management.io/categories: CM Configuration Management
+          policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/standards: NIST SP 800-53
+        name: osd-pcap-collector
+        namespace: openshift-managed-rbac-policies
+      spec:
+        disabled: false
+        policy-templates:
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+              name: osd-pcap-collector
+            spec:
+              object-templates:
+              - complianceType: musthave
+                objectDefinition:
+                  allowHostNetwork: false
+                  allowPrivilegedContainer: false
+                  allowedCapabilities:
+                  - NET_ADMIN
+                  - NET_RAW
+                  apiVersion: security.openshift.io/v1
+                  kind: SecurityContextConstraints
+                  metadata:
+                    name: pcap-dedicated-admins
+                  runAsUser:
+                    type: RunAsAny
+                  seLinuxContext:
+                    type: RunAsAny
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: ClusterRole
+                  metadata:
+                    name: pcap-dedicated-admins
+                  rules:
+                  - apiGroups:
+                    - security.openshift.io
+                    resourceNames:
+                    - pcap-dedicated-admins
+                    resources:
+                    - securitycontextconstraints
+                    verbs:
+                    - use
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: ClusterRoleBinding
+                  metadata:
+                    name: pcap-dedicated-admins
+                  roleRef:
+                    apiGroup: rbac.authorization.k8s.io
+                    kind: ClusterRole
+                    name: pcap-dedicated-admins
+                  subjects:
+                  - kind: Group
+                    name: dedicated-admins
+              remediationAction: enforce
+              severity: low
+    - apiVersion: apps.open-cluster-management.io/v1
+      kind: PlacementRule
+      metadata:
+        name: placement-osd-pcap-collector
+        namespace: openshift-managed-rbac-policies
+      spec:
+        clusterSelector:
+          matchExpressions:
+          - key: hypershift.open-cluster-management.io/hosted-cluster
+            operator: In
+            values:
+            - 'true'
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: PlacementBinding
+      metadata:
+        name: binding-osd-pcap-collector
+        namespace: openshift-managed-rbac-policies
+      placementRef:
+        apiGroup: apps.open-cluster-management.io
+        kind: PlacementRule
+        name: placement-osd-pcap-collector
+      subjects:
+      - apiGroup: policy.open-cluster-management.io
+        kind: Policy
+        name: osd-pcap-collector
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: backplane-addon-connectors-addon-connectors-operator
   spec:
     clusterDeploymentSelector:
