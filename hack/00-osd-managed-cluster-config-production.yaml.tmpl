@@ -12218,7 +12218,7 @@ objects:
       kind: NetworkPolicy
       metadata:
         name: default-allow-all
-        namespace: app-sre
+        namespace: dedicated-admin
       spec:
         podSelector: {}
         ingress:
@@ -12228,11 +12228,34 @@ objects:
         policyTypes:
         - Ingress
         - Egress
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-fedramp-default-netpols-hive
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/fedramp
+        operator: In
+        values:
+        - 'true'
+      - key: ext-managed.openshift.io/hive-shard
+        operator: In
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
     - apiVersion: networking.k8s.io/v1
       kind: NetworkPolicy
       metadata:
         name: default-allow-all
-        namespace: dedicated-admin
+        namespace: app-sre
       spec:
         podSelector: {}
         ingress:
