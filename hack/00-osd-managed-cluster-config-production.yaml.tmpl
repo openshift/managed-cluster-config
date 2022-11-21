@@ -12202,6 +12202,67 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: osd-fedramp-default-netpols
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/fedramp
+        operator: In
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: networking.k8s.io/v1
+      kind: NetworkPolicy
+      metadata:
+        name: default-allow-all
+        namespace: app-sre
+      spec:
+        podSelector: {}
+        ingress:
+        - {}
+        egress:
+        - {}
+        policyTypes:
+        - Ingress
+        - Egress
+    - apiVersion: networking.k8s.io/v1
+      kind: NetworkPolicy
+      metadata:
+        name: default-allow-all
+        namespace: dedicated-admin
+      spec:
+        podSelector: {}
+        ingress:
+        - {}
+        egress:
+        - {}
+        policyTypes:
+        - Ingress
+        - Egress
+    - apiVersion: networking.k8s.io/v1
+      kind: NetworkPolicy
+      metadata:
+        name: default-allow-all
+        namespace: osd-experience
+      spec:
+        podSelector: {}
+        ingress:
+        - {}
+        egress:
+        - {}
+        policyTypes:
+        - Ingress
+        - Egress
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: osd-fedramp-machineconfig
   spec:
     clusterDeploymentSelector:
