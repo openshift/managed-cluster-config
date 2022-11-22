@@ -22,7 +22,21 @@ spec:
           value: /host/var/log/openshift_managed_malware_scan.log
         - name: POD_LOG_FILE
           value: /host/var/log/openshift_managed_pod_creation.log
-        image: quay.io/app-sre/pod-logger@sha256:23b0e8fe37d996dd07b5bb81c2a2082e84698c9f44ae441af98a30df9495aefe
+        - name: POD_SOCK
+          value: "@rpc.pod.sock"
+        - name: SCAN_SOCK
+          value: "@rpc.scan.sock"
+        - name: APP_SECRETS_PATH
+          value: "/secrets/api_config.json"
+        - name: SA_TOKEN_PATH
+          value: "/var/run/secrets/kubernetes.io/serviceaccount/token"
+        - name: OAPI_URL
+          value: "https://openshift.default.svc.cluster.local"
+        - name: CV_URL
+          value: "/apis/config.openshift.io/v1/clusterversions"
+        - name: MIDDLEWARE_LOGGER 
+          value: "true"
+        image: quay.io/app-sre/pod-logger@sha256:8c4d6118f4a475be29a9638198dffb96ad47d703e69e7750e8429a2e8e02a63d
         name: logger
         ports:
         - containerPort: 8080
@@ -35,14 +49,37 @@ spec:
           requests:
             cpu: 100m
             memory: 50Mi
-        securityContext:
-          privileged: true
-          runAsUser: 0
         volumeMounts:
         - mountPath: /secrets
           name: logger-secrets
-        - mountPath: /host/var/log/
-          name: host-logs
+      - env:
+        - name: OO_PAUSE_ON_START
+          value: "false"
+        - name: SOCK
+          value: "@rpc.pod.sock"
+        image: quay.io/app-sre/log-printer@sha256:af480dffcf9953f37c97f81bcc5429d371685c3194c10368264dff0f12189426
+        name: pod-printer
+        resources:
+          limits:
+            cpu: 100m
+            memory: 100Mi
+          requests:
+            cpu: 100m
+            memory: 50Mi
+      - env:
+        - name: OO_PAUSE_ON_START
+          value: "false"
+        - name: SOCK
+          value: "@rpc.scan.sock"
+        image: quay.io/app-sre/log-printer@sha256:af480dffcf9953f37c97f81bcc5429d371685c3194c10368264dff0f12189426
+        name: scan-printer
+        resources:
+          limits:
+            cpu: 100m
+            memory: 100Mi
+          requests:
+            cpu: 100m
+            memory: 50Mi
       nodeSelector:
         node-role.kubernetes.io/master: ""
       serviceAccountName: logger-sa
@@ -52,6 +89,3 @@ spec:
       - name: logger-secrets
         secret:
           secretName: logger-secrets
-      - hostPath:
-          path: /var/log/
-        name: host-logs
