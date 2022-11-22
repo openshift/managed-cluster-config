@@ -612,9 +612,6 @@ objects:
       kind: ClusterRole
       metadata:
         name: backplane-readers-cluster
-        labels:
-          managed.openshift.io/aggregate-to-backplane-readers-cluster: 'true'
-      rules: []
       aggregationRule:
         clusterRoleSelectors:
         - matchExpressions:
@@ -697,13 +694,6 @@ objects:
       kind: ClusterRole
       metadata:
         name: backplane-cee-readers-cluster
-      aggregationRule:
-        clusterRoleSelectors:
-        - matchExpressions:
-          - key: managed.openshift.io/aggregate-to-backplane-readers-cluster
-            operator: In
-            values:
-            - 'true'
       rules:
       - apiGroups:
         - machineconfiguration.openshift.io
@@ -796,6 +786,7 @@ objects:
       spec:
         clusterPermissions:
         - backplane-cee-readers-cluster
+        - backplane-readers-cluster
         permissions:
         - allowFirst: true
           clusterRoleName: dedicated-readers
@@ -821,18 +812,6 @@ objects:
       kind: Namespace
       metadata:
         name: openshift-backplane-csa
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: backplane-csa-readers-cluster
-      aggregationRule:
-        clusterRoleSelectors:
-        - matchExpressions:
-          - key: managed.openshift.io/aggregate-to-backplane-readers-cluster
-            operator: In
-            values:
-            - 'true'
-      rules: []
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -840,7 +819,7 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-csa-readers-cluster
+        - backplane-readers-cluster
         permissions:
         - allowFirst: true
           clusterRoleName: dedicated-readers
@@ -866,18 +845,6 @@ objects:
       kind: Namespace
       metadata:
         name: openshift-backplane-cse
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: backplane-cse-readers-cluster
-      aggregationRule:
-        clusterRoleSelectors:
-        - matchExpressions:
-          - key: managed.openshift.io/aggregate-to-backplane-readers-cluster
-            operator: In
-            values:
-            - 'true'
-      rules: []
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -885,7 +852,7 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-cse-readers-cluster
+        - backplane-readers-cluster
         permissions:
         - allowFirst: true
           clusterRoleName: dedicated-readers
@@ -911,18 +878,6 @@ objects:
       kind: Namespace
       metadata:
         name: openshift-backplane-csm
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: backplane-csm-readers-cluster
-      aggregationRule:
-        clusterRoleSelectors:
-        - matchExpressions:
-          - key: managed.openshift.io/aggregate-to-backplane-readers-cluster
-            operator: In
-            values:
-            - 'true'
-      rules: []
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -930,7 +885,7 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-csm-readers-cluster
+        - backplane-readers-cluster
         permissions:
         - allowFirst: true
           clusterRoleName: dedicated-readers
@@ -970,18 +925,6 @@ objects:
             - cluster
       rules: []
     - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: backplane-cssre-readers-cluster
-      aggregationRule:
-        clusterRoleSelectors:
-        - matchExpressions:
-          - key: managed.openshift.io/aggregate-to-backplane-readers-cluster
-            operator: In
-            values:
-            - 'true'
-      rules: []
-    - apiVersion: rbac.authorization.k8s.io/v1
       kind: Role
       metadata:
         name: backplane-cssre
@@ -1052,7 +995,7 @@ objects:
       spec:
         clusterPermissions:
         - backplane-cssre-admins-cluster
-        - backplane-cssre-readers-cluster
+        - backplane-readers-cluster
         permissions:
         - allowFirst: true
           clusterRoleName: dedicated-readers
@@ -1092,18 +1035,6 @@ objects:
             - cluster
       rules: []
     - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: backplane-cssre-readers-cluster
-      aggregationRule:
-        clusterRoleSelectors:
-        - matchExpressions:
-          - key: managed.openshift.io/aggregate-to-backplane-readers-cluster
-            operator: In
-            values:
-            - 'true'
-      rules: []
-    - apiVersion: rbac.authorization.k8s.io/v1
       kind: Role
       metadata:
         name: backplane-cssre
@@ -1174,7 +1105,7 @@ objects:
       spec:
         clusterPermissions:
         - backplane-cssre-admins-cluster
-        - backplane-cssre-readers-cluster
+        - backplane-readers-cluster
         permissions:
         - allowFirst: true
           clusterRoleName: dedicated-readers
@@ -1214,18 +1145,6 @@ objects:
             - cluster
       rules: []
     - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: backplane-cssre-readers-cluster
-      aggregationRule:
-        clusterRoleSelectors:
-        - matchExpressions:
-          - key: managed.openshift.io/aggregate-to-backplane-readers-cluster
-            operator: In
-            values:
-            - 'true'
-      rules: []
-    - apiVersion: rbac.authorization.k8s.io/v1
       kind: Role
       metadata:
         name: backplane-cssre
@@ -1296,7 +1215,7 @@ objects:
       spec:
         clusterPermissions:
         - backplane-cssre-admins-cluster
-        - backplane-cssre-readers-cluster
+        - backplane-readers-cluster
         permissions:
         - allowFirst: true
           clusterRoleName: dedicated-readers
@@ -1336,18 +1255,6 @@ objects:
             - cluster
       rules: []
     - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: backplane-cssre-readers-cluster
-      aggregationRule:
-        clusterRoleSelectors:
-        - matchExpressions:
-          - key: managed.openshift.io/aggregate-to-backplane-readers-cluster
-            operator: In
-            values:
-            - 'true'
-      rules: []
-    - apiVersion: rbac.authorization.k8s.io/v1
       kind: Role
       metadata:
         name: backplane-cssre
@@ -1418,7 +1325,7 @@ objects:
       spec:
         clusterPermissions:
         - backplane-cssre-admins-cluster
-        - backplane-cssre-readers-cluster
+        - backplane-readers-cluster
         permissions:
         - allowFirst: true
           clusterRoleName: dedicated-readers
@@ -1458,18 +1365,6 @@ objects:
             - cluster
       rules: []
     - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: backplane-cssre-readers-cluster
-      aggregationRule:
-        clusterRoleSelectors:
-        - matchExpressions:
-          - key: managed.openshift.io/aggregate-to-backplane-readers-cluster
-            operator: In
-            values:
-            - 'true'
-      rules: []
-    - apiVersion: rbac.authorization.k8s.io/v1
       kind: Role
       metadata:
         name: backplane-cssre
@@ -1540,7 +1435,7 @@ objects:
       spec:
         clusterPermissions:
         - backplane-cssre-admins-cluster
-        - backplane-cssre-readers-cluster
+        - backplane-readers-cluster
         permissions:
         - allowFirst: true
           clusterRoleName: dedicated-readers
@@ -1580,18 +1475,6 @@ objects:
             - cluster
       rules: []
     - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: backplane-cssre-readers-cluster
-      aggregationRule:
-        clusterRoleSelectors:
-        - matchExpressions:
-          - key: managed.openshift.io/aggregate-to-backplane-readers-cluster
-            operator: In
-            values:
-            - 'true'
-      rules: []
-    - apiVersion: rbac.authorization.k8s.io/v1
       kind: Role
       metadata:
         name: backplane-cssre
@@ -1662,7 +1545,7 @@ objects:
       spec:
         clusterPermissions:
         - backplane-cssre-admins-cluster
-        - backplane-cssre-readers-cluster
+        - backplane-readers-cluster
         permissions:
         - allowFirst: true
           clusterRoleName: dedicated-readers
@@ -1702,18 +1585,6 @@ objects:
             - cluster
       rules: []
     - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: backplane-cssre-readers-cluster
-      aggregationRule:
-        clusterRoleSelectors:
-        - matchExpressions:
-          - key: managed.openshift.io/aggregate-to-backplane-readers-cluster
-            operator: In
-            values:
-            - 'true'
-      rules: []
-    - apiVersion: rbac.authorization.k8s.io/v1
       kind: Role
       metadata:
         name: backplane-cssre
@@ -1784,7 +1655,7 @@ objects:
       spec:
         clusterPermissions:
         - backplane-cssre-admins-cluster
-        - backplane-cssre-readers-cluster
+        - backplane-readers-cluster
         permissions:
         - allowFirst: true
           clusterRoleName: dedicated-readers
@@ -1824,18 +1695,6 @@ objects:
             - cluster
       rules: []
     - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: backplane-cssre-readers-cluster
-      aggregationRule:
-        clusterRoleSelectors:
-        - matchExpressions:
-          - key: managed.openshift.io/aggregate-to-backplane-readers-cluster
-            operator: In
-            values:
-            - 'true'
-      rules: []
-    - apiVersion: rbac.authorization.k8s.io/v1
       kind: Role
       metadata:
         name: backplane-cssre
@@ -1906,7 +1765,7 @@ objects:
       spec:
         clusterPermissions:
         - backplane-cssre-admins-cluster
-        - backplane-cssre-readers-cluster
+        - backplane-readers-cluster
         permissions:
         - allowFirst: true
           clusterRoleName: dedicated-readers
@@ -1933,13 +1792,6 @@ objects:
       kind: ClusterRole
       metadata:
         name: backplane-cssre-mkafka-project
-      aggregationRule:
-        clusterRoleSelectors:
-        - matchExpressions:
-          - key: rbac.authorization.k8s.io/aggregate-to-view
-            operator: In
-            values:
-            - 'true'
       rules:
       - apiGroups:
         - ''
@@ -1996,6 +1848,9 @@ objects:
         permissions:
         - allowFirst: true
           clusterRoleName: backplane-cssre-mkafka-project
+          namespacesAllowedRegex: (^redhat-managed-kafka-.*|^redhat-kas-fleetshard-.*|^managed-application-services-observability|^kafka-.*)
+        - allowFirst: true
+          clusterRoleName: view
           namespacesAllowedRegex: (^redhat-managed-kafka-.*|^redhat-kas-fleetshard-.*|^managed-application-services-observability|^kafka-.*)
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-cssre
@@ -2018,13 +1873,6 @@ objects:
       kind: ClusterRole
       metadata:
         name: backplane-cssre-mkafka-project
-      aggregationRule:
-        clusterRoleSelectors:
-        - matchExpressions:
-          - key: rbac.authorization.k8s.io/aggregate-to-view
-            operator: In
-            values:
-            - 'true'
       rules:
       - apiGroups:
         - ''
@@ -2081,6 +1929,9 @@ objects:
         permissions:
         - allowFirst: true
           clusterRoleName: backplane-cssre-mkafka-project
+          namespacesAllowedRegex: (^redhat-managed-kafka-.*|^redhat-kas-fleetshard-.*|^managed-application-services-observability|^kafka-.*)
+        - allowFirst: true
+          clusterRoleName: view
           namespacesAllowedRegex: (^redhat-managed-kafka-.*|^redhat-kas-fleetshard-.*|^managed-application-services-observability|^kafka-.*)
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-cssre
@@ -2103,13 +1954,6 @@ objects:
       kind: ClusterRole
       metadata:
         name: backplane-cssre-mkafka-project
-      aggregationRule:
-        clusterRoleSelectors:
-        - matchExpressions:
-          - key: rbac.authorization.k8s.io/aggregate-to-view
-            operator: In
-            values:
-            - 'true'
       rules:
       - apiGroups:
         - ''
@@ -2167,6 +2011,9 @@ objects:
         - allowFirst: true
           clusterRoleName: backplane-cssre-mkafka-project
           namespacesAllowedRegex: (^redhat-managed-kafka-.*|^redhat-kas-fleetshard-.*|^managed-application-services-observability|^kafka-.*)
+        - allowFirst: true
+          clusterRoleName: view
+          namespacesAllowedRegex: (^redhat-managed-kafka-.*|^redhat-kas-fleetshard-.*|^managed-application-services-observability|^kafka-.*)
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-cssre
 - apiVersion: hive.openshift.io/v1
@@ -2188,13 +2035,6 @@ objects:
       kind: ClusterRole
       metadata:
         name: backplane-cssre-mkafka-project
-      aggregationRule:
-        clusterRoleSelectors:
-        - matchExpressions:
-          - key: rbac.authorization.k8s.io/aggregate-to-view
-            operator: In
-            values:
-            - 'true'
       rules:
       - apiGroups:
         - ''
@@ -2251,6 +2091,9 @@ objects:
         permissions:
         - allowFirst: true
           clusterRoleName: backplane-cssre-mkafka-project
+          namespacesAllowedRegex: (^redhat-managed-kafka-.*|^redhat-kas-fleetshard-.*|^managed-application-services-observability|^kafka-.*)
+        - allowFirst: true
+          clusterRoleName: view
           namespacesAllowedRegex: (^redhat-managed-kafka-.*|^redhat-kas-fleetshard-.*|^managed-application-services-observability|^kafka-.*)
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-cssre
@@ -2317,13 +2160,6 @@ objects:
       kind: ClusterRole
       metadata:
         name: backplane-rhmi-cssre-admins-project
-      aggregationRule:
-        clusterRoleSelectors:
-        - matchExpressions:
-          - key: rbac.authorization.k8s.io/aggregate-to-view
-            operator: In
-            values:
-            - 'true'
       rules:
       - apiGroups:
         - ''
@@ -2441,7 +2277,9 @@ objects:
         - allowFirst: true
           clusterRoleName: backplane-rhmi-cssre-admins-project
           namespacesAllowedRegex: ^redhat-.*$
-          namespacesDeniedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$)
+        - allowFirst: true
+          clusterRoleName: view
+          namespacesAllowedRegex: ^redhat-.*$
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-cssre
 - apiVersion: hive.openshift.io/v1
@@ -2507,13 +2345,6 @@ objects:
       kind: ClusterRole
       metadata:
         name: backplane-rhmi-cssre-admins-project
-      aggregationRule:
-        clusterRoleSelectors:
-        - matchExpressions:
-          - key: rbac.authorization.k8s.io/aggregate-to-view
-            operator: In
-            values:
-            - 'true'
       rules:
       - apiGroups:
         - ''
@@ -2631,7 +2462,9 @@ objects:
         - allowFirst: true
           clusterRoleName: backplane-rhmi-cssre-admins-project
           namespacesAllowedRegex: ^redhat-.*$
-          namespacesDeniedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$)
+        - allowFirst: true
+          clusterRoleName: view
+          namespacesAllowedRegex: ^redhat-.*$
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-cssre
 - apiVersion: hive.openshift.io/v1
@@ -2842,6 +2675,9 @@ objects:
         permissions:
         - allowFirst: true
           clusterRoleName: backplane-rhoam-cssre-admins-project
+          namespacesAllowedRegex: (^redhat-rhoami?$|^redhat-rhoami?-.*)
+        - allowFirst: true
+          clusterRoleName: view
           namespacesAllowedRegex: (^redhat-rhoami?$|^redhat-rhoami?-.*)
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-cssre
@@ -3054,6 +2890,9 @@ objects:
         - allowFirst: true
           clusterRoleName: backplane-rhoam-cssre-admins-project
           namespacesAllowedRegex: (^redhat-rhoami?$|^redhat-rhoami?-.*)
+        - allowFirst: true
+          clusterRoleName: view
+          namespacesAllowedRegex: (^redhat-rhoami?$|^redhat-rhoami?-.*)
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-cssre
 - apiVersion: hive.openshift.io/v1
@@ -3204,18 +3043,6 @@ objects:
       kind: Namespace
       metadata:
         name: openshift-backplane-mobb
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: backplane-mobb-readers-cluster
-      aggregationRule:
-        clusterRoleSelectors:
-        - matchExpressions:
-          - key: managed.openshift.io/aggregate-to-backplane-readers-cluster
-            operator: In
-            values:
-            - 'true'
-      rules: []
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -3223,7 +3050,7 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-mobb-readers-cluster
+        - backplane-readers-cluster
         permissions:
         - allowFirst: true
           clusterRoleName: dedicated-readers
@@ -3310,18 +3137,6 @@ objects:
         - watch
         - patch
         - update
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: backplane-mtsre-readers-cluster
-      aggregationRule:
-        clusterRoleSelectors:
-        - matchExpressions:
-          - key: managed.openshift.io/aggregate-to-backplane-readers-cluster
-            operator: In
-            values:
-            - 'true'
-      rules: []
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -3330,7 +3145,7 @@ objects:
       spec:
         clusterPermissions:
         - backplane-mtsre-addon-operator-admin
-        - backplane-mtsre-readers-cluster
+        - backplane-readers-cluster
         permissions:
         - allowFirst: true
           clusterRoleName: admin
@@ -3422,18 +3237,6 @@ objects:
         - watch
         - patch
         - update
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: backplane-mtsre-readers-cluster
-      aggregationRule:
-        clusterRoleSelectors:
-        - matchExpressions:
-          - key: managed.openshift.io/aggregate-to-backplane-readers-cluster
-            operator: In
-            values:
-            - 'true'
-      rules: []
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -3442,7 +3245,7 @@ objects:
       spec:
         clusterPermissions:
         - backplane-mtsre-addon-operator-admin
-        - backplane-mtsre-readers-cluster
+        - backplane-readers-cluster
         permissions:
         - allowFirst: true
           clusterRoleName: admin
@@ -3534,18 +3337,6 @@ objects:
         - watch
         - patch
         - update
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: backplane-mtsre-readers-cluster
-      aggregationRule:
-        clusterRoleSelectors:
-        - matchExpressions:
-          - key: managed.openshift.io/aggregate-to-backplane-readers-cluster
-            operator: In
-            values:
-            - 'true'
-      rules: []
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -3554,7 +3345,7 @@ objects:
       spec:
         clusterPermissions:
         - backplane-mtsre-addon-operator-admin
-        - backplane-mtsre-readers-cluster
+        - backplane-readers-cluster
         permissions:
         - allowFirst: true
           clusterRoleName: admin
@@ -3646,18 +3437,6 @@ objects:
         - watch
         - patch
         - update
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: backplane-mtsre-readers-cluster
-      aggregationRule:
-        clusterRoleSelectors:
-        - matchExpressions:
-          - key: managed.openshift.io/aggregate-to-backplane-readers-cluster
-            operator: In
-            values:
-            - 'true'
-      rules: []
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -3666,7 +3445,7 @@ objects:
       spec:
         clusterPermissions:
         - backplane-mtsre-addon-operator-admin
-        - backplane-mtsre-readers-cluster
+        - backplane-readers-cluster
         permissions:
         - allowFirst: true
           clusterRoleName: admin
@@ -3758,18 +3537,6 @@ objects:
         - watch
         - patch
         - update
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: backplane-mtsre-readers-cluster
-      aggregationRule:
-        clusterRoleSelectors:
-        - matchExpressions:
-          - key: managed.openshift.io/aggregate-to-backplane-readers-cluster
-            operator: In
-            values:
-            - 'true'
-      rules: []
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -3778,7 +3545,7 @@ objects:
       spec:
         clusterPermissions:
         - backplane-mtsre-addon-operator-admin
-        - backplane-mtsre-readers-cluster
+        - backplane-readers-cluster
         permissions:
         - allowFirst: true
           clusterRoleName: admin
@@ -3870,18 +3637,6 @@ objects:
         - watch
         - patch
         - update
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: backplane-mtsre-readers-cluster
-      aggregationRule:
-        clusterRoleSelectors:
-        - matchExpressions:
-          - key: managed.openshift.io/aggregate-to-backplane-readers-cluster
-            operator: In
-            values:
-            - 'true'
-      rules: []
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -3890,7 +3645,7 @@ objects:
       spec:
         clusterPermissions:
         - backplane-mtsre-addon-operator-admin
-        - backplane-mtsre-readers-cluster
+        - backplane-readers-cluster
         permissions:
         - allowFirst: true
           clusterRoleName: admin
@@ -3982,18 +3737,6 @@ objects:
         - watch
         - patch
         - update
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: backplane-mtsre-readers-cluster
-      aggregationRule:
-        clusterRoleSelectors:
-        - matchExpressions:
-          - key: managed.openshift.io/aggregate-to-backplane-readers-cluster
-            operator: In
-            values:
-            - 'true'
-      rules: []
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -4002,7 +3745,7 @@ objects:
       spec:
         clusterPermissions:
         - backplane-mtsre-addon-operator-admin
-        - backplane-mtsre-readers-cluster
+        - backplane-readers-cluster
         permissions:
         - allowFirst: true
           clusterRoleName: admin
@@ -4094,18 +3837,6 @@ objects:
         - watch
         - patch
         - update
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: backplane-mtsre-readers-cluster
-      aggregationRule:
-        clusterRoleSelectors:
-        - matchExpressions:
-          - key: managed.openshift.io/aggregate-to-backplane-readers-cluster
-            operator: In
-            values:
-            - 'true'
-      rules: []
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -4114,7 +3845,7 @@ objects:
       spec:
         clusterPermissions:
         - backplane-mtsre-addon-operator-admin
-        - backplane-mtsre-readers-cluster
+        - backplane-readers-cluster
         permissions:
         - allowFirst: true
           clusterRoleName: admin
@@ -4206,18 +3937,6 @@ objects:
         - watch
         - patch
         - update
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: backplane-mtsre-readers-cluster
-      aggregationRule:
-        clusterRoleSelectors:
-        - matchExpressions:
-          - key: managed.openshift.io/aggregate-to-backplane-readers-cluster
-            operator: In
-            values:
-            - 'true'
-      rules: []
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -4226,7 +3945,7 @@ objects:
       spec:
         clusterPermissions:
         - backplane-mtsre-addon-operator-admin
-        - backplane-mtsre-readers-cluster
+        - backplane-readers-cluster
         permissions:
         - allowFirst: true
           clusterRoleName: admin
@@ -4318,18 +4037,6 @@ objects:
         - watch
         - patch
         - update
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: backplane-mtsre-readers-cluster
-      aggregationRule:
-        clusterRoleSelectors:
-        - matchExpressions:
-          - key: managed.openshift.io/aggregate-to-backplane-readers-cluster
-            operator: In
-            values:
-            - 'true'
-      rules: []
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -4338,7 +4045,7 @@ objects:
       spec:
         clusterPermissions:
         - backplane-mtsre-addon-operator-admin
-        - backplane-mtsre-readers-cluster
+        - backplane-readers-cluster
         permissions:
         - allowFirst: true
           clusterRoleName: admin
@@ -4430,18 +4137,6 @@ objects:
         - watch
         - patch
         - update
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: backplane-mtsre-readers-cluster
-      aggregationRule:
-        clusterRoleSelectors:
-        - matchExpressions:
-          - key: managed.openshift.io/aggregate-to-backplane-readers-cluster
-            operator: In
-            values:
-            - 'true'
-      rules: []
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -4450,7 +4145,7 @@ objects:
       spec:
         clusterPermissions:
         - backplane-mtsre-addon-operator-admin
-        - backplane-mtsre-readers-cluster
+        - backplane-readers-cluster
         permissions:
         - allowFirst: true
           clusterRoleName: admin
@@ -4542,18 +4237,6 @@ objects:
         - watch
         - patch
         - update
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: backplane-mtsre-readers-cluster
-      aggregationRule:
-        clusterRoleSelectors:
-        - matchExpressions:
-          - key: managed.openshift.io/aggregate-to-backplane-readers-cluster
-            operator: In
-            values:
-            - 'true'
-      rules: []
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -4562,7 +4245,7 @@ objects:
       spec:
         clusterPermissions:
         - backplane-mtsre-addon-operator-admin
-        - backplane-mtsre-readers-cluster
+        - backplane-readers-cluster
         permissions:
         - allowFirst: true
           clusterRoleName: admin
@@ -4654,18 +4337,6 @@ objects:
         - watch
         - patch
         - update
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: backplane-mtsre-readers-cluster
-      aggregationRule:
-        clusterRoleSelectors:
-        - matchExpressions:
-          - key: managed.openshift.io/aggregate-to-backplane-readers-cluster
-            operator: In
-            values:
-            - 'true'
-      rules: []
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -4674,7 +4345,7 @@ objects:
       spec:
         clusterPermissions:
         - backplane-mtsre-addon-operator-admin
-        - backplane-mtsre-readers-cluster
+        - backplane-readers-cluster
         permissions:
         - allowFirst: true
           clusterRoleName: admin
@@ -4766,18 +4437,6 @@ objects:
         - watch
         - patch
         - update
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: backplane-mtsre-readers-cluster
-      aggregationRule:
-        clusterRoleSelectors:
-        - matchExpressions:
-          - key: managed.openshift.io/aggregate-to-backplane-readers-cluster
-            operator: In
-            values:
-            - 'true'
-      rules: []
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -4786,7 +4445,7 @@ objects:
       spec:
         clusterPermissions:
         - backplane-mtsre-addon-operator-admin
-        - backplane-mtsre-readers-cluster
+        - backplane-readers-cluster
         permissions:
         - allowFirst: true
           clusterRoleName: admin
@@ -4878,18 +4537,6 @@ objects:
         - watch
         - patch
         - update
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: backplane-mtsre-readers-cluster
-      aggregationRule:
-        clusterRoleSelectors:
-        - matchExpressions:
-          - key: managed.openshift.io/aggregate-to-backplane-readers-cluster
-            operator: In
-            values:
-            - 'true'
-      rules: []
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -4898,7 +4545,7 @@ objects:
       spec:
         clusterPermissions:
         - backplane-mtsre-addon-operator-admin
-        - backplane-mtsre-readers-cluster
+        - backplane-readers-cluster
         permissions:
         - allowFirst: true
           clusterRoleName: admin
@@ -4990,18 +4637,6 @@ objects:
         - watch
         - patch
         - update
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: backplane-mtsre-readers-cluster
-      aggregationRule:
-        clusterRoleSelectors:
-        - matchExpressions:
-          - key: managed.openshift.io/aggregate-to-backplane-readers-cluster
-            operator: In
-            values:
-            - 'true'
-      rules: []
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -5010,7 +4645,7 @@ objects:
       spec:
         clusterPermissions:
         - backplane-mtsre-addon-operator-admin
-        - backplane-mtsre-readers-cluster
+        - backplane-readers-cluster
         permissions:
         - allowFirst: true
           clusterRoleName: admin
@@ -5102,18 +4737,6 @@ objects:
         - watch
         - patch
         - update
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: backplane-mtsre-readers-cluster
-      aggregationRule:
-        clusterRoleSelectors:
-        - matchExpressions:
-          - key: managed.openshift.io/aggregate-to-backplane-readers-cluster
-            operator: In
-            values:
-            - 'true'
-      rules: []
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -5122,7 +4745,7 @@ objects:
       spec:
         clusterPermissions:
         - backplane-mtsre-addon-operator-admin
-        - backplane-mtsre-readers-cluster
+        - backplane-readers-cluster
         permissions:
         - allowFirst: true
           clusterRoleName: admin
@@ -5214,18 +4837,6 @@ objects:
         - watch
         - patch
         - update
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: backplane-mtsre-readers-cluster
-      aggregationRule:
-        clusterRoleSelectors:
-        - matchExpressions:
-          - key: managed.openshift.io/aggregate-to-backplane-readers-cluster
-            operator: In
-            values:
-            - 'true'
-      rules: []
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -5234,7 +4845,7 @@ objects:
       spec:
         clusterPermissions:
         - backplane-mtsre-addon-operator-admin
-        - backplane-mtsre-readers-cluster
+        - backplane-readers-cluster
         permissions:
         - allowFirst: true
           clusterRoleName: admin
@@ -5326,18 +4937,6 @@ objects:
         - watch
         - patch
         - update
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: backplane-mtsre-readers-cluster
-      aggregationRule:
-        clusterRoleSelectors:
-        - matchExpressions:
-          - key: managed.openshift.io/aggregate-to-backplane-readers-cluster
-            operator: In
-            values:
-            - 'true'
-      rules: []
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -5346,7 +4945,7 @@ objects:
       spec:
         clusterPermissions:
         - backplane-mtsre-addon-operator-admin
-        - backplane-mtsre-readers-cluster
+        - backplane-readers-cluster
         permissions:
         - allowFirst: true
           clusterRoleName: admin
@@ -5438,18 +5037,6 @@ objects:
         - watch
         - patch
         - update
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: backplane-mtsre-readers-cluster
-      aggregationRule:
-        clusterRoleSelectors:
-        - matchExpressions:
-          - key: managed.openshift.io/aggregate-to-backplane-readers-cluster
-            operator: In
-            values:
-            - 'true'
-      rules: []
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -5458,7 +5045,7 @@ objects:
       spec:
         clusterPermissions:
         - backplane-mtsre-addon-operator-admin
-        - backplane-mtsre-readers-cluster
+        - backplane-readers-cluster
         permissions:
         - allowFirst: true
           clusterRoleName: admin
@@ -5550,18 +5137,6 @@ objects:
         - watch
         - patch
         - update
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: backplane-mtsre-readers-cluster
-      aggregationRule:
-        clusterRoleSelectors:
-        - matchExpressions:
-          - key: managed.openshift.io/aggregate-to-backplane-readers-cluster
-            operator: In
-            values:
-            - 'true'
-      rules: []
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -5570,7 +5145,7 @@ objects:
       spec:
         clusterPermissions:
         - backplane-mtsre-addon-operator-admin
-        - backplane-mtsre-readers-cluster
+        - backplane-readers-cluster
         permissions:
         - allowFirst: true
           clusterRoleName: admin
@@ -5662,18 +5237,6 @@ objects:
         - watch
         - patch
         - update
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: backplane-mtsre-readers-cluster
-      aggregationRule:
-        clusterRoleSelectors:
-        - matchExpressions:
-          - key: managed.openshift.io/aggregate-to-backplane-readers-cluster
-            operator: In
-            values:
-            - 'true'
-      rules: []
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -5682,7 +5245,7 @@ objects:
       spec:
         clusterPermissions:
         - backplane-mtsre-addon-operator-admin
-        - backplane-mtsre-readers-cluster
+        - backplane-readers-cluster
         permissions:
         - allowFirst: true
           clusterRoleName: admin
@@ -5774,18 +5337,6 @@ objects:
         - watch
         - patch
         - update
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: backplane-mtsre-readers-cluster
-      aggregationRule:
-        clusterRoleSelectors:
-        - matchExpressions:
-          - key: managed.openshift.io/aggregate-to-backplane-readers-cluster
-            operator: In
-            values:
-            - 'true'
-      rules: []
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -5794,7 +5345,7 @@ objects:
       spec:
         clusterPermissions:
         - backplane-mtsre-addon-operator-admin
-        - backplane-mtsre-readers-cluster
+        - backplane-readers-cluster
         permissions:
         - allowFirst: true
           clusterRoleName: admin
@@ -5886,18 +5437,6 @@ objects:
         - watch
         - patch
         - update
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: backplane-mtsre-readers-cluster
-      aggregationRule:
-        clusterRoleSelectors:
-        - matchExpressions:
-          - key: managed.openshift.io/aggregate-to-backplane-readers-cluster
-            operator: In
-            values:
-            - 'true'
-      rules: []
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -5906,7 +5445,7 @@ objects:
       spec:
         clusterPermissions:
         - backplane-mtsre-addon-operator-admin
-        - backplane-mtsre-readers-cluster
+        - backplane-readers-cluster
         permissions:
         - allowFirst: true
           clusterRoleName: admin
@@ -5998,18 +5537,6 @@ objects:
         - watch
         - patch
         - update
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: backplane-mtsre-readers-cluster
-      aggregationRule:
-        clusterRoleSelectors:
-        - matchExpressions:
-          - key: managed.openshift.io/aggregate-to-backplane-readers-cluster
-            operator: In
-            values:
-            - 'true'
-      rules: []
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -6018,7 +5545,7 @@ objects:
       spec:
         clusterPermissions:
         - backplane-mtsre-addon-operator-admin
-        - backplane-mtsre-readers-cluster
+        - backplane-readers-cluster
         permissions:
         - allowFirst: true
           clusterRoleName: admin
@@ -6110,18 +5637,6 @@ objects:
         - watch
         - patch
         - update
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: backplane-mtsre-readers-cluster
-      aggregationRule:
-        clusterRoleSelectors:
-        - matchExpressions:
-          - key: managed.openshift.io/aggregate-to-backplane-readers-cluster
-            operator: In
-            values:
-            - 'true'
-      rules: []
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -6130,7 +5645,7 @@ objects:
       spec:
         clusterPermissions:
         - backplane-mtsre-addon-operator-admin
-        - backplane-mtsre-readers-cluster
+        - backplane-readers-cluster
         permissions:
         - allowFirst: true
           clusterRoleName: admin
@@ -6222,18 +5737,6 @@ objects:
         - watch
         - patch
         - update
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: backplane-mtsre-readers-cluster
-      aggregationRule:
-        clusterRoleSelectors:
-        - matchExpressions:
-          - key: managed.openshift.io/aggregate-to-backplane-readers-cluster
-            operator: In
-            values:
-            - 'true'
-      rules: []
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -6242,7 +5745,7 @@ objects:
       spec:
         clusterPermissions:
         - backplane-mtsre-addon-operator-admin
-        - backplane-mtsre-readers-cluster
+        - backplane-readers-cluster
         permissions:
         - allowFirst: true
           clusterRoleName: admin
@@ -6334,18 +5837,6 @@ objects:
         - watch
         - patch
         - update
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: backplane-mtsre-readers-cluster
-      aggregationRule:
-        clusterRoleSelectors:
-        - matchExpressions:
-          - key: managed.openshift.io/aggregate-to-backplane-readers-cluster
-            operator: In
-            values:
-            - 'true'
-      rules: []
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -6354,7 +5845,7 @@ objects:
       spec:
         clusterPermissions:
         - backplane-mtsre-addon-operator-admin
-        - backplane-mtsre-readers-cluster
+        - backplane-readers-cluster
         permissions:
         - allowFirst: true
           clusterRoleName: admin
@@ -7002,13 +6493,6 @@ objects:
       kind: ClusterRole
       metadata:
         name: backplane-srep-admins-project
-      aggregationRule:
-        clusterRoleSelectors:
-        - matchExpressions:
-          - key: rbac.authorization.k8s.io/aggregate-to-view
-            operator: In
-            values:
-            - 'true'
       rules:
       - apiGroups:
         - ''
@@ -7186,29 +6670,6 @@ objects:
         - create
         - delete
     - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: backplane-srep-readers-cluster
-      aggregationRule:
-        clusterRoleSelectors:
-        - matchExpressions:
-          - key: managed.openshift.io/aggregate-to-backplane-readers-cluster
-            operator: In
-            values:
-            - 'true'
-      rules: []
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRoleBinding
-      metadata:
-        name: backplane-srep-admins-cluster
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: ClusterRole
-        name: backplane-srep-admins-cluster
-      subjects:
-      - kind: Group
-        name: system:serviceaccounts:openshift-backplane-srep
-    - apiVersion: rbac.authorization.k8s.io/v1
       kind: RoleBinding
       metadata:
         name: backplane-srep-mustgather
@@ -7222,26 +6683,22 @@ objects:
         kind: Role
         name: backplane-srep-mustgather
         namespace: openshift-must-gather-operator
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRoleBinding
-      metadata:
-        name: backplane-srep-readers-cluster
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: ClusterRole
-        name: backplane-srep-readers-cluster
-      subjects:
-      - kind: Group
-        name: system:serviceaccounts:openshift-backplane-srep
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
         name: backplane-srep
         namespace: openshift-rbac-permissions
       spec:
+        clusterPermissions:
+        - backplane-srep-admins-cluster
+        - backplane-readers-cluster
         permissions:
         - allowFirst: true
           clusterRoleName: backplane-srep-admins-project
+          namespacesAllowedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - allowFirst: true
+          clusterRoleName: dedicated-readers
           namespacesAllowedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
           namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
@@ -7371,18 +6828,6 @@ objects:
       kind: Namespace
       metadata:
         name: openshift-backplane-tam
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: backplane-tam-readers-cluster
-      aggregationRule:
-        clusterRoleSelectors:
-        - matchExpressions:
-          - key: managed.openshift.io/aggregate-to-backplane-readers-cluster
-            operator: In
-            values:
-            - 'true'
-      rules: []
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -7390,7 +6835,7 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-tam-readers-cluster
+        - backplane-readers-cluster
         permissions:
         - allowFirst: true
           clusterRoleName: dedicated-readers
