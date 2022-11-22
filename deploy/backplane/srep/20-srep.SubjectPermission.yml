@@ -4,9 +4,16 @@ metadata:
   name: backplane-srep
   namespace: openshift-rbac-permissions
 spec:
+  clusterPermissions:
+  - backplane-srep-admins-cluster
+  - backplane-readers-cluster
   permissions:
   - allowFirst: true
     clusterRoleName: backplane-srep-admins-project
+    namespacesAllowedRegex: "(^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)"
+    namespacesDeniedRegex: openshift-backplane-cluster-admin
+  - allowFirst: true
+    clusterRoleName: dedicated-readers
     namespacesAllowedRegex: "(^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)"
     namespacesDeniedRegex: openshift-backplane-cluster-admin
   subjectKind: Group
