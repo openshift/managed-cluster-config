@@ -8221,6 +8221,20 @@ objects:
           resendWait: 24
           resolvedBody: Your cluster's cluster-wide proxy is no longer raising any
             errors concerning network egress. No further action on this issue is required.
+    - apiVersion: ocmagent.managed.openshift.io/v1alpha1
+      kind: ManagedNotification
+      metadata:
+        name: sre-upgrade-managed-notifications
+        namespace: openshift-ocm-agent-operator
+      spec:
+        notifications:
+        - name: UpgradeControlPlaneUpgradeTimeout
+          severity: Error
+          summary: Control plane upgrade completion delayed
+          activeBody: There has been a delay observed in the anticipated completion
+            time of your cluster's Control Plane upgrade. Red Hat SRE has been notified
+            of the situation
+          resendWait: 72
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -17832,6 +17846,31 @@ objects:
             annotations:
               message: Cluster proxy is failing network readiness endpoint checks
                 and may be misconfigured or not running.
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
+          prometheus: sre-upgrade-managed-notification-alerts
+          role: alert-rules
+        name: sre-upgrade-send-managed-notification-alerts
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-upgrade-managed-notification-alerts
+          rules:
+          - alert: UpgradeControlPlaneUpgradeTimeoutNotificationSRE
+            expr: count(ALERTS{alertname="UpgradeControlPlaneUpgradeTimeoutSRE", alertstate="firing"})
+              >= 1
+            for: 30m
+            labels:
+              severity: info
+              namespace: openshift-monitoring
+              managed_notification_template: UpgradeControlPlaneUpgradeTimeout
+              send_managed_notification: 'true'
+            annotations:
+              summary: Controlplane upgrade timeout for {{ $labels.version }}
+              description: controlplane upgrade for {{ $labels.version }} cannot be
+                finished in the given time period
     - apiVersion: monitoring.coreos.com/v1
       kind: PrometheusRule
       metadata:
