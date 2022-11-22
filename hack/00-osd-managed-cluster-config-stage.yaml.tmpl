@@ -10170,6 +10170,36 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: osd-cluster-acks-ocp-4.12
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.11'
+      - key: api.openshift.com/gate-ocp
+        operator: In
+        values:
+        - '4.12'
+    resourceApplyMode: Upsert
+    resources:
+    - apiVersion: v1
+      data:
+        ack-4.11-kube-1.25-api-removals-in-4.12: 'true'
+      kind: ConfigMap
+      metadata:
+        name: admin-acks
+        namespace: openshift-config
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: osd-cluster-acks-ocp-4.9
   spec:
     clusterDeploymentSelector:
@@ -10258,6 +10288,39 @@ objects:
       name: cluster
       applyMode: AlwaysApply
       patch: '{"metadata":{"annotations":{"cloudcredential.openshift.io/upgradeable-to":"v4.11"}}}'
+      patchType: merge
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-cluster-acks-sts-4.12
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.11'
+      - key: api.openshift.com/gate-sts
+        operator: In
+        values:
+        - '4.12'
+      - key: api.openshift.com/sts
+        operator: In
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    patches:
+    - apiVersion: operator.openshift.io/v1
+      kind: CloudCredential
+      name: cluster
+      applyMode: AlwaysApply
+      patch: '{"metadata":{"annotations":{"cloudcredential.openshift.io/upgradeable-to":"v4.12"}}}'
       patchType: merge
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
