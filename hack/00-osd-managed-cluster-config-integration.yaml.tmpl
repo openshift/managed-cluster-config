@@ -18466,3 +18466,28 @@ objects:
   metadata:
     name: hive-environment
     namespace: openshift-config
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    name: rhobs-hypershift-config
+  spec:
+    clusterDeploymentSelector:
+      matchExpressions:
+      - key: ext-hypershift.openshift.io/cluster-type
+        operator: In
+        values:
+        - management-cluster
+    resourceApplyMode: Sync
+    secretMappings:
+    - sourceRef:
+        name: rhobs-hypershift-credential
+        namespace: hive
+      targetRef:
+        name: rhobs-hypershift-credential
+        namespace: openshift-monitoring
+    - sourceRef:
+        name: rhobs-hypershift-credential
+        namespace: hive
+      targetRef:
+        name: rhobs-hypershift-credential
+        namespace: openshift-observability-operator
