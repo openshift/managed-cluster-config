@@ -17,7 +17,7 @@ spec:
         - name: OO_PAUSE_ON_START
           value: "false"
         - name: LOG_WRITER_URL
-          value: http://logger.openshift-scanning.svc:8080/api/log
+          value: http://logger.openshift-scanning.svc:8443/api/log
         - name: SCAN_LOG_FILE
           value: /host/var/log/openshift_managed_malware_scan.log
         - name: POD_LOG_FILE
@@ -34,12 +34,18 @@ spec:
           value: "https://openshift.default.svc.cluster.local"
         - name: CV_URL
           value: "/apis/config.openshift.io/v1/clusterversions"
-        - name: MIDDLEWARE_LOGGER 
+        - name: MIDDLEWARE_LOGGER
           value: "true"
-        image: quay.io/app-sre/pod-logger@sha256:8c4d6118f4a475be29a9638198dffb96ad47d703e69e7750e8429a2e8e02a63d
+        - name: LISTEN_PORT
+          value: "8443"
+        - name: TLS_CERT_FILE
+          value: /certs/tls.crt
+        - name: TLS_KEY_FILE
+          value: /certs/tls.key
+        image: quay.io/app-sre/pod-logger@sha256:39ac045ca243a2adc6c3ea925bdf17085f69cb83293f3cd466ec23a25bab07b5 
         name: logger
         ports:
-        - containerPort: 8080
+        - containerPort: 8443
           name: logger
           protocol: TCP
         resources:
@@ -52,12 +58,14 @@ spec:
         volumeMounts:
         - mountPath: /secrets
           name: logger-secrets
+        - mountPath: /certs
+          name: logger-certs
       - env:
         - name: OO_PAUSE_ON_START
           value: "false"
         - name: SOCK
           value: "@rpc.pod.sock"
-        image: quay.io/app-sre/log-printer@sha256:af480dffcf9953f37c97f81bcc5429d371685c3194c10368264dff0f12189426
+        image: quay.io/app-sre/log-printer@sha256:625792b89721d1c4a88d54b44f3be395b398c9d93df53a75857fe178d8ff6fab 
         name: pod-printer
         resources:
           limits:
@@ -71,7 +79,7 @@ spec:
           value: "false"
         - name: SOCK
           value: "@rpc.scan.sock"
-        image: quay.io/app-sre/log-printer@sha256:af480dffcf9953f37c97f81bcc5429d371685c3194c10368264dff0f12189426
+        image: quay.io/app-sre/log-printer@sha256:625792b89721d1c4a88d54b44f3be395b398c9d93df53a75857fe178d8ff6fab 
         name: scan-printer
         resources:
           limits:
@@ -89,3 +97,6 @@ spec:
       - name: logger-secrets
         secret:
           secretName: logger-secrets
+      - name: logger-certs
+        secret:
+          secretName: loggerservice
