@@ -117,7 +117,8 @@ data:
         misscheduled_pods=`for ns in $@; do oc -n $ns get po -o go-template='{{range .items}}{{$isjob := index .metadata.labels "job-name"}}{{$namespace := .metadata.namespace}}{{$name := .metadata.name}}{{$affinity := .spec.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution }}{{if not $isjob}}{{if $affinity}}{{- $namespace }} | {{$name}} | {{$affinity}} | {{.spec.nodeName}} {{"\n" -}} {{end}}{{end}}{{end}}';done |grep "node-role.kubernetes.io/infra" |grep -vE ${infranodes_regexp}`
 
         if [ ! -z  "$misscheduled_pods" ]; then
-            while read line ; do cmd=`echo $line|awk -F'|' '{print "oc -n " $1 " delete po " $2}'`;echo "INFO: $cmd"; eval $cmd;done <<< "$misscheduled_pods"
+            # --ignore-not-found=true so that for STS clusters this doesn't fail when this can't find CIO or velero pods
+            while read line ; do cmd=`echo $line|awk -F'|' '{print "oc -n " $1 " delete po --ignore-not-found=true " $2}'`;echo "INFO: $cmd"; eval $cmd;done <<< "$misscheduled_pods"
         else
             echo "INFO: no misscheduled pods in openshift-* namespaces"
         fi
