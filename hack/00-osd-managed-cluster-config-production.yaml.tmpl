@@ -13304,19 +13304,6 @@ objects:
       apiVersion: rbac.authorization.k8s.io/v1
       metadata:
         name: osd-rebalance-infra-nodes-openshift-pod-rebalance
-        namespace: openshift-cloud-ingress-operator
-      subjects:
-      - kind: ServiceAccount
-        name: osd-rebalance-infra-nodes
-        namespace: openshift-monitoring
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: ClusterRole
-        name: osd-rebalance-infra-nodes-openshift-pod-rebalance
-    - kind: RoleBinding
-      apiVersion: rbac.authorization.k8s.io/v1
-      metadata:
-        name: osd-rebalance-infra-nodes-openshift-pod-rebalance
         namespace: openshift-custom-domains-operator
       subjects:
       - kind: ServiceAccount
@@ -13614,6 +13601,42 @@ objects:
                   configMap:
                     name: osd-rebalance-infra-nodes
                     defaultMode: 493
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-rebalance-infra-nodes-non-sts
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/sts
+        operator: NotIn
+        values:
+        - 'true'
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Upsert
+    resources:
+    - kind: RoleBinding
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        name: osd-rebalance-infra-nodes-openshift-pod-rebalance
+        namespace: openshift-cloud-ingress-operator
+      subjects:
+      - kind: ServiceAccount
+        name: osd-rebalance-infra-nodes
+        namespace: openshift-monitoring
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: osd-rebalance-infra-nodes-openshift-pod-rebalance
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
