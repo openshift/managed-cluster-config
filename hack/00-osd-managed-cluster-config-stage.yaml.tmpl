@@ -18337,6 +18337,15 @@ objects:
         - builds
         verbs:
         - delete
+      - apiGroups:
+        - rbac.authorization.k8s.io
+        resources:
+        - clusterrolebindings
+        verbs:
+        - list
+        - get
+        - delete
+        - deletecollection
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRoleBinding
       metadata:
@@ -18395,6 +18404,51 @@ objects:
                   - --keep-complete=1
                   - --keep-failed=1
                   - --confirm
+    - apiVersion: batch/v1beta1
+      kind: CronJob
+      metadata:
+        name: crb-pruner
+        namespace: openshift-sre-pruning
+      spec:
+        failedJobsHistoryLimit: 5
+        successfulJobsHistoryLimit: 3
+        concurrencyPolicy: Replace
+        schedule: 0 */1 * * *
+        jobTemplate:
+          spec:
+            template:
+              spec:
+                affinity:
+                  nodeAffinity:
+                    preferredDuringSchedulingIgnoredDuringExecution:
+                    - preference:
+                        matchExpressions:
+                        - key: node-role.kubernetes.io/infra
+                          operator: Exists
+                      weight: 1
+                tolerations:
+                - effect: NoSchedule
+                  key: node-role.kubernetes.io/infra
+                  operator: Exists
+                serviceAccountName: sre-pruner-sa
+                restartPolicy: Never
+                containers:
+                - name: crb-pruner
+                  image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+                  imagePullPolicy: Always
+                  command:
+                  - oc
+                  - delete
+                  - --ignore-not-found
+                  - --wait=false
+                  - clusterrolebinding.rbac.authorization.k8s.io/backplane-csa-readers-cluster-system:serviceaccounts:openshift-backplane-csa
+                  - clusterrolebinding.rbac.authorization.k8s.io/backplane-cse-readers-cluster-system:serviceaccounts:openshift-backplane-cse
+                  - clusterrolebinding.rbac.authorization.k8s.io/backplane-csm-readers-cluster-system:serviceaccounts:openshift-backplane-csm
+                  - clusterrolebinding.rbac.authorization.k8s.io/backplane-mobb-readers-cluster-system:serviceaccounts:openshift-backplane-mobb
+                  - clusterrolebinding.rbac.authorization.k8s.io/backplane-mtsre-addon-operator-admin-system:serviceaccounts:openshift-backplane-mtsre
+                  - clusterrolebinding.rbac.authorization.k8s.io/backplane-mtsre-readers-cluster-system:serviceaccounts:openshift-backplane-mtsre
+                  - clusterrolebinding.rbac.authorization.k8s.io/backplane-srep-readers-cluster-system:serviceaccounts:openshift-backplane-srep
+                  - clusterrolebinding.rbac.authorization.k8s.io/backplane-tam-readers-cluster-system:serviceaccounts:openshift-backplane-tam
     - apiVersion: batch/v1beta1
       kind: CronJob
       metadata:
