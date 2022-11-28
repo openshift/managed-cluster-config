@@ -7907,9 +7907,9 @@ objects:
           scale:\n  timeOut: 30\nupgradeWindow:\n  delayTrigger: 30\n  timeOut: 120\n\
           nodeDrain:\n  timeOut: 45\n  expectedNodeDrainTime: 8\nhealthCheck:\n  ignoredCriticals:\n\
           \  - DNSErrors05MinSRE\n  - MetricsClientSendFailingSRE\n  - UpgradeNodeScalingFailedSRE\n\
-          \  - UpgradeClusterCheckFailedSRE\n  - PruningCronjobErrorSRE\n  - PrometheusRuleFailures\n\
-          \  - CannotRetrieveUpdates\n  - FluentdNodeDown\n  # OSD-11927\n  - ClusterProxyCAExpiringSRE\n\
-          \  # https://bugzilla.redhat.com/show_bug.cgi?id=1986981\n  - PrometheusRemoteWriteBehind\n\
+          \  - PruningCronjobErrorSRE\n  - PrometheusRuleFailures\n  - CannotRetrieveUpdates\n\
+          \  - FluentdNodeDown\n  # OSD-11927\n  - ClusterProxyCAExpiringSRE\n  #\
+          \ https://bugzilla.redhat.com/show_bug.cgi?id=1986981\n  - PrometheusRemoteWriteBehind\n\
           \  - KubePersistentVolumeErrors\n  - PrometheusBadConfig\n  - PrometheusRemoteStorageFailures\n\
           \  - AlertmanagerMembersInconsistent\n  - AlertmanagerClusterFailedToSendAlerts\n\
           \  - AlertmanagerConfigInconsistent\n  - AlertmanagerClusterDown\n  - KubeStateMetricsListErrors\n\
@@ -17032,16 +17032,6 @@ objects:
             annotations:
               summary: Upgrade config validation failed
               description: Upgrade config validation failed
-          - alert: UpgradeClusterCheckFailedSRE
-            expr: avg_over_time(upgradeoperator_cluster_check_failed[10m]) == 1
-            for: 10m
-            labels:
-              severity: critical
-              namespace: openshift-monitoring
-            annotations:
-              summary: cluster check failed
-              description: basic cluster checks failed on either before the upgrade
-                or after the upgrade
           - alert: UpgradeControlPlaneUpgradeTimeoutSRE
             expr: avg_over_time(upgradeoperator_controlplane_timeout[10m]) == 1
             for: 10m
