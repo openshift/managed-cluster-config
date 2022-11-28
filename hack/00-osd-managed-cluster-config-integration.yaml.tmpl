@@ -8136,6 +8136,16 @@ objects:
             is required.
           severity: Info
           summary: ElasticSearch reaching disk capacity
+        - activeBody: 'Your cluster requires you to take action. SRE has observed
+            that there is more than one default Storage Class configured for your
+            cluster. Please specify one default storage class for your persistent
+            volume claims. Consult the documentation for details: https://docs.openshift.com/container-platform/latest/storage/understanding-persistent-storage.html#pvc-storage-class_understanding-persistent-storage'
+          name: MultipleDefaultStorageClasses
+          resendWait: 24
+          resolvedBody: Your cluster no longer has multiple default storage classes
+            defined. No further action is required.
+          severity: Info
+          summary: Multiple Default Storage Classes Configured
     - apiVersion: ocmagent.managed.openshift.io/v1alpha1
       kind: ManagedNotification
       metadata:
@@ -18157,6 +18167,15 @@ objects:
               namespace: openshift-logging
               send_managed_notification: 'true'
               managed_notification_template: LoggingVolumeFillingUp
+          - alert: MultipleDefaultStorageClassesNotificationSRE
+            expr: count(ALERTS{alertname="MultipleDefaultStorageClasses", alertstate="firing",
+              namespace="openshift-cluster-storage-operator"}) >= 1
+            for: 30m
+            labels:
+              severity: Info
+              namespace: openshift-cluster-storage-operator
+              send_managed_notification: 'true'
+              managed_notification_template: MultipleDefaultStorageClasses
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
