@@ -44,8 +44,6 @@
         "elasticloadbalancing:CreateListener",
         "elasticloadbalancing:CreateLoadBalancerListeners",
         "elasticloadbalancing:CreateTargetGroup",
-        "elasticloadbalancing:DeleteLoadBalancer",
-        "elasticloadbalancing:DeleteTargetGroup",
         "elasticloadbalancing:DeregisterInstancesFromLoadBalancer",
         "elasticloadbalancing:DeregisterTargets",
         "elasticloadbalancing:DescribeInstanceHealth",
@@ -111,7 +109,7 @@
         "arn:aws:ec2:*::image/ami-*"
       ],
       "Condition": {
-        "StringNotEquals": {
+        "StringEquals": {
           "ec2:Owner": [
             "aws-marketplace",
             "531415883065"
@@ -120,17 +118,33 @@
       }
     },
     {
-      "sid": "StartInstances",
-      "effect": "allow",
-      "action": [
+      "Sid": "DeleteLoadBalancer",
+      "Effect": "Allow",
+      "Action": [
+        "elasticloadbalancing:DeleteLoadBalancer",
+        "elasticloadbalancing:DeleteTargetGroup"
+      ],
+      "Resource": [
+        "*"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "elasticloadbalancing:ResourceTag/red-hat-managed": "true"
+        }
+      }
+    },
+    {
+      "Sid": "StartInstances",
+      "Effect": "Allow",
+      "Action": [
         "ec2:StartInstances"
       ],
-      "resource": [
+      "Resource": [
         "arn:aws:ec2:*:*:instance/*"
       ],
-      "condition": {
-        "stringequals": {
-          "aws:resourcetag/red-hat-managed": "true"
+      "Condition": {
+        "StringEquals": {
+          "aws:ResourceTag/red-hat-managed": "true"
         }
       }
     },
