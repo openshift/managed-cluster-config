@@ -6,14 +6,14 @@ Burn rates define the rate at which the SLO error budget is used.
 A burn rate of 1 means the complete error budget is used after the complete rolling window.
 ### Details
 In the basic implementation a couple of questions need to be asked:
-* How fast to we need to be alerted?
-* How much budget can we burn worst case until we're alerted?
+* How fast do we need to be alerted?
+* How much budget can we burn in worst case until we're alerted?
 * How fast do we want to recover?
 
 The combination of the first and the last question hints that we always want to be implementing at least a short
 and a long window.
 
-We want to avoid flapping alerts therefore a good time period to chose for a condition to exist
+We want to avoid flapping alerts therefore a good time period to choose for a condition to exist
 is 1h. We now combine that with the time to recover, which should in this case not exceed 5m
 This means that a condition has to exist for the last 1h **and** 5m.
 
@@ -106,7 +106,7 @@ and
 rate(metricsclient_request_send{status_code!="200"}[1h]) / rate(metricsclient_request_send[1h]) > 14.4 * 0.1
 ```
 
-You may notice how the results differ in the equasion, we need to compare the same on both sides;
+You may notice how the results differ in the equation, we need to compare the same on both sides;
 
 ```
 100 * rate(metricsclient_request_send{status_code!="200"}[5m]) / rate(metricsclient_request_send[5m]) > 14.4 * 0.1
