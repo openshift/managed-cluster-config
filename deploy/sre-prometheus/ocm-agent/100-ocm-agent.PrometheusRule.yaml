@@ -28,3 +28,12 @@ spec:
         namespace: openshift-cluster-storage-operator
         send_managed_notification: "true"
         managed_notification_template: "MultipleDefaultStorageClasses"
+    - alert: NonSystemChangeValidatingWebhookConfigurationsNotificationSRE
+    # splunkforwarder_audit_filter_exposed_splunk_event_total increased in the last 5 minutes
+      expr: rate(splunkforwarder_audit_filter_exposed_splunk_event_total{alert="NonSystemChangeValidationWebhookConfiguration"}[5m]) > 0
+      for: 1m
+      labels:
+        severity: Info
+        namespace: audit-exporter
+        send_managed_notification: "true"
+        managed_notification_template: "NonSystemChangeValidationWebhookConfigurations"
