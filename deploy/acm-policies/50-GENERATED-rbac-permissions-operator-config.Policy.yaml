@@ -1,0 +1,1022 @@
+---
+apiVersion: policy.open-cluster-management.io/v1
+kind: Policy
+metadata:
+    annotations:
+        policy.open-cluster-management.io/categories: CM Configuration Management
+        policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+        policy.open-cluster-management.io/standards: NIST SP 800-53
+    name: rbac-permissions-operator-config
+    namespace: openshift-rbac-policies
+spec:
+    disabled: false
+    policy-templates:
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+                name: rbac-permissions-operator-config
+            spec:
+                object-templates:
+                    - complianceType: musthave
+                      objectDefinition:
+                        apiVersion: v1
+                        kind: Namespace
+                        metadata:
+                            annotations:
+                                openshift.io/node-selector: ""
+                            name: dedicated-admin
+                    - complianceType: musthave
+                      objectDefinition:
+                        aggregationRule:
+                            clusterRoleSelectors:
+                                - matchExpressions:
+                                    - key: managed.openshift.io/aggregate-to-dedicated-admins
+                                      operator: In
+                                      values:
+                                        - cluster
+                                - matchExpressions:
+                                    - key: olm.owner.kind
+                                      operator: In
+                                      values:
+                                        - OperatorGroup
+                                    - key: olm.owner
+                                      operator: NotIn
+                                      values:
+                                        - openshift-cluster-monitoring
+                                        - olm-operators
+                                        - cloud-ingress-operator
+                                        - rbac-permissions-operator
+                                        - splunk-forwarder-operator-og
+                                        - redhat-layered-product-og
+                                        - addon-rhmi-og
+                                        - addon-rhmi-internal-og
+                                        - rhmi-registry-og
+                                        - addon-operator-og
+                                    - key: olm.owner.namespace
+                                      operator: NotIn
+                                      values:
+                                        - openshift-monitoring
+                                        - openshift-operator-lifecycle-manager
+                                        - openshift-cloud-ingress-operator
+                                        - openshift-rbac-permissions
+                                        - openshift-splunk-forwarder-operator
+                                        - openshift-managed-upgrade-operator
+                                        - openshift-velero
+                                        - openshift-ocm-agent-operator
+                                        - openshift-addon-operator
+                        apiVersion: rbac.authorization.k8s.io/v1
+                        kind: ClusterRole
+                        metadata:
+                            name: dedicated-admins-cluster
+                        rules: []
+                    - complianceType: musthave
+                      objectDefinition:
+                        aggregationRule:
+                            clusterRoleSelectors:
+                                - matchExpressions:
+                                    - key: managed.openshift.io/aggregate-to-dedicated-admins
+                                      operator: In
+                                      values:
+                                        - project
+                                - matchExpressions:
+                                    - key: rbac.authorization.k8s.io/aggregate-to-admin
+                                      operator: In
+                                      values:
+                                        - "true"
+                                - matchExpressions:
+                                    - key: olm.owner.kind
+                                      operator: In
+                                      values:
+                                        - OperatorGroup
+                                    - key: olm.owner.namespace
+                                      operator: NotIn
+                                      values:
+                                        - openshift-cloud-ingress-operator
+                                        - openshift-monitoring
+                                        - openshift-operator-lifecycle-manager
+                                        - openshift-rbac-permissions
+                                        - openshift-splunk-forwarder-operator
+                                        - openshift-velero
+                                        - openshift-managed-upgrade-operator
+                                        - openshift-ocm-agent-operator
+                        apiVersion: rbac.authorization.k8s.io/v1
+                        kind: ClusterRole
+                        metadata:
+                            name: dedicated-admins-project
+                        rules: []
+                    - complianceType: musthave
+                      objectDefinition:
+                        apiVersion: rbac.authorization.k8s.io/v1
+                        kind: ClusterRole
+                        metadata:
+                            labels:
+                                managed.openshift.io/aggregate-to-dedicated-admins: cluster
+                            name: dedicated-admins-aggregate-cluster
+                        rules:
+                            - apiGroups:
+                                - rbac.authorization.k8s.io
+                              attributeRestrictions: null
+                              resources:
+                                - clusterroles
+                                - clusterrolebindings
+                              verbs:
+                                - create
+                                - delete
+                                - get
+                                - list
+                                - patch
+                                - update
+                                - watch
+                            - apiGroups:
+                                - ""
+                                - oauth.openshift.io
+                              attributeRestrictions: null
+                              resources:
+                                - oauthclientauthorizations
+                              verbs:
+                                - delete
+                                - get
+                                - list
+                                - watch
+                            - apiGroups:
+                                - ""
+                                - authorization.openshift.io
+                              attributeRestrictions: null
+                              resources:
+                                - resourceaccessreviews
+                                - subjectaccessreviews
+                              verbs:
+                                - create
+                            - apiGroups:
+                                - authorization.k8s.io
+                              attributeRestrictions: null
+                              resources:
+                                - subjectaccessreviews
+                                - selfsubjectaccessreviews
+                              verbs:
+                                - create
+                            - apiGroups:
+                                - ""
+                                - project.openshift.io
+                              attributeRestrictions: null
+                              resources:
+                                - projectrequests
+                              verbs:
+                                - create
+                            - apiGroups:
+                                - ""
+                                - security.openshift.io
+                              attributeRestrictions: null
+                              resources:
+                                - securitycontextconstraints
+                              verbs:
+                                - get
+                                - list
+                                - watch
+                            - apiGroups:
+                                - ""
+                                - network.openshift.io
+                              attributeRestrictions: null
+                              resources:
+                                - netnamespaces
+                              verbs:
+                                - get
+                                - list
+                                - update
+                            - apiGroups:
+                                - route.openshift.io
+                              resources:
+                                - routers/metrics
+                              verbs:
+                                - get
+                            - apiGroups:
+                                - ""
+                              resources:
+                                - namespaces
+                              verbs:
+                                - get
+                                - list
+                                - update
+                                - patch
+                            - apiGroups:
+                                - build.openshift.io
+                              resources:
+                                - builds
+                                - buildconfigs
+                              verbs:
+                                - list
+                            - apiGroups:
+                                - apps
+                              resources:
+                                - daemonsets
+                                - deployments
+                                - replicasets
+                                - statefulsets
+                              verbs:
+                                - list
+                            - apiGroups:
+                                - apps.openshift.io
+                              resources:
+                                - deploymentconfigs
+                              verbs:
+                                - list
+                            - apiGroups:
+                                - ""
+                              resources:
+                                - pods
+                                - replicationcontrollers
+                                - services
+                              verbs:
+                                - list
+                                - get
+                                - watch
+                            - apiGroups:
+                                - project.openshift.io
+                              resources:
+                                - projects
+                              verbs:
+                                - get
+                            - apiGroups:
+                                - route.openshift.io
+                              resources:
+                                - routes
+                              verbs:
+                                - list
+                                - get
+                            - apiGroups:
+                                - authentication.k8s.io
+                              resources:
+                                - tokenreviews
+                              verbs:
+                                - create
+                            - apiGroups:
+                                - authorization.k8s.io
+                              resources:
+                                - subjectaccessreviews
+                              verbs:
+                                - create
+                            - apiGroups:
+                                - operators.coreos.com
+                                - packages.operators.coreos.com
+                              resources:
+                                - '*'
+                              verbs:
+                                - list
+                                - get
+                                - watch
+                            - apiGroups:
+                                - '*'
+                              resources:
+                                - packagemanifests
+                              verbs:
+                                - list
+                            - apiGroups:
+                                - certificates.certmanager.k8s.io
+                                - issuers.certmanager.k8s.io
+                                - clusterissuers.certmanager.k8s.io
+                                - orders.certmanager.k8s.io
+                                - challenges.certmanager.k8s.io
+                                - anchoreengines.anchore.com
+                                - atlasmaps.atlasmap.io
+                                - builds.camel.apache.org
+                                - camelcatalogs.camel.apache.org
+                                - integrations.camel.apache.org
+                                - integrationcontexts.camel.apache.org
+                                - integrationplatforms.camel.apache.org
+                                - couchbaseclusters.couchbase.com
+                                - openliberties.openliberty.io
+                                - opsmxspinnakeroperators.charts.helm.k8s.io
+                                - seldondeployments.machinelearning.seldon.io
+                                - spinnakeroperators.charts.helm.k8s.io
+                                - twistlockconsoles.charts.helm.k8s.io
+                                - tekton.dev
+                              resources:
+                                - '*'
+                              verbs:
+                                - '*'
+                            - apiGroups:
+                                - user.openshift.io
+                              resources:
+                                - groups
+                                - identities
+                                - users
+                              verbs:
+                                - get
+                                - list
+                                - update
+                                - patch
+                                - create
+                                - delete
+                            - apiGroups:
+                                - user.openshift.io
+                              resources:
+                                - useridentitymappings
+                              verbs:
+                                - '*'
+                            - apiGroups:
+                                - operator.openshift.io
+                              resourceNames:
+                                - default
+                              resources:
+                                - dnses
+                              verbs:
+                                - get
+                                - list
+                                - patch
+                                - update
+                                - watch
+                            - apiGroups:
+                                - ""
+                                - image.openshift.io
+                              attributeRestrictions: null
+                              resources:
+                                - images
+                                - imagestreamtags
+                              verbs:
+                                - get
+                                - list
+                                - watch
+                            - apiGroups:
+                                - security.openshift.io
+                              resourceNames:
+                                - anyuid
+                                - nonroot
+                              resources:
+                                - securitycontextconstraints
+                              verbs:
+                                - use
+                            - apiGroups:
+                                - config.openshift.io
+                              resources:
+                                - projects
+                              verbs:
+                                - get
+                                - list
+                                - patch
+                                - update
+                                - watch
+                            - apiGroups:
+                                - machine.openshift.io
+                              resources:
+                                - machines
+                                - machinesets
+                              verbs:
+                                - get
+                                - list
+                                - watch
+                            - apiGroups:
+                                - quota.openshift.io
+                              resources:
+                                - clusterresourcequotas
+                              verbs:
+                                - '*'
+                            - apiGroups:
+                                - apiserver.openshift.io
+                              resources:
+                                - apirequestcounts
+                              verbs:
+                                - get
+                                - list
+                                - watch
+                            - apiGroups:
+                                - console.openshift.io
+                              resources:
+                                - consoleplugins
+                              verbs:
+                                - create
+                                - delete
+                                - patch
+                                - update
+                            - apiGroups:
+                                - operator.openshift.io
+                              resources:
+                                - consoles
+                              verbs:
+                                - patch
+                                - update
+                    - complianceType: musthave
+                      objectDefinition:
+                        apiVersion: rbac.authorization.k8s.io/v1
+                        kind: ClusterRole
+                        metadata:
+                            labels:
+                                managed.openshift.io/aggregate-to-dedicated-admins: project
+                            name: dedicated-admins-aggregate-project
+                        rules:
+                            - apiGroups:
+                                - ""
+                              attributeRestrictions: null
+                              resources:
+                                - limitranges
+                                - resourcequotas
+                              verbs:
+                                - create
+                                - delete
+                                - get
+                                - list
+                                - patch
+                                - update
+                                - watch
+                            - apiGroups:
+                                - ""
+                                - network.openshift.io
+                              attributeRestrictions: null
+                              resources:
+                                - egressnetworkpolicies
+                              verbs:
+                                - create
+                                - delete
+                                - get
+                                - list
+                                - patch
+                                - update
+                                - watch
+                            - apiGroups:
+                                - extensions
+                              attributeRestrictions: null
+                              resources:
+                                - daemonsets
+                              verbs:
+                                - create
+                                - delete
+                                - get
+                                - list
+                                - patch
+                                - update
+                                - watch
+                            - apiGroups:
+                                - rbac.authorization.k8s.io
+                              attributeRestrictions: null
+                              resources:
+                                - clusterrolebindings
+                                - rolebindings
+                              verbs:
+                                - create
+                                - delete
+                                - get
+                                - list
+                                - patch
+                                - update
+                                - watch
+                            - apiGroups:
+                                - ""
+                              attributeRestrictions: null
+                              resources:
+                                - events
+                                - namespaces
+                                - pods
+                              verbs:
+                                - get
+                                - list
+                                - watch
+                            - apiGroups:
+                                - ""
+                                - network.openshift.io
+                              attributeRestrictions: null
+                              resources:
+                                - clusternetworks
+                              verbs:
+                                - get
+                                - list
+                                - watch
+                            - apiGroups:
+                                - ""
+                                - image.openshift.io
+                              attributeRestrictions: null
+                              resources:
+                                - images
+                                - imagestreamtags
+                              verbs:
+                                - get
+                                - list
+                                - watch
+                            - apiGroups:
+                                - ""
+                                - build.openshift.io
+                              attributeRestrictions: null
+                              resources:
+                                - buildconfigs
+                                - builds
+                              verbs:
+                                - get
+                                - list
+                                - watch
+                            - apiGroups:
+                                - monitoring.coreos.com
+                              resources:
+                                - alertmanagers
+                              verbs:
+                                - '*'
+                            - apiGroups:
+                                - monitoring.coreos.com
+                              resources:
+                                - prometheuses
+                                - prometheusrules
+                                - servicemonitors
+                                - podmonitors
+                                - thanosrulers
+                              verbs:
+                                - '*'
+                            - apiGroups:
+                                - kafka.strimzi.io
+                              resources:
+                                - '*'
+                              verbs:
+                                - create
+                                - delete
+                                - get
+                                - list
+                                - patch
+                                - update
+                                - watch
+                            - apiGroups:
+                                - apiextensions.k8s.io
+                              resources:
+                                - customresourcedefinitions
+                              verbs:
+                                - get
+                                - list
+                                - watch
+                            - apiGroups:
+                                - prow.k8s.io
+                              resources:
+                                - prowjobs
+                              verbs:
+                                - '*'
+                            - apiGroups:
+                                - ""
+                              resources:
+                                - events
+                              verbs:
+                                - create
+                            - apiGroups:
+                                - metering.openshift.io
+                              resources:
+                                - reports/export
+                              verbs:
+                                - '*'
+                            - apiGroups:
+                                - coordination.k8s.io
+                              resources:
+                                - leases
+                              verbs:
+                                - '*'
+                    - complianceType: musthave
+                      objectDefinition:
+                        aggregationRule:
+                            clusterRoleSelectors:
+                                - matchExpressions:
+                                    - key: rbac.authorization.k8s.io/aggregate-to-view
+                                      operator: In
+                                      values:
+                                        - "true"
+                                - matchExpressions:
+                                    - key: managed.openshift.io/aggregate-to-dedicated-readers
+                                      operator: In
+                                      values:
+                                        - "true"
+                        apiVersion: rbac.authorization.k8s.io/v1
+                        kind: ClusterRole
+                        metadata:
+                            labels:
+                                managed.openshift.io/aggregate-to-dedicated-admins: cluster
+                            name: dedicated-readers
+                        rules: []
+                    - complianceType: musthave
+                      objectDefinition:
+                        apiVersion: rbac.authorization.k8s.io/v1
+                        kind: ClusterRole
+                        metadata:
+                            labels:
+                                managed.openshift.io/aggregate-to-dedicated-readers: "true"
+                            name: osd-readers-aggregate
+                        rules:
+                            - apiGroups:
+                                - ""
+                              attributeRestrictions: null
+                              resources:
+                                - nodes
+                                - persistentvolumes
+                              verbs:
+                                - get
+                                - list
+                                - watch
+                            - apiGroups:
+                                - ""
+                                - quota.openshift.io
+                              attributeRestrictions: null
+                              resources:
+                                - clusterresourcequotas
+                              verbs:
+                                - get
+                                - list
+                                - watch
+                            - apiGroups:
+                                - ""
+                                - authorization.openshift.io
+                              attributeRestrictions: null
+                              resources:
+                                - clusterpolicybindings
+                              verbs:
+                                - get
+                                - list
+                            - apiGroups:
+                                - metrics.k8s.io
+                              resources:
+                                - nodes
+                                - pods
+                              verbs:
+                                - list
+                            - apiGroups:
+                                - coordination.k8s.io
+                              resources:
+                                - leases
+                              verbs:
+                                - get
+                            - apiGroups:
+                                - admissionregistration.k8s.io
+                              resources:
+                                - '*'
+                              verbs:
+                                - get
+                                - list
+                                - watch
+                            - apiGroups:
+                                - apiextensions.k8s.io
+                              resources:
+                                - customresourcedefinitions
+                              verbs:
+                                - get
+                                - list
+                                - watch
+                            - apiGroups:
+                                - apiregistration.k8s.io
+                              resources:
+                                - apiservices
+                              verbs:
+                                - get
+                                - list
+                                - watch
+                            - apiGroups:
+                                - authentication.k8s.io
+                              resources:
+                                - tokenreviews
+                              verbs:
+                                - get
+                                - list
+                                - watch
+                            - apiGroups:
+                                - authorization.openshift.io
+                              resources:
+                                - clusterrolebindings
+                                - clusterroles
+                              verbs:
+                                - get
+                                - list
+                                - watch
+                            - apiGroups:
+                                - autoscaling.openshift.io
+                              resources:
+                                - clusterautoscalers
+                              verbs:
+                                - get
+                                - list
+                                - watch
+                            - apiGroups:
+                                - config.openshift.io
+                              resources:
+                                - '*'
+                              verbs:
+                                - get
+                                - list
+                                - watch
+                            - apiGroups:
+                                - console.openshift.io
+                              resources:
+                                - '*'
+                              verbs:
+                                - get
+                                - list
+                                - watch
+                            - apiGroups:
+                                - flowcontrol.apiserver.k8s.io
+                              resources:
+                                - '*'
+                              verbs:
+                                - get
+                                - list
+                                - watch
+                            - apiGroups:
+                                - image.openshift.io
+                              resources:
+                                - images
+                                - imagesignatures
+                              verbs:
+                                - get
+                                - list
+                                - watch
+                            - apiGroups:
+                                - imageregistry.operator.openshift.io
+                              resources:
+                                - '*'
+                              verbs:
+                                - get
+                                - list
+                                - watch
+                            - apiGroups:
+                                - metal3.io
+                              resources:
+                                - provisionings
+                              verbs:
+                                - get
+                                - list
+                                - watch
+                            - apiGroups:
+                                - migration.k8s.io
+                              resources:
+                                - '*'
+                              verbs:
+                                - get
+                                - list
+                                - watch
+                            - apiGroups:
+                                - network.openshift.io
+                              resources:
+                                - clusternetworks
+                                - hostsubnets
+                                - netnamespaces
+                              verbs:
+                                - get
+                                - list
+                                - watch
+                            - apiGroups:
+                                - networking.k8s.io
+                              resources:
+                                - ingressclasses
+                              verbs:
+                                - get
+                                - list
+                                - watch
+                            - apiGroups:
+                                - node.k8s.io
+                              resources:
+                                - runtimeclasses
+                              verbs:
+                                - get
+                                - list
+                                - watch
+                            - apiGroups:
+                                - operator.openshift.io
+                              resources:
+                                - '*'
+                              verbs:
+                                - get
+                                - list
+                                - watch
+                            - apiGroups:
+                                - policy
+                              resources:
+                                - podsecuritypolicies
+                              verbs:
+                                - get
+                                - list
+                                - watch
+                            - apiGroups:
+                                - project.openshift.io
+                              resources:
+                                - projectrequests
+                              verbs:
+                                - get
+                                - list
+                                - watch
+                            - apiGroups:
+                                - rbac.authorization.k8s.io
+                              resources:
+                                - clusterroles
+                                - clusterrolebindings
+                              verbs:
+                                - get
+                                - list
+                                - watch
+                            - apiGroups:
+                                - samples.operator.openshift.io
+                              resources:
+                                - configs
+                              verbs:
+                                - get
+                                - list
+                                - watch
+                            - apiGroups:
+                                - scheduling.k8s.io
+                              resources:
+                                - priorityclasses
+                              verbs:
+                                - get
+                                - list
+                                - watch
+                            - apiGroups:
+                                - security.openshift.io
+                              resources:
+                                - securitycontextconstraints
+                                - rangeallocations
+                              verbs:
+                                - get
+                                - list
+                                - watch
+                            - apiGroups:
+                                - snapshot.storage.k8s.io
+                              resources:
+                                - volumesnapshotcontents
+                                - volumesnapshotclasses
+                              verbs:
+                                - get
+                                - list
+                                - watch
+                            - apiGroups:
+                                - storage.k8s.io
+                              resources:
+                                - storageclasses
+                                - volumeattachments
+                                - csinodes
+                                - csidrivers
+                              verbs:
+                                - get
+                                - list
+                                - watch
+                            - apiGroups:
+                                - template.openshift.io
+                              resources:
+                                - brokertemplateinstances
+                              verbs:
+                                - get
+                                - list
+                                - watch
+                            - apiGroups:
+                                - user.openshift.io
+                              resources:
+                                - groups
+                                - identities
+                                - users
+                              verbs:
+                                - get
+                                - list
+                                - watch
+                            - apiGroups:
+                                - operators.coreos.com
+                              resources:
+                                - operators
+                              verbs:
+                                - get
+                                - list
+                                - watch
+                    - complianceType: musthave
+                      objectDefinition:
+                        apiVersion: rbac.authorization.k8s.io/v1
+                        kind: ClusterRoleBinding
+                        metadata:
+                            name: dedicated-admins-cluster
+                        roleRef:
+                            apiGroup: rbac.authorization.k8s.io
+                            kind: ClusterRole
+                            name: dedicated-admins-cluster
+                        subjects:
+                            - kind: Group
+                              name: dedicated-admins
+                            - kind: Group
+                              name: system:serviceaccounts:dedicated-admin
+                    - complianceType: musthave
+                      objectDefinition:
+                        apiVersion: rbac.authorization.k8s.io/v1
+                        kind: Role
+                        metadata:
+                            name: dedicated-admins-openshift-operators
+                            namespace: openshift-operators
+                        rules:
+                            - apiGroups:
+                                - operators.coreos.com
+                              resources:
+                                - installplans
+                                - subscriptions
+                                - clusterserviceversions
+                              verbs:
+                                - '*'
+                            - apiGroups:
+                                - ""
+                              resources:
+                                - events
+                              verbs:
+                                - list
+                                - get
+                                - watch
+                    - complianceType: musthave
+                      objectDefinition:
+                        apiVersion: rbac.authorization.k8s.io/v1
+                        kind: RoleBinding
+                        metadata:
+                            name: dedicated-admins-openshift-operators
+                            namespace: openshift-operators
+                        roleRef:
+                            apiGroup: rbac.authorization.k8s.io
+                            kind: Role
+                            name: dedicated-admins-openshift-operators
+                        subjects:
+                            - apiGroup: rbac.authorization.k8s.io
+                              kind: Group
+                              name: dedicated-admins
+                            - kind: Group
+                              name: system:serviceaccounts:dedicated-admin
+                    - complianceType: musthave
+                      objectDefinition:
+                        apiVersion: rbac.authorization.k8s.io/v1
+                        kind: Role
+                        metadata:
+                            name: dedicated-admins-openshift-marketplace
+                            namespace: openshift-marketplace
+                        rules:
+                            - apiGroups:
+                                - operators.coreos.com
+                              resources:
+                                - catalogsources
+                              verbs:
+                                - '*'
+                    - complianceType: musthave
+                      objectDefinition:
+                        apiVersion: rbac.authorization.k8s.io/v1
+                        kind: RoleBinding
+                        metadata:
+                            name: dedicated-admins-openshift-marketplace
+                            namespace: openshift-marketplace
+                        roleRef:
+                            apiGroup: rbac.authorization.k8s.io
+                            kind: Role
+                            name: dedicated-admins-openshift-marketplace
+                        subjects:
+                            - apiGroup: rbac.authorization.k8s.io
+                              kind: Group
+                              name: dedicated-admins
+                            - kind: Group
+                              name: system:serviceaccounts:dedicated-admin
+                    - complianceType: musthave
+                      objectDefinition:
+                        apiVersion: rbac.authorization.k8s.io/v1
+                        kind: Role
+                        metadata:
+                            name: dedicated-admins-openshift-dns
+                            namespace: openshift-dns
+                        rules:
+                            - apiGroups:
+                                - ""
+                              resources:
+                                - configmaps
+                              verbs:
+                                - list
+                                - get
+                                - watch
+                    - complianceType: musthave
+                      objectDefinition:
+                        apiVersion: rbac.authorization.k8s.io/v1
+                        kind: RoleBinding
+                        metadata:
+                            name: dedicated-admins-openshift-dns
+                            namespace: openshift-dns
+                        roleRef:
+                            apiGroup: rbac.authorization.k8s.io
+                            kind: Role
+                            name: dedicated-admins-openshift-dns
+                        subjects:
+                            - apiGroup: rbac.authorization.k8s.io
+                              kind: Group
+                              name: dedicated-admins
+                            - kind: Group
+                              name: system:serviceaccounts:dedicated-admin
+                pruneObjectBehavior: DeleteIfCreated
+                remediationAction: enforce
+                severity: low
+---
+apiVersion: apps.open-cluster-management.io/v1
+kind: PlacementRule
+metadata:
+    name: placement-rbac-permissions-operator-config
+    namespace: openshift-rbac-policies
+spec:
+    clusterSelector:
+        matchExpressions:
+            - key: hypershift.open-cluster-management.io/hosted-cluster
+              operator: In
+              values:
+                - "true"
+---
+apiVersion: policy.open-cluster-management.io/v1
+kind: PlacementBinding
+metadata:
+    name: binding-rbac-permissions-operator-config
+    namespace: openshift-rbac-policies
+placementRef:
+    apiGroup: apps.open-cluster-management.io
+    kind: PlacementRule
+    name: placement-rbac-permissions-operator-config
+subjects:
+    - apiGroup: policy.open-cluster-management.io
+      kind: Policy
+      name: rbac-permissions-operator-config

@@ -3,10 +3,10 @@
 import oyaml as yaml
 import shutil
 import os
-import sys
 
 #an array of directories you want to generate policies for. Please make sure ONLY the directories you want exist here. if there's entries here, delete it and add yours.
-directory = ['./deploy/rbac-permissions-operator-config',
+directory = [
+        './deploy/rbac-permissions-operator-config',
         './deploy/osd-cluster-admin'
         ]
 policy_generator_config = './scripts/policy-generator-config.yaml'
