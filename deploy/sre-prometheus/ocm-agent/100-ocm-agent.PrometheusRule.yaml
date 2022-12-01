@@ -29,10 +29,12 @@ spec:
         send_managed_notification: "true"
         managed_notification_template: "MultipleDefaultStorageClasses"
     - alert: NonSystemChangeValidatingWebhookConfigurationsNotificationSRE
-    # splunkforwarder_audit_filter_exposed_splunk_event_total is a counter that starts at 1. Therefore, we cannot use increase()
-    # We don't care about the increased value either, we only care if it increased.
-    # Thererfore, we use sum up the changes of all matching metrics. A freshly created metric starting at 1 is considered a change.
-      expr: sum(changes(splunkforwarder_audit_filter_exposed_splunk_event_total{alert="NonSystemChangeValidationWebhookConfiguration"}[5m])) > 0
+    # splunkforwarder_audit_filter_exposed_splunk_event_total is a counter that starts at 1. 
+    # We cannot use increase(), as there is no increase from 0 to 1. 
+    # See https://github.com/prometheus/prometheus/issues/1673
+    # Therefore, we use the difference between two 5 minute timeslots (and fill up with 0 in case there is no metric)
+    # to check if the value increased
+      expr: sum(max_over_time(splunkforwarder_audit_filter_exposed_splunk_event_total{alert="NonSystemChangeValidationWebhookConfiguration"}[5m]) or vector(0)) - sum(max_over_time(splunkforwarder_audit_filter_exposed_splunk_event_total{alert="NonSystemChangeValidationWebhookConfiguration"}[5m] offset 5m) or vector(0)) > 0
       for: 1m
       labels:
         severity: Info
