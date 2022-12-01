@@ -71,12 +71,6 @@
         "iam:ListUserPolicies",
         "iam:ListUsers",
         "iam:SimulatePrincipalPolicy",
-        "iam:TagRole",
-        "iam:UntagRole",
-        "route53:ChangeResourceRecordSets",
-        "route53:ChangeTagsForResource",
-        "route53:CreateHostedZone",
-        "route53:DeleteHostedZone",
         "route53:GetChange",
         "route53:GetHostedZone",
         "route53:ListHostedZones",
@@ -111,7 +105,6 @@
       "Condition": {
         "StringEquals": {
           "ec2:Owner": [
-            "aws-marketplace",
             "531415883065"
           ]
         }
@@ -237,6 +230,31 @@
       "Resource": [
         "arn:aws:ec2:*:*:security-group/*"
       ]
+    },
+    {
+      "Sid": "Route53Manage",
+      "Effect": "Allow",
+      "Action": [
+        "route53:ChangeResourceRecordSets",
+        "route53:ChangeTagsForResource",
+        "route53:CreateHostedZone",
+        "route53:DeleteHostedZone",
+        "route53:UpdateHostedZoneComment"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "Route53ManageRecords",
+      "Effect": "Allow",
+      "Action": [
+        "route53:ChangeResourceRecordSets"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "ForAllValues:StringLike": {
+          "route53:ChangeResourceRecordSetsNormalizedRecordNames": ["*.openshiftapps.com", "*.devshift.org"]
+        }
+      }
     }
   ]
 }
