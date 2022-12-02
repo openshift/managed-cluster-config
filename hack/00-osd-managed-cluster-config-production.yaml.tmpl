@@ -20048,7 +20048,7 @@ objects:
       metadata:
         name: sre-pruner-sa
         namespace: openshift-sre-pruning
-    - apiVersion: batch/v1beta1
+    - apiVersion: batch/v1
       kind: CronJob
       metadata:
         name: builds-pruner
@@ -20089,7 +20089,16 @@ objects:
                   - --keep-complete=1
                   - --keep-failed=1
                   - --confirm
-    - apiVersion: batch/v1beta1
+                  securityContext:
+                    allowPrivilegeEscalation: false
+                    capabilities:
+                      drop:
+                      - ALL
+                securityContext:
+                  runAsNonRoot: true
+                  seccompProfile:
+                    type: RuntimeDefault
+    - apiVersion: batch/v1
       kind: CronJob
       metadata:
         name: deployments-pruner
@@ -20130,6 +20139,15 @@ objects:
                   - --keep-younger-than=24h
                   - --keep-failed=1
                   - --confirm
+                  securityContext:
+                    allowPrivilegeEscalation: false
+                    capabilities:
+                      drop:
+                      - ALL
+                securityContext:
+                  runAsNonRoot: true
+                  seccompProfile:
+                    type: RuntimeDefault
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
