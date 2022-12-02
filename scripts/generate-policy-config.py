@@ -12,7 +12,11 @@ directories = [
         'rbac-permissions-operator-config',
         'osd-cluster-admin',
         'backplane',
-        'backplane/srep'
+        'backplane/srep',
+        'ccs-dedicated-admins',
+        'customer-registry-cas',
+        'osd-openshift-operators-redhat',
+        'osd-pcap-collector',
         ]
 policy_generator_config = './scripts/policy-generator-config.yaml'
 config_filename = "config.yaml"
