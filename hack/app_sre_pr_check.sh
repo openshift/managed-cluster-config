@@ -40,7 +40,7 @@ do
 done
 
 # check if roleref has been modified in a clusterrolebinding/rolebinding as a part of this change
-for fl in $( git diff --name-only --diff-filter=M  origin/master deploy )
+for fl in $( git diff --name-only --diff-filter=M  origin/master deploy ':!deploy/acm-policies/50-GENERATED-*' )
 do
   if cat ${fl} | grep -i "RoleBinding" | grep -q "kind:" ; then
     ROLEREF_MASTER=$(git show origin/master:${fl} | python -c 'import json, sys, yaml ; y=yaml.safe_load(sys.stdin.read()) ; print(json.dumps(y))' | jq -r '.roleRef' )
@@ -53,5 +53,5 @@ do
   fi
 done
 
-# script needs to pass for app-sre workflow 
+# script needs to pass for app-sre workflow
 exit 0
