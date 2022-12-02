@@ -8876,7 +8876,7 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: ClusterRole
         name: bz1980755
-    - apiVersion: batch/v1beta1
+    - apiVersion: batch/v1
       kind: CronJob
       metadata:
         name: bz1980755
@@ -8888,6 +8888,7 @@ objects:
         schedule: 25 3 * * *
         jobTemplate:
           spec:
+            ttlSecondsAfterFinished: 86400
             template:
               spec:
                 affinity:
@@ -12818,7 +12819,7 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: ClusterRole
         name: osd-patch-subscription-source
-    - apiVersion: batch/v1beta1
+    - apiVersion: batch/v1
       kind: CronJob
       metadata:
         name: osd-patch-subscription-source
@@ -12830,6 +12831,7 @@ objects:
         schedule: 0 */1 * * *
         jobTemplate:
           spec:
+            ttlSecondsAfterFinished: 86400
             template:
               spec:
                 affinity:
@@ -13594,7 +13596,7 @@ objects:
       - kind: ServiceAccount
         name: osd-backplane
         namespace: openshift-backplane-managed-scripts
-    - apiVersion: batch/v1beta1
+    - apiVersion: batch/v1
       kind: CronJob
       metadata:
         name: osd-delete-backplane-script-resources
@@ -13606,6 +13608,7 @@ objects:
         schedule: 42 0 * * *
         jobTemplate:
           spec:
+            ttlSecondsAfterFinished: 86400
             template:
               spec:
                 affinity:
@@ -13640,7 +13643,7 @@ objects:
                     \ -n $NS --selector $LABEL -o custom-columns=NAME:.metadata.name\
                     \ --no-headers)\n\n# Format: role_name role_ns\nROLES=$(oc get\
                     \ role -A --selector $LABEL -o custom-columns=NAME:.metadata.name,NS:.metadata.namespace\
-                    \ --no-headers) \n\n# Format: rolebinding_name rolebinding_ns\n\
+                    \ --no-headers)\n\n# Format: rolebinding_name rolebinding_ns\n\
                     ROLEBINDINGS=$(oc get rolebinding -A --selector $LABEL -o custom-columns=NAME:.metadata.name,NS:.metadata.namespace\
                     \ --no-headers)\n\n# Format: clusterrole_name\nCROLES=$(oc get\
                     \ clusterrole --selector $LABEL -o custom-columns=NAME:.metadata.name\
@@ -13650,7 +13653,7 @@ objects:
                     \ delete.\n# - Current running pods and related resources.\n#\
                     \ - pods created within THRESHOLD_PERIOD and related resouces.\n\
                     PODS_TO_KEEP=$(awk -v before=$DEL_ONLY_BEFORE \\\n  '{\n  if($2\
-                    \ ~ /Running/){print $1} \n  else{cmd = sprintf(\"date +\\\"%%s\\\
+                    \ ~ /Running/){print $1}\n  else{cmd = sprintf(\"date +\\\"%%s\\\
                     \" --date=%s\", $3); cmd|getline unix_sec; close(cmd); if(unix_sec+0\
                     \ > before+0){print $1}}\n  }' \\\n  <<< \"$PODS\")\n\nPODS_TO_DEL=$(awk\
                     \ '{print $1}' <<< \"$PODS\")\n\nfor pod in $PODS_TO_KEEP\ndo\n\
@@ -13736,7 +13739,7 @@ objects:
           namespacesAllowedRegex: (^openshift-backplane-.*)
         subjectKind: User
         subjectName: system:serviceaccount:openshift-backplane:osd-delete-backplane-serviceaccounts
-    - apiVersion: batch/v1beta1
+    - apiVersion: batch/v1
       kind: CronJob
       metadata:
         name: osd-delete-backplane-serviceaccounts
@@ -13748,6 +13751,7 @@ objects:
         schedule: '*/10 * * * *'
         jobTemplate:
           spec:
+            ttlSecondsAfterFinished: 86400
             template:
               spec:
                 affinity:
@@ -13779,7 +13783,7 @@ objects:
                     \ +%s);\n      expiryMins=$(oc get sa $sa -n $ns -o jsonpath='{.metadata.annotations.managed\\\
                     .openshift\\.io/backplane-expiry-duration}');\n      if [[ $(expr\
                     \ $((now-creation)) \\> ${expiryMins:=720} \\* 60) == 1 ]]; then\n\
-                    \        oc delete sa $sa -n $ns\n      fi\n    done;\ndone;"
+                    \        oc delete sa $sa -n $ns\n      fi\n    done;\ndone;\n"
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -15783,7 +15787,7 @@ objects:
           \ openshift-network-operator openshift-ocm-agent-operator openshift-osd-metrics\
           \ openshift-rbac-permissions openshift-route-monitor-operator openshift-splunk-forwarder-operator\
           \ openshift-velero"
-    - apiVersion: batch/v1beta1
+    - apiVersion: batch/v1
       kind: CronJob
       metadata:
         name: osd-rebalance-infra-nodes
@@ -15795,6 +15799,7 @@ objects:
         schedule: '*/15 * * * *'
         jobTemplate:
           spec:
+            ttlSecondsAfterFinished: 86400
             template:
               spec:
                 affinity:
@@ -16723,7 +16728,7 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: ClusterRole
         name: osd-delete-ownerrefs-serviceaccounts
-    - apiVersion: batch/v1beta1
+    - apiVersion: batch/v1
       kind: CronJob
       metadata:
         name: osd-delete-ownerrefs-serviceaccounts
@@ -18706,7 +18711,7 @@ objects:
         verbs:
         - list
         - delete
-    - apiVersion: batch/v1beta1
+    - apiVersion: batch/v1
       kind: CronJob
       metadata:
         name: sre-build-test
@@ -20447,6 +20452,7 @@ objects:
         schedule: 0 */1 * * *
         jobTemplate:
           spec:
+            ttlSecondsAfterFinished: 86400
             template:
               spec:
                 affinity:
@@ -20497,6 +20503,7 @@ objects:
         schedule: 0 */1 * * *
         jobTemplate:
           spec:
+            ttlSecondsAfterFinished: 86400
             template:
               spec:
                 affinity:
