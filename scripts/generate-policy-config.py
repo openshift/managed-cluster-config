@@ -8,7 +8,15 @@ import os
 directory = [
         './deploy/rbac-permissions-operator-config',
         './deploy/osd-cluster-admin',
-        './deploy/backplane'
+        './deploy/backplane',
+        './deploy/backplane/cee',
+        './deploy/backplane/csa',
+        './deploy/backplane/cse',
+        './deploy/backplane/csm',
+        './deploy/backplane/elevated-sre',
+        './deploy/backplane/mobb',
+        './deploy/backplane/srep',
+        './deploy/backplane/tam'
         ]
 policy_generator_config = './scripts/policy-generator-config.yaml'
 config_filename = "config.yaml"
