@@ -35,7 +35,7 @@ ifeq ($(CONTAINER_ENGINE),)
 OC := oc --dry-run=true --kubeconfig=.kubeconfig
 else
 # Run the oc inside container
-OC := $(CONTAINER_ENGINE) run $(CONTAINER_RUN_FLAGS) quay.io/openshift/origin-cli:4.10.0 oc --dry-run=client --kubeconfig=.kubeconfig
+OC := $(CONTAINER_ENGINE) run $(CONTAINER_RUN_FLAGS) quay.io/openshift/origin-cli:4.12 oc --dry-run=client --kubeconfig=.kubeconfig
 endif
 
 .PHONY: default
