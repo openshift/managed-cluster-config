@@ -10,3 +10,4 @@ REPO_NAME=managed-cluster-config
 GEN_TEMPLATE?=scripts/generate_template.py -t ${SELECTOR_SYNC_SET_TEMPLATE_DIR} -y ${YAML_DIRECTORY} -d ${GIT_ROOT}/hack/ -r ${REPO_NAME}
 GEN_POLICY?=scripts/generate-policy.sh
 GEN_POLICY_CONFIG?=scripts/generate-policy-config.py 
+GEN_POLICY_CONFIG_SP?=scripts/generate-subjectpermissions-policy-config.py

@@ -1,0 +1,67 @@
+---
+apiVersion: policy.open-cluster-management.io/v1
+kind: Policy
+metadata:
+    annotations:
+        policy.open-cluster-management.io/categories: CM Configuration Management
+        policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+        policy.open-cluster-management.io/standards: NIST SP 800-53
+    name: ccs-dedicated-admins-sp
+    namespace: openshift-rbac-policies
+spec:
+    disabled: false
+    policy-templates:
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+                name: ccs-dedicated-admins-sp
+            spec:
+                object-templates:
+                    - complianceType: musthave
+                      objectDefinition:
+                        apiVersion: managed.openshift.io/v1alpha1
+                        kind: SubjectPermission
+                        metadata:
+                            name: dedicated-admins-customer-monitoring
+                            namespace: openshift-rbac-permissions
+                        spec:
+                            permissions:
+                                - allowFirst: true
+                                  clusterRoleName: dedicated-admins-project
+                                  namespacesAllowedRegex: ^openshift-customer-monitoring$
+                                - allowFirst: true
+                                  clusterRoleName: admin
+                                  namespacesAllowedRegex: ^openshift-customer-monitoring$
+                            subjectKind: Group
+                            subjectName: dedicated-admins
+                pruneObjectBehavior: DeleteIfCreated
+                remediationAction: enforce
+                severity: low
+---
+apiVersion: apps.open-cluster-management.io/v1
+kind: PlacementRule
+metadata:
+    name: placement-ccs-dedicated-admins-sp
+    namespace: openshift-rbac-policies
+spec:
+    clusterSelector:
+        matchExpressions:
+            - key: hypershift.open-cluster-management.io/hosted-cluster
+              operator: In
+              values:
+                - "true"
+---
+apiVersion: policy.open-cluster-management.io/v1
+kind: PlacementBinding
+metadata:
+    name: binding-ccs-dedicated-admins-sp
+    namespace: openshift-rbac-policies
+placementRef:
+    apiGroup: apps.open-cluster-management.io
+    kind: PlacementRule
+    name: placement-ccs-dedicated-admins-sp
+subjects:
+    - apiGroup: policy.open-cluster-management.io
+      kind: Policy
+      name: ccs-dedicated-admins-sp

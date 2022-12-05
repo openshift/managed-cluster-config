@@ -1,0 +1,126 @@
+---
+apiVersion: policy.open-cluster-management.io/v1
+kind: Policy
+metadata:
+    annotations:
+        policy.open-cluster-management.io/categories: CM Configuration Management
+        policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+        policy.open-cluster-management.io/standards: NIST SP 800-53
+    name: rbac-permissions-operator-config-sp
+    namespace: openshift-rbac-policies
+spec:
+    disabled: false
+    policy-templates:
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+                name: rbac-permissions-operator-config-sp
+            spec:
+                object-templates:
+                    - complianceType: musthave
+                      objectDefinition:
+                        apiVersion: managed.openshift.io/v1alpha1
+                        kind: SubjectPermission
+                        metadata:
+                            name: dedicated-admin-serviceaccounts
+                            namespace: openshift-rbac-permissions
+                        spec:
+                            clusterPermissions:
+                                - dedicated-admins-cluster
+                            permissions:
+                                - allowFirst: true
+                                  clusterRoleName: dedicated-admins-project
+                                  namespacesAllowedRegex: .*
+                                  namespacesDeniedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
+                                - allowFirst: true
+                                  clusterRoleName: admin
+                                  namespacesAllowedRegex: .*
+                                  namespacesDeniedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
+                            subjectKind: Group
+                            subjectName: system:serviceaccounts:dedicated-admin
+                    - complianceType: musthave
+                      objectDefinition:
+                        apiVersion: managed.openshift.io/v1alpha1
+                        kind: SubjectPermission
+                        metadata:
+                            name: dedicated-admins
+                            namespace: openshift-rbac-permissions
+                        spec:
+                            clusterPermissions:
+                                - dedicated-admins-cluster
+                            permissions:
+                                - allowFirst: true
+                                  clusterRoleName: dedicated-admins-project
+                                  namespacesAllowedRegex: .*
+                                  namespacesDeniedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
+                                - allowFirst: true
+                                  clusterRoleName: admin
+                                  namespacesAllowedRegex: .*
+                                  namespacesDeniedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
+                            subjectKind: Group
+                            subjectName: dedicated-admins
+                    - complianceType: musthave
+                      objectDefinition:
+                        apiVersion: managed.openshift.io/v1alpha1
+                        kind: SubjectPermission
+                        metadata:
+                            name: dedicated-admins-core-ns
+                            namespace: openshift-rbac-permissions
+                        spec:
+                            permissions:
+                                - allowFirst: true
+                                  clusterRoleName: dedicated-admins-project
+                                  namespacesAllowedRegex: (^openshift-operators$|^openshift-operators-redhat$)
+                                - allowFirst: true
+                                  clusterRoleName: admin
+                                  namespacesAllowedRegex: (^openshift-operators$|^openshift-operators-redhat$)
+                            subjectKind: Group
+                            subjectName: dedicated-admins
+                    - complianceType: musthave
+                      objectDefinition:
+                        apiVersion: managed.openshift.io/v1alpha1
+                        kind: SubjectPermission
+                        metadata:
+                            name: dedicated-admin-serviceaccounts-core-ns
+                            namespace: openshift-rbac-permissions
+                        spec:
+                            permissions:
+                                - allowFirst: true
+                                  clusterRoleName: dedicated-admins-project
+                                  namespacesAllowedRegex: (^openshift-operators$|^openshift-operators-redhat$)
+                                - allowFirst: true
+                                  clusterRoleName: admin
+                                  namespacesAllowedRegex: (^openshift-operators$|^openshift-operators-redhat$)
+                            subjectKind: Group
+                            subjectName: system:serviceaccounts:dedicated-admin
+                pruneObjectBehavior: DeleteIfCreated
+                remediationAction: enforce
+                severity: low
+---
+apiVersion: apps.open-cluster-management.io/v1
+kind: PlacementRule
+metadata:
+    name: placement-rbac-permissions-operator-config-sp
+    namespace: openshift-rbac-policies
+spec:
+    clusterSelector:
+        matchExpressions:
+            - key: hypershift.open-cluster-management.io/hosted-cluster
+              operator: In
+              values:
+                - "true"
+---
+apiVersion: policy.open-cluster-management.io/v1
+kind: PlacementBinding
+metadata:
+    name: binding-rbac-permissions-operator-config-sp
+    namespace: openshift-rbac-policies
+placementRef:
+    apiGroup: apps.open-cluster-management.io
+    kind: PlacementRule
+    name: placement-rbac-permissions-operator-config-sp
+subjects:
+    - apiGroup: policy.open-cluster-management.io
+      kind: Policy
+      name: rbac-permissions-operator-config-sp
