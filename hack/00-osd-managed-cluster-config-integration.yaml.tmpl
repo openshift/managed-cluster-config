@@ -33800,6 +33800,36 @@ objects:
       kind: PrometheusRule
       metadata:
         labels:
+          prometheus: sre-node-stuck
+          role: alert-rules
+        name: sre-node-stuck
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-node-stuck
+          rules:
+          - alert: KubeNodeStuckWithCreatingAndTerminatingPodsSRE
+            expr: "sum by (node) ((\n  count(\n    count(kube_pod_container_status_waiting_reason{job=\"\
+              kube-state-metrics\", namespace=~\"(openshift-.*|kube-.*|default)\"\
+              }) by (pod, namespace) * on (pod, namespace) group_right kube_pod_info{})\
+              \ by (node)\n  )\n* on (node) group_left\n  count(\n    (count(kube_pod_deletion_timestamp)\
+              \ by (pod, namespace) * count(kube_pod_status_reason{reason=\"NodeLost\"\
+              ,namespace=~\"(openshift-.*|kube-.*|default)\"}  == 0) by (namespace,\
+              \ pod) * on (pod, namespace) group_right kube_pod_info{})\n  ) by (node)\n\
+              ) > 0\n"
+            for: 30m
+            labels:
+              severity: warning
+              namespace: openshift-monitoring
+              maturity: immature
+              source: https://issues.redhat.com//browse/OSD-14160
+            annotations:
+              message: The node {{ $labels.node }} has containers stuck in creating
+                and terminating for more than 30 minutes.
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
           prometheus: sre-node-unschedulable
           role: alert-rules
         name: sre-node-unschedulable
