@@ -5,29 +5,21 @@ import shutil
 import os
 
 base_directory = "./deploy/"
-# An array of directories you want to generate policies for.
-# Please make sure ONLY the directories you want exist here.
-# This script doesn't walk the sub-directories.
-directories = [
-        'rbac-permissions-operator-config',
-        'osd-cluster-admin',
-        'backplane',
-        'backplane/srep',
-        'backplane/tam',
-        'backplane/cee',
-        'backplane/cse',
-        'backplane/cssre',
-        'backplane/csm',
-        'backplane/elevated-sre',
-        'backplane/mobb',
-        'ccs-dedicated-admins',
-        'customer-registry-cas',
-        'osd-must-gather-operator',
-        'osd-openshift-operators-redhat',
-        'osd-pcap-collector',
-        ]
+
+# Place new directories in policy-paths.yaml.
+with open('./scripts/policy-paths.yaml','r') as paths_file:
+    # Please make sure ONLY the directories you want exist here.
+    # This script doesn't walk the sub-directories.
+    paths_yaml = yaml.safe_load(paths_file)
+    directories = paths_yaml['policies']['paths']
+    policies_namespace = paths_yaml['policies']['namespace']
+    # Array of policy directories targeting limited-support clusters
+    limited_support = paths_yaml['limited-support-policies']['paths']
+    ls_namespace = paths_yaml['limited-support-policies']['namespace']
+
 policy_generator_config = './scripts/policy-generator-config.yaml'
 config_filename = "config.yaml"
+
 #go into each directory and copy a subset of manifests that are not SubjectPermissions or config.yaml into a /tmp dir
 for directory in sorted(directories, key=str.casefold):
     #extract the directory name
@@ -49,6 +41,13 @@ for directory in sorted(directories, key=str.casefold):
         policy_template = yaml.safe_load(input_file)
     #fill in the name and path in the policy generator template
     policy_template['metadata']['name'] = 'rbac-policies'
+    policy_template['policyDefaults']['namespace'] = policies_namespace
+
+    # Add limited support cluster selector and namespace
+    if directory in limited_support:
+        policy_template['policyDefaults']['placement']['clusterSelectors']['api.openshift.com/limited-support'] = 'true'
+        policy_template['policyDefaults']['namespace'] = ls_namespace
+
     for p in policy_template['policies']:
         p['name'] = policy_name
         for m in p['manifests']:
