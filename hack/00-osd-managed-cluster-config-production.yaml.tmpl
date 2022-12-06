@@ -18196,8 +18196,9 @@ objects:
               send_managed_notification: 'true'
               managed_notification_template: MultipleDefaultStorageClasses
           - alert: NonSystemChangeValidatingWebhookConfigurationsNotificationSRE
-            expr: rate(splunkforwarder_audit_filter_exposed_splunk_event_total{alert="NonSystemChangeValidationWebhookConfiguration"}[5m])
-              > 0
+            expr: sum(max_over_time(splunkforwarder_audit_filter_exposed_splunk_event_total{alert="NonSystemChangeValidationWebhookConfiguration"}[5m])
+              or vector(0)) - sum(max_over_time(splunkforwarder_audit_filter_exposed_splunk_event_total{alert="NonSystemChangeValidationWebhookConfiguration"}[5m]
+              offset 5m) or vector(0)) > 0
             for: 1m
             labels:
               severity: Info
