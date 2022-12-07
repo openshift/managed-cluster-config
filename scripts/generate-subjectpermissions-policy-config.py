@@ -3,7 +3,6 @@
 import oyaml as yaml
 import shutil
 import os
-
 base_directory = "./deploy/"
 # An array of directories you want to generate policies for.
 # Please make sure ONLY the directories you want exist here.
@@ -13,6 +12,14 @@ directories = [
         'backplane/srep',
         'ccs-dedicated-admins'
         ]
+sp_dictionary = dict({
+    'include' : list([
+        'kube', 'kube-*', 'openshift', 'openshift-*', 'default', 'redhat-*'
+        ]),
+    'exclude' : list([
+        'openshift-backplane-cluster-admin'
+        ])
+    })
 policy_generator_config = './scripts/policy-generator-config.yaml'
 config_filename = "config.yaml"
 #go into each directory and copy a subset of manifests that are not SubjectPermissions or config.yaml into a /tmp dir
@@ -35,6 +42,7 @@ for directory in directories:
         policy_template = yaml.safe_load(input_file)
     #fill in the name and path in the policy generator template
     policy_template['metadata']['name'] = 'subjectpermission-policies'
+    policy_template['policyDefaults']['namespaceSelector'] = sp_dictionary
     for p in policy_template['policies']:
         p['name'] =  policy_name + '-sp'
         for m in p['manifests']:
