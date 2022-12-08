@@ -19091,6 +19091,84 @@ objects:
       kind: PrometheusRule
       metadata:
         labels:
+          prometheus: sre-managed-kube-apiserver-missing-on-node
+          role: alert-rules
+        name: sre-managed-kube-apiserver-missing-on-node
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-managed-kube-apiserver-missing-on-node
+          rules:
+          - alert: KubeAPIServerMissingOnNode60Minutes
+            expr: 'count(cluster:master_nodes{}) by (node) unless count(kube_pod_info{namespace="openshift-kube-apiserver",
+              pod=~"kube-apiserver-ip-.*"}) by (node) >= 1
+
+              '
+            for: 60m
+            labels:
+              severity: warning
+              maturity: immature
+              source: https://issues.redhat.com/browse/OSD-13647
+              link: https://github.com/openshift/ops-sop/blob/master/v4/alerts/StaticPodMissing.md
+            annotations:
+              message: Static pod kube-apiserver is not running on node {{ $labels.node
+                }} for 60 minutes.
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
+          prometheus: sre-managed-kube-controller-manager-missing-on-node
+          role: alert-rules
+        name: sre-managed-kube-controller-manager-missing-on-node
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-managed-kube-controller-manager-missing-on-node
+          rules:
+          - alert: KubeControllerManagerMissingOnNode60Minutes
+            expr: 'count(cluster:master_nodes{}) by (node) unless count(kube_pod_info{namespace="openshift-kube-controller-manager",
+              pod=~"kube-controller-manager-ip-.*"}) by (node) >= 1
+
+              '
+            for: 60m
+            labels:
+              severity: warning
+              maturity: immature
+              source: https://issues.redhat.com/browse/OSD-13647
+              link: https://github.com/openshift/ops-sop/blob/master/v4/alerts/StaticPodMissing.md
+            annotations:
+              message: Static pod kube-controller-manager is not running on node {{
+                $labels.node }} for 60 minutes.
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
+          prometheus: sre-managed-kube-scheduler-missing-on-node
+          role: alert-rules
+        name: sre-managed-kube-scheduler-missing-on-node
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-managed-kube-scheduler-missing-on-node
+          rules:
+          - alert: KubeSchedulerMissingOnNode60Minutes
+            expr: 'count(cluster:master_nodes{}) by (node) unless count(kube_pod_info{namespace="openshift-kube-scheduler",
+              pod=~"openshift-kube-scheduler-ip-.*"}) by (node) >= 1
+
+              '
+            for: 60m
+            labels:
+              severity: warning
+              maturity: immature
+              source: https://issues.redhat.com/browse/OSD-13647
+              link: https://github.com/openshift/ops-sop/blob/master/v4/alerts/StaticPodMissing.md
+            annotations:
+              message: Static pod kube-scheduler is not running on node {{ $labels.node
+                }} for 60 minutes.
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
           prometheus: sre-managed-node-metadata-operator-alerts
           role: alert-rules
         name: sre-managed-node-metadata-operator-alerts
