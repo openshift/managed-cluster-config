@@ -18,33 +18,50 @@ spec:
                 name: ccs-dedicated-admins-sp
             spec:
                 namespaceSelector:
-                    exclude:
-                        - openshift-backplane-cluster-admin
                     include:
-                        - kube
-                        - kube-*
-                        - openshift
-                        - openshift-*
-                        - default
-                        - redhat-*
+                        - openshift-customer-monitoring
                 object-templates:
                     - complianceType: musthave
                       objectDefinition:
-                        apiVersion: managed.openshift.io/v1alpha1
-                        kind: SubjectPermission
+                        apiVersion: rbac.authorization.k8s.io/v1
+                        kind: RoleBinding
                         metadata:
-                            name: dedicated-admins-customer-monitoring
-                            namespace: openshift-rbac-permissions
-                        spec:
-                            permissions:
-                                - allowFirst: true
-                                  clusterRoleName: dedicated-admins-project
-                                  namespacesAllowedRegex: ^openshift-customer-monitoring$
-                                - allowFirst: true
-                                  clusterRoleName: admin
-                                  namespacesAllowedRegex: ^openshift-customer-monitoring$
-                            subjectKind: Group
-                            subjectName: dedicated-admins
+                            name: dedicated-admins-customer-monitoring-0
+                        roleRef:
+                            apiGroup: rbac.authorization.k8s.io
+                            kind: ClusterRole
+                            name: dedicated-admins-project
+                        subjects:
+                            - apiGroup: rbac.authorization.k8s.io
+                              kind: Group
+                              name: dedicated-admins
+                pruneObjectBehavior: DeleteIfCreated
+                remediationAction: enforce
+                severity: low
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+                name: ccs-dedicated-admins-sp2
+            spec:
+                namespaceSelector:
+                    include:
+                        - openshift-customer-monitoring
+                object-templates:
+                    - complianceType: musthave
+                      objectDefinition:
+                        apiVersion: rbac.authorization.k8s.io/v1
+                        kind: RoleBinding
+                        metadata:
+                            name: dedicated-admins-customer-monitoring-1
+                        roleRef:
+                            apiGroup: rbac.authorization.k8s.io
+                            kind: ClusterRole
+                            name: admin
+                        subjects:
+                            - apiGroup: rbac.authorization.k8s.io
+                              kind: Group
+                              name: dedicated-admins
                 pruneObjectBehavior: DeleteIfCreated
                 remediationAction: enforce
                 severity: low
