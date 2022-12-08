@@ -1,0 +1,156 @@
+---
+apiVersion: policy.open-cluster-management.io/v1
+kind: Policy
+metadata:
+    annotations:
+        policy.open-cluster-management.io/categories: CM Configuration Management
+        policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+        policy.open-cluster-management.io/standards: NIST SP 800-53
+    name: backplane-srep-sp
+    namespace: openshift-rbac-policies
+spec:
+    disabled: false
+    policy-templates:
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+                name: backplane-srep-sp
+            spec:
+                object-templates:
+                    - complianceType: musthave
+                      objectDefinition:
+                        apiVersion: rbac.authorization.k8s.io/v1
+                        kind: ClusterRoleBinding
+                        metadata:
+                            name: backplane-srep-c0
+                        roleRef:
+                            apiGroup: rbac.authorization.k8s.io
+                            kind: ClusterRole
+                            name: backplane-srep-admins-cluster
+                        subjects:
+                            - apiGroup: rbac.authorization.k8s.io
+                              kind: Group
+                              name: system:serviceaccounts:openshift-backplane-srep
+                pruneObjectBehavior: DeleteIfCreated
+                remediationAction: enforce
+                severity: low
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+                name: backplane-srep-sp2
+            spec:
+                object-templates:
+                    - complianceType: musthave
+                      objectDefinition:
+                        apiVersion: rbac.authorization.k8s.io/v1
+                        kind: ClusterRoleBinding
+                        metadata:
+                            name: backplane-srep-c1
+                        roleRef:
+                            apiGroup: rbac.authorization.k8s.io
+                            kind: ClusterRole
+                            name: backplane-readers-cluster
+                        subjects:
+                            - apiGroup: rbac.authorization.k8s.io
+                              kind: Group
+                              name: system:serviceaccounts:openshift-backplane-srep
+                pruneObjectBehavior: DeleteIfCreated
+                remediationAction: enforce
+                severity: low
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+                name: backplane-srep-sp3
+            spec:
+                namespaceSelector:
+                    exclude:
+                        - openshift-backplane-cluster-admin
+                    include:
+                        - kube
+                        - kube-*
+                        - openshift
+                        - openshift-*
+                        - default
+                        - redhat-*
+                object-templates:
+                    - complianceType: musthave
+                      objectDefinition:
+                        apiVersion: rbac.authorization.k8s.io/v1
+                        kind: RoleBinding
+                        metadata:
+                            name: backplane-srep-0
+                        roleRef:
+                            apiGroup: rbac.authorization.k8s.io
+                            kind: ClusterRole
+                            name: backplane-srep-admins-project
+                        subjects:
+                            - apiGroup: rbac.authorization.k8s.io
+                              kind: Group
+                              name: system:serviceaccounts:openshift-backplane-srep
+                pruneObjectBehavior: DeleteIfCreated
+                remediationAction: enforce
+                severity: low
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+                name: backplane-srep-sp4
+            spec:
+                namespaceSelector:
+                    exclude:
+                        - openshift-backplane-cluster-admin
+                    include:
+                        - kube
+                        - kube-*
+                        - openshift
+                        - openshift-*
+                        - default
+                        - redhat-*
+                object-templates:
+                    - complianceType: musthave
+                      objectDefinition:
+                        apiVersion: rbac.authorization.k8s.io/v1
+                        kind: RoleBinding
+                        metadata:
+                            name: backplane-srep-1
+                        roleRef:
+                            apiGroup: rbac.authorization.k8s.io
+                            kind: ClusterRole
+                            name: dedicated-readers
+                        subjects:
+                            - apiGroup: rbac.authorization.k8s.io
+                              kind: Group
+                              name: system:serviceaccounts:openshift-backplane-srep
+                pruneObjectBehavior: DeleteIfCreated
+                remediationAction: enforce
+                severity: low
+---
+apiVersion: apps.open-cluster-management.io/v1
+kind: PlacementRule
+metadata:
+    name: placement-backplane-srep-sp
+    namespace: openshift-rbac-policies
+spec:
+    clusterSelector:
+        matchExpressions:
+            - key: hypershift.open-cluster-management.io/hosted-cluster
+              operator: In
+              values:
+                - "true"
+---
+apiVersion: policy.open-cluster-management.io/v1
+kind: PlacementBinding
+metadata:
+    name: binding-backplane-srep-sp
+    namespace: openshift-rbac-policies
+placementRef:
+    apiGroup: apps.open-cluster-management.io
+    kind: PlacementRule
+    name: placement-backplane-srep-sp
+subjects:
+    - apiGroup: policy.open-cluster-management.io
+      kind: Policy
+      name: backplane-srep-sp

@@ -1,4 +1,4 @@
-apiVersion: batch/v1beta1
+apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: osd-delete-backplane-script-resources
@@ -10,6 +10,7 @@ spec:
   schedule: "42 0 * * *"
   jobTemplate:
     spec:
+      ttlSecondsAfterFinished: 86400
       template:
         spec:
           affinity:
@@ -51,7 +52,7 @@ spec:
                   SAS=$(oc get serviceaccount -n $NS --selector $LABEL -o custom-columns=NAME:.metadata.name --no-headers)
 
                   # Format: role_name role_ns
-                  ROLES=$(oc get role -A --selector $LABEL -o custom-columns=NAME:.metadata.name,NS:.metadata.namespace --no-headers) 
+                  ROLES=$(oc get role -A --selector $LABEL -o custom-columns=NAME:.metadata.name,NS:.metadata.namespace --no-headers)
 
                   # Format: rolebinding_name rolebinding_ns
                   ROLEBINDINGS=$(oc get rolebinding -A --selector $LABEL -o custom-columns=NAME:.metadata.name,NS:.metadata.namespace --no-headers)
@@ -67,7 +68,7 @@ spec:
                   # - pods created within THRESHOLD_PERIOD and related resouces.
                   PODS_TO_KEEP=$(awk -v before=$DEL_ONLY_BEFORE \
                     '{
-                    if($2 ~ /Running/){print $1} 
+                    if($2 ~ /Running/){print $1}
                     else{cmd = sprintf("date +\"%%s\" --date=%s", $3); cmd|getline unix_sec; close(cmd); if(unix_sec+0 > before+0){print $1}}
                     }' \
                     <<< "$PODS")

@@ -20,6 +20,16 @@ endif
 ifndef GEN_TEMPLATE
 $(error GEN_TEMPLATE is not set; check project.mk file)
 endif
+ifndef GEN_POLICY
+$(error GEN_POLICY is not set; check project.mk file)
+endif
+ifndef GEN_POLICY_CONFIG
+$(error GEN_POLICY_CONFIG is not set; check project.mk file)
+endif
+ifndef GEN_POLICY_CONFIG_SP
+$(error GEN_POLICY_CONFIG_SP is not set; check project.mk file)
+endif
+
 
 CONTAINER_ENGINE?=$(shell command -v docker 2>/dev/null || command -v podman 2>/dev/null)
 CONTAINER_RUN_FLAGS=--rm -v `pwd -P`:`pwd -P`:z -w=`pwd` --platform linux/amd64
@@ -29,7 +39,7 @@ ifeq ($(CONTAINER_ENGINE),)
 OC := oc --dry-run=true --kubeconfig=.kubeconfig
 else
 # Run the oc inside container
-OC := $(CONTAINER_ENGINE) run $(CONTAINER_RUN_FLAGS) quay.io/openshift/origin-cli:4.10.0 oc --dry-run=client --kubeconfig=.kubeconfig
+OC := $(CONTAINER_ENGINE) run $(CONTAINER_RUN_FLAGS) quay.io/openshift/origin-cli:4.12 oc --dry-run=client --kubeconfig=.kubeconfig
 endif
 
 .PHONY: default
@@ -53,7 +63,11 @@ generate-rosa-brand-logo:
 generate-hive-templates: generate-oauth-templates
 	if [ -z ${IN_CONTAINER} ]; then \
 		$(CONTAINER_ENGINE) pull quay.io/app-sre/python:3 && $(CONTAINER_ENGINE) tag quay.io/app-sre/python:3 python:3 || true; \
+		$(CONTAINER_ENGINE) run $(CONTAINER_RUN_FLAGS) --user $(id -u):$(id -g) python:3 /bin/sh -c "echo $(shell id -u) ; cd `pwd -P`; pip install oyaml;${GEN_POLICY_CONFIG}; ${GEN_POLICY_CONFIG_SP}; wget -nc https://github.com/stolostron/policy-generator-plugin/releases/download/v1.9.1/linux-amd64-PolicyGenerator -O /tmp/linux-amd64-PolicyGenerator; echo $(shell id -g); chmod +x /tmp/linux-amd64-PolicyGenerator ; PolicyGenerator=/tmp/linux-amd64-PolicyGenerator ${GEN_POLICY}";\
 		$(CONTAINER_ENGINE) run $(CONTAINER_RUN_FLAGS) python:3 /bin/sh -c "cd `pwd -P`; pip install oyaml; ${GEN_TEMPLATE}"; \
 	else \
+		${GEN_POLICY_CONFIG};\
+		${GEN_POLICY_CONFIG_SP};\
+		PolicyGenerator=/tmp/linux-amd64-PolicyGenerator ${GEN_POLICY};\
 		${GEN_TEMPLATE}; \
 	fi

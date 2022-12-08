@@ -1,5 +1,5 @@
 ---
-apiVersion: batch/v1beta1
+apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: sre-build-test
@@ -12,6 +12,7 @@ spec:
   jobTemplate:
     spec:
       activeDeadlineSeconds: 900
+      ttlSecondsAfterFinished: 86400
       template:
         spec:
           affinity:
