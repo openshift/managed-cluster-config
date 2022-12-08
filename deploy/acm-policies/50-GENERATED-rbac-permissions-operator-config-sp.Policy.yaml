@@ -17,93 +17,293 @@ spec:
             metadata:
                 name: rbac-permissions-operator-config-sp
             spec:
+                object-templates:
+                    - complianceType: musthave
+                      objectDefinition:
+                        apiVersion: rbac.authorization.k8s.io/v1
+                        kind: ClusterRoleBinding
+                        metadata:
+                            name: dedicated-admin-serviceaccounts-c0
+                        roleRef:
+                            apiGroup: rbac.authorization.k8s.io
+                            kind: ClusterRole
+                            name: dedicated-admins-cluster
+                        subjects:
+                            - apiGroup: rbac.authorization.k8s.io
+                              kind: Group
+                              name: system:serviceaccounts:dedicated-admin
+                pruneObjectBehavior: DeleteIfCreated
+                remediationAction: enforce
+                severity: low
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+                name: rbac-permissions-operator-config-sp2
+            spec:
                 namespaceSelector:
                     exclude:
-                        - openshift-backplane-cluster-admin
-                    include:
                         - kube
                         - kube-*
                         - openshift
                         - openshift-*
                         - default
                         - redhat-*
+                    include:
+                        - '*'
                 object-templates:
                     - complianceType: musthave
                       objectDefinition:
-                        apiVersion: managed.openshift.io/v1alpha1
-                        kind: SubjectPermission
+                        apiVersion: rbac.authorization.k8s.io/v1
+                        kind: RoleBinding
                         metadata:
-                            name: dedicated-admin-serviceaccounts
-                            namespace: openshift-rbac-permissions
-                        spec:
-                            clusterPermissions:
-                                - dedicated-admins-cluster
-                            permissions:
-                                - allowFirst: true
-                                  clusterRoleName: dedicated-admins-project
-                                  namespacesAllowedRegex: .*
-                                  namespacesDeniedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
-                                - allowFirst: true
-                                  clusterRoleName: admin
-                                  namespacesAllowedRegex: .*
-                                  namespacesDeniedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
-                            subjectKind: Group
-                            subjectName: system:serviceaccounts:dedicated-admin
+                            name: dedicated-admin-serviceaccounts-0
+                        roleRef:
+                            apiGroup: rbac.authorization.k8s.io
+                            kind: ClusterRole
+                            name: dedicated-admins-project
+                        subjects:
+                            - apiGroup: rbac.authorization.k8s.io
+                              kind: Group
+                              name: system:serviceaccounts:dedicated-admin
+                pruneObjectBehavior: DeleteIfCreated
+                remediationAction: enforce
+                severity: low
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+                name: rbac-permissions-operator-config-sp3
+            spec:
+                namespaceSelector:
+                    exclude:
+                        - kube
+                        - kube-*
+                        - openshift
+                        - openshift-*
+                        - default
+                        - redhat-*
+                    include:
+                        - '*'
+                object-templates:
                     - complianceType: musthave
                       objectDefinition:
-                        apiVersion: managed.openshift.io/v1alpha1
-                        kind: SubjectPermission
+                        apiVersion: rbac.authorization.k8s.io/v1
+                        kind: RoleBinding
                         metadata:
-                            name: dedicated-admins
-                            namespace: openshift-rbac-permissions
-                        spec:
-                            clusterPermissions:
-                                - dedicated-admins-cluster
-                            permissions:
-                                - allowFirst: true
-                                  clusterRoleName: dedicated-admins-project
-                                  namespacesAllowedRegex: .*
-                                  namespacesDeniedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
-                                - allowFirst: true
-                                  clusterRoleName: admin
-                                  namespacesAllowedRegex: .*
-                                  namespacesDeniedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
-                            subjectKind: Group
-                            subjectName: dedicated-admins
+                            name: dedicated-admin-serviceaccounts-1
+                        roleRef:
+                            apiGroup: rbac.authorization.k8s.io
+                            kind: ClusterRole
+                            name: admin
+                        subjects:
+                            - apiGroup: rbac.authorization.k8s.io
+                              kind: Group
+                              name: system:serviceaccounts:dedicated-admin
+                pruneObjectBehavior: DeleteIfCreated
+                remediationAction: enforce
+                severity: low
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+                name: rbac-permissions-operator-config-sp4
+            spec:
+                object-templates:
                     - complianceType: musthave
                       objectDefinition:
-                        apiVersion: managed.openshift.io/v1alpha1
-                        kind: SubjectPermission
+                        apiVersion: rbac.authorization.k8s.io/v1
+                        kind: ClusterRoleBinding
                         metadata:
-                            name: dedicated-admins-core-ns
-                            namespace: openshift-rbac-permissions
-                        spec:
-                            permissions:
-                                - allowFirst: true
-                                  clusterRoleName: dedicated-admins-project
-                                  namespacesAllowedRegex: (^openshift-operators$|^openshift-operators-redhat$)
-                                - allowFirst: true
-                                  clusterRoleName: admin
-                                  namespacesAllowedRegex: (^openshift-operators$|^openshift-operators-redhat$)
-                            subjectKind: Group
-                            subjectName: dedicated-admins
+                            name: dedicated-admins-c0
+                        roleRef:
+                            apiGroup: rbac.authorization.k8s.io
+                            kind: ClusterRole
+                            name: dedicated-admins-cluster
+                        subjects:
+                            - apiGroup: rbac.authorization.k8s.io
+                              kind: Group
+                              name: dedicated-admins
+                pruneObjectBehavior: DeleteIfCreated
+                remediationAction: enforce
+                severity: low
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+                name: rbac-permissions-operator-config-sp5
+            spec:
+                namespaceSelector:
+                    exclude:
+                        - kube
+                        - kube-*
+                        - openshift
+                        - openshift-*
+                        - default
+                        - redhat-*
+                    include:
+                        - '*'
+                object-templates:
                     - complianceType: musthave
                       objectDefinition:
-                        apiVersion: managed.openshift.io/v1alpha1
-                        kind: SubjectPermission
+                        apiVersion: rbac.authorization.k8s.io/v1
+                        kind: RoleBinding
                         metadata:
-                            name: dedicated-admin-serviceaccounts-core-ns
-                            namespace: openshift-rbac-permissions
-                        spec:
-                            permissions:
-                                - allowFirst: true
-                                  clusterRoleName: dedicated-admins-project
-                                  namespacesAllowedRegex: (^openshift-operators$|^openshift-operators-redhat$)
-                                - allowFirst: true
-                                  clusterRoleName: admin
-                                  namespacesAllowedRegex: (^openshift-operators$|^openshift-operators-redhat$)
-                            subjectKind: Group
-                            subjectName: system:serviceaccounts:dedicated-admin
+                            name: dedicated-admins-0
+                        roleRef:
+                            apiGroup: rbac.authorization.k8s.io
+                            kind: ClusterRole
+                            name: dedicated-admins-project
+                        subjects:
+                            - apiGroup: rbac.authorization.k8s.io
+                              kind: Group
+                              name: dedicated-admins
+                pruneObjectBehavior: DeleteIfCreated
+                remediationAction: enforce
+                severity: low
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+                name: rbac-permissions-operator-config-sp6
+            spec:
+                namespaceSelector:
+                    exclude:
+                        - kube
+                        - kube-*
+                        - openshift
+                        - openshift-*
+                        - default
+                        - redhat-*
+                    include:
+                        - '*'
+                object-templates:
+                    - complianceType: musthave
+                      objectDefinition:
+                        apiVersion: rbac.authorization.k8s.io/v1
+                        kind: RoleBinding
+                        metadata:
+                            name: dedicated-admins-1
+                        roleRef:
+                            apiGroup: rbac.authorization.k8s.io
+                            kind: ClusterRole
+                            name: admin
+                        subjects:
+                            - apiGroup: rbac.authorization.k8s.io
+                              kind: Group
+                              name: dedicated-admins
+                pruneObjectBehavior: DeleteIfCreated
+                remediationAction: enforce
+                severity: low
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+                name: rbac-permissions-operator-config-sp7
+            spec:
+                namespaceSelector:
+                    include:
+                        - openshift-operators
+                        - openshift-operators-redhat
+                object-templates:
+                    - complianceType: musthave
+                      objectDefinition:
+                        apiVersion: rbac.authorization.k8s.io/v1
+                        kind: RoleBinding
+                        metadata:
+                            name: dedicated-admins-core-ns-0
+                        roleRef:
+                            apiGroup: rbac.authorization.k8s.io
+                            kind: ClusterRole
+                            name: dedicated-admins-project
+                        subjects:
+                            - apiGroup: rbac.authorization.k8s.io
+                              kind: Group
+                              name: dedicated-admins
+                pruneObjectBehavior: DeleteIfCreated
+                remediationAction: enforce
+                severity: low
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+                name: rbac-permissions-operator-config-sp8
+            spec:
+                namespaceSelector:
+                    include:
+                        - openshift-operators
+                        - openshift-operators-redhat
+                object-templates:
+                    - complianceType: musthave
+                      objectDefinition:
+                        apiVersion: rbac.authorization.k8s.io/v1
+                        kind: RoleBinding
+                        metadata:
+                            name: dedicated-admins-core-ns-1
+                        roleRef:
+                            apiGroup: rbac.authorization.k8s.io
+                            kind: ClusterRole
+                            name: admin
+                        subjects:
+                            - apiGroup: rbac.authorization.k8s.io
+                              kind: Group
+                              name: dedicated-admins
+                pruneObjectBehavior: DeleteIfCreated
+                remediationAction: enforce
+                severity: low
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+                name: rbac-permissions-operator-config-sp9
+            spec:
+                namespaceSelector:
+                    include:
+                        - openshift-operators
+                        - openshift-operators-redhat
+                object-templates:
+                    - complianceType: musthave
+                      objectDefinition:
+                        apiVersion: rbac.authorization.k8s.io/v1
+                        kind: RoleBinding
+                        metadata:
+                            name: dedicated-admin-serviceaccounts-core-ns-0
+                        roleRef:
+                            apiGroup: rbac.authorization.k8s.io
+                            kind: ClusterRole
+                            name: dedicated-admins-project
+                        subjects:
+                            - apiGroup: rbac.authorization.k8s.io
+                              kind: Group
+                              name: system:serviceaccounts:dedicated-admin
+                pruneObjectBehavior: DeleteIfCreated
+                remediationAction: enforce
+                severity: low
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+                name: rbac-permissions-operator-config-sp10
+            spec:
+                namespaceSelector:
+                    include:
+                        - openshift-operators
+                        - openshift-operators-redhat
+                object-templates:
+                    - complianceType: musthave
+                      objectDefinition:
+                        apiVersion: rbac.authorization.k8s.io/v1
+                        kind: RoleBinding
+                        metadata:
+                            name: dedicated-admin-serviceaccounts-core-ns-1
+                        roleRef:
+                            apiGroup: rbac.authorization.k8s.io
+                            kind: ClusterRole
+                            name: admin
+                        subjects:
+                            - apiGroup: rbac.authorization.k8s.io
+                              kind: Group
+                              name: system:serviceaccounts:dedicated-admin
                 pruneObjectBehavior: DeleteIfCreated
                 remediationAction: enforce
                 severity: low
