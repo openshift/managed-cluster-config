@@ -364,6 +364,39 @@ spec:
                             - apiGroup: rbac.authorization.k8s.io
                               kind: Group
                               name: system:serviceaccounts:openshift-backplane-srep
+                    - complianceType: musthave
+                      objectDefinition:
+                        apiVersion: rbac.authorization.k8s.io/v1
+                        kind: Role
+                        metadata:
+                            name: backplane-srep-pcap-collector
+                            namespace: openshift-backplane-managed-scripts
+                        rules:
+                            - apiGroups:
+                                - ""
+                              resourceNames:
+                                - pcap-collector-creds
+                              resources:
+                                - secrets
+                              verbs:
+                                - create
+                                - delete
+                    - complianceType: musthave
+                      objectDefinition:
+                        apiVersion: rbac.authorization.k8s.io/v1
+                        kind: RoleBinding
+                        metadata:
+                            name: backplane-srep-mustgather
+                            namespace: openshift-backplane-managed-scripts
+                        roleRef:
+                            apiGroup: rbac.authorization.k8s.io
+                            kind: Role
+                            name: backplane-srep-pcap-collector
+                            namespace: openshift-backplane-managed-scripts
+                        subjects:
+                            - apiGroup: rbac.authorization.k8s.io
+                              kind: Group
+                              name: system:serviceaccounts:openshift-backplane-srep
                 pruneObjectBehavior: DeleteIfCreated
                 remediationAction: enforce
                 severity: low
