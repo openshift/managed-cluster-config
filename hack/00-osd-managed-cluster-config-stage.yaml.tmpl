@@ -10778,6 +10778,13 @@ objects:
             defined. No further action is required.
           severity: Info
           summary: Multiple Default Storage Classes Configured
+        - activeBody: A user on your system has removed a platform protection webhook.
+            This protection has already been automatically replaced, and no further
+            action is required. Tampering with platform protections can endanger SLAs.
+          name: NonSystemChangeValidationWebhookConfigurations
+          resendWait: 1
+          severity: Error
+          summary: Platform protections removed by non-Red Hat user
     - apiVersion: ocmagent.managed.openshift.io/v1alpha1
       kind: ManagedNotification
       metadata:
@@ -20878,6 +20885,15 @@ objects:
               namespace: openshift-cluster-storage-operator
               send_managed_notification: 'true'
               managed_notification_template: MultipleDefaultStorageClasses
+          - alert: NonSystemChangeValidatingWebhookConfigurationsNotificationSRE
+            expr: sum(max_over_time(splunkforwarder_audit_filter_exposed_splunk_event_total{alert="NonSystemChangeValidationWebhookConfiguration"}[5m])
+              or vector(0)) - sum(max_over_time(splunkforwarder_audit_filter_exposed_splunk_event_total{alert="NonSystemChangeValidationWebhookConfiguration"}[5m]
+              offset 5m) or vector(0)) > 0
+            labels:
+              severity: Info
+              namespace: audit-exporter
+              send_managed_notification: 'true'
+              managed_notification_template: NonSystemChangeValidationWebhookConfigurations
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
