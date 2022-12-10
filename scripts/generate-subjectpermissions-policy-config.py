@@ -41,10 +41,21 @@ def regex_to_strings(regex):
         strings[i] = strings[i].replace(".*","*")
     return strings
 
+def get_all_yaml_files(path):
+    file_paths = []
+    for r,d,f in os.walk(path):
+        for file in f:
+            if (file.endswith('.SubjectPermission.yml') or file.endswith('.SubjectPermission.yaml') and not(file == config_filename)):
+                file_paths.append(os.path.join(r,file))
+        # break, so we don't recurse
+        break
+    file_paths = sorted(file_paths, key=str.casefold)
+    return file_paths
+
 policy_generator_config = './scripts/policy-generator-config.yaml'
 config_filename = "config.yaml"
 #go into each directory and copy a subset of manifests that are not SubjectPermissions or config.yaml into a /tmp dir
-for directory in directories:
+for directory in sorted(directories, key=str.casefold):
     #extract the directory name
     policy_name = directory.replace("/", "-")
     temp_directory = os.path.join("/tmp", policy_name + "-subjectpermissions")
@@ -52,12 +63,8 @@ for directory in directories:
     #create a temporary path to stores the subset of manifests that will generate policies with
     configs_directory = os.path.join(temp_directory, "configs")
     os.makedirs(configs_directory)
-    for entry in os.scandir(os.path.join(base_directory, directory)):
-        if not entry.is_file():
-            continue
-        if (entry.name.endswith('.SubjectPermission.yml') or entry.name.endswith('.SubjectPermission.yaml') and not(entry.name == config_filename)):
-            sp_yaml = os.path.join(base_directory, directory, entry.name)
-            with open(sp_yaml,'r') as input_file:
+    for entry in get_all_yaml_files(os.path.join(base_directory, directory)):
+            with open(entry,'r') as input_file:
                 sp_obj = yaml.safe_load(input_file)
                 rolebinding_name_prefix = sp_obj["metadata"]["name"]
                 # for each clusterpermission, create a non-namespaced clusterrolebinding and a manifest item

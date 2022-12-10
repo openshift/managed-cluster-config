@@ -34,7 +34,7 @@ def get_all_yaml_files(path):
                 file_paths.append(os.path.join(r,file))
         # break, so we don't recurse
         break
-    file_paths = sorted(file_paths)
+    file_paths = sorted(file_paths, key=str.casefold)
     return file_paths
 
 def get_all_yaml_obj(file_paths):
@@ -42,7 +42,7 @@ def get_all_yaml_obj(file_paths):
     for file in file_paths:
         raw_objects = get_yaml_all(file)
         # remove None results (happens if a yaml has '---' at the end)
-        objects = [o for o in raw_objects if o] 
+        objects = [o for o in raw_objects if o]
 
         for obj in objects:
             yaml_objs.append(obj)
@@ -89,7 +89,7 @@ def add_sss_for(name, directory, config):
             o['spec']['resources'].append(y)
 
     o['metadata']['name'] = name
-    
+
     # collect the new sss for later processing
     data_sss.append(o)
 
@@ -119,7 +119,7 @@ if __name__ == '__main__':
         if filenames:
             dirpaths.append(dirpath)
 
-    for dirpath in sorted(dirpaths):
+    for dirpath in sorted(dirpaths, key=str.casefold):
         # load config if it exists
         config = {}
         path_config = os.path.join(dirpath, config_filename)
@@ -189,7 +189,7 @@ if __name__ == '__main__':
                 # Catches anyone with a rouge value
                 add_sss_for(sss_name, dirpath, config["selectorSyncSet"])
 
-    # Get the template 
+    # Get the template
     template_data = get_yaml(os.path.join(arguments.template_dir, "template.yaml"))
 
     # Set the REPO_NAME parameter.
