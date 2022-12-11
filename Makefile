@@ -32,7 +32,7 @@ endif
 
 
 CONTAINER_ENGINE?=$(shell command -v docker 2>/dev/null || command -v podman 2>/dev/null)
-CONTAINER_RUN_FLAGS=--rm -v `pwd -P`:`pwd -P`:z -w=`pwd` --platform linux/amd64
+CONTAINER_RUN_FLAGS=--user : --rm -v `pwd -P`:`pwd -P`:z -w=`pwd` --platform linux/amd64
 
 ifeq ($(CONTAINER_ENGINE),)
 # Running already in a container
@@ -62,12 +62,11 @@ generate-rosa-brand-logo:
 .PHONY: generate-hive-templates
 generate-hive-templates: generate-oauth-templates
 	if [ -z ${IN_CONTAINER} ]; then \
-		$(CONTAINER_ENGINE) pull quay.io/app-sre/python:3 && $(CONTAINER_ENGINE) tag quay.io/app-sre/python:3 python:3 || true; \
-		$(CONTAINER_ENGINE) run $(CONTAINER_RUN_FLAGS) --user $(id -u):$(id -g) python:3 /bin/sh -c "echo $(shell id -u) ; cd `pwd -P`; pip install oyaml;${GEN_POLICY_CONFIG}; ${GEN_POLICY_CONFIG_SP}; wget -nc https://github.com/stolostron/policy-generator-plugin/releases/download/v1.9.1/linux-amd64-PolicyGenerator -O /tmp/linux-amd64-PolicyGenerator; echo $(shell id -g); chmod +x /tmp/linux-amd64-PolicyGenerator ; PolicyGenerator=/tmp/linux-amd64-PolicyGenerator ${GEN_POLICY}";\
-		$(CONTAINER_ENGINE) run $(CONTAINER_RUN_FLAGS) python:3 /bin/sh -c "cd `pwd -P`; pip install oyaml; ${GEN_TEMPLATE}"; \
+		$(CONTAINER_ENGINE) run $(CONTAINER_RUN_FLAGS) registry.access.redhat.com/ubi8/python-39 /bin/bash -xc "cd `pwd -P`; pip install --disable-pip-version-check oyaml; curl -sSL https://github.com/stolostron/policy-generator-plugin/releases/download/v1.9.1/linux-amd64-PolicyGenerator --output /opt/app-root/bin/PolicyGenerator; chmod +x /opt/app-root/bin/PolicyGenerator; ${GEN_POLICY_CONFIG}; ${GEN_POLICY_CONFIG_SP}; ${GEN_POLICY}";\
+		$(CONTAINER_ENGINE) run $(CONTAINER_RUN_FLAGS) registry.access.redhat.com/ubi8/python-39 /bin/bash -xc "cd `pwd -P`; pip install --disable-pip-version-check oyaml; ${GEN_TEMPLATE}"; \
 	else \
 		${GEN_POLICY_CONFIG};\
 		${GEN_POLICY_CONFIG_SP};\
-		PolicyGenerator=/tmp/linux-amd64-PolicyGenerator ${GEN_POLICY};\
+		${GEN_POLICY};\
 		${GEN_TEMPLATE}; \
 	fi
