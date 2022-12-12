@@ -1,5 +1,8 @@
 name: Make Generate
-on: push
+on:
+  push:
+    branches-ignore:
+      - master
 
 jobs:
   run:
@@ -7,15 +10,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout repo
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
     - name: Make
       run: make
 
     - name: Commit changes
-      uses: EndBug/add-and-commit@v7
+      uses: EndBug/add-and-commit@v9
       with:
         message: "on push: make"
         add: "hack/00-osd-managed-cluster-config*.yaml.tmpl"
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
