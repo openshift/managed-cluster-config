@@ -16805,12 +16805,8 @@ objects:
         - ''
         resources:
         - pods
-        verbs:
-        - get
-        - list
-      - apiGroups:
-        - ''
-        resources:
+        - pods/status
+        - namespaces
         - services
         verbs:
         - get
@@ -16888,7 +16884,7 @@ objects:
               - name: OO_PAUSE_ON_START
                 value: 'false'
               - name: LOG_WRITER_URL
-                value: http://logger.openshift-scanning.svc:8080/api/log
+                value: http://logger.openshift-scanning.svc:8443/api/log
               - name: SCAN_LOG_FILE
                 value: /host/var/log/openshift_managed_malware_scan.log
               - name: POD_LOG_FILE
@@ -16907,10 +16903,16 @@ objects:
                 value: /apis/config.openshift.io/v1/clusterversions
               - name: MIDDLEWARE_LOGGER
                 value: 'true'
-              image: quay.io/app-sre/pod-logger@sha256:8c4d6118f4a475be29a9638198dffb96ad47d703e69e7750e8429a2e8e02a63d
+              - name: LISTEN_PORT
+                value: '8443'
+              - name: TLS_CERT_FILE
+                value: /certs/tls.crt
+              - name: TLS_KEY_FILE
+                value: /certs/tls.key
+              image: quay.io/app-sre/pod-logger@sha256:39ac045ca243a2adc6c3ea925bdf17085f69cb83293f3cd466ec23a25bab07b5
               name: logger
               ports:
-              - containerPort: 8080
+              - containerPort: 8443
                 name: logger
                 protocol: TCP
               resources:
@@ -16923,12 +16925,14 @@ objects:
               volumeMounts:
               - mountPath: /secrets
                 name: logger-secrets
+              - mountPath: /certs
+                name: logger-certs
             - env:
               - name: OO_PAUSE_ON_START
                 value: 'false'
               - name: SOCK
                 value: '@rpc.pod.sock'
-              image: quay.io/app-sre/log-printer@sha256:af480dffcf9953f37c97f81bcc5429d371685c3194c10368264dff0f12189426
+              image: quay.io/app-sre/log-printer@sha256:625792b89721d1c4a88d54b44f3be395b398c9d93df53a75857fe178d8ff6fab
               name: pod-printer
               resources:
                 limits:
@@ -16942,7 +16946,7 @@ objects:
                 value: 'false'
               - name: SOCK
                 value: '@rpc.scan.sock'
-              image: quay.io/app-sre/log-printer@sha256:af480dffcf9953f37c97f81bcc5429d371685c3194c10368264dff0f12189426
+              image: quay.io/app-sre/log-printer@sha256:625792b89721d1c4a88d54b44f3be395b398c9d93df53a75857fe178d8ff6fab
               name: scan-printer
               resources:
                 limits:
@@ -16960,6 +16964,9 @@ objects:
             - name: logger-secrets
               secret:
                 secretName: logger-secrets
+            - name: logger-certs
+              secret:
+                secretName: loggerservice
     - apiVersion: v1
       kind: Service
       metadata:
@@ -16968,12 +16975,14 @@ objects:
           name: loggerservice
         name: loggerservice
         namespace: openshift-scanning
+        annotations:
+          service.beta.openshift.io/serving-cert-secret-name: loggerservice
       spec:
         ports:
         - name: loggerservice
-          port: 8080
+          port: 8443
           protocol: TCP
-          targetPort: 8080
+          targetPort: 8443
         selector:
           name: logger
     - apiVersion: apps/v1
@@ -17062,16 +17071,16 @@ objects:
               - name: ACTIVE_SCAN
                 value: 'true'
               - name: CRIO_LOG_URL
-                value: http://loggerservice.openshift-scanning.svc.cluster.local:8080/api/crio/log
+                value: https://loggerservice.openshift-scanning.svc.cluster.local:8443/api/crio/log
               - name: DOCKER_LOG_URL
-                value: http://loggerservice.openshift-scanning.svc.cluster.local:8080/api/docker/log
+                value: https://loggerservice.openshift-scanning.svc.cluster.local:8443/api/docker/log
               - name: CLAM_LOG_URL
-                value: http://loggerservice.openshift-scanning.svc.cluster.local:8080/api/clam/scanresult
+                value: https://loggerservice.openshift-scanning.svc.cluster.local:8443/api/clam/scanresult
               - name: JOURNAL_PATH
                 value: /var/log/journal
               - name: SCAN_RESULTS_DIR
               - name: POST_RESULT_URL
-                value: http://loggerservice.openshift-scanning.svc.cluster.local:8080/api/clam/scanresult
+                value: https://loggerservice.openshift-scanning.svc.cluster.local:8443/api/clam/scanresult
               - name: OUT_FILE
               - name: SKIP_NAMESPACE_PREFIXES
                 value: openshift-
@@ -17081,7 +17090,7 @@ objects:
                 value: /clam/clamd.sock
               - name: INFO_SOCKET
                 value: '@rpc.sock'
-              image: quay.io/app-sre/watcher@sha256:0c03730792a49ac0cbf330a396a286b83f705789bb0955a8ba2b5c25519319ef
+              image: quay.io/app-sre/watcher@sha256:9e6be18c66db210e7e075105feb4ba6b523acab63f780e61e60a4e098da1455a
               name: watcher
               resources:
                 limits:
@@ -17106,16 +17115,16 @@ objects:
               - name: OO_PAUSE_ON_START
                 value: 'false'
               - name: CRIO_LOG_URL
-                value: http://loggerservice.openshift-scanning.svc.cluster.local:8080/api/crio/log
+                value: https://loggerservice.openshift-scanning.svc.cluster.local:8443/api/crio/log
               - name: DOCKER_LOG_URL
-                value: http://loggerservice.openshift-scanning.svc.cluster.local:8080/api/docker/log
+                value: https://loggerservice.openshift-scanning.svc.cluster.local:8443/api/docker/log
               - name: CLAM_LOG_URL
-                value: http://loggerservice.openshift-scanning.svc.cluster.local:8080/api/clam/scanresult
+                value: https://loggerservice.openshift-scanning.svc.cluster.local:8443/api/clam/scanresult
               - name: JOURNAL_PATH
                 value: /var/log/journal
               - name: SCAN_RESULTS_DIR
               - name: POST_RESULT_URL
-                value: http://loggerservice.openshift-scanning.svc.cluster.local:8080/api/clam/scanresult
+                value: https://loggerservice.openshift-scanning.svc.cluster.local:8443/api/clam/scanresult
               - name: OUT_FILE
               - name: CLAM_SOCKET
                 value: /clam/clamd.sock
@@ -17133,7 +17142,7 @@ objects:
                 value: openshift-scanning
               - name: HOST_SCAN_DIRS
                 value: /host
-              image: quay.io/app-sre/watcher@sha256:0c03730792a49ac0cbf330a396a286b83f705789bb0955a8ba2b5c25519319ef
+              image: quay.io/app-sre/watcher@sha256:9e6be18c66db210e7e075105feb4ba6b523acab63f780e61e60a4e098da1455a
               name: scheduler
               resources:
                 limits:
