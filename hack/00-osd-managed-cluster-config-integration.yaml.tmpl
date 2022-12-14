@@ -1143,6 +1143,39 @@ objects:
                   - apiGroup: rbac.authorization.k8s.io
                     kind: Group
                     name: system:serviceaccounts:openshift-backplane-srep
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: Role
+                  metadata:
+                    name: backplane-srep-pcap-collector
+                    namespace: openshift-backplane-managed-scripts
+                  rules:
+                  - apiGroups:
+                    - ''
+                    resourceNames:
+                    - pcap-collector-creds
+                    resources:
+                    - secrets
+                    verbs:
+                    - create
+                    - delete
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: RoleBinding
+                  metadata:
+                    name: backplane-srep-mustgather
+                    namespace: openshift-backplane-managed-scripts
+                  roleRef:
+                    apiGroup: rbac.authorization.k8s.io
+                    kind: Role
+                    name: backplane-srep-pcap-collector
+                    namespace: openshift-backplane-managed-scripts
+                  subjects:
+                  - apiGroup: rbac.authorization.k8s.io
+                    kind: Group
+                    name: system:serviceaccounts:openshift-backplane-srep
               pruneObjectBehavior: DeleteIfCreated
               remediationAction: enforce
               severity: low
@@ -3320,6 +3353,21 @@ objects:
         kind: Role
         name: backplane-cee-mustgather
         namespace: openshift-must-gather-operator
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: backplane-cee-pcap-collector
+        namespace: openshift-backplane-managed-scripts
+      rules:
+      - verbs:
+        - create
+        - delete
+        apiGroups:
+        - ''
+        resources:
+        - secrets
+        resourceNames:
+        - pcap-collector-creds
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -3336,6 +3384,20 @@ objects:
           namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-cee
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: backplane-cee-mustgather
+        namespace: openshift-backplane-managed-scripts
+      subjects:
+      - apiGroup: rbac.authorization.k8s.io
+        kind: Group
+        name: system:serviceaccounts:openshift-backplane-cee
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: backplane-cee-pcap-collector
+        namespace: openshift-backplane-managed-scripts
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -9253,6 +9315,35 @@ objects:
           namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-srep
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: backplane-srep-pcap-collector
+        namespace: openshift-backplane-managed-scripts
+      rules:
+      - verbs:
+        - create
+        - delete
+        apiGroups:
+        - ''
+        resources:
+        - secrets
+        resourceNames:
+        - pcap-collector-creds
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: backplane-srep-mustgather
+        namespace: openshift-backplane-managed-scripts
+      subjects:
+      - apiGroup: rbac.authorization.k8s.io
+        kind: Group
+        name: system:serviceaccounts:openshift-backplane-srep
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: backplane-srep-pcap-collector
+        namespace: openshift-backplane-managed-scripts
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
