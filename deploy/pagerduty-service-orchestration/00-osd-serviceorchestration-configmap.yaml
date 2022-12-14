@@ -1,0 +1,32 @@
+apiVersion: v1
+data:
+  service-orchestration.json: |
+    {
+    "orchestration_path": {
+    "catch_all": {
+        "actions": {}
+    },
+    "sets": [
+    {
+        "id": "start",
+        "rules": [
+        {     
+            "actions": {
+            "suppress": true
+            },
+            "conditions": [
+            {
+            "expression": "event.severity matches 'Warning'"
+            }
+            ]
+        }
+        ]
+    }
+    ],
+    "type": "service"
+    }
+    }
+kind: ConfigMap
+metadata:
+  name: osd-serviceorchestration
+  namespace: pagerduty-operator
