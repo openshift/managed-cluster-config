@@ -76,6 +76,12 @@ spec:
                 sleep 5
               done
 
+              # wait for rolebindings needed for build to be created
+               until (oc -n "${NS}" get rolebindings system:deployers >/dev/null) && (oc -n "${NS}" get rolebindings system:image-builders >/dev/null) && (oc -n "${NS}" get rolebindings system:image-pullers >/dev/null); do
+                 echo "$(date): Waiting for rolebindings to be created"
+                 sleep 5
+               done
+
               # run build
               oc -n "${NS}" new-build --name="${JOB_PREFIX}" --binary --strategy source --docker-image registry.redhat.io/ubi8/go-toolset:1.17.7-13
               mkdir -p /tmp/build
