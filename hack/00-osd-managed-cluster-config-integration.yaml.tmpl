@@ -632,6 +632,1106 @@ objects:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
           policy.open-cluster-management.io/standards: NIST SP 800-53
+        name: backplane-cee-sp
+        namespace: openshift-rbac-policies
+      spec:
+        disabled: false
+        policy-templates:
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+              name: backplane-cee-sp
+            spec:
+              object-templates:
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: ClusterRoleBinding
+                  metadata:
+                    name: backplane-cee-c0
+                  roleRef:
+                    apiGroup: rbac.authorization.k8s.io
+                    kind: ClusterRole
+                    name: backplane-cee-readers-cluster
+                  subjects:
+                  - apiGroup: rbac.authorization.k8s.io
+                    kind: Group
+                    name: system:serviceaccounts:openshift-backplane-cee
+              pruneObjectBehavior: DeleteIfCreated
+              remediationAction: enforce
+              severity: low
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+              name: backplane-cee-sp2
+            spec:
+              object-templates:
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: ClusterRoleBinding
+                  metadata:
+                    name: backplane-cee-c1
+                  roleRef:
+                    apiGroup: rbac.authorization.k8s.io
+                    kind: ClusterRole
+                    name: backplane-readers-cluster
+                  subjects:
+                  - apiGroup: rbac.authorization.k8s.io
+                    kind: Group
+                    name: system:serviceaccounts:openshift-backplane-cee
+              pruneObjectBehavior: DeleteIfCreated
+              remediationAction: enforce
+              severity: low
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+              name: backplane-cee-sp3
+            spec:
+              namespaceSelector:
+                exclude:
+                - openshift-backplane-cluster-admin
+                include:
+                - kube
+                - kube-*
+                - openshift
+                - openshift-*
+                - default
+                - redhat-*
+              object-templates:
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: RoleBinding
+                  metadata:
+                    name: backplane-cee-0
+                  roleRef:
+                    apiGroup: rbac.authorization.k8s.io
+                    kind: ClusterRole
+                    name: dedicated-readers
+                  subjects:
+                  - apiGroup: rbac.authorization.k8s.io
+                    kind: Group
+                    name: system:serviceaccounts:openshift-backplane-cee
+              pruneObjectBehavior: DeleteIfCreated
+              remediationAction: enforce
+              severity: low
+    - apiVersion: apps.open-cluster-management.io/v1
+      kind: PlacementRule
+      metadata:
+        name: placement-backplane-cee-sp
+        namespace: openshift-rbac-policies
+      spec:
+        clusterSelector:
+          matchExpressions:
+          - key: hypershift.open-cluster-management.io/hosted-cluster
+            operator: In
+            values:
+            - 'true'
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: PlacementBinding
+      metadata:
+        name: binding-backplane-cee-sp
+        namespace: openshift-rbac-policies
+      placementRef:
+        apiGroup: apps.open-cluster-management.io
+        kind: PlacementRule
+        name: placement-backplane-cee-sp
+      subjects:
+      - apiGroup: policy.open-cluster-management.io
+        kind: Policy
+        name: backplane-cee-sp
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: Policy
+      metadata:
+        annotations:
+          policy.open-cluster-management.io/categories: CM Configuration Management
+          policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/standards: NIST SP 800-53
+        name: backplane-cee
+        namespace: openshift-rbac-policies
+      spec:
+        disabled: false
+        policy-templates:
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+              name: backplane-cee
+            spec:
+              object-templates:
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: v1
+                  kind: Namespace
+                  metadata:
+                    name: openshift-backplane-cee
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: ClusterRole
+                  metadata:
+                    name: backplane-cee-readers-cluster
+                  rules:
+                  - apiGroups:
+                    - machineconfiguration.openshift.io
+                    resources:
+                    - '*'
+                    verbs:
+                    - get
+                    - list
+                    - watch
+                  - apiGroups:
+                    - machine.openshift.io
+                    resources:
+                    - '*'
+                    verbs:
+                    - get
+                    - list
+                    - watch
+                  - apiGroups:
+                    - apiserver.openshift.io
+                    resources:
+                    - apirequestcounts
+                    verbs:
+                    - get
+                    - list
+                    - watch
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: Role
+                  metadata:
+                    name: backplane-cee
+                    namespace: openshift-monitoring
+                  rules:
+                  - apiGroups:
+                    - ''
+                    resources:
+                    - pods/portforward
+                    verbs:
+                    - create
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: RoleBinding
+                  metadata:
+                    name: backplane-cee
+                    namespace: openshift-monitoring
+                  roleRef:
+                    apiGroup: rbac.authorization.k8s.io
+                    kind: Role
+                    name: backplane-cee
+                    namespace: openshift-monitoring
+                  subjects:
+                  - apiGroup: rbac.authorization.k8s.io
+                    kind: Group
+                    name: system:serviceaccounts:openshift-backplane-cee
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: Role
+                  metadata:
+                    name: backplane-cee-mustgather
+                    namespace: openshift-must-gather-operator
+                  rules:
+                  - apiGroups:
+                    - ''
+                    resources:
+                    - secrets
+                    verbs:
+                    - create
+                  - apiGroups:
+                    - managed.openshift.io
+                    resources:
+                    - mustgathers
+                    verbs:
+                    - create
+                    - delete
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: RoleBinding
+                  metadata:
+                    name: backplane-cee-mustgather
+                    namespace: openshift-must-gather-operator
+                  roleRef:
+                    apiGroup: rbac.authorization.k8s.io
+                    kind: Role
+                    name: backplane-cee-mustgather
+                    namespace: openshift-must-gather-operator
+                  subjects:
+                  - apiGroup: rbac.authorization.k8s.io
+                    kind: Group
+                    name: system:serviceaccounts:openshift-backplane-cee
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: Role
+                  metadata:
+                    name: backplane-cee-pcap-collector
+                    namespace: openshift-backplane-managed-scripts
+                  rules:
+                  - apiGroups:
+                    - ''
+                    resourceNames:
+                    - pcap-collector-creds
+                    resources:
+                    - secrets
+                    verbs:
+                    - create
+                    - delete
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: RoleBinding
+                  metadata:
+                    name: backplane-cee-mustgather
+                    namespace: openshift-backplane-managed-scripts
+                  roleRef:
+                    apiGroup: rbac.authorization.k8s.io
+                    kind: Role
+                    name: backplane-cee-pcap-collector
+                    namespace: openshift-backplane-managed-scripts
+                  subjects:
+                  - apiGroup: rbac.authorization.k8s.io
+                    kind: Group
+                    name: system:serviceaccounts:openshift-backplane-cee
+              pruneObjectBehavior: DeleteIfCreated
+              remediationAction: enforce
+              severity: low
+    - apiVersion: apps.open-cluster-management.io/v1
+      kind: PlacementRule
+      metadata:
+        name: placement-backplane-cee
+        namespace: openshift-rbac-policies
+      spec:
+        clusterSelector:
+          matchExpressions:
+          - key: hypershift.open-cluster-management.io/hosted-cluster
+            operator: In
+            values:
+            - 'true'
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: PlacementBinding
+      metadata:
+        name: binding-backplane-cee
+        namespace: openshift-rbac-policies
+      placementRef:
+        apiGroup: apps.open-cluster-management.io
+        kind: PlacementRule
+        name: placement-backplane-cee
+      subjects:
+      - apiGroup: policy.open-cluster-management.io
+        kind: Policy
+        name: backplane-cee
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: Policy
+      metadata:
+        annotations:
+          policy.open-cluster-management.io/categories: CM Configuration Management
+          policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/standards: NIST SP 800-53
+        name: backplane-cse-sp
+        namespace: openshift-rbac-policies
+      spec:
+        disabled: false
+        policy-templates:
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+              name: backplane-cse-sp
+            spec:
+              object-templates:
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: ClusterRoleBinding
+                  metadata:
+                    name: backplane-cse-c0
+                  roleRef:
+                    apiGroup: rbac.authorization.k8s.io
+                    kind: ClusterRole
+                    name: backplane-readers-cluster
+                  subjects:
+                  - apiGroup: rbac.authorization.k8s.io
+                    kind: Group
+                    name: system:serviceaccounts:openshift-backplane-cse
+              pruneObjectBehavior: DeleteIfCreated
+              remediationAction: enforce
+              severity: low
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+              name: backplane-cse-sp2
+            spec:
+              namespaceSelector:
+                exclude:
+                - openshift-backplane-cluster-admin
+                include:
+                - kube
+                - kube-*
+                - openshift
+                - openshift-*
+                - default
+                - redhat-*
+              object-templates:
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: RoleBinding
+                  metadata:
+                    name: backplane-cse-0
+                  roleRef:
+                    apiGroup: rbac.authorization.k8s.io
+                    kind: ClusterRole
+                    name: dedicated-readers
+                  subjects:
+                  - apiGroup: rbac.authorization.k8s.io
+                    kind: Group
+                    name: system:serviceaccounts:openshift-backplane-cse
+              pruneObjectBehavior: DeleteIfCreated
+              remediationAction: enforce
+              severity: low
+    - apiVersion: apps.open-cluster-management.io/v1
+      kind: PlacementRule
+      metadata:
+        name: placement-backplane-cse-sp
+        namespace: openshift-rbac-policies
+      spec:
+        clusterSelector:
+          matchExpressions:
+          - key: hypershift.open-cluster-management.io/hosted-cluster
+            operator: In
+            values:
+            - 'true'
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: PlacementBinding
+      metadata:
+        name: binding-backplane-cse-sp
+        namespace: openshift-rbac-policies
+      placementRef:
+        apiGroup: apps.open-cluster-management.io
+        kind: PlacementRule
+        name: placement-backplane-cse-sp
+      subjects:
+      - apiGroup: policy.open-cluster-management.io
+        kind: Policy
+        name: backplane-cse-sp
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: Policy
+      metadata:
+        annotations:
+          policy.open-cluster-management.io/categories: CM Configuration Management
+          policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/standards: NIST SP 800-53
+        name: backplane-cse
+        namespace: openshift-rbac-policies
+      spec:
+        disabled: false
+        policy-templates:
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+              name: backplane-cse
+            spec:
+              object-templates:
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: v1
+                  kind: Namespace
+                  metadata:
+                    name: openshift-backplane-cse
+              pruneObjectBehavior: DeleteIfCreated
+              remediationAction: enforce
+              severity: low
+    - apiVersion: apps.open-cluster-management.io/v1
+      kind: PlacementRule
+      metadata:
+        name: placement-backplane-cse
+        namespace: openshift-rbac-policies
+      spec:
+        clusterSelector:
+          matchExpressions:
+          - key: hypershift.open-cluster-management.io/hosted-cluster
+            operator: In
+            values:
+            - 'true'
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: PlacementBinding
+      metadata:
+        name: binding-backplane-cse
+        namespace: openshift-rbac-policies
+      placementRef:
+        apiGroup: apps.open-cluster-management.io
+        kind: PlacementRule
+        name: placement-backplane-cse
+      subjects:
+      - apiGroup: policy.open-cluster-management.io
+        kind: Policy
+        name: backplane-cse
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: Policy
+      metadata:
+        annotations:
+          policy.open-cluster-management.io/categories: CM Configuration Management
+          policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/standards: NIST SP 800-53
+        name: backplane-csm-sp
+        namespace: openshift-rbac-policies
+      spec:
+        disabled: false
+        policy-templates:
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+              name: backplane-csm-sp
+            spec:
+              object-templates:
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: ClusterRoleBinding
+                  metadata:
+                    name: backplane-csm-c0
+                  roleRef:
+                    apiGroup: rbac.authorization.k8s.io
+                    kind: ClusterRole
+                    name: backplane-readers-cluster
+                  subjects:
+                  - apiGroup: rbac.authorization.k8s.io
+                    kind: Group
+                    name: system:serviceaccounts:openshift-backplane-csm
+              pruneObjectBehavior: DeleteIfCreated
+              remediationAction: enforce
+              severity: low
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+              name: backplane-csm-sp2
+            spec:
+              namespaceSelector:
+                exclude:
+                - openshift-backplane-cluster-admin
+                include:
+                - kube
+                - kube-*
+                - openshift
+                - openshift-*
+                - default
+                - redhat-*
+              object-templates:
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: RoleBinding
+                  metadata:
+                    name: backplane-csm-0
+                  roleRef:
+                    apiGroup: rbac.authorization.k8s.io
+                    kind: ClusterRole
+                    name: dedicated-readers
+                  subjects:
+                  - apiGroup: rbac.authorization.k8s.io
+                    kind: Group
+                    name: system:serviceaccounts:openshift-backplane-csm
+              pruneObjectBehavior: DeleteIfCreated
+              remediationAction: enforce
+              severity: low
+    - apiVersion: apps.open-cluster-management.io/v1
+      kind: PlacementRule
+      metadata:
+        name: placement-backplane-csm-sp
+        namespace: openshift-rbac-policies
+      spec:
+        clusterSelector:
+          matchExpressions:
+          - key: hypershift.open-cluster-management.io/hosted-cluster
+            operator: In
+            values:
+            - 'true'
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: PlacementBinding
+      metadata:
+        name: binding-backplane-csm-sp
+        namespace: openshift-rbac-policies
+      placementRef:
+        apiGroup: apps.open-cluster-management.io
+        kind: PlacementRule
+        name: placement-backplane-csm-sp
+      subjects:
+      - apiGroup: policy.open-cluster-management.io
+        kind: Policy
+        name: backplane-csm-sp
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: Policy
+      metadata:
+        annotations:
+          policy.open-cluster-management.io/categories: CM Configuration Management
+          policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/standards: NIST SP 800-53
+        name: backplane-csm
+        namespace: openshift-rbac-policies
+      spec:
+        disabled: false
+        policy-templates:
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+              name: backplane-csm
+            spec:
+              object-templates:
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: v1
+                  kind: Namespace
+                  metadata:
+                    name: openshift-backplane-csm
+              pruneObjectBehavior: DeleteIfCreated
+              remediationAction: enforce
+              severity: low
+    - apiVersion: apps.open-cluster-management.io/v1
+      kind: PlacementRule
+      metadata:
+        name: placement-backplane-csm
+        namespace: openshift-rbac-policies
+      spec:
+        clusterSelector:
+          matchExpressions:
+          - key: hypershift.open-cluster-management.io/hosted-cluster
+            operator: In
+            values:
+            - 'true'
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: PlacementBinding
+      metadata:
+        name: binding-backplane-csm
+        namespace: openshift-rbac-policies
+      placementRef:
+        apiGroup: apps.open-cluster-management.io
+        kind: PlacementRule
+        name: placement-backplane-csm
+      subjects:
+      - apiGroup: policy.open-cluster-management.io
+        kind: Policy
+        name: backplane-csm
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: Policy
+      metadata:
+        annotations:
+          policy.open-cluster-management.io/categories: CM Configuration Management
+          policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/standards: NIST SP 800-53
+        name: backplane-cssre-sp
+        namespace: openshift-rbac-policies
+      spec:
+        disabled: false
+        policy-templates:
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+              name: backplane-cssre-sp
+            spec:
+              object-templates:
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: ClusterRoleBinding
+                  metadata:
+                    name: backplane-cssre-c0
+                  roleRef:
+                    apiGroup: rbac.authorization.k8s.io
+                    kind: ClusterRole
+                    name: backplane-cssre-admins-cluster
+                  subjects:
+                  - apiGroup: rbac.authorization.k8s.io
+                    kind: Group
+                    name: system:serviceaccounts:openshift-backplane-cssre
+              pruneObjectBehavior: DeleteIfCreated
+              remediationAction: enforce
+              severity: low
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+              name: backplane-cssre-sp2
+            spec:
+              object-templates:
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: ClusterRoleBinding
+                  metadata:
+                    name: backplane-cssre-c1
+                  roleRef:
+                    apiGroup: rbac.authorization.k8s.io
+                    kind: ClusterRole
+                    name: backplane-readers-cluster
+                  subjects:
+                  - apiGroup: rbac.authorization.k8s.io
+                    kind: Group
+                    name: system:serviceaccounts:openshift-backplane-cssre
+              pruneObjectBehavior: DeleteIfCreated
+              remediationAction: enforce
+              severity: low
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+              name: backplane-cssre-sp3
+            spec:
+              namespaceSelector:
+                exclude:
+                - openshift-backplane-cluster-admin
+                include:
+                - kube
+                - kube-*
+                - openshift
+                - openshift-*
+                - default
+                - redhat-*
+              object-templates:
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: RoleBinding
+                  metadata:
+                    name: backplane-cssre-0
+                  roleRef:
+                    apiGroup: rbac.authorization.k8s.io
+                    kind: ClusterRole
+                    name: dedicated-readers
+                  subjects:
+                  - apiGroup: rbac.authorization.k8s.io
+                    kind: Group
+                    name: system:serviceaccounts:openshift-backplane-cssre
+              pruneObjectBehavior: DeleteIfCreated
+              remediationAction: enforce
+              severity: low
+    - apiVersion: apps.open-cluster-management.io/v1
+      kind: PlacementRule
+      metadata:
+        name: placement-backplane-cssre-sp
+        namespace: openshift-rbac-policies
+      spec:
+        clusterSelector:
+          matchExpressions:
+          - key: hypershift.open-cluster-management.io/hosted-cluster
+            operator: In
+            values:
+            - 'true'
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: PlacementBinding
+      metadata:
+        name: binding-backplane-cssre-sp
+        namespace: openshift-rbac-policies
+      placementRef:
+        apiGroup: apps.open-cluster-management.io
+        kind: PlacementRule
+        name: placement-backplane-cssre-sp
+      subjects:
+      - apiGroup: policy.open-cluster-management.io
+        kind: Policy
+        name: backplane-cssre-sp
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: Policy
+      metadata:
+        annotations:
+          policy.open-cluster-management.io/categories: CM Configuration Management
+          policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/standards: NIST SP 800-53
+        name: backplane-cssre
+        namespace: openshift-rbac-policies
+      spec:
+        disabled: false
+        policy-templates:
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+              name: backplane-cssre
+            spec:
+              object-templates:
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: v1
+                  kind: Namespace
+                  metadata:
+                    name: openshift-backplane-cssre
+              - complianceType: musthave
+                objectDefinition:
+                  aggregationRule:
+                    clusterRoleSelectors:
+                    - matchExpressions:
+                      - key: managed.openshift.io/aggregate-to-cssre-admins
+                        operator: In
+                        values:
+                        - cluster
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: ClusterRole
+                  metadata:
+                    name: backplane-cssre-admins-cluster
+                  rules: []
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: Role
+                  metadata:
+                    name: backplane-cssre
+                    namespace: openshift-monitoring
+                  rules:
+                  - apiGroups:
+                    - ''
+                    resources:
+                    - pods/portforward
+                    verbs:
+                    - create
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: RoleBinding
+                  metadata:
+                    name: backplane-cssre
+                    namespace: openshift-monitoring
+                  roleRef:
+                    apiGroup: rbac.authorization.k8s.io
+                    kind: Role
+                    name: backplane-cssre
+                    namespace: openshift-monitoring
+                  subjects:
+                  - apiGroup: rbac.authorization.k8s.io
+                    kind: Group
+                    name: system:serviceaccounts:openshift-backplane-cssre
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: Role
+                  metadata:
+                    name: backplane-cssre-mustgather
+                    namespace: openshift-must-gather-operator
+                  rules:
+                  - apiGroups:
+                    - ''
+                    resources:
+                    - secrets
+                    verbs:
+                    - create
+                    - list
+                    - get
+                  - apiGroups:
+                    - managed.openshift.io
+                    resources:
+                    - mustgathers
+                    verbs:
+                    - create
+                    - list
+                    - get
+                    - delete
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: RoleBinding
+                  metadata:
+                    name: backplane-cssre-mustgather
+                    namespace: openshift-must-gather-operator
+                  roleRef:
+                    apiGroup: rbac.authorization.k8s.io
+                    kind: Role
+                    name: backplane-cssre-mustgather
+                    namespace: openshift-must-gather-operator
+                  subjects:
+                  - apiGroup: rbac.authorization.k8s.io
+                    kind: Group
+                    name: system:serviceaccounts:openshift-backplane-cssre
+              pruneObjectBehavior: DeleteIfCreated
+              remediationAction: enforce
+              severity: low
+    - apiVersion: apps.open-cluster-management.io/v1
+      kind: PlacementRule
+      metadata:
+        name: placement-backplane-cssre
+        namespace: openshift-rbac-policies
+      spec:
+        clusterSelector:
+          matchExpressions:
+          - key: hypershift.open-cluster-management.io/hosted-cluster
+            operator: In
+            values:
+            - 'true'
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: PlacementBinding
+      metadata:
+        name: binding-backplane-cssre
+        namespace: openshift-rbac-policies
+      placementRef:
+        apiGroup: apps.open-cluster-management.io
+        kind: PlacementRule
+        name: placement-backplane-cssre
+      subjects:
+      - apiGroup: policy.open-cluster-management.io
+        kind: Policy
+        name: backplane-cssre
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: Policy
+      metadata:
+        annotations:
+          policy.open-cluster-management.io/categories: CM Configuration Management
+          policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/standards: NIST SP 800-53
+        name: backplane-elevated-sre
+        namespace: openshift-rbac-policies
+      spec:
+        disabled: false
+        policy-templates:
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+              name: backplane-elevated-sre
+            spec:
+              object-templates:
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: ClusterRole
+                  metadata:
+                    name: backplane-impersonate-cluster-admin
+                  rules:
+                  - apiGroups:
+                    - ''
+                    resourceNames:
+                    - backplane-cluster-admin
+                    resources:
+                    - users
+                    verbs:
+                    - impersonate
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: ClusterRoleBinding
+                  metadata:
+                    name: backplane-impersonate-cluster-admin
+                  roleRef:
+                    apiGroup: rbac.authorization.k8s.io
+                    kind: ClusterRole
+                    name: backplane-impersonate-cluster-admin
+                  subjects:
+                  - kind: Group
+                    name: system:serviceaccounts:openshift-backplane-srep
+                  - kind: Group
+                    name: system:serviceaccounts:openshift-backplane-cssre
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: user.openshift.io/v1
+                  kind: User
+                  metadata:
+                    name: backplane-cluster-admin
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: ClusterRoleBinding
+                  metadata:
+                    name: backplane-cluster-admin
+                  roleRef:
+                    apiGroup: rbac.authorization.k8s.io
+                    kind: ClusterRole
+                    name: cluster-admin
+                  subjects:
+                  - kind: User
+                    name: backplane-cluster-admin
+              pruneObjectBehavior: DeleteIfCreated
+              remediationAction: enforce
+              severity: low
+    - apiVersion: apps.open-cluster-management.io/v1
+      kind: PlacementRule
+      metadata:
+        name: placement-backplane-elevated-sre
+        namespace: openshift-rbac-policies
+      spec:
+        clusterSelector:
+          matchExpressions:
+          - key: hypershift.open-cluster-management.io/hosted-cluster
+            operator: In
+            values:
+            - 'true'
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: PlacementBinding
+      metadata:
+        name: binding-backplane-elevated-sre
+        namespace: openshift-rbac-policies
+      placementRef:
+        apiGroup: apps.open-cluster-management.io
+        kind: PlacementRule
+        name: placement-backplane-elevated-sre
+      subjects:
+      - apiGroup: policy.open-cluster-management.io
+        kind: Policy
+        name: backplane-elevated-sre
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: Policy
+      metadata:
+        annotations:
+          policy.open-cluster-management.io/categories: CM Configuration Management
+          policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/standards: NIST SP 800-53
+        name: backplane-mobb-sp
+        namespace: openshift-rbac-policies
+      spec:
+        disabled: false
+        policy-templates:
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+              name: backplane-mobb-sp
+            spec:
+              object-templates:
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: ClusterRoleBinding
+                  metadata:
+                    name: backplane-mobb-c0
+                  roleRef:
+                    apiGroup: rbac.authorization.k8s.io
+                    kind: ClusterRole
+                    name: backplane-readers-cluster
+                  subjects:
+                  - apiGroup: rbac.authorization.k8s.io
+                    kind: Group
+                    name: system:serviceaccounts:openshift-backplane-mobb
+              pruneObjectBehavior: DeleteIfCreated
+              remediationAction: enforce
+              severity: low
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+              name: backplane-mobb-sp2
+            spec:
+              namespaceSelector:
+                exclude:
+                - openshift-backplane-cluster-admin
+                include:
+                - kube
+                - kube-*
+                - openshift
+                - openshift-*
+                - default
+                - redhat-*
+              object-templates:
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: RoleBinding
+                  metadata:
+                    name: backplane-mobb-0
+                  roleRef:
+                    apiGroup: rbac.authorization.k8s.io
+                    kind: ClusterRole
+                    name: dedicated-readers
+                  subjects:
+                  - apiGroup: rbac.authorization.k8s.io
+                    kind: Group
+                    name: system:serviceaccounts:openshift-backplane-mobb
+              pruneObjectBehavior: DeleteIfCreated
+              remediationAction: enforce
+              severity: low
+    - apiVersion: apps.open-cluster-management.io/v1
+      kind: PlacementRule
+      metadata:
+        name: placement-backplane-mobb-sp
+        namespace: openshift-rbac-policies
+      spec:
+        clusterSelector:
+          matchExpressions:
+          - key: hypershift.open-cluster-management.io/hosted-cluster
+            operator: In
+            values:
+            - 'true'
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: PlacementBinding
+      metadata:
+        name: binding-backplane-mobb-sp
+        namespace: openshift-rbac-policies
+      placementRef:
+        apiGroup: apps.open-cluster-management.io
+        kind: PlacementRule
+        name: placement-backplane-mobb-sp
+      subjects:
+      - apiGroup: policy.open-cluster-management.io
+        kind: Policy
+        name: backplane-mobb-sp
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: Policy
+      metadata:
+        annotations:
+          policy.open-cluster-management.io/categories: CM Configuration Management
+          policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/standards: NIST SP 800-53
+        name: backplane-mobb
+        namespace: openshift-rbac-policies
+      spec:
+        disabled: false
+        policy-templates:
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+              name: backplane-mobb
+            spec:
+              object-templates:
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: v1
+                  kind: Namespace
+                  metadata:
+                    name: openshift-backplane-mobb
+              pruneObjectBehavior: DeleteIfCreated
+              remediationAction: enforce
+              severity: low
+    - apiVersion: apps.open-cluster-management.io/v1
+      kind: PlacementRule
+      metadata:
+        name: placement-backplane-mobb
+        namespace: openshift-rbac-policies
+      spec:
+        clusterSelector:
+          matchExpressions:
+          - key: hypershift.open-cluster-management.io/hosted-cluster
+            operator: In
+            values:
+            - 'true'
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: PlacementBinding
+      metadata:
+        name: binding-backplane-mobb
+        namespace: openshift-rbac-policies
+      placementRef:
+        apiGroup: apps.open-cluster-management.io
+        kind: PlacementRule
+        name: placement-backplane-mobb
+      subjects:
+      - apiGroup: policy.open-cluster-management.io
+        kind: Policy
+        name: backplane-mobb
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: Policy
+      metadata:
+        annotations:
+          policy.open-cluster-management.io/categories: CM Configuration Management
+          policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/standards: NIST SP 800-53
         name: backplane-srep-sp
         namespace: openshift-rbac-policies
       spec:
@@ -1204,6 +2304,154 @@ objects:
       - apiGroup: policy.open-cluster-management.io
         kind: Policy
         name: backplane-srep
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: Policy
+      metadata:
+        annotations:
+          policy.open-cluster-management.io/categories: CM Configuration Management
+          policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/standards: NIST SP 800-53
+        name: backplane-tam-sp
+        namespace: openshift-rbac-policies
+      spec:
+        disabled: false
+        policy-templates:
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+              name: backplane-tam-sp
+            spec:
+              object-templates:
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: ClusterRoleBinding
+                  metadata:
+                    name: backplane-tam-c0
+                  roleRef:
+                    apiGroup: rbac.authorization.k8s.io
+                    kind: ClusterRole
+                    name: backplane-readers-cluster
+                  subjects:
+                  - apiGroup: rbac.authorization.k8s.io
+                    kind: Group
+                    name: system:serviceaccounts:openshift-backplane-tam
+              pruneObjectBehavior: DeleteIfCreated
+              remediationAction: enforce
+              severity: low
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+              name: backplane-tam-sp2
+            spec:
+              namespaceSelector:
+                exclude:
+                - openshift-backplane-cluster-admin
+                include:
+                - kube
+                - kube-*
+                - openshift
+                - openshift-*
+                - default
+                - redhat-*
+              object-templates:
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: RoleBinding
+                  metadata:
+                    name: backplane-tam-0
+                  roleRef:
+                    apiGroup: rbac.authorization.k8s.io
+                    kind: ClusterRole
+                    name: dedicated-readers
+                  subjects:
+                  - apiGroup: rbac.authorization.k8s.io
+                    kind: Group
+                    name: system:serviceaccounts:openshift-backplane-tam
+              pruneObjectBehavior: DeleteIfCreated
+              remediationAction: enforce
+              severity: low
+    - apiVersion: apps.open-cluster-management.io/v1
+      kind: PlacementRule
+      metadata:
+        name: placement-backplane-tam-sp
+        namespace: openshift-rbac-policies
+      spec:
+        clusterSelector:
+          matchExpressions:
+          - key: hypershift.open-cluster-management.io/hosted-cluster
+            operator: In
+            values:
+            - 'true'
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: PlacementBinding
+      metadata:
+        name: binding-backplane-tam-sp
+        namespace: openshift-rbac-policies
+      placementRef:
+        apiGroup: apps.open-cluster-management.io
+        kind: PlacementRule
+        name: placement-backplane-tam-sp
+      subjects:
+      - apiGroup: policy.open-cluster-management.io
+        kind: Policy
+        name: backplane-tam-sp
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: Policy
+      metadata:
+        annotations:
+          policy.open-cluster-management.io/categories: CM Configuration Management
+          policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/standards: NIST SP 800-53
+        name: backplane-tam
+        namespace: openshift-rbac-policies
+      spec:
+        disabled: false
+        policy-templates:
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+              name: backplane-tam
+            spec:
+              object-templates:
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: v1
+                  kind: Namespace
+                  metadata:
+                    name: openshift-backplane-tam
+              pruneObjectBehavior: DeleteIfCreated
+              remediationAction: enforce
+              severity: low
+    - apiVersion: apps.open-cluster-management.io/v1
+      kind: PlacementRule
+      metadata:
+        name: placement-backplane-tam
+        namespace: openshift-rbac-policies
+      spec:
+        clusterSelector:
+          matchExpressions:
+          - key: hypershift.open-cluster-management.io/hosted-cluster
+            operator: In
+            values:
+            - 'true'
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: PlacementBinding
+      metadata:
+        name: binding-backplane-tam
+        namespace: openshift-rbac-policies
+      placementRef:
+        apiGroup: apps.open-cluster-management.io
+        kind: PlacementRule
+        name: placement-backplane-tam
+      subjects:
+      - apiGroup: policy.open-cluster-management.io
+        kind: Policy
+        name: backplane-tam
     - apiVersion: policy.open-cluster-management.io/v1
       kind: Policy
       metadata:

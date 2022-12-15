@@ -1,0 +1,99 @@
+---
+apiVersion: policy.open-cluster-management.io/v1
+kind: Policy
+metadata:
+    annotations:
+        policy.open-cluster-management.io/categories: CM Configuration Management
+        policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+        policy.open-cluster-management.io/standards: NIST SP 800-53
+    name: backplane-elevated-sre
+    namespace: openshift-rbac-policies
+spec:
+    disabled: false
+    policy-templates:
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+                name: backplane-elevated-sre
+            spec:
+                object-templates:
+                    - complianceType: musthave
+                      objectDefinition:
+                        apiVersion: rbac.authorization.k8s.io/v1
+                        kind: ClusterRole
+                        metadata:
+                            name: backplane-impersonate-cluster-admin
+                        rules:
+                            - apiGroups:
+                                - ""
+                              resourceNames:
+                                - backplane-cluster-admin
+                              resources:
+                                - users
+                              verbs:
+                                - impersonate
+                    - complianceType: musthave
+                      objectDefinition:
+                        apiVersion: rbac.authorization.k8s.io/v1
+                        kind: ClusterRoleBinding
+                        metadata:
+                            name: backplane-impersonate-cluster-admin
+                        roleRef:
+                            apiGroup: rbac.authorization.k8s.io
+                            kind: ClusterRole
+                            name: backplane-impersonate-cluster-admin
+                        subjects:
+                            - kind: Group
+                              name: system:serviceaccounts:openshift-backplane-srep
+                            - kind: Group
+                              name: system:serviceaccounts:openshift-backplane-cssre
+                    - complianceType: musthave
+                      objectDefinition:
+                        apiVersion: user.openshift.io/v1
+                        kind: User
+                        metadata:
+                            name: backplane-cluster-admin
+                    - complianceType: musthave
+                      objectDefinition:
+                        apiVersion: rbac.authorization.k8s.io/v1
+                        kind: ClusterRoleBinding
+                        metadata:
+                            name: backplane-cluster-admin
+                        roleRef:
+                            apiGroup: rbac.authorization.k8s.io
+                            kind: ClusterRole
+                            name: cluster-admin
+                        subjects:
+                            - kind: User
+                              name: backplane-cluster-admin
+                pruneObjectBehavior: DeleteIfCreated
+                remediationAction: enforce
+                severity: low
+---
+apiVersion: apps.open-cluster-management.io/v1
+kind: PlacementRule
+metadata:
+    name: placement-backplane-elevated-sre
+    namespace: openshift-rbac-policies
+spec:
+    clusterSelector:
+        matchExpressions:
+            - key: hypershift.open-cluster-management.io/hosted-cluster
+              operator: In
+              values:
+                - "true"
+---
+apiVersion: policy.open-cluster-management.io/v1
+kind: PlacementBinding
+metadata:
+    name: binding-backplane-elevated-sre
+    namespace: openshift-rbac-policies
+placementRef:
+    apiGroup: apps.open-cluster-management.io
+    kind: PlacementRule
+    name: placement-backplane-elevated-sre
+subjects:
+    - apiGroup: policy.open-cluster-management.io
+      kind: Policy
+      name: backplane-elevated-sre
