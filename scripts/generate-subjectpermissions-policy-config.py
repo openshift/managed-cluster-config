@@ -12,6 +12,12 @@ base_directory = "./deploy/"
 directories = [
         'rbac-permissions-operator-config',
         'backplane/srep',
+        'backplane/tam',
+        'backplane/cee',
+        'backplane/cssre',
+        'backplane/cse',
+        'backplane/csm',
+        'backplane/mobb',
         'ccs-dedicated-admins'
         ]
 rolebinding = \
