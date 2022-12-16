@@ -22873,6 +22873,20 @@ objects:
   metadata:
     name: hive-environment
     namespace: openshift-config
+- apiVersion: v1
+  data:
+    service-orchestration.json: "{\n\"orchestration_path\": {\n\"catch_all\": {\n\
+      \    \"actions\": {}\n},\n\"sets\": [\n{\n    \"id\": \"start\",\n    \"rules\"\
+      : [\n    {     \n        \"actions\": {\n        \"suppress\": true\n      \
+      \  },\n        \"conditions\": [\n        {\n        \"expression\": \"event.severity\
+      \ matches 'Warning'\"\n        }\n        ]\n    }\n    ]\n}\n],\n\"type\":\
+      \ \"service\"\n}\n}\n"
+  kind: ConfigMap
+  metadata:
+    name: osd-serviceorchestration
+    namespace: pagerduty-operator
+    labels:
+      api.openshift.com/managed: 'true'
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
