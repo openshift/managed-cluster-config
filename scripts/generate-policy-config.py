@@ -22,6 +22,7 @@ directories = [
         'backplane/mobb',
         'ccs-dedicated-admins',
         'customer-registry-cas',
+        'osd-must-gather-operator',
         'osd-openshift-operators-redhat',
         'osd-pcap-collector',
         ]

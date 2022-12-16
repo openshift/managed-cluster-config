@@ -2861,6 +2861,64 @@ objects:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
           policy.open-cluster-management.io/standards: NIST SP 800-53
+        name: osd-must-gather-operator
+        namespace: openshift-rbac-policies
+      spec:
+        disabled: false
+        policy-templates:
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+              name: osd-must-gather-operator
+            spec:
+              object-templates:
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: v1
+                  kind: Namespace
+                  metadata:
+                    annotations:
+                      openshift.io/node-selector: ''
+                    labels:
+                      openshift.io/cluster-logging: 'true'
+                      openshift.io/cluster-monitoring: 'true'
+                    name: openshift-must-gather-operator
+              pruneObjectBehavior: DeleteIfCreated
+              remediationAction: enforce
+              severity: low
+    - apiVersion: apps.open-cluster-management.io/v1
+      kind: PlacementRule
+      metadata:
+        name: placement-osd-must-gather-operator
+        namespace: openshift-rbac-policies
+      spec:
+        clusterSelector:
+          matchExpressions:
+          - key: hypershift.open-cluster-management.io/hosted-cluster
+            operator: In
+            values:
+            - 'true'
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: PlacementBinding
+      metadata:
+        name: binding-osd-must-gather-operator
+        namespace: openshift-rbac-policies
+      placementRef:
+        apiGroup: apps.open-cluster-management.io
+        kind: PlacementRule
+        name: placement-osd-must-gather-operator
+      subjects:
+      - apiGroup: policy.open-cluster-management.io
+        kind: Policy
+        name: osd-must-gather-operator
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: Policy
+      metadata:
+        annotations:
+          policy.open-cluster-management.io/categories: CM Configuration Management
+          policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/standards: NIST SP 800-53
         name: osd-openshift-operators-redhat
         namespace: openshift-rbac-policies
       spec:
