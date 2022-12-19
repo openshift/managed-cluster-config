@@ -6,6 +6,14 @@ metadata:
 spec:
   notifications:
     - activeBody: |-
+        Your cluster requires you to take action as there are multiple ingress controllers detected. Red Hat SRE strongly recommends using Openshift-managed Custom Domains instead, as multiple ingress controllers, if improperly configured, can lead to problems with internal and external networking.
+      name: MultipleIngressControllersDetected
+      resendWait: 24
+      resolvedBody: |-
+        Your cluster no longer has multiple Ingress Controllers installed. No additional action on this issue is required.
+      severity: Info
+      summary: "Multiple ingress controllers detected"
+    - activeBody: |-
         Your cluster requires you to take action as its ElasticSearch cluster logging deployment has been detected as reaching a high disk usage threshold. Red Hat SRE strongly recommends reducing application logging on your cluster to ensure logging continues to function. If logging disk consumption exceeds 95%, data will be at risk of becoming unavailable or lost and the stability of your ElasticSearch deployment may be impacted.
       name: LoggingVolumeFillingUp
       resendWait: 24
