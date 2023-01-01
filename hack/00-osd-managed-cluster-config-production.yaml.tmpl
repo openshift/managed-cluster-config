@@ -26,6 +26,8 @@ parameters:
   required: true
 - name: ENV
   required: true
+- name: INSIGHTS_OPERATOR_SUPPORT_SECRET_STRING_DATA
+  required: true
 metadata:
   name: selectorsyncset-template
 objects:
@@ -11749,39 +11751,6 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: insights-integration
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-      matchExpressions:
-      - key: api.openshift.com/environment
-        operator: In
-        values:
-        - integration
-      - key: api.openshift.com/fedramp
-        operator: NotIn
-        values:
-        - 'true'
-    resourceApplyMode: Sync
-    resources:
-    - apiVersion: v1
-      kind: Secret
-      metadata:
-        name: support
-        namespace: openshift-config
-      type: Opaque
-      data:
-        endpoint: aHR0cHM6Ly9jb25zb2xlLnN0YWdlLnJlZGhhdC5jb20vYXBpL2luZ3Jlc3MvdjEvdXBsb2Fk
-        reportEndpoint: aHR0cHM6Ly9jb25zb2xlLnN0YWdlLnJlZGhhdC5jb20vYXBpL2luc2lnaHRzLXJlc3VsdHMtYWdncmVnYXRvci92MS9jbHVzdGVycy8lcy9yZXBvcnQ=
-        scaEndpoint: aHR0cHM6Ly9hcGkuaW50ZWdyYXRpb24ub3BlbnNoaWZ0LmNvbS9hcGkvYWNjb3VudHNfbWdtdC92MS9jZXJ0aWZpY2F0ZXM=
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    labels:
-      managed.openshift.io/gitHash: ${IMAGE_TAG}
-      managed.openshift.io/gitRepoName: ${REPO_NAME}
-      managed.openshift.io/osd: 'true'
     name: insights-staging
   spec:
     clusterDeploymentSelector:
@@ -11804,10 +11773,7 @@ objects:
         name: support
         namespace: openshift-config
       type: Opaque
-      data:
-        endpoint: aHR0cHM6Ly9jb25zb2xlLnN0YWdlLnJlZGhhdC5jb20vYXBpL2luZ3Jlc3MvdjEvdXBsb2Fk
-        reportEndpoint: aHR0cHM6Ly9jb25zb2xlLnN0YWdlLnJlZGhhdC5jb20vYXBpL2luc2lnaHRzLXJlc3VsdHMtYWdncmVnYXRvci92MS9jbHVzdGVycy8lcy9yZXBvcnQ=
-        scaEndpoint: aHR0cHM6Ly9hcGkuc3RhZ2Uub3BlbnNoaWZ0LmNvbS9hcGkvYWNjb3VudHNfbWdtdC92MS9jZXJ0aWZpY2F0ZXM=
+      stringData: ${{INSIGHTS_OPERATOR_SUPPORT_SECRET_STRING_DATA}}
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
