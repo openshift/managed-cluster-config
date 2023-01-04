@@ -10,13 +10,11 @@ Alternatively you can enable GitHub Actions on your fork and `make` will be ran 
 the action will create a new commit with the generated files.
 
 To add a Policy
-- If the manifest of the object you want to convert to policy already exists in ./deploy :  Right now the policies are group by their funtionalities (like the rbac-policies that will generate all the policies for rbac related thing.). So if you want to add an rbac manifest, go to /script/generate-policy-template.py and add the directory you want to convert in the directory array. 
-- If the manifest of the object does not exist; add your manifests; then also add the directory of your manifest into the array in /script/generate-policy-template.py 
--Policies requires to be deploy in namespaces, so if the new policies don't belong to `openshift-managed-rbac-config`, create a manifest to create a new namespace. Example: ./deploy/acm-policies/00-openshift-managed-rbac-policies.Namespace.yaml 
-- If the manifest is SubjectPermission, add the directory of the manifest into the array in /script/generate-subjectpermissions-policy-template.py. then run `make` as usually
+- If the manifest of the object you want to convert to policy already exists in `deploy` : go to `script/generate-policy-template.py` and add the directory you want to convert in the directory array. 
+- If the manifest of the object does not exist; add your manifests; then add the directory of your manifest into the array in `script/generate-policy-template.py`. 
+- If the manifest is SubjectPermission, add the directory of the manifest into the array in `script/generate-subjectpermissions-policy-template.py` then run `make` as usually
 
-Then Run `make`
-`make` will look for the `policy-generator-config.yaml` files, runs it with the PolicyGenerator binary and save the output to `./deploy/acm-policies` directory. `make` will then automatically
+`make` will look for the `policy-generator-config.yaml` files, runs it with the PolicyGenerator binary and save the output to `deploy/acm-policies` directory. `make` will then automatically
 add the policy as a new SelectorySyncSet.
 
 # Building
