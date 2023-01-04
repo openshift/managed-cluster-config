@@ -10084,6 +10084,52 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: backplane-mtsre-openshift-connectors
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/addon-connectors-operator: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-openshift-connectors-cr-admins
+      rules:
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - clusterserviceversions
+        - subscriptions
+        - installplans
+        - catalogsources
+        verbs:
+        - get
+        - list
+        - watch
+        - patch
+        - update
+        - delete
+    - apiVersion: managed.openshift.io/v1alpha1
+      kind: SubjectPermission
+      metadata:
+        name: backplane-mtsre-openshift-connectors-admins
+        namespace: openshift-rbac-permissions
+      spec:
+        permissions:
+        - allowFirst: true
+          clusterRoleName: admin
+          namespacesAllowedRegex: (^redhat-openshift-connectors$)
+        subjectKind: Group
+        subjectName: system:serviceaccounts:openshift-backplane-mtsre
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: backplane-mtsre-reference-addon
   spec:
     clusterDeploymentSelector:
