@@ -40,7 +40,7 @@ for directory in sorted(directories, key=str.casefold):
     #fill in the name and path in the policy generator template
     policy_template['metadata']['name'] = 'rbac-policies'
 
-    # Add limited support cluster selector and
+    # Add limited support cluster selector
     if directory in limited_support:
         policy_template['policyDefaults']['placement']['clusterSelectors']['api.openshift.com/limited-support'] = 'true'
 
