@@ -11710,12 +11710,13 @@ objects:
           \ rhobs-hypershift-credential\n        tokenUrl: https://sso.redhat.com/auth/realms/redhat-external/protocol/openid-connect/token\n\
           \      writeRelabelConfigs:\n      - sourceLabels:\n        - __tmp_openshift_cluster_id__\n\
           \        targetLabel: _mc_id\n        action: replace\n      - sourceLabels:\
-          \ [__name__]\n        action: keep\n      queueConfig:\n        capacity:\
-          \ 2500\n        maxShards: 1000\n        minShards: 1\n        maxSamplesPerSend:\
-          \ 500\n        batchSendDeadline: 60s\n        minBackoff: 30ms\n      \
-          \  maxBackoff: 5s\n  nodeSelector:\n    node-role.kubernetes.io/infra: \"\
-          \"\n  tolerations:\n    - effect: NoSchedule\n      key: node-role.kubernetes.io/infra\n\
-          \      operator: Exists\n  retention: 11d\n  retentionSize: 90GB\n  volumeClaimTemplate:\n\
+          \ [__name__]\n        action: keep\n      - targetLabel: source\n      \
+          \  replacement: HCP\n      queueConfig:\n        capacity: 2500\n      \
+          \  maxShards: 1000\n        minShards: 1\n        maxSamplesPerSend: 500\n\
+          \        batchSendDeadline: 60s\n        minBackoff: 30ms\n        maxBackoff:\
+          \ 5s\n  nodeSelector:\n    node-role.kubernetes.io/infra: \"\"\n  tolerations:\n\
+          \    - effect: NoSchedule\n      key: node-role.kubernetes.io/infra\n  \
+          \    operator: Exists\n  retention: 11d\n  retentionSize: 90GB\n  volumeClaimTemplate:\n\
           \    metadata:\n      name: prometheus-data\n    spec:\n      resources:\n\
           \        requests:\n          storage: 100Gi\nalertmanagerMain:\n  nodeSelector:\n\
           \    node-role.kubernetes.io/infra: \"\"\n  tolerations:\n    - effect:\
