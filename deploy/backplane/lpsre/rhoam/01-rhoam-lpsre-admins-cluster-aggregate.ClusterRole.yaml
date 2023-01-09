@@ -1,0 +1,72 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: backplane-rhoam-lpsre-admins-cluster-aggregate
+  labels:
+    managed.openshift.io/aggregate-to-cssre-admins: "cluster"
+rules:
+# LP SRE can manage projects
+- apiGroups:
+  - config.openshift.io
+  resources:
+  - projects
+  verbs:
+  - create
+  - get
+  - list
+  - patch
+  - update
+  - watch
+# LP SRE can get infrastructure details (cluster)
+- apiGroups:
+  - config.openshift.io
+  resources:
+  - infrastructures
+  - oauths
+  verbs:
+  - 'get'
+- apiGroups:
+  - project.openshift.io
+  resources:
+  - projects
+  verbs:
+  - '*'
+# LP SRE can manage namespaces
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  - namespaces/finalize
+  verbs:
+  - create
+  - get
+  - list
+  - patch
+  - update
+  - watch
+# LP SRE can update existing groups (enables break glass)
+- apiGroups:
+  - user.openshift.io
+  resources:
+  - groups
+  verbs:
+  - patch
+  - update
+  - get
+# LP SRE manage the following list of apigroups
+- apiGroups:
+  - "apiextensions.k8s.io"
+  - "applicationmonitoring.integreatly.org"
+  - "apps.3scale.net"
+  - "capabilities.3scale.net"
+  - "keycloak.org"
+  - "monitoring.coreos.com"
+  resources:
+  - '*'
+  verbs:
+  - create
+  - get
+  - list 
+  - patch 
+  - update 
+  - watch

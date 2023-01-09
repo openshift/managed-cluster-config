@@ -1,0 +1,18 @@
+apiVersion: managed.openshift.io/v1alpha1
+kind: SubjectPermission
+metadata:
+  name: backplane-lpsre-ocs-provider-admins
+  namespace: openshift-rbac-permissions
+spec:
+  permissions:
+  - allowFirst: true
+    clusterRoleName: admin
+    namespacesAllowedRegex: (^openshift-storage$)
+  - allowFirst: true
+    clusterRoleName: backplane-ocs-provider-cr-admins
+    namespacesAllowedRegex: (^openshift-storage$)
+  - allowFirst: true
+    clusterRoleName: backplane-lpsre-monitoring
+    namespacesAllowedRegex: (^openshift-storage$)
+  subjectKind: Group
+  subjectName: system:serviceaccounts:openshift-backplane-lpsre
