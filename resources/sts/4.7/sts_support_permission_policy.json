@@ -138,7 +138,6 @@
                 "elasticloadbalancing:DescribeTargetGroupAttributes",
                 "elasticloadbalancing:DescribeTargetGroups",
                 "elasticloadbalancing:DescribeTargetHealth",
-                "iam:SimulatePrincipalPolicy",
                 "kms:CreateGrant",
                 "route53:GetHostedZone",
                 "route53:GetHostedZoneCount",
@@ -154,6 +153,18 @@
                 "tiros:GetQueryAnswer",
                 "tiros:GetQueryExplanation"
             ],
+            "Resource": "*"
+        },
+        {
+            "Action": [
+                "iam:SimulatePrincipalPolicy"
+            ],
+            "Effect": "Allow",
+            "Condition": {
+                "StringEquals": {
+                    "aws:ResourceTag/red-hat-managed": "true"
+                }
+            },
             "Resource": "*"
         },
         {
