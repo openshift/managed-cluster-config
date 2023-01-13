@@ -21281,8 +21281,9 @@ objects:
         - name: sre-node-unschedulable
           rules:
           - alert: KubeNodeUnschedulableSRE
-            expr: kube_node_spec_unschedulable > 0
-            for: 80m
+            expr: kube_node_spec_unschedulable > 0 unless on(node) (kube_node_role{role!="master"}
+              and on(node) kube_node_spec_taint{key="UpdateInProgress"})
+            for: 60m
             labels:
               severity: critical
               namespace: openshift-monitoring
