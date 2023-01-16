@@ -37,7 +37,7 @@ Direct deployment (#1) supports resources that are not synced down to OSD cluste
 
 You must specify a `deploymentMode` property in `config.yaml`.
 
-* `deploymentMode` (optional, default = `"SelectorSyncSet"`) - either "Direct" or "SelectorSyncSet".
+* `deploymentMode` (optional, default = `"SelectorSyncSet"`) - either "Direct", "SelectorSyncSet" or "Policy" (Policy should only be used for files that are being processed by the `generate-policy-config.py` script and thus can be skipped by the regular `generate_template.py` script completely).
 
 ## Direct Deployment
 
