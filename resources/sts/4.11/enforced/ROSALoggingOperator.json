@@ -1,0 +1,30 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Effect": "Allow",
+        "Action": [
+          "logs:CreateLogStream",
+          "logs:DescribeLogGroups",
+          "logs:DescribeLogStreams",
+          "logs:PutLogEvents",
+          "logs:PutRetentionPolicy"
+        ],
+        "Resource": "*"
+      },
+      {
+        "Effect": "Allow",
+        "Action": [
+          "logs:CreateLogGroup"
+        ],
+        "Resource": [
+          "*"
+        ],
+        "Condition": {
+          "StringEquals": {
+            "aws:RequestTag/kubernetes.io/cluster/*": "owned"
+          }
+        }
+      }
+    ]
+}
