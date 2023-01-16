@@ -1,0 +1,71 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels: &labels
+    app: audit-webhook
+  name: audit-webhook
+spec:
+  replicas: 2
+  selector:
+    matchLabels: *labels
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels: *labels
+    spec:
+      containers:
+      - command:
+        - /bin/audit-exporter
+        - --webhook-mode
+        - --log-file=/var/log/hypershift-osd-audit/$(HOSTED_CLUSTER_NAMESPACE)/audit.log
+        env:
+        - name: HOSTED_CLUSTER_NAMESPACE
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+        # TODO: Replace this image with the official one once the PR is merged!
+        image: quay.io/fbergman/splunk-audit-exporter:0.1.25-b0febc7
+        imagePullPolicy: Always
+        name: audit-exporter
+        ports:
+        - containerPort: 8443
+          name: webhook
+          protocol: TCP
+        - containerPort: 9090
+          name: metrics
+          protocol: TCP
+        securityContext:
+          privileged: true
+          runAsUser: 0
+        volumeMounts:
+        - mountPath: /certs
+          name: serving-certs
+        - mountPath: /var/log
+          name: logs
+        - mountPath: /config
+          name: config
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext:
+        runAsUser: 0
+      serviceAccount: audit-webhook
+      volumes:
+      - hostPath:
+          path: /var/log
+          type: Directory
+        name: logs
+      - configMap:
+          defaultMode: 420
+          name: osd-audit-policy
+        name: config
+      - name: serving-certs
+        secret:
+          defaultMode: 416
+          secretName: audit-webhook-serving-cert

@@ -1,0 +1,631 @@
+---
+apiVersion: policy.open-cluster-management.io/v1
+kind: Policy
+metadata:
+    annotations:
+        policy.open-cluster-management.io/categories: CM Configuration Management
+        policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+        policy.open-cluster-management.io/standards: NIST SP 800-53
+    name: hypershift-splunk-audit-exporter
+    namespace: openshift-acm-policies
+spec:
+    disabled: false
+    policy-templates:
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+                name: hypershift-splunk-audit-exporter
+            spec:
+                evaluationInterval:
+                    compliant: 2h
+                    noncompliant: 45s
+                object-templates:
+                    - complianceType: musthave
+                      objectDefinition:
+                        apiVersion: v1
+                        data:
+                            policy.yaml: |-
+                                rules:
+                                # drop leases, tokenreviews, subjectaccessreviews, user self-lookup (~500k/day)
+                                - level: None
+                                  resources:
+                                  - group: coordination.k8s.io
+                                    resources: ['leases']
+                                  - group: authentication.k8s.io
+                                    resources: ['tokenreviews']
+                                  - group: oauth.openshift.io
+                                    resources: ['tokenreviews']
+                                  - group: user.openshift.io
+                                    resourceNames: ['~']
+                                    resources: ['users']
+                                  - group: authorization.k8s.io
+                                    resources:
+                                    - subjectaccessreviews
+                                    - selfsubjectaccessreviews
+                                # drop node & control plane read events (~750k/day)
+                                - level: None
+                                  users:
+                                  - system:apiserver
+                                  - system:kube-apiserver
+                                  - system:kube-scheduler
+                                  - system:kube-controller-manager
+                                  verbs:
+                                  - get
+                                  - head
+                                  - list
+                                  - watch
+                                # drop control plane configmap leases leader updates (~50k/day)
+                                - level: None
+                                  users:
+                                  - system:kube-scheduler
+                                  - system:kube-controller-manager
+                                  namespaces:
+                                  - openshift-kube-*
+                                  - kube-system
+                                  resources:
+                                  - resources: ['configmaps']
+                                  verbs: ['update']
+                                # drop common non-resource read requests (~15k/day)
+                                - level: None
+                                  nonResourceURLs:
+                                  - /
+                                  - /api*
+                                  - /healthz*
+                                  - /livez*
+                                  - /openapi/v2*
+                                  - /readyz*
+                                  - /version
+                                  - /.well-known*
+                                  verbs: ['get','head','options']
+                                # forward system:admin list/get secrets at metadata level
+                                - level: Metadata
+                                  users: ['system:admin']
+                                  resources:
+                                  - resources: ['secrets']
+                                  verbs: ['get','watch','list']
+                                # drop other system:admin read events
+                                - level: None
+                                  users: ['system:admin']
+                                  verbs: ['get','watch','list']
+                                # forward all other system:admin activity
+                                - level: Request
+                                  users: ['system:admin']
+                                # drop backplane cronjob events before rule 7 (TODO: these jobs somewhere else)
+                                - level: None
+                                  users:
+                                  - system:serviceaccount:openshift-backplane-srep:osd-delete-ownerrefs-serviceaccounts
+                                  - system:serviceaccount:openshift-backplane:osd-delete-backplane-serviceaccounts
+                                # forward backplane activity
+                                - level: RequestResponse
+                                  userGroups: ['system:serviceaccounts:openshift-backplane-*']
+                                # drop openshift-* and kube-* serviceaccount read events (~5M/day)
+                                - level: None
+                                  userGroups:
+                                  - system:serviceaccounts:openshift-*
+                                  - system:serviceaccounts:kube-*
+                                  verbs:
+                                  - get
+                                  - list
+                                  - watch
+                                # drop events from marketplace, pruning and build tests (~80k/day)
+                                - level: None
+                                  namespaces:
+                                  - openshift-build-test
+                                  - openshift-build-test-*
+                                  - openshift-marketplace
+                                  - openshift-sre-pruning
+                                # drop control plane cronjob activity within -openshift
+                                - level: None
+                                  users:
+                                  - system:apiserver
+                                  - system:node:*
+                                  - system:kube-controller-manager
+                                  - system:kube-scheduler
+                                  - system:serviceaccount:kube-system:*
+                                  resources:
+                                  - resources:
+                                    - endpoints
+                                    - pods/binding
+                                    - serviceaccounts/token
+                                  - group: discovery.k8s.io
+                                    resources: ['endpointslices']
+                                  verbs: ['create','update']
+                                # forward resources we wish to monitor
+                                - level: Request
+                                  resources:
+                                  - group: compliance.openshift.io
+                                    resources: ['compliancecheckresults']
+                                  - group: secscan.quay.redhat.com
+                                    resources: ['imagemanifestvulns']
+                                  - group: hive.openshift.io
+                                    resources: ['clusterdeployments']
+                                  verbs:
+                                  - create
+                                  - update
+                                  - patch
+                                - level: Request
+                                  users:
+                                  - system:serviceaccount:openshift-file-integrity:file-integrity-daemon
+                                  resources:
+                                  - resources: ['configmaps']
+                                  namespaces: ["openshift-file-integrity"]
+                                  verbs:
+                                  - create
+                                  - update
+                                  - patch
+                                # drop resource status updates (~100k/day)
+                                - level: None
+                                  resources:
+                                  - resources: ['*/status']
+                                  - group: apps
+                                    resources: ['*/status']
+                                  - group: batch
+                                    resources: ['*/status']
+                                  - group: velero.io
+                                    resources: ['*/status']
+                                  - group: autoscaling
+                                    resources: ['*/status']
+                                  - group: operators.coreos.com
+                                    resources: ['*/status']
+                                  - group: config.openshift.io
+                                    resources: ['*/status', 'clusteroperators/status']
+                                  - group: quota.openshift.io
+                                    resources: ['clusterresourcequotas/status']
+                                  - group: managed.openshift.io
+                                    resources: ['subjectpermissions/status']
+                                  - group: apiserver.openshift.io
+                                    resources: ['apirequestcounts/status']
+                                  - group: controlplane.operator.openshift.io
+                                    resources: ['podnetworkconnectivitychecks/status']
+                                # drop olm updates (~50k/day)
+                                - level: None
+                                  groups: ['system:serviceaccounts:openshift-operator-lifecycle-manager']
+                                  resources:
+                                  - resources: ['namespaces','configmaps']
+                                  - group: apps
+                                    resources: ['deployments']
+                                  - group: rbac.authorization.k8s.io
+                                    resources: ['clusterroles']
+                                  - group: operators.coreos.com
+                                    resources:
+                                    - operatorgroups
+                                    - clusterserviceversions
+                                  verbs:
+                                  - create
+                                  - update
+                                  - patch
+                                # drop update secret from cmo & prom within openshift-* namespaces (~3k/day)
+                                - level: None
+                                  users:
+                                  - system:serviceaccount:openshift-monitoring:cluster-monitoring-operator
+                                  - system:serviceaccount:openshift-monitoring:prometheus-operator
+                                  namespaces: ['openshift-*']
+                                  resources:
+                                  - resources: ['secrets']
+                                  verbs: ['update']
+                                # drop update route from console-operator (~10k/day)
+                                - level: None
+                                  users: ['system:serviceaccount:openshift-console-operator:console-operator']
+                                  namespaces: ['openshift-console']
+                                  resources:
+                                  - group: route.openshift.io
+                                    resourceNames: ['console','downloads']
+                                    resources: ['routes','routes/status']
+                                  verbs: ['update','patch']
+                                # drop clusterrole aggregation updates (~5k/day)
+                                - level: None
+                                  users: ['system:serviceaccount:kube-system:clusterrole-aggregation-controller']
+                                  resources:
+                                  - group: rbac.authorization.k8s.io
+                                    resources: ['clusterroles']
+                                  verbs: ['update','patch']
+                                # drop console route updates from cvo (~50k/day)
+                                - level: None
+                                  userGroups:
+                                  - system:serviceaccounts:openshift-cluster-version
+                                  - system:serviceaccounts:openshift-console-operator
+                                  - system:serviceaccounts:openshift-console
+                                  resources:
+                                  - group: route.openshift.io
+                                    resources: ['routes']
+                                  verbs: ['update','patch']
+                                # drop routine serviceaccount image activity
+                                - level: None
+                                  groups: ['system:serviceaccounts']
+                                  resources:
+                                  - group: image.openshift.io
+                                    resources: ['*']
+                                # drop openshift ns templates & imagestream and imagestreamimports
+                                - level: None
+                                  userGroups:
+                                  - system:serviceaccounts:openshift-cluster-samples-operator
+                                  - system:serviceaccounts:openshift-cluster-version
+                                  - system:serviceaccounts:openshift-infra
+                                  namespaces: ['openshift']
+                                  resources:
+                                  - resources: ['templates']
+                                    group: template.openshift.io
+                                  - group: image.openshift.io
+                                    resources:
+                                    - imagestreams
+                                    - imagestreamimports
+                                  verbs: ['create','update']
+                                # drop events.events.k8s.io
+                                - level: None
+                                  resources:
+                                  - group: events.k8s.io
+                                    resources: ['events']
+                                # drop noisy namespace reads
+                                - level: None
+                                  resources:
+                                  - group: console.openshift.io
+                                    resources: ['consoleyamlsamples','consoleexternalloglinks','consolenotifications','consolequickstarts','consolelinks']
+                                  - group: helm.openshift.io
+                                    resources: ['helmchartrepositories']
+                                  - group: storage.k8s.io
+                                    resources: ['storageclasses']
+                                  - group: storage.k8s.io
+                                    resources: ['storageclasses']
+                                  - group: project.openshift.io
+                                    resources: ['projects']
+                                  - group: config.openshift.io
+                                    resources: ['clusterversions']
+                                  verbs: ['get', 'head', 'list', 'watch']
+                                # drop browser storage updates from the console
+                                - level: None
+                                  namespaces: ['openshift-console-user-settings']
+                                  resources:
+                                  - resources: ['configmaps']
+                                # drop cco pod-identity-webhook cert requests (BZ2023906)
+                                - level: None
+                                  users: ['system:serviceaccount:openshift-cloud-credential-operator:pod-identity-webhook']
+                                  resources:
+                                  - group: certificates.k8s.io
+                                    resources: ['certificatesigningrequests']
+                                  verbs: ['create']
+                                # reduce token deletions to metadata
+                                - level: Metadata
+                                  resources:
+                                  - group: oauth.openshift.io
+                                    resources: ['oauthaccesstokens','oauthauthorizetokens']
+                                  verbs: ['delete','deletecollection']
+                                # field redactions
+                                redactions:
+                                # tokens in request objects
+                                - group: authentication.k8s.io
+                                  resources:
+                                  - tokenreviews
+                                  fields:
+                                    spec:
+                                      token: replace
+                                # tokens in response objects
+                                - resources:
+                                  - serviceaccounts
+                                  fields:
+                                    status:
+                                      token: replace
+                                # tokens in object names
+                                - group: oauth.openshift.io
+                                  resources: ['oauthaccesstokens','oauthauthorizetokens']
+                                  fields:
+                                    metadata:
+                                      name: replace
+                                    authorizeToken: replace
+                                    details:
+                                      authorizeToken: replace
+                                    state: replace
+                                # tokens in annotations & other observed token misuse
+                                - fields:
+                                    metadata:
+                                      annotations: remove
+                                    spec:
+                                      httpSecret: replace
+                                      tokenSecret: replace
+                                      externalStorage: {onboardingTicket: replace}
+                                    connectorData: replace
+                                    objects: {data: replace}
+                                    parameters: {value: replace}
+                                    prometheus: {prom_token: replace}
+                                    data:
+                                      black-box-config.yaml: replace
+                                # remove certs from certificate signing requests
+                                - group: certificates.k8s.io
+                                  resources:
+                                  - certificatesigningrequests
+                                  - certificatesigningrequests/status
+                                  fields:
+                                    spec:
+                                      request: replace
+                                    status:
+                                      certificate: replace
+                                # remove certs and keys from routes (BZ2073220)
+                                - group: route.openshift.io
+                                  resources:
+                                  - routes
+                                  - routes/status
+                                  fields:
+                                    spec:
+                                      tls:
+                                        key: replace
+                                        certificate: replace
+                                        caCertificate: replace
+                                        destinationCACertificate: replace
+                                # remove injected cabundles from webhook
+                                - group: admissionregistration.k8s.io
+                                  resources:
+                                  - validatingwebhookconfigurations
+                                  - mutatingwebhookconfigurations
+                                  fields:
+                                    webhooks:
+                                      clientConfig:
+                                        caBundle: remove
+                                # remove certs and binary data from configmaps
+                                - resources:
+                                  - configmaps
+                                  fields:
+                                    binaryData: replace
+                                    data:
+                                      ca.crt: replace
+                                      ca-bundle.crt: replace
+                                      service-ca.crt: replace
+                                      client-ca: replace
+                                      client-ca-file: replace
+                                      requestheader-client-ca-file: replace
+                                # remove machineconfig file source data, including bootstrap token
+                                - group: machineconfiguration.openshift.io
+                                  resources:
+                                  - machineconfigs
+                                  - controllerconfigs
+                                  fields:
+                                    spec:
+                                      rootCAData: replace
+                                      config:
+                                        passwd: replace
+                                        storage:
+                                          files:
+                                            contents:
+                                              source: replace
+                                      kubeAPIServerServingCAData: replace
+                                # we only really want the cve and severity counts from these
+                                - group: secscan.quay.redhat.com
+                                  resources: ['imagemanifestvulns']
+                                  fields:
+                                    metadata:
+                                      labels: remove
+                                    spec:
+                                      features: remove
+                                    status:
+                                      affectedPods: remove
+                                      lastUpdate: remove
+                                # remove object data and parameter values from processed templates
+                                - resources: ['processedtemplates']
+                                  fields:
+                                    objects: replace
+                                    parameters: {value: replace}
+                                # redact env var values from pods and controller specs
+                                - resources: ['pods']
+                                  fields:
+                                    spec: &podSpec
+                                      containers: &envSpec
+                                        env: {value: replace}
+                                      initContainers: *envSpec
+                                      ephemeralContainers: *envSpec
+                                - fields:
+                                    spec:
+                                      template: {spec: *podSpec}
+                                      pod_spec: *podSpec
+                                # remove certain fields from metadata and status
+                                - fields:
+                                    metadata:
+                                      annotations:
+                                        control-plane.alpha.kubernetes.io/leader: remove
+                                        kubectl.kubernetes.io/last-applied-configuration: remove
+                                      generation: remove
+                                      uid: remove
+                                      selfLink: remove
+                                      managedFields: remove
+                                      resourceVersion: remove
+                                      creationTimestamp: remove
+                                    status:
+                                      conditions: remove
+                                      components: remove
+                                      relatedObjects: remove
+                                      lastSyncTimestamp: remove
+                                      storageBucket:
+                                        lastSyncTimestamp: remove
+                        kind: ConfigMap
+                        metadata:
+                            name: osd-audit-policy
+                    - complianceType: musthave
+                      objectDefinition:
+                        apiVersion: apps/v1
+                        kind: Deployment
+                        metadata:
+                            labels:
+                                app: audit-webhook
+                            name: audit-webhook
+                        spec:
+                            replicas: 2
+                            selector:
+                                matchLabels:
+                                    app: audit-webhook
+                            strategy:
+                                rollingUpdate:
+                                    maxSurge: 25%
+                                    maxUnavailable: 25%
+                                type: RollingUpdate
+                            template:
+                                metadata:
+                                    labels:
+                                        app: audit-webhook
+                                spec:
+                                    containers:
+                                        - command:
+                                            - /bin/audit-exporter
+                                            - --webhook-mode
+                                            - --log-file=/var/log/hypershift-osd-audit/$(HOSTED_CLUSTER_NAMESPACE)/audit.log
+                                          env:
+                                            - name: HOSTED_CLUSTER_NAMESPACE
+                                              valueFrom:
+                                                fieldRef:
+                                                    apiVersion: v1
+                                                    fieldPath: metadata.namespace
+                                          image: quay.io/fbergman/splunk-audit-exporter:0.1.25-b0febc7
+                                          imagePullPolicy: Always
+                                          name: audit-exporter
+                                          ports:
+                                            - containerPort: 8443
+                                              name: webhook
+                                              protocol: TCP
+                                            - containerPort: 9090
+                                              name: metrics
+                                              protocol: TCP
+                                          securityContext:
+                                            privileged: true
+                                            runAsUser: 0
+                                          volumeMounts:
+                                            - mountPath: /certs
+                                              name: serving-certs
+                                            - mountPath: /var/log
+                                              name: logs
+                                            - mountPath: /config
+                                              name: config
+                                    dnsPolicy: ClusterFirst
+                                    restartPolicy: Always
+                                    schedulerName: default-scheduler
+                                    securityContext:
+                                        runAsUser: 0
+                                    serviceAccount: audit-webhook
+                                    volumes:
+                                        - hostPath:
+                                            path: /var/log
+                                            type: Directory
+                                          name: logs
+                                        - configMap:
+                                            defaultMode: 420
+                                            name: osd-audit-policy
+                                          name: config
+                                        - name: serving-certs
+                                          secret:
+                                            defaultMode: 416
+                                            secretName: audit-webhook-serving-cert
+                    - complianceType: musthave
+                      objectDefinition:
+                        apiVersion: rbac.authorization.k8s.io/v1
+                        kind: Role
+                        metadata:
+                            name: audit-webhook
+                        rules:
+                            - apiGroups:
+                                - security.openshift.io
+                              resourceNames:
+                                - splunkforwarder
+                              resources:
+                                - securitycontextconstraints
+                              verbs:
+                                - use
+                    - complianceType: musthave
+                      objectDefinition:
+                        apiVersion: rbac.authorization.k8s.io/v1
+                        kind: RoleBinding
+                        metadata:
+                            name: audit-webhook
+                        roleRef:
+                            apiGroup: rbac.authorization.k8s.io
+                            kind: Role
+                            name: audit-webhook
+                        subjects:
+                            - kind: ServiceAccount
+                              name: audit-webhook
+                    - complianceType: musthave
+                      objectDefinition:
+                        apiVersion: v1
+                        kind: Secret
+                        metadata:
+                            name: audit-webhook-kubeconfig
+                            namespace: clusters
+                        stringData:
+                            webhook-kubeconfig: |-
+                                apiVersion: v1
+                                clusters:
+                                - cluster:
+                                    insecure-skip-tls-verify: true
+                                    server: https://audit-webhook:8443
+                                  name: cluster
+                                contexts:
+                                - context:
+                                    cluster: cluster
+                                    namespace: default
+                                    user: admin
+                                  name: admin
+                                current-context: admin
+                                kind: Config
+                                preferences: {}
+                                users:
+                                - name: admin
+                                  user: {}
+                        type: Opaque
+                    - complianceType: musthave
+                      objectDefinition:
+                        apiVersion: v1
+                        kind: Service
+                        metadata:
+                            annotations:
+                                service.beta.openshift.io/serving-cert-secret-name: audit-webhook-serving-cert
+                            labels:
+                                app: audit-webhook
+                            name: audit-webhook
+                        spec:
+                            ports:
+                                - name: audit-sink
+                                  port: 8443
+                                  protocol: TCP
+                                  targetPort: 8443
+                                - name: metrics
+                                  port: 9090
+                                  protocol: TCP
+                                  targetPort: 9090
+                            selector:
+                                app: audit-webhook
+                            sessionAffinity: ClientIP
+                            sessionAffinityConfig:
+                                clientIP:
+                                    timeoutSeconds: 10800
+                            type: ClusterIP
+                    - complianceType: musthave
+                      objectDefinition:
+                        apiVersion: v1
+                        kind: ServiceAccount
+                        metadata:
+                            name: audit-webhook
+                pruneObjectBehavior: DeleteIfCreated
+                remediationAction: enforce
+                severity: low
+---
+apiVersion: apps.open-cluster-management.io/v1
+kind: PlacementRule
+metadata:
+    name: placement-hypershift-splunk-audit-exporter
+    namespace: openshift-acm-policies
+spec:
+    clusterSelector:
+        matchExpressions:
+            - key: hypershift.open-cluster-management.io/hosted-cluster
+              operator: In
+              values:
+                - "true"
+---
+apiVersion: policy.open-cluster-management.io/v1
+kind: PlacementBinding
+metadata:
+    name: binding-hypershift-splunk-audit-exporter
+    namespace: openshift-acm-policies
+placementRef:
+    apiGroup: apps.open-cluster-management.io
+    kind: PlacementRule
+    name: placement-hypershift-splunk-audit-exporter
+subjects:
+    - apiGroup: policy.open-cluster-management.io
+      kind: Policy
+      name: hypershift-splunk-audit-exporter
