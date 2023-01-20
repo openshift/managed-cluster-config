@@ -1,0 +1,41 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: osd-prune-velero-service-osd-14743
+  namespace: openshift-sre-pruning
+spec:
+  failedJobsHistoryLimit: 1
+  successfulJobsHistoryLimit: 1
+  concurrencyPolicy: Replace
+  schedule: "30 0 * * *"
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: 86400
+      template:
+        spec:
+          affinity:
+            nodeAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+              - preference:
+                  matchExpressions:
+                  - key: node-role.kubernetes.io/infra
+                    operator: Exists
+                weight: 1
+          tolerations:
+            - effect: NoSchedule
+              key: node-role.kubernetes.io/infra
+              operator: Exists
+          serviceAccountName: osd-prune-velero-service-osd-14743
+          restartPolicy: Never
+          containers:
+          - name: osd-prune-velero-service-osd-14743
+            image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+            imagePullPolicy: Always
+            args:
+            - /bin/bash
+            - -c
+            - |
+              oc delete service --ignore-not-found -n openshift-velero managed-velero-operator-metrics
+              oc delete servicemonitor --ignore-not-found -n openshift-velero managed-velero-operator-metrics
+              oc delete pod --ignore-not-found -n openshift-velero -l name=managed-velero-operator
