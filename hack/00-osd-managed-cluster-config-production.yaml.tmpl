@@ -29386,8 +29386,8 @@ objects:
         - name: sre-internal-slo.rules
           rules:
           - expr: sre:telemetry:managed_labels * on (sre) group_left(version, alerts,
-              upgradeconfig_name) label_replace(upgradeoperator_upgrade_result, "sre",
-              "true", "", "")
+              upgradeconfig_name) label_replace(topk(1, upgradeoperator_upgrade_result),
+              "sre", "true", "", "")
             record: sre:slo:upgradeoperator_upgrade_result
     - apiVersion: monitoring.coreos.com/v1
       kind: PrometheusRule
