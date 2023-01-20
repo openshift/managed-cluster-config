@@ -30348,6 +30348,115 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: sre-pruning-osd-14743
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/sts
+        operator: NotIn
+        values:
+        - 'true'
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: osd-prune-velero-service-osd-14743
+        namespace: openshift-velero
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        - services
+        verbs:
+        - get
+        - list
+        - delete
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - servicemonitors
+        verbs:
+        - get
+        - list
+        - delete
+    - kind: RoleBinding
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        name: osd-prune-velero-service-osd-14743
+        namespace: openshift-velero
+      subjects:
+      - kind: ServiceAccount
+        name: osd-prune-velero-service-osd-14743
+        namespace: openshift-sre-pruning
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: osd-prune-velero-service-osd-14743
+        namespace: openshift-velero
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: osd-prune-velero-service-osd-14743
+        namespace: openshift-sre-pruning
+    - apiVersion: batch/v1
+      kind: CronJob
+      metadata:
+        name: osd-prune-velero-service-osd-14743
+        namespace: openshift-sre-pruning
+      spec:
+        failedJobsHistoryLimit: 1
+        successfulJobsHistoryLimit: 1
+        concurrencyPolicy: Replace
+        schedule: 30 0 * * *
+        jobTemplate:
+          spec:
+            ttlSecondsAfterFinished: 86400
+            template:
+              spec:
+                affinity:
+                  nodeAffinity:
+                    preferredDuringSchedulingIgnoredDuringExecution:
+                    - preference:
+                        matchExpressions:
+                        - key: node-role.kubernetes.io/infra
+                          operator: Exists
+                      weight: 1
+                tolerations:
+                - effect: NoSchedule
+                  key: node-role.kubernetes.io/infra
+                  operator: Exists
+                serviceAccountName: osd-prune-velero-service-osd-14743
+                restartPolicy: Never
+                containers:
+                - name: osd-prune-velero-service-osd-14743
+                  image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+                  imagePullPolicy: Always
+                  args:
+                  - /bin/bash
+                  - -c
+                  - 'oc delete service --ignore-not-found -n openshift-velero managed-velero-operator-metrics
+
+                    oc delete servicemonitor --ignore-not-found -n openshift-velero
+                    managed-velero-operator-metrics
+
+                    oc delete pod --ignore-not-found -n openshift-velero -l name=managed-velero-operator
+
+                    '
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: velero-configuration
   spec:
     clusterDeploymentSelector:
