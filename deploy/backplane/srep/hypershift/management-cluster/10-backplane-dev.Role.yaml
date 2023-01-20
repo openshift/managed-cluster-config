@@ -1,0 +1,17 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: backplane-dev
+  namespace: backplane
+rules:
+# SRE get the backplane dev secret
+# TODO: Remove this when no longer needed
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  resourceNames:
+  - backplane-aws-credentials
+  verbs:
+  - get
+  - watch
