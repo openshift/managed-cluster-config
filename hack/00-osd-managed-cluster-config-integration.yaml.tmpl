@@ -28695,7 +28695,7 @@ objects:
           rules:
           - alert: KubeAPIServerMissingOnNode60Minutes
             expr: 'count(cluster:master_nodes{}) by (node) unless count(kube_pod_info{namespace="openshift-kube-apiserver",
-              pod=~"kube-apiserver-ip-.*"}) by (node) >= 1
+              pod=~"kube-apiserver-.*", pod!~".*guard.*"}) by (node) >= 1
 
               '
             for: 60m
@@ -28721,7 +28721,7 @@ objects:
           rules:
           - alert: KubeControllerManagerMissingOnNode60Minutes
             expr: 'count(cluster:master_nodes{}) by (node) unless count(kube_pod_info{namespace="openshift-kube-controller-manager",
-              pod=~"kube-controller-manager-ip-.*"}) by (node) >= 1
+              pod=~"kube-controller-manager-.*", pod!~".*guard.*"}) by (node) >= 1
 
               '
             for: 60m
@@ -28747,7 +28747,8 @@ objects:
           rules:
           - alert: KubeSchedulerMissingOnNode60Minutes
             expr: 'count(cluster:master_nodes{}) by (node) unless count(kube_pod_info{namespace="openshift-kube-scheduler",
-              pod=~"openshift-kube-scheduler-ip-.*"}) by (node) >= 1
+              pod=~"openshift-kube-scheduler-.*", pod!~".*guard.*"}) by (node) >=
+              1
 
               '
             for: 60m

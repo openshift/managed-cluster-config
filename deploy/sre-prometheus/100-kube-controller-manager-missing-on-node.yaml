@@ -12,7 +12,7 @@ spec:
     rules:
     - alert: KubeControllerManagerMissingOnNode60Minutes
       expr: |
-        count(cluster:master_nodes{}) by (node) unless count(kube_pod_info{namespace="openshift-kube-controller-manager", pod=~"kube-controller-manager-ip-.*"}) by (node) >= 1
+        count(cluster:master_nodes{}) by (node) unless count(kube_pod_info{namespace="openshift-kube-controller-manager", pod=~"kube-controller-manager-.*", pod!~".*guard.*"}) by (node) >= 1
       for: 60m
       labels:
         severity: warning
