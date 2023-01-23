@@ -25,6 +25,7 @@ directories = [
         'osd-must-gather-operator',
         'osd-openshift-operators-redhat',
         'osd-pcap-collector',
+        'osd-backplane-managed-scripts',
         ]
 policy_generator_config = './scripts/policy-generator-config.yaml'
 config_filename = "config.yaml"
