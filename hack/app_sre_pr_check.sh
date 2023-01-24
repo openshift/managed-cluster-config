@@ -8,7 +8,7 @@ trap "rm -f sorted-before*.yaml.tmpl sorted-after*.yaml.tmpl" EXIT
 MISSING_NS="false"
 for F in $(find ./deploy/sre-prometheus -type f -iname '*prometheusrule.yaml')
 do
-    # requires yq
+    # Workaround to not need yq (convert to json)
     MISSING_NS_COUNT=$(cat $F | python -c 'import json, sys, yaml ; y=yaml.safe_load(sys.stdin.read()) ; print(json.dumps(y))' | jq -r '.spec.groups[].rules[] | select(.alert != null) | select(.namespace == null) and select(.labels.namespace == null)' | wc -l)
 
     if [ "$MISSING_NS_COUNT" != "0" ]
@@ -17,7 +17,8 @@ do
         MISSING_NS="true"
     fi
 
-    if ! promtool check rules <(cat $F | yq '.spec')
+    # Workaround to not need yq (convert to json)
+    if ! promtool check rules <(cat $F | python -c 'import json, sys, yaml ; y=yaml.safe_load(sys.stdin.read()) ; print(json.dumps(y))' | jq -r '.spec')
     then 
 		    echo "Invalid rules file: '$F'" && exit 1; 
 	  fi 
