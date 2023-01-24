@@ -19469,6 +19469,31 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: kubelet-config-4.10.51
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/version-major-minor-patch
+        operator: In
+        values:
+        - 4.10.51
+    resourceApplyMode: Sync
+    patches:
+    - apiVersion: machineconfiguration.openshift.io/v1
+      kind: KubeletConfig
+      applyMode: AlwaysApply
+      name: custom-kubelet
+      patch: '{"spec":{"kubeletConfig":{"featureGates":{"CSIMigrationOpenStack": "true"}}}}'
+      patchType: merge
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: kubelet-config-pre-4.9
   spec:
     clusterDeploymentSelector:
