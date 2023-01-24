@@ -4,7 +4,7 @@ set -exv
 
 trap "rm -f sorted-before*.yaml.tmpl sorted-after*.yaml.tmpl" EXIT
 
-# all custom alerts must have a namespace label
+# all custom alerts must have a namespace label and pass promtool checks
 MISSING_NS="false"
 for F in $(find ./deploy/sre-prometheus -type f -iname '*prometheusrule.yaml')
 do
@@ -16,6 +16,11 @@ do
         echo "ERROR: Rule missing 'namespace' in file '$F'"
         MISSING_NS="true"
     fi
+
+    if ! promtool check rules <(cat $F | yq '.spec')
+    then 
+		    echo "Invalid rules file: '$F'" && exit 1; 
+	  fi 
 done
 
 if [ "$MISSING_NS" == "true" ]
