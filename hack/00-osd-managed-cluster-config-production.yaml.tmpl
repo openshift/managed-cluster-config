@@ -28922,6 +28922,33 @@ objects:
       kind: PrometheusRule
       metadata:
         labels:
+          prometheus: sre-nodefilesystemalmostoutofspace-alert
+          role: alert-rules
+        name: sre-nodefilesystemalmostoutofspace-alert
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-nodefilesystemalmostoutofspace-alert
+          rules:
+          - alert: NodeFilesystemAlmostOutOfSpaceSRE
+            expr: "(\n  node_filesystem_avail_bytes{job=\"node-exporter\",fstype!=\"\
+              \",mountpoint!~\"/var/lib/ibmc-s3fs.*\"} / node_filesystem_size_bytes{job=\"\
+              node-exporter\",fstype!=\"\",mountpoint!~\"/var/lib/ibmc-s3fs.*\"} *\
+              \ 100 < 3\nand\n  node_filesystem_readonly{job=\"node-exporter\",fstype!=\"\
+              \",mountpoint!~\"/var/lib/ibmc-s3fs.*\"} == 0\n)\n"
+            for: 30m
+            labels:
+              severity: critical
+              namespace: openshift-monitoring
+            annotations:
+              description: Filesystem on {{ $labels.device }} at {{ $labels.instance
+                }} has only {{ printf "%.2f" $value }}% available space left.
+              runbook_url: https://github.com/openshift/runbooks/blob/master/alerts/cluster-monitoring-operator/NodeFilesystemAlmostOutOfSpace.md
+              summary: Filesystem has less than 3% space left.
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
           prometheus: sre-oauth-server
           role: recording-rules
         name: sre-oauth-server
