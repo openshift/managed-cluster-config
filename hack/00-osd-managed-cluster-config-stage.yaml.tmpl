@@ -17644,6 +17644,11 @@ objects:
         resources:
         - storageclassclaims
         - storageconsumers
+        - storageclusters
+        - ocsinitializations
+        - managedocs
+        - managedocs/finalizers
+        - managedocs/status
         verbs:
         - get
         - list
@@ -17715,6 +17720,26 @@ objects:
         - update
         - delete
       - apiGroups:
+        - k8s.ovn.org
+        resources:
+        - egressfirewalls
+        verbs:
+        - get
+        - list
+        - watch
+        - patch
+        - update
+      - apiGroups:
+        - networking.k8s.io
+        resources:
+        - networkpolicies
+        verbs:
+        - get
+        - list
+        - watch
+        - patch
+        - update
+      - apiGroups:
         - network.openshift.io
         resources:
         - egressnetworkpolicies
@@ -17724,7 +17749,16 @@ objects:
         - watch
         - patch
         - update
-        - delete
+      - apiGroups:
+        - coordination.k8s.io
+        resources:
+        - leases
+        verbs:
+        - get
+        - list
+        - watch
+        - patch
+        - update
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
