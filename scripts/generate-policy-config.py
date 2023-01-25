@@ -25,6 +25,8 @@ directories = [
         'osd-must-gather-operator',
         'osd-openshift-operators-redhat',
         'osd-pcap-collector',
+        'rosa-console-branding',
+        'rosa-console-branding-configmap',
         ]
 policy_generator_config = './scripts/policy-generator-config.yaml'
 config_filename = "config.yaml"
