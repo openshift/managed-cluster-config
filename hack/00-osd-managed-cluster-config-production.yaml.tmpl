@@ -2957,6 +2957,227 @@ objects:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
           policy.open-cluster-management.io/standards: NIST SP 800-53
+        name: osd-delete-backplane-script-resources
+        namespace: openshift-acm-policies
+      spec:
+        disabled: false
+        policy-templates:
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+              name: osd-delete-backplane-script-resources
+            spec:
+              evaluationInterval:
+                compliant: 2h
+                noncompliant: 45s
+              object-templates:
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: v1
+                  kind: Namespace
+                  metadata:
+                    name: openshift-backplane-managed-scripts
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: v1
+                  kind: ServiceAccount
+                  metadata:
+                    name: osd-backplane
+                    namespace: openshift-backplane-managed-scripts
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: Role
+                  metadata:
+                    name: osd-delete-backplane-script-resources
+                    namespace: openshift-backplane-managed-scripts
+                  rules:
+                  - apiGroups:
+                    - ''
+                    resources:
+                    - pods
+                    - serviceaccounts
+                    verbs:
+                    - get
+                    - list
+                    - delete
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: RoleBinding
+                  metadata:
+                    name: osd-delete-backplane-script-resources
+                    namespace: openshift-backplane-managed-scripts
+                  roleRef:
+                    apiGroup: rbac.authorization.k8s.io
+                    kind: Role
+                    name: osd-delete-backplane-script-resources
+                  subjects:
+                  - kind: ServiceAccount
+                    name: osd-backplane
+                    namespace: openshift-backplane-managed-scripts
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: ClusterRole
+                  metadata:
+                    name: osd-delete-backplane-script-resources
+                  rules:
+                  - apiGroups:
+                    - rbac.authorization.k8s.io
+                    resources:
+                    - roles
+                    - rolebindings
+                    - clusterroles
+                    - clusterrolebindings
+                    verbs:
+                    - get
+                    - list
+                    - delete
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: ClusterRoleBinding
+                  metadata:
+                    name: osd-delete-backplane-script-resources
+                  roleRef:
+                    apiGroup: rbac.authorization.k8s.io
+                    kind: ClusterRole
+                    name: osd-delete-backplane-script-resources
+                  subjects:
+                  - kind: ServiceAccount
+                    name: osd-backplane
+                    namespace: openshift-backplane-managed-scripts
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: batch/v1
+                  kind: CronJob
+                  metadata:
+                    name: osd-delete-backplane-script-resources
+                    namespace: openshift-backplane-managed-scripts
+                  spec:
+                    concurrencyPolicy: Replace
+                    failedJobsHistoryLimit: 5
+                    jobTemplate:
+                      spec:
+                        template:
+                          spec:
+                            affinity:
+                              nodeAffinity:
+                                preferredDuringSchedulingIgnoredDuringExecution:
+                                - preference:
+                                    matchExpressions:
+                                    - key: node-role.kubernetes.io/infra
+                                      operator: Exists
+                                  weight: 1
+                            containers:
+                            - args:
+                              - /bin/bash
+                              - -c
+                              - "set -euxo pipefail\n\n# Namespace which pods run\
+                                \ in\nNS=\"openshift-backplane-managed-scripts\"\n\
+                                # Label which all backplane script resources should\
+                                \ have\nLABEL=\"managed.openshift.io/backplane-job-uuid\"\
+                                \n# Only delete resources created before this time,\
+                                \ in unix epoch seconds.\nDEL_ONLY_BEFORE=$(($(date\
+                                \ +%s) - 3600*24))\n\n### Gather data\n# Format: pod_name\
+                                \ pod_status creation_timestamp\nPODS=$(oc get pod\
+                                \ -n $NS --selector $LABEL -o custom-columns=NAME:.metadata.name,PHASE:.status.phase,CT:.metadata.creationTimestamp\
+                                \ --no-headers)\n\n# Format: sa_name\nSAS=$(oc get\
+                                \ serviceaccount -n $NS --selector $LABEL -o custom-columns=NAME:.metadata.name\
+                                \ --no-headers)\n\n# Format: role_name role_ns\nROLES=$(oc\
+                                \ get role -A --selector $LABEL -o custom-columns=NAME:.metadata.name,NS:.metadata.namespace\
+                                \ --no-headers)\n\n# Format: rolebinding_name rolebinding_ns\n\
+                                ROLEBINDINGS=$(oc get rolebinding -A --selector $LABEL\
+                                \ -o custom-columns=NAME:.metadata.name,NS:.metadata.namespace\
+                                \ --no-headers)\n\n# Format: clusterrole_name\nCROLES=$(oc\
+                                \ get clusterrole --selector $LABEL -o custom-columns=NAME:.metadata.name\
+                                \ --no-headers)\n\n# Format: clusterrolebinding_name\n\
+                                CROLEBINDINGS=$(oc get clusterrolebinding --selector\
+                                \ $LABEL -o custom-columns=NAME:.metadata.name --no-headers)\n\
+                                \n# Pick up those resources we don't want to delete.\n\
+                                # - Current running pods and related resources.\n\
+                                # - pods created within THRESHOLD_PERIOD and related\
+                                \ resouces.\nPODS_TO_KEEP=$(awk -v before=$DEL_ONLY_BEFORE\
+                                \ \\\n  '{\n  if($2 ~ /Running/){print $1}\n  else{cmd\
+                                \ = sprintf(\"date +\\\"%%s\\\" --date=%s\", $3);\
+                                \ cmd|getline unix_sec; close(cmd); if(unix_sec+0\
+                                \ > before+0){print $1}}\n  }' \\\n  <<< \"$PODS\"\
+                                )\n\nPODS_TO_DEL=$(awk '{print $1}' <<< \"$PODS\"\
+                                )\n\nfor pod in $PODS_TO_KEEP\ndo\n  PODS_TO_DEL=$({\
+                                \ grep -v \"$pod\" || test $? = 1; } <<< \"$PODS_TO_DEL\"\
+                                )\n  SAS=$({ grep -v \"$pod\" || test $? = 1; } <<<\
+                                \ \"$SAS\")\n  ROLES=$({ grep -v \"$pod\" || test\
+                                \ $? = 1; } <<< \"$ROLES\")\n  ROLEBINDINGS=$({ grep\
+                                \ -v \"$pod\" || test $? = 1; } <<< \"$ROLEBINDINGS\"\
+                                )\n  CROLES=$({ grep -v \"$pod\" || test $? = 1; }\
+                                \ <<< \"$CROLES\")\n  CROLEBINDINGS=$({ grep -v \"\
+                                $pod\" || test $? = 1; } <<< \"$CROLEBINDINGS\")\n\
+                                done\n\n## Delete non-running pods\nfor pod in $PODS_TO_DEL\n\
+                                do\n  oc delete pod -n $NS $pod\ndone\n\n## Delete\
+                                \ Rolebindings\n[[ -z \"$ROLEBINDINGS\" ]] || while\
+                                \ read line\ndo\n  rb_name=$(echo $line | awk '{print\
+                                \ $1}')\n  rb_namespace=$(echo $line | awk '{print\
+                                \ $2}')\n  oc delete rolebindings -n $rb_namespace\
+                                \ $rb_name\ndone <<< \"$ROLEBINDINGS\"\n\n## Delete\
+                                \ ClusterRolebindings\nfor clb in $CROLEBINDINGS\n\
+                                do\n  oc delete clusterrolebinding $clb\ndone\n\n\
+                                ## Delete Roles\n[[ -z \"$ROLES\" ]] || while read\
+                                \ line\ndo\n  role_name=$(echo $line | awk '{print\
+                                \ $1}')\n  role_namespace=$(echo $line | awk '{print\
+                                \ $2}')\n  oc delete role -n $role_namespace $role_name\n\
+                                done <<< \"$ROLES\"\n\n## Delete Clusterroles\nfor\
+                                \ crole in $CROLES\ndo\n  oc delete clusterrole $crole\n\
+                                done\n\n## Delete SAs\nfor sa in $SAS\ndo\n  oc delete\
+                                \ serviceaccount -n $NS $sa\ndone\n"
+                              image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+                              imagePullPolicy: Always
+                              name: osd-delete-backplane-script-resources
+                            restartPolicy: Never
+                            serviceAccountName: osd-backplane
+                            tolerations:
+                            - effect: NoSchedule
+                              key: node-role.kubernetes.io/infra
+                              operator: Exists
+                        ttlSecondsAfterFinished: 86400
+                    schedule: 42 0 * * *
+                    successfulJobsHistoryLimit: 3
+              pruneObjectBehavior: DeleteIfCreated
+              remediationAction: enforce
+              severity: low
+    - apiVersion: apps.open-cluster-management.io/v1
+      kind: PlacementRule
+      metadata:
+        name: placement-osd-delete-backplane-script-resources
+        namespace: openshift-acm-policies
+      spec:
+        clusterSelector:
+          matchExpressions:
+          - key: hypershift.open-cluster-management.io/hosted-cluster
+            operator: In
+            values:
+            - 'true'
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: PlacementBinding
+      metadata:
+        name: binding-osd-delete-backplane-script-resources
+        namespace: openshift-acm-policies
+      placementRef:
+        apiGroup: apps.open-cluster-management.io
+        kind: PlacementRule
+        name: placement-osd-delete-backplane-script-resources
+      subjects:
+      - apiGroup: policy.open-cluster-management.io
+        kind: Policy
+        name: osd-delete-backplane-script-resources
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: Policy
+      metadata:
+        annotations:
+          policy.open-cluster-management.io/categories: CM Configuration Management
+          policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/standards: NIST SP 800-53
         name: osd-must-gather-operator
         namespace: openshift-acm-policies
       spec:
