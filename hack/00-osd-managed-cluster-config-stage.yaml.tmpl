@@ -29025,8 +29025,7 @@ objects:
           rules:
           - alert: MNMOTooManyReconcileErrors15MinSRE
             expr: increase(controller_runtime_reconcile_total{controller="machineset_controller",
-              service="openshift-managed-node-metadata-operator-metrics-service",
-              result="error"}[90m]) >= 5
+              service="managed-node-metadata-operator-metrics-service", result="error"}[20m])>0
             for: 15m
             labels:
               severity: warning
@@ -29034,8 +29033,8 @@ objects:
               maturity: immature
               source: https://issues.redhat.com//browse/OSD-9911
             annotations:
-              message: At least 5 reconciliations of the MNMO operator ( {{ $labels.name
-                }} ) have failed in the past 15 minutes.
+              message: Reconciliations of the MNMO operator ( {{ $labels.name }} )
+                have failed in the past 15 minutes.
               link: https://github.com/openshift/ops-sop/blob/master/v4/alerts/MNMOTooManyReconcileFailures.md
     - apiVersion: monitoring.coreos.com/v1
       kind: PrometheusRule
