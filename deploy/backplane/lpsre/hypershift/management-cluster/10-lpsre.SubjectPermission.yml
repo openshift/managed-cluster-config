@@ -1,0 +1,15 @@
+apiVersion: managed.openshift.io/v1alpha1
+kind: SubjectPermission
+metadata:
+  name: backplane-lpsre-management-cluster
+  namespace: openshift-rbac-permissions
+spec:
+  permissions:
+  - allowFirst: true
+    clusterRoleName: admin
+    namespacesAllowedRegex: '(^openshift-package-operator$)'
+  - allowFirst: true
+    clusterRoleName: backplane-lpsre-management-cluster-project
+    namespacesAllowedRegex: '(^ocm-staging-.*|^ocm-production-.*|^hc-mc-.*|^openshift-package-operator$)'
+  subjectKind: Group
+  subjectName: system:serviceaccounts:openshift-backplane-lpsre
