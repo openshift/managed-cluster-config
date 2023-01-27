@@ -7,26 +7,36 @@ import os
 base_directory = "./deploy/"
 # An array of directories you want to generate policies for.
 # Please make sure ONLY the directories you want exist here.
+# Alphanumeric order is used to limit the risk of conflict when adding new directories in parallel. 
 # This script doesn't walk the sub-directories.
 directories = [
-        'rbac-permissions-operator-config',
-        'osd-cluster-admin',
         'backplane',
-        'backplane/srep',
-        'backplane/tam',
         'backplane/cee',
         'backplane/cse',
-        'backplane/cssre',
         'backplane/csm',
+        'backplane/cssre',
         'backplane/elevated-sre',
         'backplane/mobb',
+        'backplane/srep',
+        'backplane/tam',
         'ccs-dedicated-admins',
         'customer-registry-cas',
+        'osd-cluster-admin',
+        'osd-delete-backplane-script-resources',
+        'osd-delete-backplane-serviceaccounts',
+        'osd-backplane-managed-scripts',
         'osd-must-gather-operator',
         'osd-openshift-operators-redhat',
         'osd-pcap-collector',
+        'osd-project-request-template',
+        'osd-user-workload-monitoring',
+        'rbac-permissions-operator-config',
         'rosa-console-branding',
         'rosa-console-branding-configmap',
+        'rosa-oauth-templates',
+        'rosa-oauth-templates-errors',
+        'rosa-oauth-templates-login',
+        'rosa-oauth-templates-providers',
         ]
 policy_generator_config = './scripts/policy-generator-config.yaml'
 config_filename = "config.yaml"
