@@ -3261,6 +3261,100 @@ objects:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
           policy.open-cluster-management.io/standards: NIST SP 800-53
+        name: osd-delete-backplane-serviceaccounts-sp
+        namespace: openshift-acm-policies
+      spec:
+        disabled: false
+        policy-templates:
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+              name: osd-delete-backplane-serviceaccounts-sp
+            spec:
+              evaluationInterval:
+                compliant: 2h
+                noncompliant: 45s
+              object-templates:
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: ClusterRoleBinding
+                  metadata:
+                    name: osd-delete-backplane-serviceaccounts-c0
+                  roleRef:
+                    apiGroup: rbac.authorization.k8s.io
+                    kind: ClusterRole
+                    name: osd-get-namespace
+                  subjects:
+                  - apiGroup: rbac.authorization.k8s.io
+                    kind: User
+                    name: system:serviceaccount:openshift-backplane:osd-delete-backplane-serviceaccounts
+              pruneObjectBehavior: DeleteIfCreated
+              remediationAction: enforce
+              severity: low
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+              name: osd-delete-backplane-serviceaccounts-sp2
+            spec:
+              evaluationInterval:
+                compliant: 2h
+                noncompliant: 45s
+              namespaceSelector:
+                include:
+                - openshift-backplane-*
+              object-templates:
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: RoleBinding
+                  metadata:
+                    name: osd-delete-backplane-serviceaccounts-0
+                  roleRef:
+                    apiGroup: rbac.authorization.k8s.io
+                    kind: ClusterRole
+                    name: osd-delete-backplane-serviceaccounts
+                  subjects:
+                  - apiGroup: rbac.authorization.k8s.io
+                    kind: User
+                    name: system:serviceaccount:openshift-backplane:osd-delete-backplane-serviceaccounts
+              pruneObjectBehavior: DeleteIfCreated
+              remediationAction: enforce
+              severity: low
+    - apiVersion: apps.open-cluster-management.io/v1
+      kind: PlacementRule
+      metadata:
+        name: placement-osd-delete-backplane-serviceaccounts-sp
+        namespace: openshift-acm-policies
+      spec:
+        clusterSelector:
+          matchExpressions:
+          - key: hypershift.open-cluster-management.io/hosted-cluster
+            operator: In
+            values:
+            - 'true'
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: PlacementBinding
+      metadata:
+        name: binding-osd-delete-backplane-serviceaccounts-sp
+        namespace: openshift-acm-policies
+      placementRef:
+        apiGroup: apps.open-cluster-management.io
+        kind: PlacementRule
+        name: placement-osd-delete-backplane-serviceaccounts-sp
+      subjects:
+      - apiGroup: policy.open-cluster-management.io
+        kind: Policy
+        name: osd-delete-backplane-serviceaccounts-sp
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: Policy
+      metadata:
+        annotations:
+          policy.open-cluster-management.io/categories: CM Configuration Management
+          policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/standards: NIST SP 800-53
         name: osd-delete-backplane-serviceaccounts
         namespace: openshift-acm-policies
       spec:
@@ -3318,22 +3412,6 @@ objects:
                     verbs:
                     - get
                     - list
-              - complianceType: musthave
-                objectDefinition:
-                  apiVersion: managed.openshift.io/v1alpha1
-                  kind: SubjectPermission
-                  metadata:
-                    name: osd-delete-backplane-serviceaccounts
-                    namespace: openshift-rbac-permissions
-                  spec:
-                    clusterPermissions:
-                    - osd-get-namespace
-                    permissions:
-                    - allowFirst: true
-                      clusterRoleName: osd-delete-backplane-serviceaccounts
-                      namespacesAllowedRegex: (^openshift-backplane-.*)
-                    subjectKind: User
-                    subjectName: system:serviceaccount:openshift-backplane:osd-delete-backplane-serviceaccounts
               - complianceType: musthave
                 objectDefinition:
                   apiVersion: batch/v1
@@ -3770,6 +3848,81 @@ objects:
       - apiGroup: policy.open-cluster-management.io
         kind: Policy
         name: osd-project-request-template
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: Policy
+      metadata:
+        annotations:
+          policy.open-cluster-management.io/categories: CM Configuration Management
+          policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/standards: NIST SP 800-53
+        name: osd-user-workload-monitoring-sp
+        namespace: openshift-acm-policies
+      spec:
+        disabled: false
+        policy-templates:
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+              name: osd-user-workload-monitoring-sp
+            spec:
+              evaluationInterval:
+                compliant: 2h
+                noncompliant: 45s
+              namespaceSelector:
+                exclude:
+                - kube-*
+                - openshift*
+                - ops-health-monitoring
+                - management-infra
+                - default
+                - logging
+                - sre-app-check
+                include:
+                - '*'
+              object-templates:
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: RoleBinding
+                  metadata:
+                    name: dedicated-admins-alert-routing-edit-0
+                  roleRef:
+                    apiGroup: rbac.authorization.k8s.io
+                    kind: ClusterRole
+                    name: alert-routing-edit
+                  subjects:
+                  - apiGroup: rbac.authorization.k8s.io
+                    kind: Group
+                    name: dedicated-admins
+              pruneObjectBehavior: DeleteIfCreated
+              remediationAction: enforce
+              severity: low
+    - apiVersion: apps.open-cluster-management.io/v1
+      kind: PlacementRule
+      metadata:
+        name: placement-osd-user-workload-monitoring-sp
+        namespace: openshift-acm-policies
+      spec:
+        clusterSelector:
+          matchExpressions:
+          - key: hypershift.open-cluster-management.io/hosted-cluster
+            operator: In
+            values:
+            - 'true'
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: PlacementBinding
+      metadata:
+        name: binding-osd-user-workload-monitoring-sp
+        namespace: openshift-acm-policies
+      placementRef:
+        apiGroup: apps.open-cluster-management.io
+        kind: PlacementRule
+        name: placement-osd-user-workload-monitoring-sp
+      subjects:
+      - apiGroup: policy.open-cluster-management.io
+        kind: Policy
+        name: osd-user-workload-monitoring-sp
     - apiVersion: policy.open-cluster-management.io/v1
       kind: Policy
       metadata:
