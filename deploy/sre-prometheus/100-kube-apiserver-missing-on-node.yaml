@@ -12,7 +12,7 @@ spec:
     rules:
     - alert: KubeAPIServerMissingOnNode60Minutes
       expr: |
-        count(cluster:master_nodes{}) by (node) unless count(kube_pod_info{namespace="openshift-kube-apiserver", pod=~"kube-apiserver-ip-.*"}) by (node) >= 1
+        count(cluster:master_nodes{}) by (node) unless count(kube_pod_info{namespace="openshift-kube-apiserver", pod=~"kube-apiserver-.*", pod!~".*guard.*"}) by (node) >= 1
       for: 60m
       labels:
         severity: warning
