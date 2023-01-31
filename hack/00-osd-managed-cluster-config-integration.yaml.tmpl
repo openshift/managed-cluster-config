@@ -19762,6 +19762,274 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: backplane-srep-hypershift-management-cluster
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: ext-hypershift.openshift.io/cluster-type
+        operator: In
+        values:
+        - management-cluster
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-srep-management-cluster-project
+      rules:
+      - apiGroups:
+        - work.open-cluster-management.io
+        resources:
+        - appliedmanifestworks
+        - operator
+        - work
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - cluster.open-cluster-management.io
+        resources:
+        - clusterclaims
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - operator.open-cluster-management.io
+        resources:
+        - klusterlets
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - policy.open-cluster-management.io
+        resources:
+        - policies
+        - configurationpolicies
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - hypershift.openshift.io
+        resources:
+        - awsendpointservices
+        - hostedclusters
+        - hostedcontrolplanes
+        - nodepools
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - cluster.x-k8s.io
+        resources:
+        - clusterclasses
+        - clusters
+        - machinedeployments
+        - machinehealthchecks
+        - machinepools
+        - machines
+        - machinesets
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - infrastructure.cluster.x-k8s.io
+        resources:
+        - awsclustercontrolleridentities
+        - awsclusterroleidentities
+        - awsclusters
+        - awsclusterstaticidentities
+        - awsclustertemplates
+        - awsfargateprofiles
+        - awsmachinepools
+        - awsmachines
+        - awsmachinetemplates
+        - awsmanagedmachinepools
+        - azureclusteridentities
+        - azureclusters
+        - azuremachines
+        - azuremachinetemplates
+        - ibmpowervsclusters
+        - ibmpowervsimages
+        - ibmpowervsmachines
+        - ibmpowervsmachinetemplates
+        - ibmvpcclusters
+        - ibmvpcmachines
+        - ibmvpcmachinetemplates
+        - kubevirtclusters
+        - kubevirtmachines
+        - kubevirtmachinetemplates
+        verbs:
+        - get
+        - list
+        - watch
+    - apiVersion: managed.openshift.io/v1alpha1
+      kind: SubjectPermission
+      metadata:
+        name: backplane-srep-management-cluster
+        namespace: openshift-rbac-permissions
+      spec:
+        permissions:
+        - allowFirst: true
+          clusterRoleName: backplane-srep-management-cluster-project
+          namespacesAllowedRegex: (^uhc.*|^ocm.*)
+        - allowFirst: true
+          clusterRoleName: dedicated-readers
+          namespacesAllowedRegex: (^hypershift.*|^uhc.*|^ocm.*|^klusterlet.*|^open-cluster-management.*)
+        subjectKind: Group
+        subjectName: system:serviceaccounts:openshift-backplane-srep
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: backplane-srep-hypershift-service-cluster
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: ext-hypershift.openshift.io/cluster-type
+        operator: In
+        values:
+        - service-cluster
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-srep-service-cluster-project
+      rules:
+      - apiGroups:
+        - work.open-cluster-management.io
+        resources:
+        - appliedmanifestworks
+        - operator
+        - work
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - cluster.open-cluster-management.io
+        resources:
+        - clusterclaims
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - operator.open-cluster-management.io
+        resources:
+        - klusterlets
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - policy.open-cluster-management.io
+        resources:
+        - policies
+        - configurationpolicies
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - hypershift.openshift.io
+        resources:
+        - awsendpointservices
+        - hostedclusters
+        - hostedcontrolplanes
+        - nodepools
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - cluster.x-k8s.io
+        resources:
+        - clusterclasses
+        - clusters
+        - machinedeployments
+        - machinehealthchecks
+        - machinepools
+        - machines
+        - machinesets
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - infrastructure.cluster.x-k8s.io
+        resources:
+        - awsclustercontrolleridentities
+        - awsclusterroleidentities
+        - awsclusters
+        - awsclusterstaticidentities
+        - awsclustertemplates
+        - awsfargateprofiles
+        - awsmachinepools
+        - awsmachines
+        - awsmachinetemplates
+        - awsmanagedmachinepools
+        - azureclusteridentities
+        - azureclusters
+        - azuremachines
+        - azuremachinetemplates
+        - ibmpowervsclusters
+        - ibmpowervsimages
+        - ibmpowervsmachines
+        - ibmpowervsmachinetemplates
+        - ibmvpcclusters
+        - ibmvpcmachines
+        - ibmvpcmachinetemplates
+        - kubevirtclusters
+        - kubevirtmachines
+        - kubevirtmachinetemplates
+        verbs:
+        - get
+        - list
+        - watch
+    - apiVersion: managed.openshift.io/v1alpha1
+      kind: SubjectPermission
+      metadata:
+        name: backplane-srep-service-cluster
+        namespace: openshift-rbac-permissions
+      spec:
+        permissions:
+        - allowFirst: true
+          clusterRoleName: backplane-srep-service-cluster-project
+          namespacesAllowedRegex: (^uhc.*|^ocm.*)
+        - allowFirst: true
+          clusterRoleName: dedicated-readers
+          namespacesAllowedRegex: (^hypershift.*|^uhc.*|^ocm.*|^klusterlet.*|^open-cluster-management.*)
+        subjectKind: Group
+        subjectName: system:serviceaccounts:openshift-backplane-srep
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: backplane-tam
   spec:
     clusterDeploymentSelector:

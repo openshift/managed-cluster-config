@@ -1,0 +1,15 @@
+apiVersion: managed.openshift.io/v1alpha1
+kind: SubjectPermission
+metadata:
+  name: backplane-srep-service-cluster
+  namespace: openshift-rbac-permissions
+spec:
+  permissions:
+  - allowFirst: true
+    clusterRoleName: backplane-srep-service-cluster-project
+    namespacesAllowedRegex: "(^uhc.*|^ocm.*)"
+  - allowFirst: true
+    clusterRoleName: dedicated-readers
+    namespacesAllowedRegex: "(^hypershift.*|^uhc.*|^ocm.*|^klusterlet.*|^open-cluster-management.*)"
+  subjectKind: Group
+  subjectName: system:serviceaccounts:openshift-backplane-srep
