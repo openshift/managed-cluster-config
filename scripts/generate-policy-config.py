@@ -8,6 +8,7 @@ base_directory = "./deploy/"
 # An array of directories you want to generate policies for.
 # Please make sure ONLY the directories you want exist here.
 # Alphanumeric order is used to limit the risk of conflict when adding new directories in parallel. 
+# Large content (such as 'rosa-oauth-templates') aren't supported with 'Apply' mode and are moved to a dedicated selector syncset
 # This script doesn't walk the sub-directories.
 directories = [
         'backplane',
@@ -33,10 +34,6 @@ directories = [
         'rbac-permissions-operator-config',
         'rosa-console-branding',
         'rosa-console-branding-configmap',
-        'rosa-oauth-templates',
-        'rosa-oauth-templates-errors',
-        'rosa-oauth-templates-login',
-        'rosa-oauth-templates-providers',
         ]
 policy_generator_config = './scripts/policy-generator-config.yaml'
 config_filename = "config.yaml"
