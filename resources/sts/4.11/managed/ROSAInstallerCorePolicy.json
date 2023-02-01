@@ -35,7 +35,7 @@
         "ec2:DescribeVpcEndpointServiceConfigurations",
         "ec2:DescribeVpcEndpointServicePermissions",
         "ec2:DescribeVpcEndpointServices",
-        "ec2:ReleaseAddress",
+        "elasticloadbalancing:CreateTargetGroup",
         "elasticloadbalancing:DescribeInstanceHealth",
         "elasticloadbalancing:DescribeListeners",
         "elasticloadbalancing:DescribeLoadBalancerAttributes",
@@ -65,16 +65,29 @@
         "s3:ListBucketVersions",
         "servicequotas:GetServiceQuota",
         "servicequotas:ListAWSDefaultServiceQuotas",
-        "sts:AssumeRole",
-        "sts:AssumeRoleWithWebIdentity",
         "sts:GetCallerIdentity",
         "tag:GetResources",
         "tag:UntagResources",
         "kms:DescribeKey",
-        "cloudwatch:GetMetricData",
-        "autoscaling:DescribeAutoScalingGroups"
+        "autoscaling:DescribeAutoScalingGroups",
+        "cloudwatch:GetMetricData"
       ],
       "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "sts:AssumeRole",
+        "sts:AssumeRoleWithWebIdentity"
+      ],
+      "Resource": [
+        "arn:aws:iam::*:role/*"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "aws:ResourceTag/red-hat-managed": "true"
+        }
+      }
     },
     {
       "Sid": "CopyImage",
@@ -94,7 +107,7 @@
       }
     },
     {
-      "Sid": "ModifyLoadBalancer",
+      "Sid": "ModifyLoadBalancers",
       "Effect": "Allow",
       "Action": [
         "elasticloadbalancing:DeleteLoadBalancer",
@@ -124,34 +137,22 @@
       }
     },
     {
-      "Sid": "LBCreateTargetGroup",
       "Effect": "Allow",
-      "Action": [
-        "elasticloadbalancing:CreateTargetGroup"
-      ],
+      "Action": "elasticloadbalancing:CreateLoadBalancer",
       "Resource": [
         "*"
-      ]
-    },
-    {
-      "Sid": "StartInstances",
-      "Effect": "Allow",
-      "Action": [
-        "ec2:StartInstances"
-      ],
-      "Resource": [
-        "arn:aws:ec2:*:*:instance/*"
       ],
       "Condition": {
         "StringEquals": {
-          "aws:ResourceTag/red-hat-managed": "true"
+          "aws:RequestTag/red-hat-managed": "true"
         }
       }
     },
     {
-      "Sid": "StopInstances",
+      "Sid": "StopStartInstances",
       "Effect": "Allow",
       "Action": [
+        "ec2:StartInstances",
         "ec2:StopInstances",
         "ec2:TerminateInstances"
       ],
@@ -165,7 +166,7 @@
       }
     },
     {
-      "Sid": "PutDeleteObjectBucketActions",
+      "Sid": "BucketActions",
       "Effect": "Allow",
       "Action": [
         "s3:CreateBucket",
@@ -194,7 +195,7 @@
       ]
     },
     {
-      "Sid": "BucketActions",
+      "Sid": "BucketObjectActions",
       "Effect": "Allow",
       "Action": [
         "s3:DeleteObject",
@@ -212,7 +213,7 @@
       ]
     },
     {
-      "Sid": "PermissionsToCreateAndManageInstanceProfiles",
+      "Sid": "CreateAndManageInstanceProfiles",
       "Effect": "Allow",
       "Action": [
         "iam:AddRoleToInstanceProfile",
@@ -225,17 +226,6 @@
         "arn:aws:iam::*:instance-profile/*-bootstrap-profile",
         "arn:aws:iam::*:instance-profile/*-worker-profile",
         "arn:aws:iam::*:instance-profile/*-master-profile"
-      ]
-    },
-    {
-      "Sid": "SGRevokeIngressEgress",
-      "Effect": "Allow",
-      "Action": [
-        "ec2:RevokeSecurityGroupIngress",
-        "ec2:RevokeSecurityGroupEgress"
-      ],
-      "Resource": [
-        "arn:aws:ec2:*:*:security-group/*"
       ]
     },
     {
@@ -268,7 +258,6 @@
       }
     },
     {
-      "Sid": "AllocateAddress",
       "Effect": "Allow",
       "Action": [
         "ec2:AllocateAddress"
@@ -283,10 +272,10 @@
       }
     },
     {
-      "Sid": "AssociateAddress",
       "Effect": "Allow",
       "Action": [
-        "ec2:AssociateAddress"
+        "ec2:AssociateAddress",
+        "ec2:ReleaseAddress"
       ],
       "Resource": [
         "arn:aws:ec2:*:*:elastic-ip/*"
@@ -415,10 +404,12 @@
       ]
     },
     {
-      "Sid": "AuthorizeSecurityGroupIngressResource",
+      "Sid": "AuthorizeSecurityGroupIngressEgress",
       "Effect": "Allow",
       "Action": [
-        "ec2:AuthorizeSecurityGroupIngress"
+        "ec2:AuthorizeSecurityGroupIngress",
+        "ec2:RevokeSecurityGroupIngress",
+        "ec2:RevokeSecurityGroupEgress"
       ],
       "Resource": [
         "arn:aws:ec2:*:*:security-group/*"
@@ -481,20 +472,6 @@
       "Condition": {
         "StringEquals": {
           "aws:ResourceTag/red-hat-managed": "true"
-        }
-      }
-    },
-    {
-      "Effect": "Allow",
-      "Action": [
-        "elasticloadbalancing:CreateLoadBalancer"
-      ],
-      "Resource": [
-        "*"
-      ],
-      "Condition": {
-        "StringEquals": {
-          "aws:RequestTag/red-hat-managed": "true"
         }
       }
     },
@@ -636,10 +613,11 @@
       }
     },
     {
-      "Sid": "ModifyInstanceAttribute",
+      "Sid": "ModifyInstance",
       "Effect": "Allow",
       "Action": [
-        "ec2:ModifyInstanceAttribute"
+        "ec2:ModifyInstanceAttribute",
+        "ec2:GetConsoleOutput"
       ],
       "Resource": [
         "arn:aws:ec2:*:*:instance/*"
@@ -694,21 +672,6 @@
       ],
       "Resource": [
         "arn:aws:ec2:*:*:security-group/*"
-      ],
-      "Condition": {
-        "StringEquals": {
-          "aws:ResourceTag/red-hat-managed": "true"
-        }
-      }
-    },
-    {
-      "Sid": "GetConsoleOutput",
-      "Effect": "Allow",
-      "Action": [
-        "ec2:GetConsoleOutput"
-      ],
-      "Resource": [
-        "arn:aws:ec2:*:*:instance/*"
       ],
       "Condition": {
         "StringEquals": {
