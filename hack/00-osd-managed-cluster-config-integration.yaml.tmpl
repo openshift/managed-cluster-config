@@ -31783,6 +31783,22 @@ objects:
         - builds
         verbs:
         - delete
+      - apiGroups:
+        - ''
+        resources:
+        - services
+        verbs:
+        - list
+        - get
+        - delete
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - servicemonitors
+        verbs:
+        - list
+        - get
+        - delete
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRoleBinding
       metadata:
@@ -31995,6 +32011,118 @@ objects:
                     --certificate-authority=/var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt
                     --keep-younger-than=24h --keep-tag-revisions=5 --ignore-invalid-refs=true
                     --confirm
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: sre-pruning-osd-15020-rpo-412
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.12'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: batch/v1
+      kind: CronJob
+      metadata:
+        name: services-pruner
+        namespace: openshift-sre-pruning
+      spec:
+        failedJobsHistoryLimit: 5
+        successfulJobsHistoryLimit: 3
+        concurrencyPolicy: Replace
+        schedule: '*/7 * * * *'
+        jobTemplate:
+          spec:
+            template:
+              spec:
+                affinity:
+                  nodeAffinity:
+                    preferredDuringSchedulingIgnoredDuringExecution:
+                    - preference:
+                        matchExpressions:
+                        - key: node-role.kubernetes.io/infra
+                          operator: Exists
+                      weight: 1
+                tolerations:
+                - effect: NoSchedule
+                  key: node-role.kubernetes.io/infra
+                  operator: Exists
+                serviceAccountName: sre-pruner-sa
+                restartPolicy: Never
+                containers:
+                - name: services-pruner
+                  image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+                  imagePullPolicy: Always
+                  args:
+                  - /bin/bash
+                  - -c
+                  - oc delete service/localmetrics-rbac-permissions-operator servicemonitor.monitoring.coreos.com/localmetrics-rbac-permissions-operator
+                    --namespace openshift-rbac-permissions --ignore-not-found
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: sre-pruning-osd-15020-rpo-pre-412
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/version-major-minor
+        operator: NotIn
+        values:
+        - '4.12'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: batch/v1beta1
+      kind: CronJob
+      metadata:
+        name: services-pruner
+        namespace: openshift-sre-pruning
+      spec:
+        failedJobsHistoryLimit: 5
+        successfulJobsHistoryLimit: 3
+        concurrencyPolicy: Replace
+        schedule: '*/7 * * * *'
+        jobTemplate:
+          spec:
+            template:
+              spec:
+                affinity:
+                  nodeAffinity:
+                    preferredDuringSchedulingIgnoredDuringExecution:
+                    - preference:
+                        matchExpressions:
+                        - key: node-role.kubernetes.io/infra
+                          operator: Exists
+                      weight: 1
+                tolerations:
+                - effect: NoSchedule
+                  key: node-role.kubernetes.io/infra
+                  operator: Exists
+                serviceAccountName: sre-pruner-sa
+                restartPolicy: Never
+                containers:
+                - name: services-pruner
+                  image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+                  imagePullPolicy: Always
+                  args:
+                  - /bin/bash
+                  - -c
+                  - oc delete service/localmetrics-rbac-permissions-operator servicemonitor.monitoring.coreos.com/localmetrics-rbac-permissions-operator
+                    --namespace openshift-rbac-permissions --ignore-not-found
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
