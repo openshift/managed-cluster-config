@@ -22,3 +22,9 @@ spec:
           record: sre:sla:outage_5_minutes
         - expr: sre:telemetry:managed_labels * on (sre) group_left(probe_url) label_replace(((80640 - sum by(_id) (count_over_time(sre:slo:probe_success_api{}[4w])) + sum by(_id) (sum_over_time(sre:slo:probe_success_api{}[4w]))) / 80640), "sre", "true", "", "")
           record: sre:slo:apiserver_28d_slo
+        - expr: sre:telemetry:managed_labels * on (sre) group_left(probe_url) label_replace(((80640 - sum by(_id) (count_over_time(sre:slo:probe_success_console{}[4w])) + sum by(_id) (sum_over_time(sre:slo:probe_success_console{}[4w]))) / 80640), "sre", "true", "", "")
+          record: sre:slo:console_28d_slo
+        - expr: sre:telemetry:managed_labels * on (sre) group_left(probe_url) label_replace(((sum by(_id) (count_over_time(sre:slo:probe_success_api{}[4w])) - sum by(_id) (sum_over_time(sre:slo:probe_success_api{}[4w]))) / ((1-0.9995) * 80640)), "sre", "true", "", "")
+          record: sre:error_budget_burn:apiserver_28d_slo
+        - expr: sre:telemetry:managed_labels * on (sre) group_left(probe_url) label_replace(((sum by(_id) (count_over_time(sre:slo:probe_success_console{}[4w])) - sum by(_id) (sum_over_time(sre:slo:probe_success_console{}[4w]))) / ((1-0.9995) * 80640)), "sre", "true", "", "")
+          record: sre:error_budget_burn:console_28d_slo
