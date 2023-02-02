@@ -14268,6 +14268,961 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: backplane-lpsre-acm-acm
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/addon-advanced-cluster-management: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: managed.openshift.io/v1alpha1
+      kind: SubjectPermission
+      metadata:
+        name: backplane-lpsre-acm-admins-project
+        namespace: openshift-rbac-permissions
+      spec:
+        permissions:
+        - allowFirst: true
+          clusterRoleName: admin
+          namespacesAllowedRegex: (^redhat-open-cluster-management$)
+        - allowFirst: true
+          clusterRoleName: backplane-lpsre-acm-admins-project
+          namespacesAllowedRegex: (^redhat-open-cluster-management$)
+        subjectKind: Group
+        subjectName: system:serviceaccounts:openshift-backplane-lpsre
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-acm-lpsre-admins-project
+      rules:
+      - apiGroups:
+        - ''
+        - action.open-cluster-management.io
+        - addon.open-cluster-management.io
+        - agent.open-cluster-management.io
+        - app.k8s.io
+        - apps.open-cluster-management.io
+        - argoproj.io
+        - authorization.k8s.io
+        - certificates.k8s.io
+        - cluster.open-cluster-management.io
+        - clusterregistry.k8s.io
+        - compliance.mcm.ibm.com
+        - config.openshift.io
+        - coordination.k8s.io
+        - discovery.open-cluster-management.io
+        - hive.openshift.io
+        - hiveinternal.openshift.io
+        - imageregistry.open-cluster-management.io
+        - internal.open-cluster-management.io
+        - inventory.open-cluster-management.io
+        - mcm.ibm.com
+        - multicloud.ibm.com
+        - operator.open-cluster-management.io
+        - policy.open-cluster-management.io
+        - proxy.open-cluster-management.io
+        - rbac.authorization.k8s.io
+        - register.open-cluster-management.io
+        - search.open-cluster-management.io
+        - submarineraddon.open-cluster-management.io
+        - view.open-cluster-management.io
+        - work.open-cluster-management.io
+        resources:
+        - applicationrelationships
+        - applicationrelationships/status
+        - applications
+        - applications/status
+        - certificatesigningrequests
+        - certificatesigningrequests/approval
+        - channels
+        - channels/status
+        - clusterclaims
+        - clustercurators
+        - clusterdeployments
+        - clustermanagementaddons
+        - clustermanagers
+        - clusterpools
+        - clusterrolebindings
+        - clusterroles
+        - clusterstatuses/aggregator
+        - clustersyncs
+        - clusterversions
+        - compliances
+        - configmaps
+        - deployableoverrides
+        - deployableoverrides/status
+        - deployables
+        - deployables/status
+        - discoveredclusters
+        - discoveryconfigs
+        - endpointconfigs
+        - endpoints
+        - events
+        - helmrepos
+        - helmrepos/status
+        - klusterletaddonconfigs
+        - leases
+        - machinepools
+        - managedclusteractions
+        - managedclusteractions/status
+        - managedclusteraddons
+        - managedclusteraddons/status
+        - managedclusterimageregistries
+        - managedclusterimageregistries/status
+        - managedclusterinfos
+        - managedclusterinfos/status
+        - managedclusters
+        - managedclusters/accept
+        - managedclusters/status
+        - managedclustersetbindings
+        - managedclustersets
+        - managedclustersets/bind
+        - managedclustersets/join
+        - managedclustersets/status
+        - managedclusterviews
+        - managedclusterviews/status
+        - manifestworks
+        - manifestworks/status
+        - namespaces
+        - placementbindings
+        - placementdecisions
+        - placementdecisions/status
+        - placementrules
+        - placementrules/status
+        - placements
+        - pods
+        - pods/log
+        - policies
+        - policies/status
+        - policyautomations
+        - policysets
+        - policysets/status
+        - rolebindings
+        - roles
+        - searchcustomizations
+        - secrets
+        - signers
+        - subjectaccessreviews
+        - submarinerconfigs
+        - submarinerconfigs/status
+        - subscriptions
+        - subscriptions/status
+        - syncsets
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        - admissionregistration.k8s.io
+        - apiextensions.k8s.io
+        - apiregistration.k8s.io
+        - apps
+        - apps.open-cluster-management.io
+        - authorization.k8s.io
+        - clusterview.open-cluster-management.io
+        - discovery.open-cluster-management.io
+        - hive.openshift.io
+        - mcm.ibm.com
+        - proxy.open-cluster-management.io
+        - rbac.authorization.k8s.io
+        - security.openshift.io
+        - wgpolicyk8s.io
+        resources:
+        - apiservices
+        - channels
+        - clusterjoinrequests
+        - clusterrolebindings
+        - clusterstatuses/log
+        - configmaps
+        - customresourcedefinitions
+        - deployments
+        - discoveryconfigs
+        - helmreleases
+        - hiveconfigs
+        - managedclusters
+        - managedclustersets
+        - mutatingwebhookconfigurations
+        - namespaces
+        - pods
+        - policyreports
+        - replicasets
+        - rolebindings
+        - serviceaccounts
+        - services
+        - subjectaccessreviews
+        - subscriptions
+        - validatingwebhookconfigurations
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        - admissionregistration.k8s.io
+        - apiextensions.k8s.io
+        - apiregistration.k8s.io
+        - apps
+        - apps.open-cluster-management.io
+        - authorization.k8s.io
+        - hive.openshift.io
+        - mcm.ibm.com
+        - monitoring.coreos.com
+        - rbac.authorization.k8s.io
+        - security.openshift.io
+        resources:
+        - apiservices
+        - channels
+        - clusterjoinrequests
+        - clusterrolebindings
+        - clusterroles
+        - configmaps
+        - customresourcedefinitions
+        - deployments
+        - hiveconfigs
+        - mutatingwebhookconfigurations
+        - namespaces
+        - rolebindings
+        - serviceaccounts
+        - servicemonitors
+        - services
+        - subjectaccessreviews
+        - subscriptions
+        - validatingwebhookconfigurations
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        - admissionregistration.k8s.io
+        - apiregistration.k8s.io
+        - apps
+        - apps.open-cluster-management.io
+        - authorization.k8s.io
+        - clusterview.open-cluster-management.io
+        - config.openshift.io
+        - discovery.open-cluster-management.io
+        - hive.openshift.io
+        - inventory.open-cluster-management.io
+        - mcm.ibm.com
+        - observability.open-cluster-management.io
+        - operator.open-cluster-management.io
+        - rbac.authorization.k8s.io
+        - wgpolicyk8s.io
+        resources:
+        - apiservices
+        - clusterjoinrequests
+        - configmaps
+        - deployments
+        - discoveryconfigs
+        - helmreleases
+        - hiveconfigs
+        - ingresses
+        - managedclusters
+        - managedclustersets
+        - multiclusterhubs
+        - multiclusterobservabilities
+        - namespaces
+        - pods
+        - policyreports
+        - rolebindings
+        - servicemonitors
+        - services
+        - subjectaccessreviews
+        - subscriptions
+        - validatingwebhookconfigurations
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        - admissionregistration.k8s.io
+        - apiregistration.k8s.io
+        - apps
+        - apps.open-cluster-management.io
+        - authorization.k8s.io
+        - clusterview.open-cluster-management.io
+        - config.openshift.io
+        - hive.openshift.io
+        - mcm.ibm.com
+        - operator.open-cluster-management.io
+        - rbac.authorization.k8s.io
+        - storage.k8s.io
+        - wgpolicyk8s.io
+        resources:
+        - apiservices
+        - clusterjoinrequests
+        - configmaps
+        - deployments
+        - helmreleases
+        - hiveconfigs
+        - ingresses
+        - managedclusters
+        - managedclustersets
+        - multiclusterhubs
+        - namespaces
+        - pods
+        - policyreports
+        - rolebindings
+        - services
+        - subjectaccessreviews
+        - validatingwebhookconfigurations
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        - admissionregistration.k8s.io
+        - apps
+        - apps.open-cluster-management.io
+        - mcm.ibm.com
+        - monitoring.coreos.com
+        - operator.open-cluster-management.io
+        resources:
+        - deployments
+        - deployments/finalizers
+        - helmreleases
+        - multiclusterhubs
+        - multiclusterhubs/finalizers
+        - multiclusterhubs/status
+        - servicemonitors
+        - servicemonitors/finalizers
+        - services
+        - services/finalizers
+        - validatingwebhookconfigurations
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        - apiextensions.k8s.io
+        - apiregistration.k8s.io
+        - apps
+        - apps.open-cluster-management.io
+        resources:
+        - apiservices
+        - channels
+        - customresourcedefinitions
+        - deployments
+        - services
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        - apps
+        resources:
+        - deployments
+        - serviceaccounts
+        - services
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - admissionregistration.k8s.io
+        - apiextensions.k8s.io
+        - apiregistration.k8s.io
+        - hive.openshift.io
+        - mcm.ibm.com
+        - rbac.authorization.k8s.io
+        resources:
+        - apiservices
+        - clusterrolebindings
+        - clusterroles
+        - customresourcedefinitions
+        - hiveconfigs
+        - mutatingwebhookconfigurations
+        - validatingwebhookconfigurations
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - agent-install.openshift.io
+        resources:
+        - agentserviceconfigs
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - console.openshift.io
+        - search.open-cluster-management.io
+        resources:
+        - consolelinks
+        - consoleplugins
+        - searches
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - prometheusrules
+        - servicemonitors
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - multicluster.openshift.io
+        resources:
+        - multiclusterengines
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - networking.k8s.io
+        resources:
+        - ingresses
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - operator.openshift.io
+        resources:
+        - consoles
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - clusterserviceversions
+        - operatorgroups
+        - subscriptions
+        verbs:
+        - delete
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - packages.operators.coreos.com
+        resources:
+        - packagemanifests
+        verbs:
+        - get
+        - list
+        - watch
+        serviceAccountName: multiclusterhub-operator
+      - rules: null
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        - services
+        - services/finalizers
+        - endpoints
+        - persistentvolumeclaims
+        - events
+        - configmaps
+        - serviceaccounts
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - apps
+        resources:
+        - deployments
+        - daemonsets
+        - replicasets
+        - statefulsets
+        verbs:
+        - get
+        - list
+        - patch
+        - update
+        - watch
+      - apiGroups:
+        - storage.k8s.io
+        resources:
+        - storageclasses
+        verbs:
+        - watch
+        - get
+        - list
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - servicemonitors
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - apps
+        resourceNames:
+        - multicluster-observability-operator
+        resources:
+        - deployments/finalizers
+        verbs:
+        - update
+      - apiGroups:
+        - apps
+        resources:
+        - replicasets
+        - deployments
+        verbs:
+        - get
+      - apiGroups:
+        - monitor.open-cluster-management.io
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - observability.open-cluster-management.io
+        resources:
+        - '*'
+        - multiclusterobservabilities
+        - endpointmonitorings
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - core.observatorium.io
+        resources:
+        - observatoria
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - integreatly.org
+        resources:
+        - grafanas
+        - grafanas/status
+        - grafanas/finalizers
+        - grafanadashboards
+        - grafanadashboards/status
+        - grafanadatasources
+        - grafanadatasources/status
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - networking.k8s.io
+        resources:
+        - ingresses
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - route.openshift.io
+        resources:
+        - routes
+        - routes/custom-host
+        - routes/status
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - cluster.open-cluster-management.io
+        resources:
+        - manageclusters
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - work.open-cluster-management.io
+        resources:
+        - manifestworks
+        verbs:
+        - list
+      - apiGroups:
+        - operator.openshift.io
+        resources:
+        - ingresscontrollers
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - coordination.k8s.io
+        resources:
+        - leases
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - addon.open-cluster-management.io
+        resources:
+        - clustermanagementaddons
+        - clustermanagementaddons/finalizers
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - addon.open-cluster-management.io
+        resources:
+        - managedclusteraddons
+        - managedclusteraddons/status
+        - managedclusteraddons/finalizers
+        verbs:
+        - watch
+        - create
+        - update
+        - delete
+        - get
+        - list
+      - apiGroups:
+        - migration.k8s.io
+        resources:
+        - storageversionmigrations
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - cluster.open-cluster-management.io
+        resources:
+        - managedclusters
+        verbs:
+        - watch
+        - get
+        - list
+      - apiGroups:
+        - operator.open-cluster-management.io
+        resources:
+        - multiclusterhubs
+        verbs:
+        - watch
+        - get
+        - list
+      - apiGroups:
+        - certificates.k8s.io
+        resources:
+        - certificatesigningrequests
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - certificates.k8s.io
+        resources:
+        - certificatesigningrequests/status
+        - certificatesigningrequests/approval
+        verbs:
+        - update
+      - apiGroups:
+        - certificates.k8s.io
+        resourceNames:
+        - kubernetes.io/kube-apiserver-client
+        - open-cluster-management.io/observability-signer
+        resources:
+        - signers
+        verbs:
+        - approve
+      - apiGroups:
+        - certificates.k8s.io
+        resources:
+        - certificatesigningrequests
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - certificates.k8s.io
+        resources:
+        - certificatesigningrequests/status
+        verbs:
+        - update
+      - apiGroups:
+        - certificates.k8s.io
+        resourceNames:
+        - open-cluster-management.io/observability-signer
+        resources:
+        - signers
+        verbs:
+        - sign
+      - apiGroups:
+        - admissionregistration.k8s.io
+        resources:
+        - mutatingwebhookconfigurations
+        - validatingwebhookconfigurations
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - imageregistry.open-cluster-management.io
+        resources:
+        - managedclusterimageregistries
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - prometheusrules
+        verbs:
+        - get
+        - list
+        - patch
+        - update
+        - watch
+      - apiGroups:
+        - oauth.openshift.io
+        resources:
+        - oauthclients
+        verbs:
+        - get
+        - list
+        - patch
+        - update
+        - watch
+      - apiGroups:
+        - addon.open-cluster-management.io
+        resources:
+        - addondeploymentconfigs
+        verbs:
+        - get
+        - list
+        - watch
+        serviceAccountName: multicluster-observability-operator
+      - rules: null
+      - apiGroups:
+        - ''
+        resources:
+        - configmaps
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - get
+      - apiGroups:
+        - apps
+        resources:
+        - replicasets
+        verbs:
+        - get
+      - apiGroups:
+        - ''
+        - events.k8s.io
+        resources:
+        - events
+        verbs:
+        - get
+        - list
+      - apiGroups:
+        - ''
+        resources:
+        - namespaces
+        - serviceaccounts
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - rbac.authorization.k8s.io
+        resources:
+        - roles
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - rbac.authorization.k8s.io
+        resources:
+        - clusterroles
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - rbac.authorization.k8s.io
+        resources:
+        - rolebindings
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - apiextensions.k8s.io
+        resources:
+        - customresourcedefinitions
+        - customresourcedefinitions/finalizers
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - submariner.io
+        resources:
+        - brokers
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - secrets
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - cluster.open-cluster-management.io
+        resources:
+        - managedclusters
+        - managedclustersets
+        verbs:
+        - get
+        - list
+        - watch
+        - update
+        - patch
+      - apiGroups:
+        - work.open-cluster-management.io
+        resources:
+        - manifestworks
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - config.openshift.io
+        resources:
+        - apiservers
+        - infrastructures
+        - infrastructures/status
+        verbs:
+        - get
+      - apiGroups:
+        - submarineraddon.open-cluster-management.io
+        resources:
+        - submarinerconfigs
+        verbs:
+        - get
+        - list
+        - watch
+        - update
+        - patch
+      - apiGroups:
+        - submarineraddon.open-cluster-management.io
+        resources:
+        - submarinerconfigs/status
+        verbs:
+        - update
+        - patch
+      - apiGroups:
+        - addon.open-cluster-management.io
+        resources:
+        - clustermanagementaddons
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - addon.open-cluster-management.io
+        resources:
+        - managedclusteraddons
+        verbs:
+        - get
+        - list
+        - watch
+        - patch
+        - update
+      - apiGroups:
+        - addon.open-cluster-management.io
+        resources:
+        - managedclusteraddons/finalizers
+        verbs:
+        - update
+      - apiGroups:
+        - addon.open-cluster-management.io
+        resources:
+        - managedclusteraddons/status
+        verbs:
+        - patch
+        - update
+      - apiGroups:
+        - certificates.k8s.io
+        resources:
+        - certificatesigningrequests
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - certificates.k8s.io
+        resources:
+        - certificatesigningrequests/approval
+        verbs:
+        - update
+        - patch
+      - apiGroups:
+        - certificates.k8s.io
+        resourceNames:
+        - kubernetes.io/kube-apiserver-client
+        resources:
+        - signers
+        verbs:
+        - approve
+        - list
+        - get
+      - apiGroups:
+        - coordination.k8s.io
+        resources:
+        - leases
+        verbs:
+        - get
+        - list
+        - watch
+        serviceAccountName: submariner-addon
+        permissions: null
+      - rules: null
+      - apiGroups:
+        - ''
+        resources:
+        - configmaps
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - coordination.k8s.io
+        resources:
+        - leases
+        verbs:
+        - get
+        - list
+        - watch
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: backplane-lpsre-hypershift-management-cluster
   spec:
     clusterDeploymentSelector:
