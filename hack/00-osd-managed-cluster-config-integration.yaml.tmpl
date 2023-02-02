@@ -30273,12 +30273,15 @@ objects:
               - complianceType: musthave
                 objectDefinition:
                   apiVersion: config.openshift.io/v1
-                  applyMode: AlwaysApply
                   kind: OAuth
-                  name: cluster
-                  patch: '{"spec":{"templates": {"login": {"name": "rosa-oauth-templates-login"},"providerSelection":
-                    {"name": "rosa-oauth-templates-providers"},"error": {"name": "rosa-oauth-templates-errors"}}}}'
-                  patchType: merge
+                  spec:
+                    templates:
+                      login:
+                        name: rosa-oauth-templates-login
+                      providerSelection:
+                        name: rosa-oauth-templates-providers
+                      error:
+                        name: rosa-oauth-templates-errors
                   metadata:
                     name: cluster
               pruneObjectBehavior: DeleteIfCreated
