@@ -20772,7 +20772,7 @@ objects:
           # so that killswitch instructions point to the right file!\n  remoteWrite:\n\
           \    - url: http://token-refresher.openshift-monitoring.svc.cluster.local\n\
           \      remoteTimeout: 30s\n      writeRelabelConfigs:\n      - sourceLabels:\
-          \ [__name__]\n        action: keep\n        regex: '(addon_operator_addons_count|addon_operator_addon_health_info|addon_operator_ocm_api_requests_durations|addon_operator_ocm_api_requests_durations_sum|addon_operator_ocm_api_requests_durations_count|addon_operator_paused|cluster_admin_enabled|limited_support_enabled|identity_provider|ingress_canary_route_reachable|ocm_agent_service_log_sent_total|sre:slo:probe_success_api|sre:slo:probe_success_console|sre:slo:upgradeoperator_upgrade_result|sre:slo:imageregistry_http_requests_total|sre:slo:oauth_server_requests_total|sre:sla:outage_5_minutes)'\n\
+          \ [__name__]\n        action: keep\n        regex: '(addon_operator_addons_count|addon_operator_addon_health_info|addon_operator_ocm_api_requests_durations|addon_operator_ocm_api_requests_durations_sum|addon_operator_ocm_api_requests_durations_count|addon_operator_paused|cluster_admin_enabled|limited_support_enabled|identity_provider|ingress_canary_route_reachable|ocm_agent_service_log_sent_total|sre:slo:probe_success_api|sre:slo:probe_success_console|sre:slo:upgradeoperator_upgrade_result|sre:slo:imageregistry_http_requests_total|sre:slo:oauth_server_requests_total|sre:sla:outage_5_minutes|sre:slo:apiserver_28d_slo|sre:slo:console_28d_slo|sre:error_budget_burn:apiserver_28d_slo|sre:error_budget_burn:console_28d_slo)'\n\
           \      queueConfig:\n        capacity: 2500\n        maxShards: 1000\n \
           \       minShards: 1\n        maxSamplesPerSend: 500\n        batchSendDeadline:\
           \ 60s\n        minBackoff: 30ms\n        maxBackoff: 5s\n  nodeSelector:\n\
@@ -31537,6 +31537,26 @@ objects:
               code=~"([1-5]..)"}[5m]))) == 1) or (sum(absent_over_time(apiserver_request_total{job="apiserver"}[5m]))*(count(sum(sum_over_time(sre:slo:probe_success_api{}[5m]))
               == 0))) or vector(0), "sre", "true", "", "")
             record: sre:sla:outage_5_minutes
+          - expr: sre:telemetry:managed_labels * on (sre) group_left(probe_url) label_replace(((80640
+              - sum by(_id) (count_over_time(sre:slo:probe_success_api{}[4w])) + sum
+              by(_id) (sum_over_time(sre:slo:probe_success_api{}[4w]))) / 80640),
+              "sre", "true", "", "")
+            record: sre:slo:apiserver_28d_slo
+          - expr: sre:telemetry:managed_labels * on (sre) group_left(probe_url) label_replace(((80640
+              - sum by(_id) (count_over_time(sre:slo:probe_success_console{}[4w]))
+              + sum by(_id) (sum_over_time(sre:slo:probe_success_console{}[4w])))
+              / 80640), "sre", "true", "", "")
+            record: sre:slo:console_28d_slo
+          - expr: sre:telemetry:managed_labels * on (sre) group_left(probe_url) label_replace(((sum
+              by(_id) (count_over_time(sre:slo:probe_success_api{}[4w])) - sum by(_id)
+              (sum_over_time(sre:slo:probe_success_api{}[4w]))) / ((1-0.9995) * 80640)),
+              "sre", "true", "", "")
+            record: sre:error_budget_burn:apiserver_28d_slo
+          - expr: sre:telemetry:managed_labels * on (sre) group_left(probe_url) label_replace(((sum
+              by(_id) (count_over_time(sre:slo:probe_success_console{}[4w])) - sum
+              by(_id) (sum_over_time(sre:slo:probe_success_console{}[4w]))) / ((1-0.9995)
+              * 80640)), "sre", "true", "", "")
+            record: sre:error_budget_burn:console_28d_slo
     - apiVersion: monitoring.coreos.com/v1
       kind: PrometheusRule
       metadata:
