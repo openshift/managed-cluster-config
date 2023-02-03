@@ -5818,6 +5818,67 @@ objects:
       - apiGroup: policy.open-cluster-management.io
         kind: Policy
         name: hosted-uwm
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: Policy
+      metadata:
+        annotations:
+          policy.open-cluster-management.io/categories: CM Configuration Management
+        name: api-clusterurlmonitor
+        namespace: openshift-acm-policies
+      spec:
+        disabled: false
+        policy-templates:
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+              name: api-clusterurlmonitor
+            spec:
+              namespaceSelector:
+                include:
+                - ocm-*-*-*
+                exclude: []
+              remediationAction: enforce
+              object-templates:
+                apiVersion: monitoring.openshift.io/v1alpha1
+                kind: ClusterUrlMonitor
+                metadata:
+                  finalizers:
+                  - clusterurlmonitor.routemonitoroperator.monitoring.openshift.io/finalizer
+                  labels:
+                    hive.openshift.io/managed: 'true'
+                  name: api
+                spec:
+                  port: '6443'
+                  prefix: https://api.
+                  slo:
+                    targetAvailabilityPercent: '99.0'
+                  suffix: /livez
+    - apiVersion: apps.open-cluster-management.io/v1
+      kind: PlacementRule
+      metadata:
+        name: placement-api-clusterurlmonitor
+        namespace: openshift-acm-policies
+      spec:
+        clusterSelector:
+          matchExpressions:
+          - key: hypershift.open-cluster-management.io/management-cluster
+            operator: In
+            values:
+            - 'true'
+    - apiVersion: apps.open-cluster-management.io/v1
+      kind: PlacementBinding
+      metadata:
+        name: binding-api-clusterurlmonitor
+        namespace: openshift-acm-policies
+      placementRef:
+        apiGroup: apps.open-cluster-management.io
+        kind: PlacementRule
+        name: placement-api-clusterurlmonitor
+      subjects:
+      - apiGroup: policy.open-cluster-management.io
+        kind: Policy
+        name: api-clusterurlmonitor
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
