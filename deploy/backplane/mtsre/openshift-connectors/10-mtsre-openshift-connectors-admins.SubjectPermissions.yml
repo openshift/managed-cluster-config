@@ -1,0 +1,18 @@
+apiVersion: managed.openshift.io/v1alpha1
+kind: SubjectPermission
+metadata:
+  name: backplane-mtsre-openshift-connectors-admins
+  namespace: openshift-rbac-permissions
+spec:
+  permissions:
+  - allowFirst: true
+    clusterRoleName: admin
+    namespacesAllowedRegex: (^redhat-openshift-connectors$)
+  - allowedFirst: true
+    clusterRoleName: backplane-openshift-connectors-cr-admins
+    namespacesAllowedRegex: (^redhat-openshift-connectors$)
+  - allowedFirst: true
+    clusterRoleName: backplane-mtsre-monitoring
+    namespacesAllowedRegex: (^redhat-openshift-connectors$)
+  subjectKind: Group
+  subjectName: system:serviceaccounts:openshift-backplane-mtsre
