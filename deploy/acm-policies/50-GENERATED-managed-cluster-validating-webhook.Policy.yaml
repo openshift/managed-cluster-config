@@ -2,7 +2,7 @@
 apiVersion: policy.open-cluster-management.io/v1
 kind: Policy
 metadata:
-  annotations: #TODO: reffered from other acm-policies,should we keep this one?
+  annotations:
       policy.open-cluster-management.io/categories: CM Configuration Management
       policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
       policy.open-cluster-management.io/standards: NIST SP 800-53
@@ -28,7 +28,7 @@ spec:
                 kind: ValidatingWebhookConfiguration
                 metadata:
                   annotations:
-                    service.beta.openshift.io/inject-cabundle: "true" #TODO: confirm this value
+                    service.beta.openshift.io/inject-cabundle: "true"
                   creationTimestamp: null
                   name: sre-techpreviewnoupgrade-validation
                 webhooks:
@@ -36,7 +36,7 @@ spec:
                   - v1
                   clientConfig: #TODO:what is expected value here, assuming we will patch later ? 
                     caBundle : ""     
-                    url: https://validation-webhook.{{$HS_NAMESPACE}}.svc.cluster.local/techpreviewnoupgrade-validation
+                    url: https://validation-webhook.HS_NAMESPACE.svc.cluster.local/techpreviewnoupgrade-validation
                   failurePolicy: Fail
                   matchPolicy: Equivalent
                   name: techpreviewnoupgrade-validation.managed.openshift.io
@@ -67,7 +67,7 @@ spec:
                   - v1
                   clientConfig:
                     caBundle : ""     
-                    url: https://validation-webhook.{{$HS_NAMESPACE}}.svc.cluster.local/sre-namespace-validation
+                    url: https://validation-webhook.HS_NAMESPACE.svc.cluster.local/sre-namespace-validation
                   failurePolicy: Ignore
                   matchPolicy: Equivalent
                   name: namespace-validation.managed.openshift.io
@@ -99,7 +99,7 @@ spec:
                   - v1
                   clientConfig:
                     caBundle : ""     
-                    url: https://validation-webhook.{{$HS_NAMESPACE}}.svc.cluster.local/sre-regular-user-validation
+                    url: https://validation-webhook.HS_NAMESPACE.svc.cluster.local/sre-regular-user-validation
                   failurePolicy: Ignore
                   matchPolicy: Equivalent
                   name: regular-user-validation.managed.openshift.io
@@ -221,7 +221,7 @@ spec:
                   - v1
                   clientConfig:
                     caBundle : ""     
-                    url: https://validation-webhook.{{$HS_NAMESPACE}}.svc.cluster.local/sre-scc-validation
+                    url: https://validation-webhook.HS_NAMESPACE.svc.cluster.local/sre-scc-validation
                   failurePolicy: Ignore
                   matchPolicy: Equivalent
                   name: scc-validation.managed.openshift.io
@@ -254,10 +254,6 @@ spec:
       operator: In
       values:
       - 'true'
-    - key: name
-      operator: In
-      values: #TODO:hosted cluster id 
-      - " {{$HS_CLUSTER_ID}} "
 ---                       
 apiVersion: policy.open-cluster-management.io/v1
 kind: PlacementBinding
@@ -272,4 +268,3 @@ subjects:
 - name: managed-cluster-validation-webhook
   kind: Policy
   apiGroup: policy.open-cluster-management.io
-  
