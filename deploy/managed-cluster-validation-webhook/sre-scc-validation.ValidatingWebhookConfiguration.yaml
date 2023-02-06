@@ -1,0 +1,29 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  annotations:
+    service.beta.openshift.io/inject-cabundle: "true"
+  creationTimestamp: null
+  name: sre-scc-validation
+webhooks:
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    caBundle : ""     
+    url: https://validation-webhook.{{$HS_NAMESPACE}}.svc.cluster.local/sre-scc-validation
+  failurePolicy: Ignore
+  matchPolicy: Equivalent
+  name: scc-validation.managed.openshift.io
+  rules:
+  - apiGroups:
+    - security.openshift.io
+    apiVersions:
+    - '*'
+    operations:
+    - UPDATE
+    - DELETE
+    resources:
+    - securitycontextconstraints
+    scope: Cluster
+  sideEffects: None
+  timeoutSeconds: 2

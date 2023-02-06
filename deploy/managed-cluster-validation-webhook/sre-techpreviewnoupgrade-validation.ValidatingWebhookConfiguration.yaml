@@ -1,0 +1,29 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  annotations:
+    service.beta.openshift.io/inject-cabundle: "true" 
+  creationTimestamp: null
+  name: sre-techpreviewnoupgrade-validation
+webhooks:
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    caBundle : ""     
+    url: https://validation-webhook.{{$HS_NAMESPACE}}.svc.cluster.local/techpreviewnoupgrade-validation
+  failurePolicy: Fail
+  matchPolicy: Equivalent
+  name: techpreviewnoupgrade-validation.managed.openshift.io
+  rules:
+  - apiGroups:
+    - config.openshift.io
+    apiVersions:
+    - '*'
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - featuregates
+    scope: Cluster
+  sideEffects: None
+  timeoutSeconds: 1

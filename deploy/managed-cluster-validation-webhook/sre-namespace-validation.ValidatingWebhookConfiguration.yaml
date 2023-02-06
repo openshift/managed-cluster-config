@@ -1,0 +1,30 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  annotations:
+    service.beta.openshift.io/inject-cabundle: "true"
+  creationTimestamp: null
+  name: sre-namespace-validation
+webhooks:
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    caBundle : ""     
+    url: https://validation-webhook.{{$HS_NAMESPACE}}.svc.cluster.local/sre-namespace-validation
+  failurePolicy: Ignore
+  matchPolicy: Equivalent
+  name: namespace-validation.managed.openshift.io
+  rules:
+  - apiGroups:
+    - ""
+    apiVersions:
+    - '*'
+    operations:
+    - CREATE
+    - UPDATE
+    - DELETE
+    resources:
+    - namespaces
+    scope: Cluster
+  sideEffects: None
+  timeoutSeconds: 2

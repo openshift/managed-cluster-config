@@ -1,0 +1,120 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  annotations:
+    service.beta.openshift.io/inject-cabundle: "true"
+  creationTimestamp: null
+  name: sre-regular-user-validation
+webhooks:
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    caBundle : ""     
+    url: https://validation-webhook.{{$HS_NAMESPACE}}.svc.cluster.local/sre-regular-user-validation
+  failurePolicy: Ignore
+  matchPolicy: Equivalent
+  name: regular-user-validation.managed.openshift.io
+  rules:
+  - apiGroups:
+    - cloudcredential.openshift.io
+    - machine.openshift.io
+    - admissionregistration.k8s.io
+    - addons.managed.openshift.io
+    - cloudingress.managed.openshift.io
+    - managed.openshift.io
+    - ocmagent.managed.openshift.io
+    - splunkforwarder.managed.openshift.io
+    - upgrade.managed.openshift.io
+    apiVersions:
+    - '*'
+    operations:
+    - '*'
+    resources:
+    - '*/*'
+    scope: '*'
+  - apiGroups:
+    - autoscaling.openshift.io
+    apiVersions:
+    - '*'
+    operations:
+    - '*'
+    resources:
+    - clusterautoscalers
+    - machineautoscalers
+    scope: '*'
+  - apiGroups:
+    - config.openshift.io
+    apiVersions:
+    - '*'
+    operations:
+    - '*'
+    resources:
+    - clusterversions
+    - clusterversions/status
+    - schedulers
+    - apiservers
+    - proxies
+    scope: '*'
+  - apiGroups:
+    - ""
+    apiVersions:
+    - '*'
+    operations:
+    - CREATE
+    - UPDATE
+    - DELETE
+    resources:
+    - configmaps
+    scope: '*'
+  - apiGroups:
+    - machineconfiguration.openshift.io
+    apiVersions:
+    - '*'
+    operations:
+    - '*'
+    resources:
+    - machineconfigs
+    - machineconfigpools
+    scope: '*'
+  - apiGroups:
+    - operator.openshift.io
+    apiVersions:
+    - '*'
+    operations:
+    - '*'
+    resources:
+    - kubeapiservers
+    - openshiftapiservers
+    scope: '*'
+  - apiGroups:
+    - ""
+    apiVersions:
+    - '*'
+    operations:
+    - '*'
+    resources:
+    - nodes
+    - nodes/*
+    scope: '*'
+  - apiGroups:
+    - managed.openshift.io
+    apiVersions:
+    - '*'
+    operations:
+    - '*'
+    resources:
+    - subjectpermissions
+    - subjectpermissions/*
+    scope: '*'
+  - apiGroups:
+    - network.openshift.io
+    apiVersions:
+    - '*'
+    operations:
+    - '*'
+    resources:
+    - netnamespaces
+    - netnamespaces/*
+    scope: '*'
+  sideEffects: None
+  timeoutSeconds: 2
