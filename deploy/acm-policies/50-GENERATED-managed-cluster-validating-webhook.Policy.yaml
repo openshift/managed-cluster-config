@@ -24,7 +24,7 @@ spec:
           object-templates:
             - complianceType: musthave
               objectDefinition:
-              - apiVersion: admissionregistration.k8s.io/v1
+                apiVersion: admissionregistration.k8s.io/v1
                 kind: ValidatingWebhookConfiguration
                 metadata:
                   annotations:
@@ -53,7 +53,9 @@ spec:
                     scope: Cluster
                   sideEffects: None
                   timeoutSeconds: 1
-              - apiVersion: admissionregistration.k8s.io/v1
+            - complianceType: musthave
+              objectDefinition:
+                apiVersion: admissionregistration.k8s.io/v1
                 kind: ValidatingWebhookConfiguration
                 metadata:
                   annotations:
@@ -83,7 +85,9 @@ spec:
                     scope: Cluster
                   sideEffects: None
                   timeoutSeconds: 2
-              - apiVersion: admissionregistration.k8s.io/v1
+            - complianceType: musthave
+              objectDefinition:
+                apiVersion: admissionregistration.k8s.io/v1
                 kind: ValidatingWebhookConfiguration
                 metadata:
                   annotations:
@@ -203,7 +207,9 @@ spec:
                     scope: '*'
                   sideEffects: None
                   timeoutSeconds: 2
-              - apiVersion: admissionregistration.k8s.io/v1
+            - complianceType: musthave
+              objectDefinition:
+                apiVersion: admissionregistration.k8s.io/v1
                 kind: ValidatingWebhookConfiguration
                 metadata:
                   annotations:
@@ -236,7 +242,7 @@ spec:
 apiVersion: apps.open-cluster-management.io/v1
 kind: PlacementRule
 metadata:
-  name: managed-cluster-validation-webhook
+  name: placement-managed-cluster-validation-webhook
   namespace: openshift-acm-policies 
 spec:
   clusterConditions:
@@ -256,15 +262,15 @@ spec:
 apiVersion: policy.open-cluster-management.io/v1
 kind: PlacementBinding
 metadata:
-  name: managed-cluster-validation-webhook
+  name: binding-managed-cluster-validation-webhook
   namespace: openshift-acm-policies 
 placementRef:
-  name: managed-cluster-validation-webhook 
+  name: placement-managed-cluster-validation-webhook 
   kind: PlacementRule
   apiGroup: apps.open-cluster-management.io
 subjects:
 - name: managed-cluster-validation-webhook
   kind: Policy
   apiGroup: policy.open-cluster-management.io
-  
+
       
