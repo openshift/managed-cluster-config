@@ -32,7 +32,6 @@ directories = [
         'osd-project-request-template',
         'osd-user-workload-monitoring',
         'rbac-permissions-operator-config',
-        'rosa-console-branding',
         'rosa-console-branding-configmap',
         ]
 policy_generator_config = './scripts/policy-generator-config.yaml'
