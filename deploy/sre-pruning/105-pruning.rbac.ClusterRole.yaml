@@ -3,57 +3,40 @@ kind: ClusterRole
 metadata:
   name: sre-pruner-buildsdeploys-cr
 rules:
-  # deployment pruning
-  - apiGroups:
-      - ""
-    resources:
-      - pods
-      - replicationcontrollers
-    verbs:
-      - list
-      - get
-  - apiGroups:
-      - ""
-    resources:
-      - replicationcontrollers
-    verbs:
-      - delete
-  - apiGroups:
-      - apps.openshift.io
-    resources:
-      - deploymentconfigs
-    verbs:
-      - get
-      - list
-  # builds pruning
-  - apiGroups:
-      - build.openshift.io
-    resources:
-      - buildconfigs
-      - builds
-    verbs:
-      - list
-      - get
-  - apiGroups:
-      - build.openshift.io
-    resources:
-      - builds
-    verbs:
-      - delete
-  # service and servicemonitor pruning
-  - apiGroups:
-      - ""
-    resources:
-      - services
-    verbs:
-      - list
-      - get
-      - delete
-  - apiGroups:
-      - monitoring.coreos.com
-    resources:
-      - servicemonitors
-    verbs:
-      - list
-      - get
-      - delete
+# deployment pruning
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - replicationcontrollers
+  verbs:
+  - list
+  - get
+- apiGroups:
+  - ""
+  resources:
+  - replicationcontrollers
+  verbs:
+  - delete
+- apiGroups:
+  - apps.openshift.io
+  resources:
+  - deploymentconfigs
+  verbs:
+  - get
+  - list
+# builds pruning
+- apiGroups:
+  - build.openshift.io
+  resources:
+  - buildconfigs
+  - builds
+  verbs:
+  - list
+  - get
+- apiGroups:
+  - build.openshift.io
+  resources:
+  - builds
+  verbs:
+  - delete
