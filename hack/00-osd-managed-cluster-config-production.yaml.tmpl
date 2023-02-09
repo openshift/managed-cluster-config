@@ -21464,17 +21464,20 @@ objects:
                               - -c
                               - "set -e\nset -o nounset\nset -o pipefail\n\nif [[\
                                 \ -z \"${JOB_NS}\" ]]; then\n   echo \"Missing namespace\
-                                \ JOB_NS var\"\n   exit 1\nfi\n\n# Get that CA\nCABundle=$(oc\
-                                \ get configmap webhook-cert -o json | jq -r '.data.\"\
-                                service-ca.crt\"' | base64 -w 0)\n\n# Get that kubeconfig\n\
-                                TMPDIR=$(mktemp -d)\noc get secret admin-kubeconfig\
-                                \ -o json | jq -r '.data.kubeconfig' | base64 -d >>\
-                                \ ${TMPDIR}/kubeconfig\n\n# patch the CA\nfor WEBHOOK\
-                                \ in namespace regular-user scc techpreviewnoupgrade\n\
+                                \ JOB_NS var\"\n   exit 1\nfi\n\n# Get that CA\nCABUNDLE=$(oc\
+                                \ get configmap webhook-cert -o json --ignore-not-found\
+                                \ | jq -r '.data.\"service-ca.crt\"' | base64 -w 0)\n\
+                                \nif [[ -z $CABUNDLE ]]; then\n  echo \"CA bundle\
+                                \ not found, might be due to the MCVW has not been\
+                                \ deployed, skipping...\"\n  exit 0\nfi\n\n# Get that\
+                                \ kubeconfig\nTMPDIR=$(mktemp -d)\noc get secret admin-kubeconfig\
+                                \ -o json | jq -r '.data.kubeconfig' --ignore-not-found\
+                                \ | base64 -d >> ${TMPDIR}/kubeconfig\n\n# patch the\
+                                \ CA\nfor WEBHOOK in namespace regular-user scc techpreviewnoupgrade\n\
                                 do\n  oc patch --kubeconfig ${TMPDIR}/kubeconfig validatingwebhookconfiguration\
                                 \ sre-${WEBHOOK}-validation --type=json -p \"[{'op':'replace',\
                                 \ 'path': '/webhooks/0/clientConfig/caBundle', 'value':\
-                                \ '${CABundle}'}]\" || true\ndone\n\n# clean up\n\
+                                \ '${CABUNDLE}'}]\" || true\ndone\n\n# clean up\n\
                                 rm -f ${TMPDIR}/kubeconfig"
                               env:
                               - name: JOB_NS
