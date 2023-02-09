@@ -5669,6 +5669,68 @@ objects:
       - apiGroup: policy.open-cluster-management.io
         kind: Policy
         name: rosa-console-branding
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: Policy
+      metadata:
+        annotations:
+          policy.open-cluster-management.io/categories: CM Configuration Management
+        name: route-monitor-operator
+        namespace: openshift-acm-policies
+      spec:
+        disabled: false
+        policy-templates:
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+              name: route-monitor-operator
+              namespace: openshift-route-monitor-operator
+            spec:
+              namespaceSelector:
+                include:
+                - ocm-*-*-*
+                exclude: []
+              remediationAction: enforce
+              object-templates:
+                apiVersion: monitoring.openshift.io/v1alpha1
+                kind: RouteMonitor
+                metadata:
+                  finalizers:
+                  - routeMonitor.routemonitoroperator.monitoring.openshift.io/finalizer
+                  labels:
+                    hive.openshift.io/managed: 'true'
+                  name: console
+                spec:
+                  route:
+                    namespace: openshift-console
+                    name: console
+                  slo:
+                    targetAvailabilityPercent: "99.5"
+    - apiVersion: apps.open-cluster-management.io/v1
+      kind: PlacementRule
+      metadata:
+        name: placement-route-monitor-operator
+        namespace: openshift-acm-policies
+      spec:
+        clusterSelector:
+          matchExpressions:
+          - key: hypershift.open-cluster-management.io/hosted-cluster
+            operator: In
+            values:
+            - 'true'
+    - apiVersion: apps.open-cluster-management.io/v1
+      kind: PlacementBinding
+      metadata:
+        name: binding-route-monitor-operator
+        namespace: openshift-acm-policies
+      placementRef:
+        apiGroup: apps.open-cluster-management.io
+        kind: PlacementRule
+        name: placement-route-monitor-operator
+      subjects:
+      - apiGroup: policy.open-cluster-management.io
+        kind: Policy
+        name: route-monitor-operator  
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
