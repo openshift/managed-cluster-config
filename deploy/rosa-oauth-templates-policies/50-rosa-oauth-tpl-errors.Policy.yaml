@@ -6,8 +6,8 @@ metadata:
         policy.open-cluster-management.io/categories: CM Configuration Management
         policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
         policy.open-cluster-management.io/standards: NIST SP 800-53
-    name: rosa-oauth-templates-errors
-    namespace: openshift-rosa-oauth-templates-policies
+    name: rosa-oauth-tpl-errors
+    namespace: openshift-rosa-oauth-tpl-policies
 spec:
     disabled: false
     policy-templates:
@@ -15,7 +15,7 @@ spec:
             apiVersion: policy.open-cluster-management.io/v1
             kind: ConfigurationPolicy
             metadata:
-                name: rosa-oauth-templates-errors
+                name: rosa-oauth-tpl-errors
             spec:
                 evaluationInterval:
                     compliant: 2h
@@ -29,7 +29,7 @@ spec:
                         kind: Secret
                         metadata:
                             creationTimestamp: null
-                            name: rosa-oauth-templates-errors
+                            name: rosa-oauth-tpl-errors
                             namespace: openshift-config
                 pruneObjectBehavior: DeleteIfCreated
                 remediationAction: enforce
@@ -38,8 +38,8 @@ spec:
 apiVersion: apps.open-cluster-management.io/v1
 kind: PlacementRule
 metadata:
-    name: placement-rosa-oauth-templates-errors
-    namespace: openshift-rosa-oauth-templates-policies
+    name: pr-rosa-oauth-tpl-errors
+    namespace: openshift-rosa-oauth-tpl-policies
 spec:
     clusterSelector:
         matchExpressions:
@@ -51,13 +51,13 @@ spec:
 apiVersion: policy.open-cluster-management.io/v1
 kind: PlacementBinding
 metadata:
-    name: binding-rosa-oauth-templates-errors
-    namespace: openshift-rosa-oauth-templates-policies
+    name: br-rosa-oauth-tpl-errors
+    namespace: openshift-rosa-oauth-tpl-policies
 placementRef:
     apiGroup: apps.open-cluster-management.io
     kind: PlacementRule
-    name: placement-rosa-oauth-templates-errors
+    name: pr-rosa-oauth-tpl-errors
 subjects:
     - apiGroup: policy.open-cluster-management.io
       kind: Policy
-      name: rosa-oauth-templates-errors
+      name: rosa-oauth-tpl-errors
