@@ -1,0 +1,123 @@
+---
+apiVersion: policy.open-cluster-management.io/v1
+kind: Policy
+metadata:
+    annotations:
+        policy.open-cluster-management.io/categories: CM Configuration Management
+        policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+        policy.open-cluster-management.io/standards: NIST SP 800-53
+    name: hypershift-route-monitor-operator
+    namespace: openshift-acm-policies
+spec:
+    disabled: false
+    policy-templates:
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+                name: hypershift-route-monitor-operator
+            spec:
+                evaluationInterval:
+                    compliant: 2h
+                    noncompliant: 45s
+                object-templates:
+                    - complianceType: mustonlyhave
+                      metadataComplianceType: musthave
+                      objectDefinition:
+                        apiVersion: policy.open-cluster-management.io/v1
+                        kind: Policy
+                        metadata:
+                            annotations:
+                                policy.open-cluster-management.io/categories: CM Configuration Management
+                            name: api-clusterurlmonitor
+                            namespace: openshift-acm-policies
+                        spec:
+                            disabled: false
+                            policy-templates:
+                                - objectDefinition:
+                                    apiVersion: policy.open-cluster-management.io/v1
+                                    kind: ConfigurationPolicy
+                                    metadata:
+                                        name: api-clusterurlmonitor
+                                    spec:
+                                        namespaceSelector:
+                                            exclude: []
+                                            include:
+                                                - ocm-*-*-*
+                                        object-templates:
+                                            apiVersion: monitoring.openshift.io/v1alpha1
+                                            kind: ClusterUrlMonitor
+                                            metadata:
+                                                finalizers:
+                                                    - clusterurlmonitor.routemonitoroperator.monitoring.openshift.io/finalizer
+                                                labels:
+                                                    hive.openshift.io/managed: "true"
+                                                name: api
+                                            spec:
+                                                port: "6443"
+                                                prefix: https://api.
+                                                slo:
+                                                    targetAvailabilityPercent: "99.0"
+                                                suffix: /livez
+                                        remediationAction: enforce
+                    - complianceType: mustonlyhave
+                      metadataComplianceType: musthave
+                      objectDefinition:
+                        apiVersion: apps.open-cluster-management.io/v1
+                        kind: PlacementRule
+                        metadata:
+                            name: placement-api-clusterurlmonitor
+                            namespace: openshift-acm-policies
+                        spec:
+                            clusterSelector:
+                                matchExpressions:
+                                    - key: hypershift.open-cluster-management.io/management-cluster
+                                      operator: In
+                                      values:
+                                        - "true"
+                    - complianceType: mustonlyhave
+                      metadataComplianceType: musthave
+                      objectDefinition:
+                        apiVersion: apps.open-cluster-management.io/v1
+                        kind: PlacementBinding
+                        metadata:
+                            name: binding-api-clusterurlmonitor
+                            namespace: openshift-acm-policies
+                        placementRef:
+                            apiGroup: apps.open-cluster-management.io
+                            kind: PlacementRule
+                            name: placement-api-clusterurlmonitor
+                        subjects:
+                            - apiGroup: policy.open-cluster-management.io
+                              kind: Policy
+                              name: api-clusterurlmonitor
+                pruneObjectBehavior: DeleteIfCreated
+                remediationAction: enforce
+                severity: low
+---
+apiVersion: apps.open-cluster-management.io/v1
+kind: PlacementRule
+metadata:
+    name: placement-hypershift-route-monitor-operator
+    namespace: openshift-acm-policies
+spec:
+    clusterSelector:
+        matchExpressions:
+            - key: hypershift.open-cluster-management.io/hosted-cluster
+              operator: In
+              values:
+                - "true"
+---
+apiVersion: policy.open-cluster-management.io/v1
+kind: PlacementBinding
+metadata:
+    name: binding-hypershift-route-monitor-operator
+    namespace: openshift-acm-policies
+placementRef:
+    apiGroup: apps.open-cluster-management.io
+    kind: PlacementRule
+    name: placement-hypershift-route-monitor-operator
+subjects:
+    - apiGroup: policy.open-cluster-management.io
+      kind: Policy
+      name: hypershift-route-monitor-operator
