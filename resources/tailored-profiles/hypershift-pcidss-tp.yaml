@@ -1,0 +1,78 @@
+# This is a tailored profile for HyperShift clusters. It extends the ocp4-pci-dss profile
+# and overrides the values of some variables to make the profile work for HyperShift clusters.
+# please replace the value of <hypershift-hosted-cluster-name> with the actual name of the hosted cluster.
+apiVersion: compliance.openshift.io/v1alpha1
+kind: TailoredProfile
+metadata:
+ name: pcidss-compliance-hypershift
+ namespace: openshift-compliance
+ annotations:
+   compliance.openshift.io/product-type: Platform
+spec:
+ title: PCI-DSS Benchmark for Hypershift
+ description: PCI-DSS Benchmark for Hypershift Master-plane components
+ extends: ocp4-pci-dss
+ setValues:
+   - name: ocp4-hypershift-cluster
+     value: "<hypershift-hosted-cluster-name>"
+     rationale: This value is used for HyperShift version detection
+   - name: ocp4-var-openshift-kube-apiserver-namespace
+     value: "clusters-<hypershift-hosted-cluster-name>"
+     rationale: ConfigMap for Kube API server config is stored in master namespace of a HyperShift hosted cluster
+   - name: ocp4-var-openshift-kube-apiserver-config
+     value: kas-config
+     rationale: HyperShift stores configration in a different ConfigMap resource
+   - name: ocp4-var-openshift-kube-apiserver-config-data-name
+     value: "config.json"
+     rationale: Kube API server config values are stored under "config.json" key of the ConfigMap in HyperShift
+   - name: ocp4-var-apiserver-client-ca
+     value: "/etc/kubernetes/certs/client-ca/ca.crt"
+     rationale: Certificate and key files are stored in different locations in HyperShift
+   - name: ocp4-var-apiserver-etcd-ca
+     value: "/etc/kubernetes/certs/etcd-ca/ca.crt"
+     rationale: Certificate and key files are stored in different locations in HyperShift
+   - name: ocp4-var-apiserver-kubelet-certificate-authority
+     value: "/etc/kubernetes/certs/kubelet-ca/ca.crt"
+     rationale: Certificate and key files are stored in different locations in HyperShift
+   - name: ocp4-var-apiserver-kubelet-client-cert
+     value: "/etc/kubernetes/certs/kubelet/tls.crt"
+     rationale: Certificate and key files are stored in different locations in HyperShift
+   - name: ocp4-var-apiserver-kubelet-client-key
+     value: "/etc/kubernetes/certs/kubelet/tls.key"
+     rationale: Certificate and key files are stored in different locations in HyperShift
+   - name: ocp4-var-apiserver-tls-cert
+     value: "/etc/kubernetes/certs/server/tls.crt"
+     rationale: Certificate and key files are stored in different locations in HyperShift
+   - name: ocp4-var-apiserver-tls-private-key
+     value: "/etc/kubernetes/certs/server/tls.key"
+     rationale: Certificate and key files are stored in different locations in HyperShift
+   - name: ocp4-var-apiserver-encryption-filter
+     value: '[.spec.secretEncryption.type]'
+     rationale: Logic to check ectd encryption type in HyperShift
+   - name: ocp4-var-kube-controller-manager-config-data-name
+     value: "config.json"
+     rationale: Kube controller manager config values are stored under "config.json" key of the ConfigMap in HyperShift
+   - name: ocp4-var-kube-controller-manager-rotate-kubelet-server-certs-filter
+     value: '.items[0].spec.containers[0].args'
+     rationale: Server certs configuration of Kube controller manager config can be retrieved using different jqfilter in HyperShift
+   - name: ocp4-var-kube-controller-manager-port-zero-filter
+     value: '[[.items[0].spec.containers[0].args[] | select(. | match("--port=[1-9]*[1-9]+") )] | length | if . == 0 then true else false end]'
+     rationale: Logic to check whether port of Kube controller manager is compliant or not in HyperShift
+   - name: ocp4-var-kube-controller-manager-secure-port-filter
+     value: '[[.items[0].spec.containers[0].args[] | select(. | match("--secure-port=10257") )] | length | if . ==1 then true else false end]'
+     rationale: Logic to check whether TLS port of Kube controller manager is compliant or not in HyperShift
+   - name: ocp4-var-kube-controller-manager-service-account-ca-filter
+     value: '[[.items[0].spec.containers[0].args[] | select(. | match("--root-ca-file") )] | length | if . ==1 then true else false end]'
+     rationale: Logic to check whether CA file of Kube controller manager is compliant or not in HyperShift
+   - name: ocp4-var-kube-controller-manager-service-account-private-key-filter
+     value: '[[.items[0].spec.containers[0].args[] | select(. | match("--service-account-private-key-file") )] | length | if . ==1 then true else false end]'
+     rationale: Logic to check whether service account private key file of Kube controller manager is compliant or not in HyperShift
+   - name: ocp4-var-kube-controller-manager-use-service-account-filter
+     value: '[[.items[0].spec.containers[0].args[] | select(. | match("--use-service-account-credentials=true") )] | length | if . ==1 then true else false end]'
+     rationale: Logic to check whether specific service account credential of Kube controller manager is used or not in HyperShift
+   - name: ocp4-var-etcd-argument-filter
+     value: '[.items[0].spec.containers[0].command | join(" ")]'
+     rationale: Logic to check the arguments of Etcd in HyperShift
+   - name: ocp4-var-scheduler-argument-filter
+     value: '[.items[0].spec.containers[0].args | join(" ")]'
+     rationale: Logic to check the arguments of kube scheduler in HyperShift
