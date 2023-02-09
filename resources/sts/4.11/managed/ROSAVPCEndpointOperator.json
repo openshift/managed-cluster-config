@@ -21,14 +21,6 @@
       {
         "Effect": "Allow",
         "Action": [
-          "ec2:DeleteTags",
-          "ec2:CreateTags"
-        ],
-        "Resource": "*"
-      },
-      {
-        "Effect": "Allow",
-        "Action": [
           "ec2:AuthorizeSecurityGroupIngress",
           "ec2:AuthorizeSecurityGroupEgress"
         ],
@@ -117,6 +109,25 @@
                   "*.devshiftusgov.com"
                 ]
             }
+        }
+      },
+      {
+        "Sid": "CreateTagsDependentAction",
+        "Effect": "Allow",
+        "Action": [
+          "ec2:CreateTags"
+        ],
+        "Resource": [
+          "arn:aws:ec2:*:*:security-group/*",
+          "arn:aws:ec2:*:*:vpc-endpoint/*"
+        ],
+        "Condition": {
+          "StringEquals": {
+            "ec2:CreateAction": [
+              "CreateVpcEndpoint",
+              "CreateSecurityGroup"
+            ]
+          }
         }
       }
     ]

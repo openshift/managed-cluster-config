@@ -35,7 +35,21 @@
         "Effect": "Allow",
         "Action": [
           "elasticloadbalancing:CreateLoadBalancer",
-          "elasticloadbalancing:CreateListener",
+          "elasticloadbalancing:CreateListener"
+        ],
+        "Resource": [
+          "*"
+        ],
+        "Condition": {
+          "StringEquals": {
+            "aws:RequestTag/red-hat-managed": "true"
+          }
+        }
+      },
+      {
+        "Sid": "DeleteLoadBalancer",
+        "Effect": "Allow",
+        "Action": [
           "elasticloadbalancing:DeleteLoadBalancer"
         ],
         "Resource": [
