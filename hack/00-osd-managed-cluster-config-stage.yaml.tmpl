@@ -5740,6 +5740,92 @@ objects:
       - apiGroup: policy.open-cluster-management.io
         kind: Policy
         name: rosa-oauth-templates
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: Policy
+      metadata:
+        annotations:
+          policy.open-cluster-management.io/categories: CM Configuration Management
+          policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/standards: NIST SP 800-53
+        name: hosted-uwm
+        namespace: openshift-acm-policies
+      spec:
+        disabled: false
+        policy-templates:
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+              name: hosted-uwm
+            spec:
+              evaluationInterval:
+                compliant: 2h
+                noncompliant: 45s
+              object-templates:
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: Role
+                  metadata:
+                    name: dedicated-admins-hostedcluster-uwm
+                    namespace: openshift-monitoring
+                  rules:
+                  - apiGroups:
+                    - ''
+                    resourceNames:
+                    - cluster-monitoring-config
+                    resources:
+                    - configmap
+                    verbs:
+                    - '*'
+                  - apiGroups:
+                    - ''
+                    resources:
+                    - configmap
+                    verbs:
+                    - create
+              - complianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: RoleBinding
+                  metadata:
+                    name: dedicated-admins-hostedcluster-uwm
+                    namespace: openshift-monitoring
+                  roleRef:
+                    apiGroup: rbac.authorization.k8s.io
+                    kind: Role
+                    name: dedicated-admins-hostedcluster-uwm
+                  subjects:
+                  - kind: Group
+                    name: dedicated-admins
+              pruneObjectBehavior: DeleteIfCreated
+              remediationAction: enforce
+              severity: low
+    - apiVersion: apps.open-cluster-management.io/v1
+      kind: PlacementRule
+      metadata:
+        name: placement-hosted-uwm
+        namespace: openshift-acm-policies
+      spec:
+        clusterSelector:
+          matchExpressions:
+          - key: hypershift.open-cluster-management.io/hosted-cluster
+            operator: In
+            values:
+            - 'true'
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: PlacementBinding
+      metadata:
+        name: binding-hosted-uwm
+        namespace: openshift-acm-policies
+      placementRef:
+        apiGroup: apps.open-cluster-management.io
+        kind: PlacementRule
+        name: placement-hosted-uwm
+      subjects:
+      - apiGroup: policy.open-cluster-management.io
+        kind: Policy
+        name: hosted-uwm
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
