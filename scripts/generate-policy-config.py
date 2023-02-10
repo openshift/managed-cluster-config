@@ -32,6 +32,7 @@ directories = [
         'osd-project-request-template',
         'osd-user-workload-monitoring',
         'rbac-permissions-operator-config',
+        'rosa-oauth-templates',
         'rosa-console-branding',
         'rosa-console-branding-configmap',
         ]
