@@ -24,11 +24,19 @@ spec:
                     - complianceType: musthave
                       objectDefinition:
                         apiVersion: operator.openshift.io/v1
-                        applyMode: AlwaysApply
                         kind: Console
-                        name: cluster
-                        patch: '{"spec":{"managementState":"Managed","route":null,"customization":{"brand":null,"documentationBaseURL":"https://docs.openshift.com/rosa/","customProductName":"Red Hat OpenShift Service on AWS","customLogoFile":{"name":"rosa-brand-logo","key":"rosa-brand-logo.svg"}}}}'
-                        patchType: merge
+                        metadata:
+                            name: cluster
+                        spec:
+                            customization:
+                                brand: null
+                                customLogoFile:
+                                    key: rosa-brand-logo.svg
+                                    name: rosa-brand-logo
+                                customProductName: Red Hat OpenShift Service on AWS
+                                documentationBaseURL: https://docs.openshift.com/rosa/
+                            managementState: Managed
+                            route: null
                 pruneObjectBehavior: DeleteIfCreated
                 remediationAction: enforce
                 severity: low
