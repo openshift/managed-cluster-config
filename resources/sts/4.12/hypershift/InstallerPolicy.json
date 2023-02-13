@@ -18,12 +18,10 @@
                 "ec2:DescribeInstanceTypeOfferings",
                 "elasticloadbalancing:DeleteLoadBalancer",
                 "kms:DescribeKey",
-                "route53:ChangeResourceRecordSets",
-                "route53:DeleteHostedZone",
-                "route53:GetAccountLimit",
-                "route53:GetHostedZone",
+                "iam:GetRole",
                 "route53:ListHostedZones",
                 "route53:ListResourceRecordSets",
+                "route53:GetAccountLimit",
                 "servicequotas:GetServiceQuota",
                 "sts:GetCallerIdentity",
                 "iam:TagInstanceProfile"
@@ -37,7 +35,14 @@
             "Resource": [
                 "arn:*:iam::*:role/*-Worker-Role"
             ],
-            "Effect": "Allow"
+            "Effect": "Allow",
+            "Condition": {
+                "StringEquals": {
+                    "iam:PassedToService": [
+                        "ec2.amazonaws.com"
+                    ]
+                }
+            }
         },
         {
             "Effect": "Allow",
@@ -65,17 +70,6 @@
                 "aws:RequestTag/red-hat-managed": "true"
               }
             }
-        },
-        {
-            "Sid": "BucketActions",
-            "Effect": "Allow",
-            "Action": [
-                "s3:CreateBucket",
-                "s3:DeleteBucket"
-            ],
-            "Resource": [
-                "arn:aws:s3:::*-oidc"
-            ]
         },
         {
             "Sid": "CreateAndManageInstanceProfiles",
@@ -108,6 +102,20 @@
               }
         },
         {
+            "Effect": "Allow",
+            "Action": [
+                "secretsmanager:GetSecretValue"
+            ],
+            "Resource": [
+                "*"
+            ],
+            "Condition": {
+                "StringEquals": {
+                    "aws:ResourceTag/red-hat-managed": "true"
+                }
+              }
+        },
+        {
             "Sid": "Route53ManageRecords",
             "Effect": "Allow",
             "Action": [
@@ -119,7 +127,9 @@
                 "route53:ChangeResourceRecordSetsNormalizedRecordNames": [
                   "*.openshiftapps.com",
                   "*.devshift.org",
-                  "*.hypershift.local"
+                  "*.hypershift.local",
+                  "*.openshiftusgov.com",
+                  "*.devshiftusgov.com"
                 ]
               }
             }
