@@ -61,13 +61,17 @@ direct:
 
 ## SelectorSyncSet Deployment
 
-In the `config.yaml` file you define a top level property `selectorSyncSet`.  Within this configuration is supported for `matchLabels`, `matchExpressions`, `matchLabelsApplyMode`, `resourceApplyMode`, and `applyBehavior`.
+In the `config.yaml` file you define a top level property `selectorSyncSet`.  Within this configuration is supported for `matchLabels`, `matchExpressions`, `matchLabelsApplyMode`, `resourceApplyMode` and `applyBehavior`.
 
 * `matchLabels` (optional, default: `{}`) - adds additional `matchLabels` conditions to the SelectorSyncSet's `clusterDeploymentSelector`
 * `matchExpressions` (optional, default: `[]`) - adds `matchExpressions` conditions to the SelectoSyncSet's `clusterDeploymentSelector`
 * `resourceApplyMode` (optional, default: `"Sync"`) - sets the SelectorSyncSet's `resourceApplyMode`
 * `matchLabelsApplyMode` (optional, default: `"AND"`) - When set as `"OR"` generates a separate SSS per `matchLabels` conditions. Default behavior creates a single SSS with all `matchLabels` conditions.  This is to tackle a situation where we want to apply configuration for one of many label conditions.
 * `applyBehavior` (optional, default: None, [see hive default](https://github.com/openshift/hive/blob/master/config/crds/hive.openshift.io_selectorsyncsets.yaml)) - sets the SelectorSyncSet's `applyBehavior`
+
+You can also define a top level property `policy` to specify the behaviour of `./scripts/generate-policy-config.py` for the resource. Supported sub-properties : 
+* `complianceType` (optional, default: `"mustonlyhave"`, [see operator values](https://github.com/open-cluster-management-io/config-policy-controller/blob/main/api/v1/configurationpolicy_types.go) - select the compliance type for the policy when used by `./scripts/generate-policy-config.py`)
+* `metadataComplianceType` (optional, default: `"musthave"`, [see operator values](https://github.com/open-cluster-management-io/config-policy-controller/blob/main/api/v1/configurationpolicy_types.go) - select the compliance type for metadata for the policy when used by `./scripts/generate-policy-config.py`)
 
 Example to apply a directory for any of a set of label conditions using Upsert:
 ```yaml
@@ -78,6 +82,9 @@ selectorSyncSet:
         someOtherLabel: "something else"
     resourceApplyMode: "Upsert"
     matchLabelsApplyMode: "OR"
+policy:
+    complianceType: "mustonlyhave"
+    metadataComplianceType: "musthave"
 ```
 
 # Selector Sync Sets included in this repo

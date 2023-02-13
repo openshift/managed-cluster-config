@@ -3,6 +3,7 @@
 import oyaml as yaml
 import shutil
 import os
+from pathlib import Path
 
 base_directory = "./deploy/"
 # An array of directories you want to generate policies for.
@@ -59,6 +60,15 @@ for directory in sorted(directories, key=str.casefold):
         policy_template = yaml.safe_load(input_file)
     #fill in the name and path in the policy generator template
     policy_template['metadata']['name'] = 'rbac-policies'
+    if Path(os.path.join(base_directory,directory, config_filename)).is_file():
+        with open(os.path.join(base_directory, directory, config_filename),'r') as input_file:
+            config = yaml.safe_load(input_file)
+        if 'policy' in config.keys():
+            if 'complianceType' in config['policy'].keys() and config['policy']['complianceType'] != '' : 
+                policy_template['policyDefaults']['complianceType'] = config['policy']['complianceType'].lower()
+            if 'metadataComplianceType' in config['policy'].keys() and config['policy']['metadataComplianceType'] != '' : 
+                policy_template['policyDefaults']['metadataComplianceType'] = config['policy']['metadataComplianceType'].lower()
+       
     for p in policy_template['policies']:
         p['name'] = policy_name
         for m in p['manifests']:
