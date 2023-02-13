@@ -36,6 +36,7 @@ directories = [
         'rosa-oauth-templates',
         'rosa-console-branding',
         'rosa-console-branding-configmap',
+        'hypershift-route-monitor-operator',
         ]
 policy_generator_config = './scripts/policy-generator-config.yaml'
 config_filename = "config.yaml"
