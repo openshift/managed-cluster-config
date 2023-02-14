@@ -844,7 +844,6 @@ objects:
                     apiGroup: rbac.authorization.k8s.io
                     kind: Role
                     name: backplane-cee
-                    namespace: openshift-monitoring
                   subjects:
                   - apiGroup: rbac.authorization.k8s.io
                     kind: Group
@@ -883,7 +882,6 @@ objects:
                     apiGroup: rbac.authorization.k8s.io
                     kind: Role
                     name: backplane-cee-mustgather
-                    namespace: openshift-must-gather-operator
                   subjects:
                   - apiGroup: rbac.authorization.k8s.io
                     kind: Group
@@ -918,7 +916,6 @@ objects:
                     apiGroup: rbac.authorization.k8s.io
                     kind: Role
                     name: backplane-cee-pcap-collector
-                    namespace: openshift-backplane-managed-scripts
                   subjects:
                   - apiGroup: rbac.authorization.k8s.io
                     kind: Group
@@ -1473,7 +1470,6 @@ objects:
                     apiGroup: rbac.authorization.k8s.io
                     kind: Role
                     name: backplane-cssre
-                    namespace: openshift-monitoring
                   subjects:
                   - apiGroup: rbac.authorization.k8s.io
                     kind: Group
@@ -1516,7 +1512,6 @@ objects:
                     apiGroup: rbac.authorization.k8s.io
                     kind: Role
                     name: backplane-cssre-mustgather
-                    namespace: openshift-must-gather-operator
                   subjects:
                   - apiGroup: rbac.authorization.k8s.io
                     kind: Group
@@ -1607,6 +1602,7 @@ objects:
                 metadataComplianceType: musthave
                 objectDefinition:
                   apiVersion: user.openshift.io/v1
+                  groups: null
                   kind: User
                   metadata:
                     name: backplane-cluster-admin
@@ -2349,7 +2345,6 @@ objects:
                     apiGroup: rbac.authorization.k8s.io
                     kind: Role
                     name: backplane-srep-mustgather
-                    namespace: openshift-must-gather-operator
                   subjects:
                   - apiGroup: rbac.authorization.k8s.io
                     kind: Group
@@ -2384,7 +2379,6 @@ objects:
                     apiGroup: rbac.authorization.k8s.io
                     kind: Role
                     name: backplane-srep-pcap-collector
-                    namespace: openshift-backplane-managed-scripts
                   subjects:
                   - apiGroup: rbac.authorization.k8s.io
                     kind: Group
@@ -3770,7 +3764,11 @@ objects:
               - complianceType: mustonlyhave
                 metadataComplianceType: musthave
                 objectDefinition:
+                  allowHostDirVolumePlugin: false
+                  allowHostIPC: false
                   allowHostNetwork: false
+                  allowHostPID: false
+                  allowHostPorts: false
                   allowPrivilegedContainer: false
                   allowedCapabilities:
                   - NET_ADMIN
@@ -3779,6 +3777,7 @@ objects:
                   kind: SecurityContextConstraints
                   metadata:
                     name: pcap-dedicated-admins
+                  readOnlyRootFilesystem: false
                   runAsUser:
                     type: RunAsAny
                   seLinuxContext:
@@ -6094,7 +6093,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-cee
-        namespace: openshift-monitoring
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: Role
       metadata:
@@ -6127,7 +6125,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-cee-mustgather
-        namespace: openshift-must-gather-operator
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: Role
       metadata:
@@ -6172,7 +6169,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-cee-pcap-collector
-        namespace: openshift-backplane-managed-scripts
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -6328,7 +6324,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-cssre
-        namespace: openshift-monitoring
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: Role
       metadata:
@@ -6365,7 +6360,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-cssre-mustgather
-        namespace: openshift-must-gather-operator
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -6438,7 +6432,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-cssre
-        namespace: openshift-monitoring
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: Role
       metadata:
@@ -6475,7 +6468,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-cssre-mustgather
-        namespace: openshift-must-gather-operator
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -6548,7 +6540,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-cssre
-        namespace: openshift-monitoring
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: Role
       metadata:
@@ -6585,7 +6576,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-cssre-mustgather
-        namespace: openshift-must-gather-operator
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -6658,7 +6648,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-cssre
-        namespace: openshift-monitoring
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: Role
       metadata:
@@ -6695,7 +6684,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-cssre-mustgather
-        namespace: openshift-must-gather-operator
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -6768,7 +6756,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-cssre
-        namespace: openshift-monitoring
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: Role
       metadata:
@@ -6805,7 +6792,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-cssre-mustgather
-        namespace: openshift-must-gather-operator
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -6878,7 +6864,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-cssre
-        namespace: openshift-monitoring
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: Role
       metadata:
@@ -6915,7 +6900,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-cssre-mustgather
-        namespace: openshift-must-gather-operator
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -6988,7 +6972,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-cssre
-        namespace: openshift-monitoring
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: Role
       metadata:
@@ -7025,7 +7008,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-cssre-mustgather
-        namespace: openshift-must-gather-operator
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -7098,7 +7080,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-cssre
-        namespace: openshift-monitoring
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: Role
       metadata:
@@ -7135,7 +7116,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-cssre-mustgather
-        namespace: openshift-must-gather-operator
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -7208,7 +7188,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-cssre
-        namespace: openshift-monitoring
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: Role
       metadata:
@@ -7245,7 +7224,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-cssre-mustgather
-        namespace: openshift-must-gather-operator
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -8555,6 +8533,7 @@ objects:
       kind: User
       metadata:
         name: backplane-cluster-admin
+      groups: null
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRoleBinding
       metadata:
@@ -8622,7 +8601,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-lpsre
-        namespace: openshift-monitoring
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
@@ -8748,7 +8726,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-lpsre-mustgather
-        namespace: openshift-must-gather-operator
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -8821,7 +8798,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-lpsre
-        namespace: openshift-monitoring
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
@@ -8947,7 +8923,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-lpsre-mustgather
-        namespace: openshift-must-gather-operator
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -9020,7 +8995,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-lpsre
-        namespace: openshift-monitoring
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
@@ -9146,7 +9120,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-lpsre-mustgather
-        namespace: openshift-must-gather-operator
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -9219,7 +9192,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-lpsre
-        namespace: openshift-monitoring
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
@@ -9345,7 +9317,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-lpsre-mustgather
-        namespace: openshift-must-gather-operator
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -9418,7 +9389,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-lpsre
-        namespace: openshift-monitoring
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
@@ -9544,7 +9514,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-lpsre-mustgather
-        namespace: openshift-must-gather-operator
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -9617,7 +9586,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-lpsre
-        namespace: openshift-monitoring
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
@@ -9743,7 +9711,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-lpsre-mustgather
-        namespace: openshift-must-gather-operator
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -9816,7 +9783,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-lpsre
-        namespace: openshift-monitoring
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
@@ -9942,7 +9908,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-lpsre-mustgather
-        namespace: openshift-must-gather-operator
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -10015,7 +9980,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-lpsre
-        namespace: openshift-monitoring
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
@@ -10141,7 +10105,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-lpsre-mustgather
-        namespace: openshift-must-gather-operator
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -10214,7 +10177,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-lpsre
-        namespace: openshift-monitoring
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
@@ -10340,7 +10302,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-lpsre-mustgather
-        namespace: openshift-must-gather-operator
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -10413,7 +10374,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-lpsre
-        namespace: openshift-monitoring
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
@@ -10539,7 +10499,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-lpsre-mustgather
-        namespace: openshift-must-gather-operator
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -10612,7 +10571,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-lpsre
-        namespace: openshift-monitoring
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
@@ -10738,7 +10696,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-lpsre-mustgather
-        namespace: openshift-must-gather-operator
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -10811,7 +10768,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-lpsre
-        namespace: openshift-monitoring
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
@@ -10937,7 +10893,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-lpsre-mustgather
-        namespace: openshift-must-gather-operator
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -11010,7 +10965,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-lpsre
-        namespace: openshift-monitoring
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
@@ -11136,7 +11090,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-lpsre-mustgather
-        namespace: openshift-must-gather-operator
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -11209,7 +11162,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-lpsre
-        namespace: openshift-monitoring
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
@@ -11335,7 +11287,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-lpsre-mustgather
-        namespace: openshift-must-gather-operator
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -11408,7 +11359,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-lpsre
-        namespace: openshift-monitoring
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
@@ -11534,7 +11484,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-lpsre-mustgather
-        namespace: openshift-must-gather-operator
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -11607,7 +11556,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-lpsre
-        namespace: openshift-monitoring
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
@@ -11733,7 +11681,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-lpsre-mustgather
-        namespace: openshift-must-gather-operator
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -11806,7 +11753,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-lpsre
-        namespace: openshift-monitoring
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
@@ -11932,7 +11878,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-lpsre-mustgather
-        namespace: openshift-must-gather-operator
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -12005,7 +11950,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-lpsre
-        namespace: openshift-monitoring
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
@@ -12131,7 +12075,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-lpsre-mustgather
-        namespace: openshift-must-gather-operator
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -12204,7 +12147,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-lpsre
-        namespace: openshift-monitoring
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
@@ -12330,7 +12272,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-lpsre-mustgather
-        namespace: openshift-must-gather-operator
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -12403,7 +12344,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-lpsre
-        namespace: openshift-monitoring
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
@@ -12529,7 +12469,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-lpsre-mustgather
-        namespace: openshift-must-gather-operator
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -12602,7 +12541,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-lpsre
-        namespace: openshift-monitoring
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
@@ -12728,7 +12666,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-lpsre-mustgather
-        namespace: openshift-must-gather-operator
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -12801,7 +12738,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-lpsre
-        namespace: openshift-monitoring
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
@@ -12927,7 +12863,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-lpsre-mustgather
-        namespace: openshift-must-gather-operator
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -13000,7 +12935,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-lpsre
-        namespace: openshift-monitoring
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
@@ -13126,7 +13060,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-lpsre-mustgather
-        namespace: openshift-must-gather-operator
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -13199,7 +13132,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-lpsre
-        namespace: openshift-monitoring
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
@@ -13325,7 +13257,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-lpsre-mustgather
-        namespace: openshift-must-gather-operator
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -13398,7 +13329,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-lpsre
-        namespace: openshift-monitoring
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
@@ -13524,7 +13454,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-lpsre-mustgather
-        namespace: openshift-must-gather-operator
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -13597,7 +13526,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-lpsre
-        namespace: openshift-monitoring
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
@@ -13723,7 +13651,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-lpsre-mustgather
-        namespace: openshift-must-gather-operator
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -13796,7 +13723,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-lpsre
-        namespace: openshift-monitoring
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
@@ -13922,7 +13848,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-lpsre-mustgather
-        namespace: openshift-must-gather-operator
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -13995,7 +13920,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-lpsre
-        namespace: openshift-monitoring
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
@@ -14121,7 +14045,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-lpsre-mustgather
-        namespace: openshift-must-gather-operator
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -14194,7 +14117,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-lpsre
-        namespace: openshift-monitoring
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
@@ -14320,7 +14242,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-lpsre-mustgather
-        namespace: openshift-must-gather-operator
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -14393,7 +14314,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-lpsre
-        namespace: openshift-monitoring
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
@@ -14519,7 +14439,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-lpsre-mustgather
-        namespace: openshift-must-gather-operator
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -21238,7 +21157,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-srep-mustgather
-        namespace: openshift-must-gather-operator
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -21287,7 +21205,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-srep-pcap-collector
-        namespace: openshift-backplane-managed-scripts
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -28247,11 +28164,16 @@ objects:
       apiVersion: security.openshift.io/v1
       metadata:
         name: pcap-dedicated-admins
-      allowPrivilegedContainer: false
+      allowHostDirVolumePlugin: false
+      allowHostIPC: false
       allowHostNetwork: false
+      allowHostPID: false
+      allowHostPorts: false
+      allowPrivilegedContainer: false
       allowedCapabilities:
       - NET_ADMIN
       - NET_RAW
+      readOnlyRootFilesystem: false
       runAsUser:
         type: RunAsAny
       seLinuxContext:
@@ -28397,7 +28319,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: osd-rebalance-infra-nodes-openshift-dns
-        namespace: openshift-dns
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: Role
       metadata:
@@ -28437,7 +28358,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: osd-rebalance-infra-nodes-openshift-monitoring
-        namespace: openshift-monitoring
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: Role
       metadata:
@@ -28498,7 +28418,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: osd-rebalance-infra-nodes-openshift-security
-        namespace: openshift-security
     - kind: RoleBinding
       apiVersion: rbac.authorization.k8s.io/v1
       metadata:
