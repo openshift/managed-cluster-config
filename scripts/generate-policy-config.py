@@ -30,7 +30,6 @@ directories = [
         'osd-must-gather-operator',
         'osd-openshift-operators-redhat',
         'osd-pcap-collector',
-        'osd-project-request-template',
         'osd-user-workload-monitoring',
         'rbac-permissions-operator-config',
         'rosa-oauth-templates',
