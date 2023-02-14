@@ -14271,12 +14271,18 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: backplane-lpsre-acm-acm
+    name: backplane-lpsre-acm
   spec:
     clusterDeploymentSelector:
       matchLabels:
         api.openshift.com/managed: 'true'
         api.openshift.com/addon-advanced-cluster-management: 'true'
+      matchExpressions:
+      - key: api.openshift.com/environment
+        operator: In
+        values:
+        - staging
+        - integration
     resourceApplyMode: Sync
     resources:
     - apiVersion: managed.openshift.io/v1alpha1
