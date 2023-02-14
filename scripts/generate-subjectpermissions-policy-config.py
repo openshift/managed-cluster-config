@@ -18,7 +18,6 @@ directories = [
         'backplane/mobb',
         'backplane/srep',
         'backplane/tam',
-        'ccs-dedicated-admins',
         'osd-delete-backplane-serviceaccounts',
         'osd-user-workload-monitoring',
         'rbac-permissions-operator-config',
