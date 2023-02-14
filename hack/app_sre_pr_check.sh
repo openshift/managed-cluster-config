@@ -43,7 +43,9 @@ done
 for fl in $( git diff --name-only --diff-filter=M  origin/master deploy ':!deploy/acm-policies/50-GENERATED-*' )
 do
   if cat ${fl} | grep -i "RoleBinding" | grep -q "kind:" ; then
-    ROLEREF_MASTER=$(git show origin/master:${fl} | python -c 'import json, sys, yaml ; y=yaml.safe_load(sys.stdin.read()) ; print(json.dumps(y))' | jq -r '.roleRef' )
+    # NOTE Remove 'namespace' from roleRef as this is not part of the specification and has not impact on the resource.
+    #      Excluding 'namespace' from the PR check allows us to remove it and therefore get ACM Policy validation to work correctly.
+    ROLEREF_MASTER=$(git show origin/master:${fl} | python -c 'import json, sys, yaml ; y=yaml.safe_load(sys.stdin.read()) ; print(json.dumps(y))' | jq -r 'del(.roleRef.namespace) | .roleRef' )
     ROLEREF_PR=$(cat ${fl} | python -c 'import json, sys, yaml ; y=yaml.safe_load(sys.stdin.read()) ; print(json.dumps(y))' | jq -r '.roleRef' )
     # see if roleref has changed compared to master
     if ! jq -ne --argjson a "$ROLEREF_MASTER" --argjson b "$ROLEREF_PR" '$a == $b'; then
