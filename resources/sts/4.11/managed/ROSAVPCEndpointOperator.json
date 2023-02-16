@@ -2,6 +2,7 @@
     "Version": "2012-10-17",
     "Statement": [
       {
+        "Sid": "DescribeListResources",
         "Effect": "Allow",
         "Action": [
           "ec2:DescribeTags",
@@ -12,13 +13,12 @@
           "ec2:DescribeVpcEndpoints",
           "route53:ListHostedZonesByName",
           "route53:ListResourceRecordSets",
-          "route53:ListTagsForResource",
-          "route53:CreateHostedZone",
-          "route53:ChangeTagsForResource"
+          "route53:ListTagsForResource"
         ],
         "Resource": "*"
       },
       {
+        "Sid": "ModifySGIngressEgress",
         "Effect": "Allow",
         "Action": [
           "ec2:AuthorizeSecurityGroupIngress",
@@ -51,7 +51,6 @@
         }
       },
       {
-        "Sid": "ModifyVpcEndpoint",
         "Effect": "Allow",
         "Action": [
           "ec2:ModifyVpcEndpoint"
@@ -80,7 +79,6 @@
         }
       },
       {
-        "Sid": "CreateVpcEndpoint",
         "Effect": "Allow",
         "Action": [
           "ec2:CreateVpcEndpoint"
@@ -93,6 +91,17 @@
             "aws:RequestTag/red-hat-managed": "true"
           }
         }
+      },
+      {
+        "Sid": "ModifyRoute53",
+        "Effect": "Allow",
+        "Action": [
+          "route53:CreateHostedZone",
+          "route53:ChangeTagsForResource"
+        ],
+        "Resource": [
+          "*"
+        ]
       },
       {
         "Effect": "Allow",
