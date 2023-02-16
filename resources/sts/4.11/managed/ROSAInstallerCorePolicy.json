@@ -2,6 +2,7 @@
   "Version": "2012-10-17",
   "Statement": [
     {
+      "Sid": "DescribeListResources",
       "Effect": "Allow",
       "Action": [
         "ec2:DescribeAccountAttributes",
@@ -35,7 +36,6 @@
         "ec2:DescribeVpcEndpointServiceConfigurations",
         "ec2:DescribeVpcEndpointServicePermissions",
         "ec2:DescribeVpcEndpointServices",
-        "elasticloadbalancing:CreateTargetGroup",
         "elasticloadbalancing:DescribeInstanceHealth",
         "elasticloadbalancing:DescribeListeners",
         "elasticloadbalancing:DescribeLoadBalancerAttributes",
@@ -75,6 +75,7 @@
       "Resource": "*"
     },
     {
+      "Sid": "AssumeIAMRoles",
       "Effect": "Allow",
       "Action": [
         "sts:AssumeRole",
@@ -90,7 +91,7 @@
       }
     },
     {
-      "Sid": "CopyImage",
+      "Sid": "CopyImages",
       "Effect": "Allow",
       "Action": [
         "ec2:CopyImage"
@@ -107,7 +108,7 @@
       }
     },
     {
-      "Sid": "ModifyLoadBalancers",
+      "Sid": "CreateDeleteModifyLoadBalancers",
       "Effect": "Allow",
       "Action": [
         "elasticloadbalancing:DeleteLoadBalancer",
@@ -138,6 +139,15 @@
     },
     {
       "Effect": "Allow",
+      "Action": [
+        "elasticloadbalancing:elasticloadbalancing:CreateTargetGroup"
+      ],
+      "Resource": [
+        "*"
+      ]
+    },
+    {
+      "Effect": "Allow",
       "Action": "elasticloadbalancing:CreateLoadBalancer",
       "Resource": [
         "*"
@@ -149,7 +159,7 @@
       }
     },
     {
-      "Sid": "StopStartInstances",
+      "Sid": "StartStopTerminateInstances",
       "Effect": "Allow",
       "Action": [
         "ec2:StartInstances",
@@ -229,7 +239,7 @@
       ]
     },
     {
-      "Sid": "Route53Manage",
+      "Sid": "ManageRoute53",
       "Effect": "Allow",
       "Action": [
         "route53:ChangeTagsForResource",
@@ -240,7 +250,7 @@
       "Resource": "*"
     },
     {
-      "Sid": "Route53ManageRecords",
+      "Sid": "ManageRecordsRoute53",
       "Effect": "Allow",
       "Action": [
         "route53:ChangeResourceRecordSets"
@@ -272,6 +282,7 @@
       }
     },
     {
+      "Sid": "AssociateReleaseEIPs",
       "Effect": "Allow",
       "Action": [
         "ec2:AssociateAddress",
@@ -287,7 +298,7 @@
       }
     },
     {
-      "Sid": "AttachNetworkInterface",
+      "Sid": "AttachENIs",
       "Effect": "Allow",
       "Action": [
         "ec2:AttachNetworkInterface"
@@ -303,7 +314,7 @@
       }
     },
     {
-      "Sid": "CreateNetworkInterfaceInSubnetAndSGRequest",
+      "Sid": "CreateENIRequest",
       "Effect": "Allow",
       "Action": [
         "ec2:CreateNetworkInterface"
@@ -318,7 +329,7 @@
       }
     },
     {
-      "Sid": "CreateNetworkInterfaceInSubnetAndSG",
+      "Sid": "CreateNetworkENI",
       "Effect": "Allow",
       "Action": [
         "ec2:CreateNetworkInterface"
@@ -334,7 +345,7 @@
       }
     },
     {
-      "Sid": "DeleteNetworkInterface",
+      "Sid": "DeleteENI",
       "Effect": "Allow",
       "Action": [
         "ec2:DeleteNetworkInterface"
@@ -352,21 +363,7 @@
       "Sid": "CreateRoute",
       "Effect": "Allow",
       "Action": [
-        "ec2:CreateRoute"
-      ],
-      "Resource": [
-        "arn:aws:ec2:*:*:route-table/*"
-      ],
-      "Condition": {
-        "StringEquals": {
-          "aws:ResourceTag/red-hat-managed": "true"
-        }
-      }
-    },
-    {
-      "Sid": "DeleteRoute",
-      "Effect": "Allow",
-      "Action": [
+        "ec2:CreateRoute",
         "ec2:DeleteRoute"
       ],
       "Resource": [
@@ -379,7 +376,6 @@
       }
     },
     {
-      "Sid": "AuthorizeSecurityGroupEgressResource",
       "Effect": "Allow",
       "Action": [
         "ec2:AuthorizeSecurityGroupEgress"
@@ -394,7 +390,6 @@
       }
     },
     {
-      "Sid": "AuthorizeSecurityGroupIngress",
       "Effect": "Allow",
       "Action": [
         "ec2:AuthorizeSecurityGroupIngress"
@@ -404,7 +399,7 @@
       ]
     },
     {
-      "Sid": "AuthorizeSecurityGroupIngressEgress",
+      "Sid": "AuthorizeRevokeSGIngressEgress",
       "Effect": "Allow",
       "Action": [
         "ec2:AuthorizeSecurityGroupIngress",
@@ -416,7 +411,6 @@
       ]
     },
     {
-      "Sid": "DescribeInstanceAttribute",
       "Effect": "Allow",
       "Action": [
         "ec2:DescribeInstanceAttribute"
@@ -431,7 +425,6 @@
       }
     },
     {
-      "Sid": "ModifyNetworkInterfaceAttribute",
       "Effect": "Allow",
       "Action": [
         "ec2:ModifyNetworkInterfaceAttribute"
@@ -447,7 +440,6 @@
       }
     },
     {
-      "Sid": "ModifyVpcEndpointServicePermissions",
       "Effect": "Allow",
       "Action": [
         "ec2:ModifyVpcEndpointServicePermissions"
@@ -476,7 +468,6 @@
       }
     },
     {
-      "Sid": "CreateVpcEndpoint",
       "Effect": "Allow",
       "Action": [
         "ec2:CreateVpcEndpoint"
@@ -491,7 +482,6 @@
       }
     },
     {
-      "Sid": "CreateVpcEndpointInVpc",
       "Effect": "Allow",
       "Action": [
         "ec2:CreateVpcEndpoint"
@@ -508,7 +498,6 @@
       }
     },
     {
-      "Sid": "CreateVpcEndpointServiceConfiguration",
       "Effect": "Allow",
       "Action": [
         "ec2:CreateVpcEndpointServiceConfiguration"
@@ -523,7 +512,7 @@
       }
     },
     {
-      "Sid": "CreateTagsDependentAction",
+      "Sid": "CreateTagsDependentIAMAction",
       "Effect": "Allow",
       "Action": [
         "ec2:CreateTags"
@@ -583,7 +572,6 @@
       ]
     },
     {
-      "Sid": "CreateVolume",
       "Effect": "Allow",
       "Action": [
         "ec2:CreateVolume"
@@ -598,7 +586,6 @@
       }
     },
     {
-      "Sid": "DeleteVolume",
       "Effect": "Allow",
       "Action": [
         "ec2:DeleteVolume"
@@ -613,7 +600,7 @@
       }
     },
     {
-      "Sid": "ModifyInstance",
+      "Sid": "ModifyInstances",
       "Effect": "Allow",
       "Action": [
         "ec2:ModifyInstanceAttribute",
@@ -643,7 +630,6 @@
       }
     },
     {
-      "Sid": "CreateSecurityGroup",
       "Effect": "Allow",
       "Action": [
         "ec2:CreateSecurityGroup"
@@ -658,14 +644,13 @@
       }
     },
     {
+      "Effect": "Allow",
       "Action": [
         "ec2:CreateSecurityGroup"
       ],
-      "Effect": "Allow",
       "Resource": "arn:aws:ec2:*:*:vpc/*"
     },
     {
-      "Sid": "DeleteSecurityGroupInVpc",
       "Effect": "Allow",
       "Action": [
         "ec2:DeleteSecurityGroup"
