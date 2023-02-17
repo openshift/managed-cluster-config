@@ -9,10 +9,10 @@ To add a new SelectorSyncSet, add your yaml manifest to the `deploy` dir, then r
 Alternatively you can enable GitHub Actions on your fork and `make` will be ran automatically. Additionally,
 the action will create a new commit with the generated files.
 
-To add a Policy
-- If the manifest of the object you want to convert to policy already exists in `deploy` : go to `script/generate-policy-template.py` and add the directory you want to convert in the directory array. 
-- If the manifest of the object does not exist; add your manifests; then add the directory of your manifest into the array in `script/generate-policy-template.py`. 
-- If the manifest is SubjectPermission, add the directory of the manifest into the array in `script/generate-subjectpermissions-policy-template.py` then run `make` as usually
+To add an ACM (Governance) Policy
+- If the manifest of the object you want to convert to policy already exists in `deploy` : go to `script/generate-policy-config.py` and add the directory you want to convert in the directory array.
+- If the manifest of the object does not exist; add your manifests; then add the directory of your manifest into the array in `script/generate-policy-config.py`.
+- If the manifest is SubjectPermission, add the directory of the manifest into the array in `script/generate-subjectpermissions-policy-template.py` then run `make` as usual
 
 `make` will look for the `policy-generator-config.yaml` files, runs it with the PolicyGenerator binary and save the output to `deploy/acm-policies` directory. `make` will then automatically
 add the policy as a new SelectorySyncSet.

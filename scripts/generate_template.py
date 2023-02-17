@@ -131,6 +131,10 @@ if __name__ == '__main__':
         if "deploymentMode" in config:
             deploymentMode = config["deploymentMode"]
 
+        # skip any directory only containing governance policies, as they are only for hypershift
+        if deploymentMode == "Policy":
+            continue
+
         if deploymentMode == "Direct":
             add_resources_for(dirpath, config["direct"])
 
