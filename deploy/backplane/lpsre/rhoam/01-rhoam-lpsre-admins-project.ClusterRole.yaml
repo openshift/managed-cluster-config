@@ -130,3 +130,24 @@ rules:
   - deployments/scale
   verbs:
   - patch
+# LP SRE can restart deployments/statefulsets/deploymentconfigs
+- apiGroups:
+  - apps
+  resources:
+  - statefulsets
+  - deployments
+  verbs:
+  - patch
+- apiGroups:
+  - apps.openshift.io
+  resources:
+  - deploymentconfigs
+  verbs:
+  - patch
+# LP SRE can patch routes
+- apiGroups:
+  - route.openshift.io
+  resources:
+  - routes
+  verbs:
+  - patch  
