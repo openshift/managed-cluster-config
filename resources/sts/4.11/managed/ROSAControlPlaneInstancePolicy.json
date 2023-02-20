@@ -5,10 +5,21 @@
       "Effect": "Allow",
       "Action": [
         "ec2:Describe*",
-        "elasticloadbalancing:Describe*",
-        "kms:DescribeKey"
+        "elasticloadbalancing:Describe*"
       ],
       "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "kms:DescribeKey"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringLike": {
+          "kms:ViaService": "ec2.*.amazonaws.com"
+        }
+      }
     },
     {
       "Effect": "Allow",

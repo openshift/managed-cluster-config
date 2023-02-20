@@ -146,7 +146,12 @@
         "kms:GenerateDataKeyWithoutPlainText",
         "kms:DescribeKey"
       ],
-      "Resource": "*"
+      "Resource": "*",
+      "Condition": {
+        "StringLike": {
+          "kms:ViaService": "ec2.*.amazonaws.com"
+        }
+      }
     },
     {
       "Effect": "Allow",
@@ -159,6 +164,9 @@
       "Condition": {
         "Bool": {
           "kms:GrantIsForAWSResource": true
+        },
+        "StringLike": {
+          "kms:ViaService": "ec2.*.amazonaws.com"
         }
       }
     }

@@ -110,7 +110,6 @@
         "elasticloadbalancing:DescribeTargetHealth",
         "iam:GetRole",
         "iam:ListRoles",
-        "kms:CreateGrant",
         "route53:GetHostedZone",
         "route53:GetHostedZoneCount",
         "route53:ListHostedZones",
@@ -220,6 +219,16 @@
       "Condition": {
         "StringEquals": {
           "aws:RequestTag/red-hat-managed": "true"
+        }
+      }
+    },
+    {
+      "Effect": "Allow",
+      "Action": "kms:CreateGrant",
+      "Resource": "*",
+      "Condition": {
+        "StringLike": {
+          "kms:ViaService": "ec2.*.amazonaws.com"
         }
       }
     },
