@@ -5,3 +5,9 @@ This directory contains AWS IAM policies that are designed to restrict IAM actio
 To see what AWS actions support condition keys (used to restrict actions by tag) can be found [here](https://docs.aws.amazon.com/service-authorization/latest/reference/reference.html).
 
 The policies in this directory are under review and should not be used for production environments until [SDE-1703](https://issues.redhat.com/browse/SDE-1703) is complete.
+
+## Troubleshooting
+
+### Policy validation
+
+`aws accessanalyzer validate-policy --policy-type RESOURCE_POLICY --policy-document file://rosa-key-policy.json`
