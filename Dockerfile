@@ -16,7 +16,7 @@ WORKDIR ${REPO_PATH}
 
 # Upgrade pip and install necessasry packages
 RUN pip install --disable-pip-version-check oyaml
-ADD --chown=default https://github.com/stolostron/policy-generator-plugin/releases/download/v1.9.1/linux-amd64-PolicyGenerator /opt/app-root/bin/PolicyGenerator
+ADD --chown=default https://github.com/open-cluster-management-io/policy-generator-plugin/releases/download/v1.9.1/linux-amd64-PolicyGenerator /opt/app-root/bin/PolicyGenerator
 RUN chmod +x /opt/app-root/bin/PolicyGenerator
 
 # Make
