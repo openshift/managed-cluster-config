@@ -16,9 +16,12 @@ spec:
    - name: ocp4-hypershift-cluster
      value: "<hypershift-hosted-cluster-name>"
      rationale: This value is used for HyperShift version detection
-   - name: ocp4-var-openshift-kube-apiserver-namespace
-     value: "clusters-<hypershift-hosted-cluster-name>"
-     rationale: ConfigMap for Kube API server config is stored in master namespace of a HyperShift hosted cluster
+   - name: ocp4-var-openshift-apiserver-config
+     value: openshift-apiserver
+     rationale: HyperShift stores configration in a different ConfigMap resource
+   - name: ocp4-var-openshift-apiserver-filter
+     value: '.data."config.yaml"'
+     rationale: OpenShift APIserver config need to be retrieved using a different jqfilter in HyperShift
    - name: ocp4-var-openshift-kube-apiserver-config
      value: kas-config
      rationale: HyperShift stores configration in a different ConfigMap resource
