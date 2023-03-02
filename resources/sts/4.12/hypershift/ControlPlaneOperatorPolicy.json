@@ -11,13 +11,28 @@
         },
         {
             "Action": [
-                "route53:ChangeResourceRecordSets",
                 "route53:ListResourceRecordSets"
             ],
             "Effect": "Allow",
             "Resource": [
                 "*"
             ]
+        },
+        {
+            "Action": [
+                "route53:ChangeResourceRecordSets"
+            ],
+            "Effect": "Allow",
+            "Resource": [
+                "*"
+            ],
+            "Condition": {
+                "ForAllValues:StringLike": {
+                    "route53:ChangeResourceRecordSetsNormalizedRecordNames": [
+                        "*.hypershift.local"
+                    ]
+                }
+            }
         },
         {
             "Sid": "VPCEndpointWithCondition",
@@ -47,7 +62,7 @@
             ]
         },
         {
-            "Sid": "ManageVPCEndpoingWithCondition",
+            "Sid": "ManageVPCEndpointWithCondition",
             "Effect": "Allow",
             "Action": [
                 "ec2:ModifyVpcEndpoint",
