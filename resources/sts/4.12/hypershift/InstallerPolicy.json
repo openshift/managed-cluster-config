@@ -23,8 +23,7 @@
                 "route53:ListResourceRecordSets",
                 "route53:GetAccountLimit",
                 "servicequotas:GetServiceQuota",
-                "sts:GetCallerIdentity",
-                "iam:TagInstanceProfile"
+                "sts:GetCallerIdentity"
             ],
             "Resource": "*"
         },
@@ -47,32 +46,32 @@
         {
             "Effect": "Allow",
             "Action": [
-              "sts:AssumeRole",
-              "sts:AssumeRoleWithWebIdentity"
+                "sts:AssumeRole",
+                "sts:AssumeRoleWithWebIdentity"
             ],
             "Resource": [
-              "arn:aws:iam::*:role/*"
+                "arn:aws:iam::*:role/*"
             ],
             "Condition": {
-              "StringEquals": {
-                "aws:ResourceTag/red-hat-managed": "true"
-              }
+                "StringEquals": {
+                    "aws:ResourceTag/red-hat-managed": "true"
+                }
             }
         },
         {
             "Effect": "Allow",
             "Action": "elasticloadbalancing:CreateLoadBalancer",
             "Resource": [
-              "*"
+                "*"
             ],
             "Condition": {
-              "StringEquals": {
-                "aws:RequestTag/red-hat-managed": "true"
-              }
+                "StringEquals": {
+                    "aws:RequestTag/red-hat-managed": "true"
+                }
             }
         },
         {
-            "Sid": "CreateAndManageInstanceProfiles",
+            "Sid": "ManageInstanceProfiles",
             "Effect": "Allow",
             "Action": [
                 "iam:AddRoleToInstanceProfile",
@@ -86,6 +85,22 @@
             ]
         },
         {
+            "Sid": "CreateInstanceProfiles",
+            "Effect": "Allow",
+            "Action": [
+                "iam:CreateInstanceProfile",
+                "iam:TagInstanceProfile"
+            ],
+            "Resource": [
+                "arn:aws:iam::*:instance-profile/*-worker"
+            ],
+            "Condition": {
+                "StringEquals": {
+                    "aws:RequestTag/red-hat-managed": "true"
+                }
+            }
+        },
+        {
             "Sid": "CreateAndManagePolicies",
             "Effect": "Allow",
             "Action": [
@@ -97,9 +112,9 @@
             ],
             "Condition": {
                 "StringEquals": {
-                  "aws:RequestTag/red-hat-managed": "true"
+                    "aws:RequestTag/red-hat-managed": "true"
                 }
-              }
+            }
         },
         {
             "Effect": "Allow",
@@ -113,37 +128,36 @@
                 "StringEquals": {
                     "aws:ResourceTag/red-hat-managed": "true"
                 }
-              }
+            }
         },
         {
             "Sid": "Route53ManageRecords",
             "Effect": "Allow",
             "Action": [
-              "route53:ChangeResourceRecordSets"
+                "route53:ChangeResourceRecordSets"
             ],
             "Resource": "*",
             "Condition": {
-              "ForAllValues:StringLike": {
-                "route53:ChangeResourceRecordSetsNormalizedRecordNames": [
-                  "*.openshiftapps.com",
-                  "*.devshift.org",
-                  "*.hypershift.local",
-                  "*.openshiftusgov.com",
-                  "*.devshiftusgov.com"
-                ]
-              }
+                "ForAllValues:StringLike": {
+                    "route53:ChangeResourceRecordSetsNormalizedRecordNames": [
+                        "*.openshiftapps.com",
+                        "*.devshift.org",
+                        "*.hypershift.local",
+                        "*.openshiftusgov.com",
+                        "*.devshiftusgov.com"
+                    ]
+                }
             }
         },
         {
             "Sid": "Route53Manage",
             "Effect": "Allow",
             "Action": [
-              "route53:ChangeTagsForResource",
-              "route53:CreateHostedZone",
-              "route53:DeleteHostedZone"
+                "route53:ChangeTagsForResource",
+                "route53:CreateHostedZone",
+                "route53:DeleteHostedZone"
             ],
             "Resource": "*"
         }
     ]
 }
-
