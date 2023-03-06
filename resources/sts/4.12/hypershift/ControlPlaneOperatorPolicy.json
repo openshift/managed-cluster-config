@@ -4,10 +4,65 @@
         {
             "Action": [
                 "ec2:DescribeVpcEndpoints",
+                "ec2:DescribeVpcs",
+                "ec2:DescribeSecurityGroups",
                 "route53:ListHostedZones"
             ],
             "Effect": "Allow",
             "Resource": "*"
+        },
+        {
+            "Sid": "CreateSecurityGroups",
+            "Effect": "Allow",
+            "Action": [
+                "ec2:CreateSecurityGroup"
+            ],
+            "Resource": [
+                "arn:aws:ec2:*:*:security-group*/*"
+            ],
+            "Condition": {
+                "StringEquals": {
+                    "aws:RequestTag/red-hat-managed": "true"
+                }
+            }
+        },
+        {
+            "Sid": "DeleteSecurityGroup",
+            "Effect": "Allow",
+            "Action": [
+                "ec2:DeleteSecurityGroup"
+            ],
+            "Resource": [
+                "arn:aws:ec2:*:*:security-group*/*"
+            ],
+            "Condition": {
+                "StringEquals": {
+                    "aws:ResourceTag/red-hat-managed": "true"
+                }
+            }
+        },
+        {
+            "Sid": "SecurityGroupIngressEgress",
+            "Effect": "Allow",
+            "Action": [
+                "ec2:AuthorizeSecurityGroupIngress",
+                "ec2:AuthorizeSecurityGroupEgress",
+                "ec2:RevokeSecurityGroupIngress",
+                "ec2:RevokeSecurityGroupEgress"
+            ],
+            "Resource": [
+                "arn:aws:ec2:*:*:security-group*/*"
+            ]
+        },
+        {
+            "Sid": "CreateSecurityGroupsVPCNoCondition",
+            "Effect": "Allow",
+            "Action": [
+                "ec2:CreateSecurityGroup"
+            ],
+            "Resource": [
+                "arn:aws:ec2:*:*:vpc/*"
+            ]
         },
         {
             "Action": [
@@ -93,11 +148,15 @@
                 "ec2:CreateTags"
             ],
             "Resource": [
-                "arn:aws:ec2:*:*:vpc-endpoint/*"
+                "arn:aws:ec2:*:*:vpc-endpoint/*",
+                "arn:aws:ec2:*:*:security-group/*"
             ],
             "Condition": {
                 "StringEquals": {
-                    "ec2:CreateAction": "CreateVpcEndpoint"
+                    "ec2:CreateAction": [
+                        "CreateVpcEndpoint",
+                        "CreateSecurityGroup"
+                    ]
                 }
             }
         }
