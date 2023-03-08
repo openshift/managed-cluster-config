@@ -20345,14 +20345,12 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-srep-management-cluster-project
+        name: backplane-srep-management-cluster-cluster
       rules:
       - apiGroups:
         - work.open-cluster-management.io
         resources:
         - appliedmanifestworks
-        - operator
-        - work
         verbs:
         - get
         - list
@@ -20373,6 +20371,11 @@ objects:
         - get
         - list
         - watch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-srep-management-cluster-project
+      rules:
       - apiGroups:
         - policy.open-cluster-management.io
         resources:
@@ -20455,7 +20458,7 @@ objects:
         permissions:
         - allowFirst: true
           clusterRoleName: backplane-srep-management-cluster-project
-          namespacesAllowedRegex: (^uhc.*|^ocm.*)
+          namespacesAllowedRegex: (^uhc.*|^ocm.*|^klusterlet.*)
         - allowFirst: true
           clusterRoleName: dedicated-readers
           namespacesAllowedRegex: (^hypershift.*|^uhc.*|^ocm.*|^klusterlet.*|^open-cluster-management.*)
@@ -20493,8 +20496,6 @@ objects:
         - work.open-cluster-management.io
         resources:
         - appliedmanifestworks
-        - operator
-        - work
         verbs:
         - get
         - list
@@ -20515,6 +20516,11 @@ objects:
         - get
         - list
         - watch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-srep-service-cluster-project
+      rules:
       - apiGroups:
         - policy.open-cluster-management.io
         resources:
@@ -20586,10 +20592,12 @@ objects:
         name: backplane-srep-service-cluster
         namespace: openshift-rbac-permissions
       spec:
+        clusterPermissions:
+        - backplane-srep-service-cluster-cluster
         permissions:
         - allowFirst: true
           clusterRoleName: backplane-srep-service-cluster-project
-          namespacesAllowedRegex: (^uhc.*|^ocm.*)
+          namespacesAllowedRegex: (^uhc.*|^ocm.*|^klusterlet.*)
         - allowFirst: true
           clusterRoleName: dedicated-readers
           namespacesAllowedRegex: (^hypershift.*|^uhc.*|^ocm.*|^klusterlet.*|^open-cluster-management.*)
