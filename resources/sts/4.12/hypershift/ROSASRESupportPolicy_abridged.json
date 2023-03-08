@@ -38,7 +38,6 @@
       "Resource": "*"
     },
     {
-      "Sid": "CreateTaggedInstancesOnly",
       "Effect": "Allow",
       "Action": [
         "ec2:CreateTags"
@@ -59,7 +58,6 @@
       }
     },
     {
-      "Sid": "ListBucket",
       "Effect": "Allow",
       "Action": "s3:ListBucket",
       "Resource": [
@@ -68,7 +66,6 @@
       ]
     },
     {
-      "Sid": "CreateNetworkInsightsPath",
       "Effect": "Allow",
       "Action": "ec2:CreateNetworkInsightsPath",
       "Resource": "arn:aws:ec2:*:*:network-insights-path/*",
@@ -79,7 +76,6 @@
       }
     },
     {
-      "Sid": "DeleteNetworkInsightsPath",
       "Effect": "Allow",
       "Action": "ec2:DeleteNetworkInsightsPath",
       "Resource": "arn:aws:ec2:*:*:network-insights-path/*",
@@ -90,7 +86,6 @@
       }
     },
     {
-      "Sid": "DeleteNetworkInsightsAnalysis",
       "Effect": "Allow",
       "Action": "ec2:DeleteNetworkInsightsAnalysis",
       "Resource": "arn:aws:ec2:*:*:network-insights-analysis/*",
@@ -101,10 +96,24 @@
       }
     },
     {
-      "Sid": "RunInstances",
       "Effect": "Allow",
       "Action": "ec2:RunInstances",
-      "Resource": "arn:aws:ec2:*:*:image/*",
+      "Resource": [
+				"arn:aws:ec2:*::image/*",
+				"arn:aws:ec2:*:*:keypair/*",
+				"arn:aws:ec2:*:*:subnet/*",
+				"arn:aws:ec2:*:*:network-interface/*",
+				"arn:aws:ec2:*:*:security-group/*",
+				"arn:aws:ec2:*:*:snapshot/*"
+			]
+    },
+    {
+      "Effect": "Allow",
+      "Action": "ec2:RunInstances",
+      "Resource": [
+				"arn:aws:ec2:*:*:instance/*",
+				"arn:aws:ec2:*:*:volume/*"
+			],
       "Condition": {
         "StringEquals": {
           "aws:ResourceTag/red-hat-managed": "true"
@@ -112,7 +121,6 @@
       }
     },
     {
-      "Sid": "SearchTransitGatewayRoutes",
       "Effect": "Allow",
       "Action": "ec2:SearchTransitGatewayRoutes",
       "Resource": "arn:aws:ec2:*:*:transit-gateway-route-table/*",
@@ -123,7 +131,6 @@
       }
     },
     {
-      "Sid": "StartNetworkInsightsAnalysis",
       "Effect": "Allow",
       "Action": "ec2:StartNetworkInsightsAnalysis",
       "Resource": "arn:aws:ec2:*:*:network-insights-analysis/*",
@@ -134,7 +141,6 @@
       }
     },
     {
-      "Sid": "StartInstances",
       "Effect": "Allow",
       "Action": "ec2:StartInstances",
       "Resource": "arn:aws:ec2:*:*:instance/*",
@@ -145,7 +151,6 @@
       }
     },
     {
-      "Sid": "StopInstances",
       "Effect": "Allow",
       "Action": "ec2:StopInstances",
       "Resource": "arn:aws:ec2:*:*:instance/*",
@@ -156,7 +161,6 @@
       }
     },
     {
-      "Sid": "TerminateInstances",
       "Effect": "Allow",
       "Action": "ec2:TerminateInstances",
       "Resource": "arn:aws:ec2:*:*:instance/*",
@@ -167,7 +171,6 @@
       }
     },
     {
-      "Sid": "Snapshot",
       "Effect": "Allow",
       "Action": [
         "ec2:CopySnapshot",
@@ -181,7 +184,6 @@
       }
     },
     {
-      "Sid": "CreateSnapshots",
       "Effect": "Allow",
       "Action": "ec2:CreateSnapshots",
       "Resource": "arn:aws:ec2:*:*:instance/*",
@@ -192,7 +194,6 @@
       }
     },
     {
-      "Sid": "DescribeAddressesAttribute",
       "Effect": "Allow",
       "Action": "ec2:DescribeAddressesAttribute",
       "Resource": "arn:aws:ec2:*:*:elastic-ip/*",
@@ -203,7 +204,6 @@
       }
     },
     {
-      "Sid": "DescribeClientVpnAuthorizationRules",
       "Effect": "Allow",
       "Action": "ec2:DescribeClientVpnAuthorizationRules",
       "Resource": "arn:aws:ec2:*:*:client-vpn-endpoint/*",
@@ -214,7 +214,6 @@
       }
     },
     {
-      "Sid": "DescribeClientVpnConnections",
       "Effect": "Allow",
       "Action": "ec2:DescribeClientVpnConnections",
       "Resource": "arn:aws:ec2:*:*:client-vpn-endpoint/*",
@@ -225,7 +224,6 @@
       }
     },
     {
-      "Sid": "DescribeClientVpnEndpoints",
       "Effect": "Allow",
       "Action": "ec2:DescribeClientVpnEndpoints",
       "Resource": "arn:aws:ec2:*:*:client-vpn-endpoint/*",
@@ -236,7 +234,6 @@
       }
     },
     {
-      "Sid": "DescribeClientVpnRoutes",
       "Effect": "Allow",
       "Action": "ec2:DescribeClientVpnRoutes",
       "Resource": "arn:aws:ec2:*:*:client-vpn-endpoint/*",
@@ -247,7 +244,6 @@
       }
     },
     {
-      "Sid": "DescribeClientVpnTargetNetworks",
       "Effect": "Allow",
       "Action": "ec2:DescribeClientVpnTargetNetworks",
       "Resource": "arn:aws:ec2:*:*:client-vpn-endpoint/*",
@@ -258,7 +254,6 @@
       }
     },
     {
-      "Sid": "DescribeImageAttribute",
       "Effect": "Allow",
       "Action": "ec2:DescribeImageAttribute",
       "Resource": "arn:aws:ec2:*:*:image/*",
@@ -269,7 +264,6 @@
       }
     },
     {
-      "Sid": "DescribeInstanceAttribute",
       "Effect": "Allow",
       "Action": "ec2:DescribeInstanceAttribute",
       "Resource": "arn:aws:ec2:*:*:instance/*",
@@ -280,7 +274,6 @@
       }
     },
     {
-      "Sid": "DescribeSnapshotAttribute",
       "Effect": "Allow",
       "Action": "ec2:DescribeSnapshotAttribute",
       "Resource": "arn:aws:ec2:*:*:snapshot/*",
@@ -291,7 +284,6 @@
       }
     },
     {
-      "Sid": "DescribeSpotFleetInstances",
       "Effect": "Allow",
       "Action": "ec2:DescribeSpotFleetInstances",
       "Resource": "arn:aws:ec2:*:*:spot-fleet-request/*",
@@ -302,7 +294,6 @@
       }
     },
     {
-      "Sid": "DescribeVolumeAttribute",
       "Effect": "Allow",
       "Action": "ec2:DescribeVolumeAttribute",
       "Resource": "arn:aws:ec2:*:*:volume/*",
@@ -313,7 +304,6 @@
       }
     },
     {
-      "Sid": "DescribeVpcAttribute",
       "Effect": "Allow",
       "Action": "ec2:DescribeVpcAttribute",
       "Resource": "arn:aws:ec2:*:*:vpc/*",
@@ -324,7 +314,6 @@
       }
     },
     {
-      "Sid": "GetConsoleOutput",
       "Effect": "Allow",
       "Action": "ec2:GetConsoleOutput",
       "Resource": "arn:aws:ec2:*:*:instance/*",
@@ -335,7 +324,6 @@
       }
     },
     {
-      "Sid": "GetManagedPrefixListEntries",
       "Effect": "Allow",
       "Action": "ec2:GetManagedPrefixListEntries",
       "Resource": "arn:aws:ec2:*:*:prefix-list/*",
@@ -346,7 +334,6 @@
       }
     },
     {
-      "Sid": "ModifyInstanceAttribute",
       "Effect": "Allow",
       "Action": "ec2:ModifyInstanceAttribute",
       "Resource": "arn:aws:ec2:*:*:instance/*",
@@ -357,7 +344,6 @@
       }
     },
     {
-      "Sid": "RebootInstances",
       "Effect": "Allow",
       "Action": "ec2:RebootInstances",
       "Resource": "arn:aws:ec2:*:*:instance/*",
