@@ -58,12 +58,28 @@
       }
     },
     {
+      "Sid": "CreateSnapshotResourceTag",
       "Effect": "Allow",
       "Action": [
         "ec2:CreateSnapshot"
       ],
       "Resource": [
-        "arn:aws:ec2:*::snapshot/*"
+        "arn:aws:ec2:*:*:volume/*"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "aws:ResourceTag/red-hat-managed": "true"
+        }
+      }
+    },
+    {
+      "Sid": "CreateSnapshotRequestTag",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:CreateSnapshot"
+      ],
+      "Resource": [
+        "arn:aws:ec2:*:*:snapshot/*"
       ],
       "Condition": {
         "StringEquals": {
@@ -77,7 +93,7 @@
         "ec2:DeleteSnapshot"
       ],
       "Resource": [
-        "arn:aws:ec2:*::snapshot/*"
+        "arn:aws:ec2:*:*:snapshot/*"
       ],
       "Condition": {
         "StringEquals": {
@@ -92,7 +108,7 @@
       ],
       "Resource": [
         "arn:aws:ec2:*:*:volume/*",
-        "arn:aws:ec2:*::snapshot/*"
+        "arn:aws:ec2:*:*:snapshot/*"
       ],
       "Condition": {
         "StringEquals": {
