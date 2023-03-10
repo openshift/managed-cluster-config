@@ -23,6 +23,7 @@ directories = [
         'backplane/tam',
         'ccs-dedicated-admins',
         'customer-registry-cas',
+        'hs-hosted-route-monitor-operator',
         'hs-mgmt-route-monitor-api',
         'osd-cluster-admin',
         'osd-delete-backplane-script-resources',
