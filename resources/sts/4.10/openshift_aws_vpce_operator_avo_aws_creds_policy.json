@@ -18,7 +18,6 @@
         "ec2:DescribeVpcs",
         "ec2:ModifyVpcEndpoint",
         "ec2:DescribeVpcEndpointServices",
-        "route53:ChangeResourceRecordSets",
         "route53:ListHostedZonesByVPC",
         "route53:ListResourceRecordSets",
         "route53:ListTagsForResource",
@@ -28,6 +27,25 @@
         "route53:ChangeTagsForResource"
       ],
       "Resource": "*"
+    },
+    {
+      "Sid": "Route53ManageRecords",
+      "Effect": "Allow",
+      "Action": [
+          "route53:ChangeResourceRecordSets"
+      ],
+      "Resource": "*",
+      "Condition": {
+          "ForAllValues:StringLike": {
+              "route53:ChangeResourceRecordSetsNormalizedRecordNames": [
+                  "*.openshiftapps.com",
+                  "*.devshift.org",
+                  "*.hypershift.local",
+                  "*.openshiftusgov.com",
+                  "*.devshiftusgov.com"
+              ]
+          }
+      }
     }
   ]
 }
