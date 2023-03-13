@@ -22952,21 +22952,27 @@ objects:
         - 'true'
     resourceApplyMode: Sync
     resources:
-    - apiVersion: avo.openshift.io/v1alpha1
+    - apiVersion: avo.openshift.io/v1alpha2
       kind: VpcEndpoint
       metadata:
         name: splunk
         namespace: openshift-security
       spec:
-        subdomainName: splunk
         serviceName: com.amazonaws.vpce.us-gov-east-1.vpce-svc-0838533cd2d6d2b8b
         securityGroup:
           ingressRules:
           - fromPort: 9997
             toPort: 9997
             protocol: tcp
-        externalNameService:
-          name: indexer
+        vpc:
+          autoDiscoverSubnets: true
+        customDns:
+          route53PrivateHostedZone:
+            autoDiscoverPrivateHostedZone: true
+            record:
+              hostname: splunk
+              externalNameService:
+                name: indexer
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -22994,21 +23000,27 @@ objects:
         - 'true'
     resourceApplyMode: Sync
     resources:
-    - apiVersion: avo.openshift.io/v1alpha1
+    - apiVersion: avo.openshift.io/v1alpha2
       kind: VpcEndpoint
       metadata:
         name: splunk
         namespace: openshift-security
       spec:
-        subdomainName: splunk
         serviceName: com.amazonaws.vpce.us-gov-west-1.vpce-svc-06225ed6e3620e8e1
         securityGroup:
           ingressRules:
           - fromPort: 9997
             toPort: 9997
             protocol: tcp
-        externalNameService:
-          name: indexer
+        vpc:
+          autoDiscoverSubnets: true
+        customDns:
+          route53PrivateHostedZone:
+            autoDiscoverPrivateHostedZone: true
+            record:
+              hostname: splunk
+              externalNameService:
+                name: indexer
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
