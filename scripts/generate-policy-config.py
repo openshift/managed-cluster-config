@@ -24,7 +24,7 @@ directories = [
         'ccs-dedicated-admins',
         'customer-registry-cas',
         'hs-hosted-route-monitor-operator',
-        'hs-mgmt-route-monitor-api',
+        'hs-mgmt-route-monitor-operator',
         'osd-cluster-admin',
         'osd-delete-backplane-script-resources',
         'osd-delete-backplane-serviceaccounts',
