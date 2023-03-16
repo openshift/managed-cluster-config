@@ -9,18 +9,12 @@
         "cloudwatch:GetMetricData",
         "cloudwatch:GetMetricStatistics",
         "cloudwatch:ListMetrics",
-        "ec2-instance-connect:SendSerialConsoleSSHPublicKey",
         "ec2:Describe*",
-        "ec2:GetAssociatedIpv6PoolCidrs",
-        "ec2:GetSerialConsoleAccessStatus",
         "ec2:GetTransitGatewayAttachmentPropagations",
         "ec2:GetTransitGatewayMulticastDomainAssociations",
         "ec2:GetTransitGatewayPrefixListReferences",
         "ec2:GetTransitGatewayRouteTableAssociations",
         "ec2:GetTransitGatewayRouteTablePropagations",
-        "ec2:SearchLocalGatewayRoutes",
-        "ec2:SearchTransitGatewayMulticastGroups",
-        "elasticloadbalancing:ConfigureHealthCheck",
         "elasticloadbalancing:Describe*",
         "iam:GetRole",
         "iam:ListRoles",
@@ -31,8 +25,6 @@
         "s3:GetObjectTagging",
         "s3:ListAllMyBuckets",
         "sts:DecodeAuthorizationMessage",
-        "tiros:CreateQuery",
-        "tiros:GetQuery*"
       ],
       "Resource": "*"
     },
@@ -63,36 +55,6 @@
         "arn:aws:s3:::managed-velero*",
         "arn:aws:s3:::*image-registry*"
       ]
-    },
-    {
-      "Effect": "Allow",
-      "Action": "ec2:CreateNetworkInsightsPath",
-      "Resource": "arn:aws:ec2:*:*:network-insights-path/*",
-      "Condition": {
-        "StringEquals": {
-          "aws:RequestTag/red-hat-managed": "true"
-        }
-      }
-    },
-    {
-      "Effect": "Allow",
-      "Action": "ec2:DeleteNetworkInsightsPath",
-      "Resource": "arn:aws:ec2:*:*:network-insights-path/*",
-      "Condition": {
-        "StringEquals": {
-          "aws:ResourceTag/red-hat-managed": "true"
-        }
-      }
-    },
-    {
-      "Effect": "Allow",
-      "Action": "ec2:DeleteNetworkInsightsAnalysis",
-      "Resource": "arn:aws:ec2:*:*:network-insights-analysis/*",
-      "Condition": {
-        "StringEquals": {
-          "aws:ResourceTag/red-hat-managed": "true"
-        }
-      }
     },
     {
       "Effect": "Allow",
@@ -301,16 +263,6 @@
       "Effect": "Allow",
       "Action": "ec2:GetConsoleOutput",
       "Resource": "arn:aws:ec2:*:*:instance/*",
-      "Condition": {
-        "StringEquals": {
-          "aws:ResourceTag/red-hat-managed": "true"
-        }
-      }
-    },
-    {
-      "Effect": "Allow",
-      "Action": "ec2:GetManagedPrefixListEntries",
-      "Resource": "arn:aws:ec2:*:*:prefix-list/*",
       "Condition": {
         "StringEquals": {
           "aws:ResourceTag/red-hat-managed": "true"
