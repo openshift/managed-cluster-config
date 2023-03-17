@@ -31610,6 +31610,51 @@ objects:
       kind: PrometheusRule
       metadata:
         labels:
+          prometheus: sre-kubejobfailing
+          role: alert-rules
+        name: sre-kubejobfailing
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-kubejobfailing-recording.rules
+          rules:
+          - record: job:kube_job_status_failed:sum
+            expr: 'clamp_max(job:kube_job_status_start_time:max, 1)
+
+              * ON(job_name) GROUP_LEFT()
+
+              (kube_job_status_failed{namespace=~"(openshift-.*|kube-.*|default)",job="kube-state-metrics"}
+              > 0)
+
+              '
+          - record: job:kube_job_status_start_time:max
+            expr: "max(\n kube_job_status_start_time{namespace=~\"(openshift-.*|kube-.*|default)\"\
+              ,job=\"kube-state-metrics\"}\n * ON(job_name,namespace) GROUP_RIGHT()\n\
+              \ kube_job_owner{owner_name!=\"\",owner_name!=\"<none>\"}\n)   \nBY\
+              \ (job_name, owner_name, namespace)\n== ON(owner_name) GROUP_LEFT()\n\
+              max(\n kube_job_status_start_time{namespace=~\"(openshift-.*|kube-.*|default)\"\
+              ,job=\"kube-state-metrics\"}\n * ON(job_name,namespace) GROUP_RIGHT()\n\
+              \ kube_job_owner{owner_name!=\"\",owner_name!=\"<none>\"}\n)   \nBY\
+              \ (owner_name)\n"
+        - name: sre-kubejobfailing
+          rules:
+          - alert: KubeJobFailingSRE
+            expr: 'job:kube_job_status_failed:sum
+
+              '
+            for: 15m
+            labels:
+              severity: warning
+              namespace: '{{ $labels.namespace }}'
+            annotations:
+              description: Job {{ $labels.namespace }}/{{ $labels.job_name }} is failing
+                to complete.
+              summary: Job is failing to complete.
+              link: https://github.com/openshift/ops-sop/blob/master/v4/alerts/KubeJobFailed.md
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
           prometheus: sre-kubequotaexceeded
           role: alert-rules
         name: sre-kubequotaexceeded
