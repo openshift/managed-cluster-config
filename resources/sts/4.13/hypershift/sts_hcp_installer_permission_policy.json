@@ -1,0 +1,163 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "ec2:CreateTags",
+                "ec2:DeleteTags",
+                "ec2:DescribeAvailabilityZones",
+                "ec2:DescribeInternetGateways",
+                "ec2:DescribeRegions",
+                "ec2:DescribeReservedInstancesOfferings",
+                "ec2:DescribeRouteTables",
+                "ec2:DescribeSecurityGroupRules",
+                "ec2:DescribeSubnets",
+                "ec2:DescribeVpcAttribute",
+                "ec2:DescribeVpcs",
+                "ec2:DescribeInstanceTypeOfferings",
+                "elasticloadbalancing:DeleteLoadBalancer",
+                "kms:DescribeKey",
+                "iam:GetRole",
+                "route53:ListHostedZones",
+                "route53:ListResourceRecordSets",
+                "route53:GetAccountLimit",
+                "servicequotas:GetServiceQuota",
+                "sts:GetCallerIdentity"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Action": [
+                "iam:PassRole"
+            ],
+            "Resource": [
+                "arn:*:iam::*:role/*-Worker-Role"
+            ],
+            "Effect": "Allow",
+            "Condition": {
+                "StringEquals": {
+                    "iam:PassedToService": [
+                        "ec2.amazonaws.com"
+                    ]
+                }
+            }
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "sts:AssumeRole",
+                "sts:AssumeRoleWithWebIdentity"
+            ],
+            "Resource": [
+                "arn:aws:iam::*:role/*"
+            ],
+            "Condition": {
+                "StringEquals": {
+                    "aws:ResourceTag/red-hat-managed": "true"
+                }
+            }
+        },
+        {
+            "Effect": "Allow",
+            "Action": "elasticloadbalancing:CreateLoadBalancer",
+            "Resource": [
+                "*"
+            ],
+            "Condition": {
+                "StringEquals": {
+                    "aws:RequestTag/red-hat-managed": "true"
+                }
+            }
+        },
+        {
+            "Sid": "ManageInstanceProfiles",
+            "Effect": "Allow",
+            "Action": [
+                "iam:AddRoleToInstanceProfile",
+                "iam:RemoveRoleFromInstanceProfile",
+                "iam:DeleteInstanceProfile",
+                "iam:CreateInstanceProfile",
+                "iam:GetInstanceProfile"
+            ],
+            "Resource": [
+                "arn:aws:iam::*:instance-profile/*-worker"
+            ]
+        },
+        {
+            "Sid": "CreateInstanceProfiles",
+            "Effect": "Allow",
+            "Action": [
+                "iam:CreateInstanceProfile",
+                "iam:TagInstanceProfile"
+            ],
+            "Resource": [
+                "arn:aws:iam::*:instance-profile/*-worker"
+            ],
+            "Condition": {
+                "StringEquals": {
+                    "aws:RequestTag/red-hat-managed": "true"
+                }
+            }
+        },
+        {
+            "Sid": "CreateAndManagePolicies",
+            "Effect": "Allow",
+            "Action": [
+                "iam:CreatePolicy",
+                "iam:CreateRole"
+            ],
+            "Resource": [
+                "*"
+            ],
+            "Condition": {
+                "StringEquals": {
+                    "aws:RequestTag/red-hat-managed": "true"
+                }
+            }
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "secretsmanager:GetSecretValue"
+            ],
+            "Resource": [
+                "*"
+            ],
+            "Condition": {
+                "StringEquals": {
+                    "aws:ResourceTag/red-hat-managed": "true"
+                }
+            }
+        },
+        {
+            "Sid": "Route53ManageRecords",
+            "Effect": "Allow",
+            "Action": [
+                "route53:ChangeResourceRecordSets"
+            ],
+            "Resource": "*",
+            "Condition": {
+                "ForAllValues:StringLike": {
+                    "route53:ChangeResourceRecordSetsNormalizedRecordNames": [
+                        "*.openshiftapps.com",
+                        "*.devshift.org",
+                        "*.hypershift.local",
+                        "*.openshiftusgov.com",
+                        "*.devshiftusgov.com"
+                    ]
+                }
+            }
+        },
+        {
+            "Sid": "Route53Manage",
+            "Effect": "Allow",
+            "Action": [
+                "route53:ChangeTagsForResource",
+                "route53:CreateHostedZone",
+                "route53:DeleteHostedZone"
+            ],
+            "Resource": "*"
+        }
+    ]
+}
