@@ -24,7 +24,6 @@
         "elasticloadbalancing:Describe*",
         "iam:GetRole",
         "iam:ListRoles",
-        "kms:CreateGrant",
         "route53:GetHosted*",
         "route53:List*",
         "s3:GetBucketTagging",
@@ -143,6 +142,7 @@
     {
       "Effect": "Allow",
       "Action": [
+        "ec2:RebootInstances",
         "ec2:StartInstances",
         "ec2:StopInstances",
         "ec2:TerminateInstances"
@@ -329,12 +329,17 @@
     },
     {
       "Effect": "Allow",
-      "Action": "ec2:RebootInstances",
-      "Resource": "arn:aws:ec2:*:*:instance/*",
+      "Action": [
+          "kms:CreateGrant"
+      ],
+      "Resource": "*",
       "Condition": {
-        "StringEquals": {
-          "aws:ResourceTag/red-hat-managed": "true"
-        }
+          "Bool": {
+              "kms:GrantIsForAWSResource": true
+          },
+          "StringLike": {
+              "kms:ViaService": "ec2.*.amazonaws.com"
+          }
       }
     }
   ]
