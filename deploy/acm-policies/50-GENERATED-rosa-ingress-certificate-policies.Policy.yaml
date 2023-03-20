@@ -1,0 +1,119 @@
+---
+apiVersion: policy.open-cluster-management.io/v1
+kind: Policy
+metadata:
+    annotations:
+        policy.open-cluster-management.io/categories: CM Configuration Management
+        policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+        policy.open-cluster-management.io/standards: NIST SP 800-53
+    name: rosa-ingress-certificate-policies
+    namespace: openshift-acm-policies
+spec:
+    disabled: false
+    policy-templates:
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+                name: rosa-ingress-certificate-policies
+            spec:
+                evaluationInterval:
+                    compliant: 2h
+                    noncompliant: 45s
+                object-templates:
+                    - complianceType: mustonlyhave
+                      metadataComplianceType: musthave
+                      objectDefinition:
+                        apiVersion: policy.open-cluster-management.io/v1
+                        kind: Policy
+                        metadata:
+                            annotations:
+                                policy.open-cluster-management.io/categories: CM Configuration Management
+                                policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+                                policy.open-cluster-management.io/standards: NIST SP 800-53
+                            name: rosa-ingress-certificate
+                            namespace: openshift-acm-policies
+                        spec:
+                            disabled: false
+                            policy-templates:
+                                - objectDefinition:
+                                    apiVersion: policy.open-cluster-management.io/v1
+                                    kind: ConfigurationPolicy
+                                    metadata:
+                                        name: rosa-ingress-certificate
+                                    spec:
+                                        evaluationInterval:
+                                            compliant: 2h
+                                            noncompliant: 45s
+                                        object-templates:
+                                            - complianceType: musthave
+                                              metadataComplianceType: musthave
+                                              objectDefinition:
+                                                apiVersion: v1
+                                                data:
+                                                    tls.crt: '{{hub fromSecret "openshift-acm-policies" .ManagedClusterName "tls.crt" hub}}'
+                                                    tls.key: '{{hub fromSecret "openshift-acm-policies" .ManagedClusterName "tls.key" hub}}'
+                                                kind: Secret
+                                                metadata:
+                                                    name: ingress-certificate-secret
+                                                    namespace: openshift-ingress
+                                        pruneObjectBehavior: DeleteIfCreated
+                                        remediationAction: enforce
+                                        severity: low
+                                - extraDependencies:
+                                    - apiVersion: policy.open-cluster-management.io/v1
+                                      compliance: Compliant
+                                      kind: ConfigurationPolicy
+                                      name: rosa-ingress-certificate
+                                      namespace: ""
+                                  objectDefinition:
+                                    apiVersion: policy.open-cluster-management.io/v1
+                                    kind: ConfigurationPolicy
+                                    metadata:
+                                        name: rosa-ingress-replace-default-cert
+                                    spec:
+                                        object-templates:
+                                            - complianceType: musthave
+                                              objectDefinition:
+                                                apiVersion: operator.openshift.io/v1
+                                                kind: IngressController
+                                                metadata:
+                                                    name: default
+                                                    namespace: openshift-ingress-operator
+                                                spec:
+                                                    defaultCertificate:
+                                                        name: ingress-certificate-secret
+                                        pruneObjectBehavior: DeleteAll
+                                        remediationAction: inform
+                                        severity: low
+                            remediationAction: enforce
+                pruneObjectBehavior: DeleteIfCreated
+                remediationAction: enforce
+                severity: low
+---
+apiVersion: apps.open-cluster-management.io/v1
+kind: PlacementRule
+metadata:
+    name: placement-rosa-ingress-certificate-policies
+    namespace: openshift-acm-policies
+spec:
+    clusterSelector:
+        matchExpressions:
+            - key: hypershift.open-cluster-management.io/hosted-cluster
+              operator: In
+              values:
+                - "true"
+---
+apiVersion: policy.open-cluster-management.io/v1
+kind: PlacementBinding
+metadata:
+    name: binding-rosa-ingress-certificate-policies
+    namespace: openshift-acm-policies
+placementRef:
+    apiGroup: apps.open-cluster-management.io
+    kind: PlacementRule
+    name: placement-rosa-ingress-certificate-policies
+subjects:
+    - apiGroup: policy.open-cluster-management.io
+      kind: Policy
+      name: rosa-ingress-certificate-policies
