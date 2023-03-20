@@ -140,7 +140,6 @@
                 "elasticloadbalancing:DescribeTargetHealth",
                 "iam:GetRole",
                 "iam:ListRoles",
-                "kms:CreateGrant",
                 "route53:GetHostedZone",
                 "route53:GetHostedZoneCount",
                 "route53:ListHostedZones",
@@ -166,6 +165,21 @@
                 "arn:aws:s3:::managed-velero*",
                 "arn:aws:s3:::*image-registry*"
             ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "kms:CreateGrant"
+            ],
+            "Resource": "*",
+            "Condition": {
+                "Bool": {
+                    "kms:GrantIsForAWSResource": true
+                },
+                "StringLike": {
+                    "kms:ViaService": "ec2.*.amazonaws.com"
+                }
+            }
         }
     ]
 }
