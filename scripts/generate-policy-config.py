@@ -37,6 +37,7 @@ directories = [
         'rosa-oauth-templates',
         'rosa-console-branding',
         'rosa-console-branding-configmap',
+        'rosa-ingress-certificate-policies',
         ]
 policy_generator_config = './scripts/policy-generator-config.yaml'
 config_filename = "config.yaml"
