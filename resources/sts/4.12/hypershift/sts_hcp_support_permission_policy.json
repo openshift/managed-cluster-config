@@ -1,297 +1,297 @@
 {
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "cloudtrail:DescribeTrails",
-        "cloudtrail:LookupEvents",
-        "cloudwatch:GetMetricData",
-        "cloudwatch:GetMetricStatistics",
-        "cloudwatch:ListMetrics",
-        "ec2:Describe*",
-        "ec2:GetTransitGatewayAttachmentPropagations",
-        "ec2:GetTransitGatewayMulticastDomainAssociations",
-        "ec2:GetTransitGatewayPrefixListReferences",
-        "ec2:GetTransitGatewayRouteTableAssociations",
-        "ec2:GetTransitGatewayRouteTablePropagations",
-        "elasticloadbalancing:Describe*",
-        "iam:GetRole",
-        "iam:ListRoles",
-        "route53:GetHosted*",
-        "route53:List*",
-        "s3:GetBucketTagging",
-        "s3:GetObjectAcl",
-        "s3:GetObjectTagging",
-        "s3:ListAllMyBuckets",
-        "sts:DecodeAuthorizationMessage"
-      ],
-      "Resource": "*"
-    },
-    {
-      "Effect": "Allow",
-      "Action": [
-        "ec2:CreateTags"
-      ],
-      "Resource": [
-        "arn:aws:ec2:*:*:instance/*",
-        "arn:aws:ec2:*:*:volume/*",
-        "arn:aws:ec2:*:*:vpc/*",
-        "arn:aws:ec2:*:*:subnet/*"
-      ],
-      "Condition": {
-        "StringEquals": {
-          "ec2:CreateAction": [
-            "RunInstances",
-            "CreateVolume"
-          ]
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "cloudtrail:DescribeTrails",
+                "cloudtrail:LookupEvents",
+                "cloudwatch:GetMetricData",
+                "cloudwatch:GetMetricStatistics",
+                "cloudwatch:ListMetrics",
+                "ec2:Describe*",
+                "ec2:GetTransitGatewayAttachmentPropagations",
+                "ec2:GetTransitGatewayMulticastDomainAssociations",
+                "ec2:GetTransitGatewayPrefixListReferences",
+                "ec2:GetTransitGatewayRouteTableAssociations",
+                "ec2:GetTransitGatewayRouteTablePropagations",
+                "elasticloadbalancing:Describe*",
+                "iam:GetRole",
+                "iam:ListRoles",
+                "route53:GetHosted*",
+                "route53:List*",
+                "s3:GetBucketTagging",
+                "s3:GetObjectAcl",
+                "s3:GetObjectTagging",
+                "s3:ListAllMyBuckets",
+                "sts:DecodeAuthorizationMessage"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "ec2:CreateTags"
+            ],
+            "Resource": [
+                "arn:aws:ec2:*:*:instance/*",
+                "arn:aws:ec2:*:*:volume/*",
+                "arn:aws:ec2:*:*:vpc/*",
+                "arn:aws:ec2:*:*:subnet/*"
+            ],
+            "Condition": {
+                "StringEquals": {
+                    "ec2:CreateAction": [
+                        "RunInstances",
+                        "CreateVolume"
+                    ]
+                }
+            }
+        },
+        {
+            "Effect": "Allow",
+            "Action": "s3:ListBucket",
+            "Resource": [
+                "arn:aws:s3:::*image-registry*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": "ec2:RunInstances",
+            "Resource": [
+                "arn:aws:ec2:*::image/*",
+                "arn:aws:ec2:*:*:keypair/*",
+                "arn:aws:ec2:*:*:subnet/*",
+                "arn:aws:ec2:*:*:network-interface/*",
+                "arn:aws:ec2:*:*:security-group/*",
+                "arn:aws:ec2:*:*:snapshot/*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": "ec2:RunInstances",
+            "Resource": [
+                "arn:aws:ec2:*:*:instance/*",
+                "arn:aws:ec2:*:*:volume/*"
+            ],
+            "Condition": {
+                "StringEquals": {
+                    "aws:ResourceTag/red-hat-managed": "true"
+                }
+            }
+        },
+        {
+            "Effect": "Allow",
+            "Action": "ec2:SearchTransitGatewayRoutes",
+            "Resource": "arn:aws:ec2:*:*:transit-gateway-route-table/*",
+            "Condition": {
+                "StringEquals": {
+                    "aws:ResourceTag/red-hat-managed": "true"
+                }
+            }
+        },
+        {
+            "Effect": "Allow",
+            "Action": "ec2:StartNetworkInsightsAnalysis",
+            "Resource": "arn:aws:ec2:*:*:network-insights-analysis/*",
+            "Condition": {
+                "StringEquals": {
+                    "aws:RequestTag/red-hat-managed": "true"
+                }
+            }
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "ec2:RebootInstances",
+                "ec2:StartInstances",
+                "ec2:StopInstances",
+                "ec2:TerminateInstances"
+            ],
+            "Resource": "arn:aws:ec2:*:*:instance/*",
+            "Condition": {
+                "StringEquals": {
+                    "aws:ResourceTag/red-hat-managed": "true"
+                }
+            }
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "ec2:CopySnapshot",
+                "ec2:CreateSnapshot"
+            ],
+            "Resource": "arn:aws:ec2:*:*:snapshot/*",
+            "Condition": {
+                "StringEquals": {
+                    "aws:RequestTag/red-hat-managed": "true"
+                }
+            }
+        },
+        {
+            "Effect": "Allow",
+            "Action": "ec2:CreateSnapshots",
+            "Resource": "arn:aws:ec2:*:*:instance/*",
+            "Condition": {
+                "StringEquals": {
+                    "aws:ResourceTag/red-hat-managed": "true"
+                }
+            }
+        },
+        {
+            "Effect": "Allow",
+            "Action": "ec2:DescribeAddressesAttribute",
+            "Resource": "arn:aws:ec2:*:*:elastic-ip/*",
+            "Condition": {
+                "StringEquals": {
+                    "aws:ResourceTag/red-hat-managed": "true"
+                }
+            }
+        },
+        {
+            "Effect": "Allow",
+            "Action": "ec2:DescribeClientVpnAuthorizationRules",
+            "Resource": "arn:aws:ec2:*:*:client-vpn-endpoint/*",
+            "Condition": {
+                "StringEquals": {
+                    "aws:ResourceTag/red-hat-managed": "true"
+                }
+            }
+        },
+        {
+            "Effect": "Allow",
+            "Action": "ec2:DescribeClientVpnConnections",
+            "Resource": "arn:aws:ec2:*:*:client-vpn-endpoint/*",
+            "Condition": {
+                "StringEquals": {
+                    "aws:ResourceTag/red-hat-managed": "true"
+                }
+            }
+        },
+        {
+            "Effect": "Allow",
+            "Action": "ec2:DescribeClientVpnEndpoints",
+            "Resource": "arn:aws:ec2:*:*:client-vpn-endpoint/*",
+            "Condition": {
+                "StringEquals": {
+                    "aws:ResourceTag/red-hat-managed": "true"
+                }
+            }
+        },
+        {
+            "Effect": "Allow",
+            "Action": "ec2:DescribeClientVpnRoutes",
+            "Resource": "arn:aws:ec2:*:*:client-vpn-endpoint/*",
+            "Condition": {
+                "StringEquals": {
+                    "aws:ResourceTag/red-hat-managed": "true"
+                }
+            }
+        },
+        {
+            "Effect": "Allow",
+            "Action": "ec2:DescribeClientVpnTargetNetworks",
+            "Resource": "arn:aws:ec2:*:*:client-vpn-endpoint/*",
+            "Condition": {
+                "StringEquals": {
+                    "aws:ResourceTag/red-hat-managed": "true"
+                }
+            }
+        },
+        {
+            "Effect": "Allow",
+            "Action": "ec2:DescribeImageAttribute",
+            "Resource": "arn:aws:ec2:*:*:image/*",
+            "Condition": {
+                "StringEquals": {
+                    "aws:ResourceTag/red-hat-managed": "true"
+                }
+            }
+        },
+        {
+            "Effect": "Allow",
+            "Action": "ec2:DescribeInstanceAttribute",
+            "Resource": "arn:aws:ec2:*:*:instance/*",
+            "Condition": {
+                "StringEquals": {
+                    "aws:ResourceTag/red-hat-managed": "true"
+                }
+            }
+        },
+        {
+            "Effect": "Allow",
+            "Action": "ec2:DescribeSnapshotAttribute",
+            "Resource": "arn:aws:ec2:*:*:snapshot/*",
+            "Condition": {
+                "StringEquals": {
+                    "aws:ResourceTag/red-hat-managed": "true"
+                }
+            }
+        },
+        {
+            "Effect": "Allow",
+            "Action": "ec2:DescribeSpotFleetInstances",
+            "Resource": "arn:aws:ec2:*:*:spot-fleet-request/*",
+            "Condition": {
+                "StringEquals": {
+                    "aws:ResourceTag/red-hat-managed": "true"
+                }
+            }
+        },
+        {
+            "Effect": "Allow",
+            "Action": "ec2:DescribeVolumeAttribute",
+            "Resource": "arn:aws:ec2:*:*:volume/*",
+            "Condition": {
+                "StringEquals": {
+                    "aws:ResourceTag/red-hat-managed": "true"
+                }
+            }
+        },
+        {
+            "Effect": "Allow",
+            "Action": "ec2:DescribeVpcAttribute",
+            "Resource": "arn:aws:ec2:*:*:vpc/*",
+            "Condition": {
+                "StringEquals": {
+                    "aws:ResourceTag/red-hat-managed": "true"
+                }
+            }
+        },
+        {
+            "Effect": "Allow",
+            "Action": "ec2:GetConsoleOutput",
+            "Resource": "arn:aws:ec2:*:*:instance/*",
+            "Condition": {
+                "StringEquals": {
+                    "aws:ResourceTag/red-hat-managed": "true"
+                }
+            }
+        },
+        {
+            "Effect": "Allow",
+            "Action": "ec2:ModifyInstanceAttribute",
+            "Resource": "arn:aws:ec2:*:*:instance/*",
+            "Condition": {
+                "StringEquals": {
+                    "aws:ResourceTag/red-hat-managed": "true"
+                }
+            }
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "kms:CreateGrant"
+            ],
+            "Resource": "*",
+            "Condition": {
+                "Bool": {
+                    "kms:GrantIsForAWSResource": true
+                },
+                "StringLike": {
+                    "kms:ViaService": "ec2.*.amazonaws.com"
+                }
+            }
         }
-      }
-    },
-    {
-      "Effect": "Allow",
-      "Action": "s3:ListBucket",
-      "Resource": [
-        "arn:aws:s3:::*image-registry*"
-      ]
-    },
-    {
-      "Effect": "Allow",
-      "Action": "ec2:RunInstances",
-      "Resource": [
-        "arn:aws:ec2:*::image/*",
-        "arn:aws:ec2:*:*:keypair/*",
-        "arn:aws:ec2:*:*:subnet/*",
-        "arn:aws:ec2:*:*:network-interface/*",
-        "arn:aws:ec2:*:*:security-group/*",
-        "arn:aws:ec2:*:*:snapshot/*"
-      ]
-    },
-    {
-      "Effect": "Allow",
-      "Action": "ec2:RunInstances",
-      "Resource": [
-        "arn:aws:ec2:*:*:instance/*",
-        "arn:aws:ec2:*:*:volume/*"
-      ],
-      "Condition": {
-        "StringEquals": {
-          "aws:ResourceTag/red-hat-managed": "true"
-        }
-      }
-    },
-    {
-      "Effect": "Allow",
-      "Action": "ec2:SearchTransitGatewayRoutes",
-      "Resource": "arn:aws:ec2:*:*:transit-gateway-route-table/*",
-      "Condition": {
-        "StringEquals": {
-          "aws:ResourceTag/red-hat-managed": "true"
-        }
-      }
-    },
-    {
-      "Effect": "Allow",
-      "Action": "ec2:StartNetworkInsightsAnalysis",
-      "Resource": "arn:aws:ec2:*:*:network-insights-analysis/*",
-      "Condition": {
-        "StringEquals": {
-          "aws:RequestTag/red-hat-managed": "true"
-        }
-      }
-    },
-    {
-      "Effect": "Allow",
-      "Action": [
-        "ec2:RebootInstances",
-        "ec2:StartInstances",
-        "ec2:StopInstances",
-        "ec2:TerminateInstances"
-      ],
-      "Resource": "arn:aws:ec2:*:*:instance/*",
-      "Condition": {
-        "StringEquals": {
-          "aws:ResourceTag/red-hat-managed": "true"
-        }
-      }
-    },
-    {
-      "Effect": "Allow",
-      "Action": [
-        "ec2:CopySnapshot",
-        "ec2:CreateSnapshot"
-      ],
-      "Resource": "arn:aws:ec2:*:*:snapshot/*",
-      "Condition": {
-        "StringEquals": {
-          "aws:RequestTag/red-hat-managed": "true"
-        }
-      }
-    },
-    {
-      "Effect": "Allow",
-      "Action": "ec2:CreateSnapshots",
-      "Resource": "arn:aws:ec2:*:*:instance/*",
-      "Condition": {
-        "StringEquals": {
-          "aws:ResourceTag/red-hat-managed": "true"
-        }
-      }
-    },
-    {
-      "Effect": "Allow",
-      "Action": "ec2:DescribeAddressesAttribute",
-      "Resource": "arn:aws:ec2:*:*:elastic-ip/*",
-      "Condition": {
-        "StringEquals": {
-          "aws:ResourceTag/red-hat-managed": "true"
-        }
-      }
-    },
-    {
-      "Effect": "Allow",
-      "Action": "ec2:DescribeClientVpnAuthorizationRules",
-      "Resource": "arn:aws:ec2:*:*:client-vpn-endpoint/*",
-      "Condition": {
-        "StringEquals": {
-          "aws:ResourceTag/red-hat-managed": "true"
-        }
-      }
-    },
-    {
-      "Effect": "Allow",
-      "Action": "ec2:DescribeClientVpnConnections",
-      "Resource": "arn:aws:ec2:*:*:client-vpn-endpoint/*",
-      "Condition": {
-        "StringEquals": {
-          "aws:ResourceTag/red-hat-managed": "true"
-        }
-      }
-    },
-    {
-      "Effect": "Allow",
-      "Action": "ec2:DescribeClientVpnEndpoints",
-      "Resource": "arn:aws:ec2:*:*:client-vpn-endpoint/*",
-      "Condition": {
-        "StringEquals": {
-          "aws:ResourceTag/red-hat-managed": "true"
-        }
-      }
-    },
-    {
-      "Effect": "Allow",
-      "Action": "ec2:DescribeClientVpnRoutes",
-      "Resource": "arn:aws:ec2:*:*:client-vpn-endpoint/*",
-      "Condition": {
-        "StringEquals": {
-          "aws:ResourceTag/red-hat-managed": "true"
-        }
-      }
-    },
-    {
-      "Effect": "Allow",
-      "Action": "ec2:DescribeClientVpnTargetNetworks",
-      "Resource": "arn:aws:ec2:*:*:client-vpn-endpoint/*",
-      "Condition": {
-        "StringEquals": {
-          "aws:ResourceTag/red-hat-managed": "true"
-        }
-      }
-    },
-    {
-      "Effect": "Allow",
-      "Action": "ec2:DescribeImageAttribute",
-      "Resource": "arn:aws:ec2:*:*:image/*",
-      "Condition": {
-        "StringEquals": {
-          "aws:ResourceTag/red-hat-managed": "true"
-        }
-      }
-    },
-    {
-      "Effect": "Allow",
-      "Action": "ec2:DescribeInstanceAttribute",
-      "Resource": "arn:aws:ec2:*:*:instance/*",
-      "Condition": {
-        "StringEquals": {
-          "aws:ResourceTag/red-hat-managed": "true"
-        }
-      }
-    },
-    {
-      "Effect": "Allow",
-      "Action": "ec2:DescribeSnapshotAttribute",
-      "Resource": "arn:aws:ec2:*:*:snapshot/*",
-      "Condition": {
-        "StringEquals": {
-          "aws:ResourceTag/red-hat-managed": "true"
-        }
-      }
-    },
-    {
-      "Effect": "Allow",
-      "Action": "ec2:DescribeSpotFleetInstances",
-      "Resource": "arn:aws:ec2:*:*:spot-fleet-request/*",
-      "Condition": {
-        "StringEquals": {
-          "aws:ResourceTag/red-hat-managed": "true"
-        }
-      }
-    },
-    {
-      "Effect": "Allow",
-      "Action": "ec2:DescribeVolumeAttribute",
-      "Resource": "arn:aws:ec2:*:*:volume/*",
-      "Condition": {
-        "StringEquals": {
-          "aws:ResourceTag/red-hat-managed": "true"
-        }
-      }
-    },
-    {
-      "Effect": "Allow",
-      "Action": "ec2:DescribeVpcAttribute",
-      "Resource": "arn:aws:ec2:*:*:vpc/*",
-      "Condition": {
-        "StringEquals": {
-          "aws:ResourceTag/red-hat-managed": "true"
-        }
-      }
-    },
-    {
-      "Effect": "Allow",
-      "Action": "ec2:GetConsoleOutput",
-      "Resource": "arn:aws:ec2:*:*:instance/*",
-      "Condition": {
-        "StringEquals": {
-          "aws:ResourceTag/red-hat-managed": "true"
-        }
-      }
-    },
-    {
-      "Effect": "Allow",
-      "Action": "ec2:ModifyInstanceAttribute",
-      "Resource": "arn:aws:ec2:*:*:instance/*",
-      "Condition": {
-        "StringEquals": {
-          "aws:ResourceTag/red-hat-managed": "true"
-        }
-      }
-    },
-    {
-      "Effect": "Allow",
-      "Action": [
-          "kms:CreateGrant"
-      ],
-      "Resource": "*",
-      "Condition": {
-          "Bool": {
-              "kms:GrantIsForAWSResource": true
-          },
-          "StringLike": {
-              "kms:ViaService": "ec2.*.amazonaws.com"
-          }
-      }
-    }
-  ]
+    ]
 }
