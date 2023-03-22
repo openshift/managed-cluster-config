@@ -26,6 +26,7 @@ directories = [
         'hs-hosted-route-monitor-operator',
         'hs-mgmt-route-monitor-operator',
         'osd-cluster-admin',
+        'osd-customer-monitoring',
         'osd-delete-backplane-script-resources',
         'osd-delete-backplane-serviceaccounts',
         'osd-backplane-managed-scripts',
