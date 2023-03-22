@@ -1,0 +1,25 @@
+apiVersion: hive.openshift.io/v1
+kind: SelectorSyncSet
+metadata:
+  labels:
+    managed.openshift.io/gitHash: ${IMAGE_TAG}
+    managed.openshift.io/gitRepoName: ${REPO_NAME}
+    managed.openshift.io/osd: 'true'
+  name: osd-console-branding
+spec:
+  clusterDeploymentSelector:
+    matchLabels:
+      api.openshift.com/managed: 'true'
+    matchExpressions:
+    - key: api.openshift.com/product
+      operator: NotIn
+      values:
+      - rosa
+  resourceApplyMode: Sync
+  patches:
+  - apiVersion: operator.openshift.io/v1
+    applyMode: AlwaysApply
+    kind: Console
+    name: cluster
+    patchType: merge
+    patch: '{"spec":{"managementState":"Managed","route":null,"customization":{"brand":"dedicated","documentationBaseURL":"https://docs.openshift.com/dedicated/4/","customProductName":null,"customLogoFile":null}}}'

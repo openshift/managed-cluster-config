@@ -1,0 +1,107 @@
+apiVersion: hive.openshift.io/v1
+kind: SelectorSyncSet
+metadata:
+  labels:
+    managed.openshift.io/gitHash: ${IMAGE_TAG}
+    managed.openshift.io/gitRepoName: ${REPO_NAME}
+    managed.openshift.io/osd: 'true'
+  name: backplane-cssre-addon-managed-kafka-qe
+spec:
+  clusterDeploymentSelector:
+    matchLabels:
+      api.openshift.com/managed: 'true'
+      api.openshift.com/addon-managed-kafka-qe: 'true'
+  resourceApplyMode: Sync
+  resources:
+  - apiVersion: v1
+    kind: Namespace
+    metadata:
+      name: openshift-backplane-cssre
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRole
+    metadata:
+      name: backplane-cssre-admins-cluster
+    aggregationRule:
+      clusterRoleSelectors:
+      - matchExpressions:
+        - key: managed.openshift.io/aggregate-to-cssre-admins
+          operator: In
+          values:
+          - cluster
+    rules: []
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: Role
+    metadata:
+      name: backplane-cssre
+      namespace: openshift-monitoring
+    rules:
+    - apiGroups:
+      - ''
+      resources:
+      - pods/portforward
+      verbs:
+      - create
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: RoleBinding
+    metadata:
+      name: backplane-cssre
+      namespace: openshift-monitoring
+    subjects:
+    - apiGroup: rbac.authorization.k8s.io
+      kind: Group
+      name: system:serviceaccounts:openshift-backplane-cssre
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: Role
+      name: backplane-cssre
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: Role
+    metadata:
+      name: backplane-cssre-mustgather
+      namespace: openshift-must-gather-operator
+    rules:
+    - apiGroups:
+      - ''
+      resources:
+      - secrets
+      verbs:
+      - create
+      - list
+      - get
+    - apiGroups:
+      - managed.openshift.io
+      resources:
+      - mustgathers
+      verbs:
+      - create
+      - list
+      - get
+      - delete
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: RoleBinding
+    metadata:
+      name: backplane-cssre-mustgather
+      namespace: openshift-must-gather-operator
+    subjects:
+    - apiGroup: rbac.authorization.k8s.io
+      kind: Group
+      name: system:serviceaccounts:openshift-backplane-cssre
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: Role
+      name: backplane-cssre-mustgather
+  - apiVersion: managed.openshift.io/v1alpha1
+    kind: SubjectPermission
+    metadata:
+      name: backplane-cssre
+      namespace: openshift-rbac-permissions
+    spec:
+      clusterPermissions:
+      - backplane-cssre-admins-cluster
+      - backplane-readers-cluster
+      permissions:
+      - clusterRoleName: dedicated-readers
+        namespacesAllowedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
+        namespacesDeniedRegex: openshift-backplane-cluster-admin
+      subjectKind: Group
+      subjectName: system:serviceaccounts:openshift-backplane-cssre

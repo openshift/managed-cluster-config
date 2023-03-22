@@ -1,0 +1,212 @@
+apiVersion: hive.openshift.io/v1
+kind: SelectorSyncSet
+metadata:
+  labels:
+    managed.openshift.io/gitHash: ${IMAGE_TAG}
+    managed.openshift.io/gitRepoName: ${REPO_NAME}
+    managed.openshift.io/osd: 'true'
+  name: sre-build-test
+spec:
+  clusterDeploymentSelector:
+    matchLabels:
+      api.openshift.com/managed: 'true'
+  resourceApplyMode: Sync
+  resources:
+  - apiVersion: v1
+    kind: Namespace
+    metadata:
+      name: openshift-build-test
+      labels:
+        openshift.io/cluster-monitoring: 'true'
+  - apiVersion: v1
+    kind: ServiceAccount
+    metadata:
+      name: sre-build-test
+      namespace: openshift-build-test
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRole
+    metadata:
+      name: sre-build-test
+    rules:
+    - apiGroups:
+      - ''
+      resources:
+      - namespaces
+      verbs:
+      - create
+      - delete
+      - get
+      - list
+      - watch
+    - apiGroups:
+      - ''
+      resources:
+      - serviceaccounts
+      verbs:
+      - get
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRoleBinding
+    metadata:
+      name: sre-build-test
+    roleRef:
+      kind: ClusterRole
+      name: sre-build-test
+      apiGroup: rbac.authorization.k8s.io
+    subjects:
+    - kind: ServiceAccount
+      name: sre-build-test
+      namespace: openshift-build-test
+  - apiVersion: managed.openshift.io/v1alpha1
+    kind: SubjectPermission
+    metadata:
+      name: sre-build-test
+      namespace: openshift-rbac-permissions
+    spec:
+      permissions:
+      - clusterRoleName: admin
+        namespacesAllowedRegex: ^openshift-build-test-.*$
+      subjectKind: User
+      subjectName: system:serviceaccount:openshift-build-test:sre-build-test
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: RoleBinding
+    metadata:
+      name: sre-build-test
+      namespace: openshift-build-test
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: Role
+      name: sre-build-test
+    subjects:
+    - kind: ServiceAccount
+      name: sre-build-test
+      namespace: openshift-build-test
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: Role
+    metadata:
+      name: sre-build-test
+      namespace: openshift-build-test
+    rules:
+    - apiGroups:
+      - batch
+      resources:
+      - jobs
+      verbs:
+      - list
+      - delete
+  - apiVersion: batch/v1
+    kind: CronJob
+    metadata:
+      name: sre-build-test
+      namespace: openshift-build-test
+    spec:
+      failedJobsHistoryLimit: 5
+      successfulJobsHistoryLimit: 3
+      concurrencyPolicy: Forbid
+      schedule: 11 * * * *
+      jobTemplate:
+        spec:
+          activeDeadlineSeconds: 900
+          ttlSecondsAfterFinished: 86400
+          template:
+            spec:
+              affinity:
+                nodeAffinity:
+                  requiredDuringSchedulingIgnoredDuringExecution:
+                    nodeSelectorTerms:
+                    - matchExpressions:
+                      - key: node-role.kubernetes.io/infra
+                        operator: Exists
+              tolerations:
+              - operator: Exists
+                key: node-role.kubernetes.io/infra
+                effect: NoSchedule
+              serviceAccountName: sre-build-test
+              restartPolicy: Never
+              containers:
+              - name: sre-build-test
+                image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+                imagePullPolicy: Always
+                env:
+                - name: POD_NAME
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.name
+                - name: POD_NS
+                  valueFrom:
+                    fieldRef:
+                      fieldPath: metadata.namespace
+                command:
+                - /bin/bash
+                - -c
+                - "# ensure we fail if something exits non-zero\nset -o errexit\n\
+                  set -o nounset\n\n# set NS to include job name, to ease linking\
+                  \ namespace to a specific job\nJOB_PREFIX=sre-build-test\nNS=\"\
+                  ${POD_NS}-${POD_NAME##${JOB_PREFIX}-}\"\nJOB_NAME=$(echo \"${POD_NAME}\"\
+                  \ | rev | cut -d- -f2- | rev)\n\n# cleanup traps on exiting, so\
+                  \ these always run\ncleanup () {\n  echo \"$(date): Done, deleting\
+                  \ build NS=$NS\"\n  oc delete ns \"${NS}\" --wait=false\n}\ntrap\
+                  \ \"cleanup\" EXIT SIGINT\n\n# create ns\noc create -f - <<EOF\n\
+                  apiVersion: v1\nkind: Namespace\nmetadata:\n  name: \"${NS}\"\n\
+                  \  managed.openshift.io/sre-build-test: \"${JOB_NAME}\"\nEOF\n\n\
+                  # wait for serviceaccount to be created\nuntil oc -n \"${NS}\" get\
+                  \ serviceaccounts default >/dev/null; do\n  echo \"$(date): Waiting\
+                  \ for service account to be created\"\n  sleep 5\ndone\n\n# wait\
+                  \ for rolebindings needed for build to be created\n until (oc -n\
+                  \ \"${NS}\" get rolebindings system:deployers >/dev/null) && (oc\
+                  \ -n \"${NS}\" get rolebindings system:image-builders >/dev/null)\
+                  \ && (oc -n \"${NS}\" get rolebindings system:image-pullers >/dev/null);\
+                  \ do\n   echo \"$(date): Waiting for rolebindings to be created\"\
+                  \n   sleep 5\n done\n\n# run build\noc -n \"${NS}\" new-build --name=\"\
+                  ${JOB_PREFIX}\" --binary --strategy source --docker-image registry.redhat.io/ubi8/go-toolset:1.17.7-13\n\
+                  mkdir -p /tmp/build\ncat <<EOF > /tmp/build/go.mod\nmodule openshift/managed-cluster-config/sre-build-test\n\
+                  \ngo 1.17\nEOF\ncat <<EOF > /tmp/build/main.go\npackage main\nimport\
+                  \ (\n       \"fmt\"\n)\n\nfunc main() {\n        fmt.Println(\"\
+                  Hello Openshift SRE :)\")\n}\nEOF\n\nwhile ! oc -n \"${NS}\" start-build\
+                  \ \"${JOB_PREFIX}\" --from-dir=/tmp/build\ndo\n  echo \"Failed to\
+                  \ start build, retrying in 15 seconds.\"\n  sleep 15s\ndone\n\n\
+                  echo \"$(date): Waiting for build to complete.\"\nwhile :\ndo\n\
+                  \  ST=$(oc -n \"${NS}\" get build -o custom-columns=STATUS:.status.phase\
+                  \ --sort-by=.status.startTimestamp --no-headers | tail -1)\n  case\
+                  \ ${ST} in\n    \"\")\n      # if build status is blank, assume\
+                  \ we are still starting the build\n      ST=\"Starting\"\n     \
+                  \ ;;\n    Failed)\n      echo \"$(date): Build Failed\" >&2\n  \
+                  \    oc logs -n \"${NS}\" -c build \"${JOB_PREFIX}\"\n      exit\
+                  \ 1\n      ;;\n    Cancelled)\n      echo \"$(date): Build was Cancelled\"\
+                  \ >&2\n      oc logs -n \"${NS}\" -c build \"${JOB_PREFIX}\"\n \
+                  \     exit 1\n      ;;\n    Complete)\n      echo \"$(date): Build\
+                  \ Complete\"\n      JOBS_TO_DELETE=$(oc get jobs -n \"${POD_NS}\"\
+                  \ --sort-by=.status.startTime -o custom-columns=\":metadata.name\"\
+                  \ --no-headers|head -n -1)\n      if [[ -n \"${JOBS_TO_DELETE}\"\
+                  \ ]] ; then\n        echo \"$(date): Selected jobs for deletion:\
+                  \ ${JOBS_TO_DELETE}\"\n        echo \"${JOBS_TO_DELETE}\" | xargs\
+                  \ oc -n \"${POD_NS}\" delete job --ignore-not-found --wait=false\n\
+                  \      fi\n\n      # clean up any old namespaces, other than the\
+                  \ current one\n      echo \"$(date): Cleaning up old namespaces\"\
+                  \n      oc delete ns -l \"managed.openshift.io/sre-build-test,kubernetes.io/metadata.name!=${NS}\"\
+                  \ --ignore-not-found --wait=false\n      break\n      ;;\n  esac\n\
+                  \  echo \"$(date): Build is ${ST}; checking build again in 15 seconds,\
+                  \ NS=${NS}\"\n  sleep 15\ndone\nexit 0\n"
+  - apiVersion: monitoring.coreos.com/v1
+    kind: PrometheusRule
+    metadata:
+      labels:
+        prometheus: sre-alerts-stuck-builds
+        role: alert-rules
+      name: sre-alerts-stuck-builds
+      namespace: openshift-monitoring
+    spec:
+      groups:
+      - name: sre-alerts-stuck-builds
+        rules:
+        - alert: StuckNewBuilds3MinSRE
+          expr: count(openshift_build_active_time_seconds{phase="New",exported_namespace=~"^openshift-build-test.*"}
+            < time() - 180) > 0
+          labels:
+            severity: warning
+            namespace: openshift-monitoring
+        - alert: StuckPendingBuilds3MinSRE
+          expr: count(openshift_build_active_time_seconds{phase="Pending",exported_namespace=~"^openshift-build-test.*"}
+            < time() - 180) > 0
+          labels:
+            severity: warning
+            namespace: openshift-monitoring

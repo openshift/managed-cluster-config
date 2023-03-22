@@ -1,0 +1,140 @@
+apiVersion: hive.openshift.io/v1
+kind: SelectorSyncSet
+metadata:
+  labels:
+    managed.openshift.io/gitHash: ${IMAGE_TAG}
+    managed.openshift.io/gitRepoName: ${REPO_NAME}
+    managed.openshift.io/osd: 'true'
+  name: osd-machine-api
+spec:
+  clusterDeploymentSelector:
+    matchLabels:
+      api.openshift.com/managed: 'true'
+  resourceApplyMode: Sync
+  resources:
+  - apiVersion: machine.openshift.io/v1beta1
+    kind: MachineHealthCheck
+    metadata:
+      name: srep-infra-healthcheck
+      namespace: openshift-machine-api
+    spec:
+      selector:
+        matchExpressions:
+        - key: machine.openshift.io/cluster-api-machine-role
+          operator: In
+          values:
+          - infra
+        - key: machine.openshift.io/cluster-api-machineset
+          operator: Exists
+      unhealthyConditions:
+      - type: Ready
+        timeout: 480s
+        status: 'False'
+      - type: Ready
+        timeout: 480s
+        status: Unknown
+      maxUnhealthy: 2
+  - apiVersion: machine.openshift.io/v1beta1
+    kind: MachineHealthCheck
+    metadata:
+      name: srep-worker-healthcheck
+      namespace: openshift-machine-api
+    spec:
+      selector:
+        matchExpressions:
+        - key: machine.openshift.io/cluster-api-machine-role
+          operator: NotIn
+          values:
+          - infra
+          - master
+        - key: machine.openshift.io/cluster-api-machineset
+          operator: Exists
+        - key: machine.openshift.io/instance-type
+          operator: NotIn
+          values:
+          - m5.metal
+          - m5d.metal
+          - m5n.metal
+          - m5dn.metal
+          - m5zn.metal
+          - m6a.metal
+          - m6i.metal
+          - m6id.metal
+          - r5.metal
+          - r5d.metal
+          - r5n.metal
+          - r5dn.metal
+          - r6a.metal
+          - r6i.metal
+          - r6id.metal
+          - x2iezn.metal
+          - z1d.metal
+          - c5.metal
+          - c5d.metal
+          - c5n.metal
+          - c6a.metal
+          - c6i.metal
+          - c6id.metal
+          - i3.metal
+          - i3en.metal
+      unhealthyConditions:
+      - type: Ready
+        timeout: 480s
+        status: 'False'
+      - type: Ready
+        timeout: 480s
+        status: Unknown
+      maxUnhealthy: 3
+      nodeStartupTimeout: 25m
+  - apiVersion: machine.openshift.io/v1beta1
+    kind: MachineHealthCheck
+    metadata:
+      name: srep-metal-worker-healthcheck
+      namespace: openshift-machine-api
+    spec:
+      selector:
+        matchExpressions:
+        - key: machine.openshift.io/cluster-api-machine-role
+          operator: NotIn
+          values:
+          - infra
+          - master
+        - key: machine.openshift.io/cluster-api-machineset
+          operator: Exists
+        - key: machine.openshift.io/instance-type
+          operator: In
+          values:
+          - m5.metal
+          - m5d.metal
+          - m5n.metal
+          - m5dn.metal
+          - m5zn.metal
+          - m6a.metal
+          - m6i.metal
+          - m6id.metal
+          - r5.metal
+          - r5d.metal
+          - r5n.metal
+          - r5dn.metal
+          - r6a.metal
+          - r6i.metal
+          - r6id.metal
+          - x2iezn.metal
+          - z1d.metal
+          - c5.metal
+          - c5d.metal
+          - c5n.metal
+          - c6a.metal
+          - c6i.metal
+          - c6id.metal
+          - i3.metal
+          - i3en.metal
+      unhealthyConditions:
+      - type: Ready
+        timeout: 8m
+        status: 'False'
+      - type: Ready
+        timeout: 15m
+        status: Unknown
+      maxUnhealthy: 3
+      nodeStartupTimeout: 40m

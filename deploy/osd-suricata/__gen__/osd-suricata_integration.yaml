@@ -1,0 +1,130 @@
+apiVersion: hive.openshift.io/v1
+kind: SelectorSyncSet
+metadata:
+  labels:
+    managed.openshift.io/gitHash: ${IMAGE_TAG}
+    managed.openshift.io/gitRepoName: ${REPO_NAME}
+    managed.openshift.io/osd: 'true'
+  name: osd-suricata
+spec:
+  clusterDeploymentSelector:
+    matchLabels:
+      api.openshift.com/managed: 'true'
+    matchExpressions:
+    - key: api.openshift.com/fedramp
+      operator: In
+      values:
+      - 'true'
+  resourceApplyMode: Sync
+  resources:
+  - apiVersion: v1
+    kind: Namespace
+    metadata:
+      name: openshift-suricata
+  - kind: SecurityContextConstraints
+    apiVersion: security.openshift.io/v1
+    metadata:
+      name: osd-suricata-scc
+    allowPrivilegedContainer: true
+    allowHostNetwork: true
+    allowedCapabilities:
+    - NET_ADMIN
+    - NET_RAW
+    runAsUser:
+      type: RunAsAny
+    seLinuxContext:
+      type: RunAsAny
+  - apiVersion: v1
+    kind: ServiceAccount
+    metadata:
+      name: suricata-sa
+      namespace: openshift-suricata
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: Role
+    metadata:
+      creationTimestamp: null
+      name: suricata-role
+      namespace: openshift-suricata
+    rules:
+    - apiGroups:
+      - security.openshift.io
+      resources:
+      - securitycontextconstraints
+      verbs:
+      - create
+      - get
+      - update
+      - use
+    - apiGroups:
+      - security.openshift.io
+      resourceNames:
+      - privileged
+      resources:
+      - securitycontextconstraints
+      verbs:
+      - create
+      - get
+      - update
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: RoleBinding
+    metadata:
+      name: suricata-rolebinding
+      namespace: openshift-suricata
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: Role
+      name: suricata-role
+    subjects:
+    - kind: ServiceAccount
+      name: suricata-sa
+      namespace: openshift-suricata
+  - apiVersion: apps/v1
+    kind: DaemonSet
+    metadata:
+      name: suricata
+      namespace: openshift-suricata
+    spec:
+      selector:
+        matchLabels:
+          name: suricata
+      template:
+        metadata:
+          labels:
+            name: suricata
+        spec:
+          containers:
+          - env:
+            - name: OO_PAUSE_ON_START
+              value: 'false'
+            image: quay.io/app-sre/suricata@sha256:f20d62e34c37b4761d5625594a5adf1c62bc44452e74d31d989a1cbd13c01962
+            imagePullPolicy: IfNotPresent
+            name: suricata
+            resources:
+              limits:
+                cpu: 900m
+                memory: 900Mi
+              requests:
+                cpu: 100m
+                memory: 50Mi
+            securityContext:
+              privileged: true
+              runAsUser: 0
+            volumeMounts:
+            - mountPath: /host/
+              name: host-filesystem
+          - name: log-cleaner
+            image: quay.io/app-sre/log-cleaner@sha256:11ad54f9bcdcb551839974aa3bde2b2404a168b407358b81bd4164a89242d53c
+            volumeMounts:
+            - mountPath: /host/
+              name: host-filesystem
+          dnsPolicy: ClusterFirst
+          hostNetwork: true
+          nodeSelector:
+            kubernetes.io/os: linux
+          serviceAccountName: suricata-sa
+          tolerations:
+          - operator: Exists
+          volumes:
+          - hostPath:
+              path: /
+            name: host-filesystem

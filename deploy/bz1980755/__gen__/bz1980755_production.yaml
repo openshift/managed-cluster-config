@@ -1,0 +1,133 @@
+apiVersion: hive.openshift.io/v1
+kind: SelectorSyncSet
+metadata:
+  labels:
+    managed.openshift.io/gitHash: ${IMAGE_TAG}
+    managed.openshift.io/gitRepoName: ${REPO_NAME}
+    managed.openshift.io/osd: 'true'
+  name: bz1980755
+spec:
+  clusterDeploymentSelector:
+    matchLabels:
+      api.openshift.com/managed: 'true'
+    matchExpressions:
+    - key: api.openshift.com/environment
+      operator: In
+      values:
+      - staging
+      - integration
+    - key: api.openshift.com/fedramp
+      operator: NotIn
+      values:
+      - 'true'
+  resourceApplyMode: Sync
+  resources:
+  - apiVersion: v1
+    kind: ServiceAccount
+    metadata:
+      name: bz1980755
+      namespace: openshift-sre-pruning
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRole
+    metadata:
+      name: bz1980755
+    rules:
+    - apiGroups:
+      - operators.coreos.com
+      resources:
+      - clusterserviceversions
+      - installplans
+      - subscriptions
+      verbs:
+      - '*'
+    - apiGroups:
+      - ''
+      resources:
+      - namespaces
+      verbs:
+      - get
+      - list
+    - apiGroups:
+      - ''
+      resources:
+      - pods
+      verbs:
+      - get
+      - list
+      - delete
+  - kind: ClusterRoleBinding
+    apiVersion: rbac.authorization.k8s.io/v1
+    metadata:
+      name: bz1980755
+    subjects:
+    - kind: ServiceAccount
+      name: bz1980755
+      namespace: openshift-sre-pruning
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: bz1980755
+  - apiVersion: batch/v1
+    kind: CronJob
+    metadata:
+      name: bz1980755
+      namespace: openshift-sre-pruning
+    spec:
+      failedJobsHistoryLimit: 3
+      successfulJobsHistoryLimit: 3
+      concurrencyPolicy: Replace
+      schedule: 25 3 * * *
+      jobTemplate:
+        spec:
+          ttlSecondsAfterFinished: 86400
+          template:
+            spec:
+              affinity:
+                nodeAffinity:
+                  preferredDuringSchedulingIgnoredDuringExecution:
+                  - preference:
+                      matchExpressions:
+                      - key: node-role.kubernetes.io/infra
+                        operator: Exists
+                    weight: 1
+              tolerations:
+              - effect: NoSchedule
+                key: node-role.kubernetes.io/infra
+                operator: Exists
+              serviceAccountName: bz1980755
+              restartPolicy: Never
+              containers:
+              - name: bz1980755
+                image: image-registry.openshift-image-registry.svc:5000/openshift/tools:latest
+                imagePullPolicy: Always
+                args:
+                - /bin/bash
+                - -c
+                - "set -e\nset -o nounset\nset -o pipefail\n\nTEMPDIR=$(mktemp -d)\n\
+                  \necho \"Checking for impacted subscriptions..\"\nIMPACTED_SUBS=$(oc\
+                  \ get sub -A -l 'hive.openshift.io/managed=true' -o json | jq -r\
+                  \ '.items[] | select(.status.conditions[].reason == \"ConstraintsNotSatisfiable\"\
+                  ) | \"\\(.metadata.namespace),\\(.metadata.name)\"')\n\nif [[ -z\
+                  \ \"${IMPACTED_SUBS}\" ]]; then\n   echo \"No impacted subscriptions\
+                  \ found.\"\n   exit 0\nfi\n\nwhile read subAndNS; do\n\n    ns=$(echo\
+                  \ \"${subAndNS}\" | cut -d, -f 1)\n    sub=$(echo \"${subAndNS}\"\
+                  \ | cut -d, -f 2)\n\n    if [[ -z \"${ns}\" || -z \"${sub}\" ]];\
+                  \ then\n        continue\n    fi\n\n    echo \"Will re-install subscription\
+                  \ ${ns}/${sub}\"\n    oc get subscriptions.operators.coreos.com\
+                  \ -n \"${ns}\" \"${sub}\" -ojson | grep -v \"kubectl.kubernetes.io/last-applied-configuration\"\
+                  \ > ${TEMPDIR}/${sub}.yaml\n\n    for ip in `oc get installplans.operators.coreos.com\
+                  \ -n \"${ns}\" -o jsonpath=\"{.items[?(@.metadata.ownerReferences[*].name=='${sub}')].metadata.name}\"\
+                  `; do\n        echo \"Removing installplan ${ip}\"\n        oc delete\
+                  \ installplans.operators.coreos.com -n \"${ns}\" $ip\n    done\n\
+                  \n    for csv in `oc get clusterserviceversions.operators.coreos.com\
+                  \ -n \"${ns}\" -o jsonpath=\"{.items[*].metadata.name}\"`; do\n\
+                  \        if [[ \"${csv}\" =~ ^${sub}.* || \"openshift-${csv}\" =~\
+                  \ ^${sub}.* ]]; then\n            echo \"Removing CSV ${csv}\"\n\
+                  \            oc delete clusterserviceversions.operators.coreos.com\
+                  \ -n \"${ns}\" \"${csv}\"\n        fi\n    done\n\n    echo \"Removing\
+                  \ subscription ${sub}\"\n    oc delete subscriptions.operators.coreos.com\
+                  \  -n \"${ns}\" \"${sub}\"\n\n    echo \"Restarting catalog-operator\
+                  \ to clear cache\"\n    oc delete pod -n openshift-operator-lifecycle-manager\
+                  \ -l app=catalog-operator --wait=true\n\n    echo \"Recreating subscription\
+                  \ ${sub}\"\n    oc create -f ${TEMPDIR}/${sub}.yaml\n\ndone <<<\
+                  \ \"${IMPACTED_SUBS}\"\n"

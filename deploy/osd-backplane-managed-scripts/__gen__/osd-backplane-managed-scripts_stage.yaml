@@ -1,0 +1,41 @@
+apiVersion: hive.openshift.io/v1
+kind: SelectorSyncSet
+metadata:
+  labels:
+    managed.openshift.io/gitHash: ${IMAGE_TAG}
+    managed.openshift.io/gitRepoName: ${REPO_NAME}
+    managed.openshift.io/osd: 'true'
+  name: osd-backplane-managed-scripts
+spec:
+  clusterDeploymentSelector:
+    matchLabels:
+      api.openshift.com/managed: 'true'
+  resourceApplyMode: Sync
+  resources:
+  - apiVersion: v1
+    kind: Namespace
+    metadata:
+      name: openshift-backplane-managed-scripts
+  - apiVersion: rbac.authorization.k8s.io/v1
+    aggregationRule:
+      clusterRoleSelectors:
+      - matchExpressions:
+        - key: rbac.authorization.k8s.io/aggregate-to-view
+          operator: In
+          values:
+          - 'true'
+    kind: ClusterRole
+    metadata:
+      name: openshift-backplane-managed-scripts-reader
+    rules: []
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRoleBinding
+    metadata:
+      name: openshift-backplane-managed-scripts-reader
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: openshift-backplane-managed-scripts-reader
+    subjects:
+    - kind: Group
+      name: system:serviceaccounts:openshift-backplane-managed-scripts

@@ -1,0 +1,131 @@
+apiVersion: hive.openshift.io/v1
+kind: SelectorSyncSet
+metadata:
+  labels:
+    managed.openshift.io/gitHash: ${IMAGE_TAG}
+    managed.openshift.io/gitRepoName: ${REPO_NAME}
+    managed.openshift.io/osd: 'true'
+  name: backplane-lpsre-ocs-consumer
+spec:
+  clusterDeploymentSelector:
+    matchLabels:
+      api.openshift.com/managed: 'true'
+      api.openshift.com/addon-ocs-consumer: 'true'
+  resourceApplyMode: Sync
+  resources:
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRole
+    metadata:
+      name: backplane-ocs-consumer-cr-admins
+    rules:
+    - apiGroups:
+      - odf.openshift.io
+      resources:
+      - storagesystems
+      verbs:
+      - get
+      - list
+      - watch
+      - patch
+      - update
+    - apiGroups:
+      - ocs.openshift.io
+      resources:
+      - storageclassclaims
+      - storageconsumers
+      verbs:
+      - get
+      - list
+      - watch
+      - patch
+      - update
+    - apiGroups:
+      - noobaa.io
+      resources:
+      - noobaaaccounts
+      verbs:
+      - get
+      - list
+      - watch
+      - patch
+      - update
+    - apiGroups:
+      - ceph.rook.io
+      resources:
+      - cephbucketnotifications
+      - cephbuckettopics
+      - cephfilesystemsubvolumegroups
+      verbs:
+      - get
+      - list
+      - watch
+      - patch
+      - update
+    - apiGroups:
+      - csiaddons.openshift.io
+      resources:
+      - csiaddonsnodes
+      - networkfences
+      - reclaimspacecronjobs
+      - reclaimspacejobs
+      verbs:
+      - get
+      - list
+      - watch
+      - patch
+      - update
+    - apiGroups:
+      - operators.coreos.com
+      resources:
+      - clusterserviceversions
+      - installplans
+      - subscriptions
+      verbs:
+      - get
+      - list
+      - watch
+      - patch
+      - update
+      - delete
+    - apiGroups:
+      - monitoring.coreos.com
+      resources:
+      - alertmanagers
+      - alertmanagerconfigs
+      - prometheuses
+      - prometheusrules
+      - servicemonitors
+      - podmonitors
+      verbs:
+      - get
+      - list
+      - watch
+      - patch
+      - update
+      - delete
+    - apiGroups:
+      - network.openshift.io
+      resources:
+      - egressnetworkpolicies
+      verbs:
+      - get
+      - list
+      - watch
+      - patch
+      - update
+      - delete
+  - apiVersion: managed.openshift.io/v1alpha1
+    kind: SubjectPermission
+    metadata:
+      name: backplane-lpsre-ocs-consumer-admins
+      namespace: openshift-rbac-permissions
+    spec:
+      permissions:
+      - clusterRoleName: admin
+        namespacesAllowedRegex: (^openshift-storage$)
+      - clusterRoleName: backplane-ocs-consumer-cr-admins
+        namespacesAllowedRegex: (^openshift-storage$)
+      - clusterRoleName: backplane-lpsre-monitoring
+        namespacesAllowedRegex: (^openshift-storage$)
+      subjectKind: Group
+      subjectName: system:serviceaccounts:openshift-backplane-lpsre

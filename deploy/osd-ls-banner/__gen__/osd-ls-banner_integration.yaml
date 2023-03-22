@@ -1,0 +1,31 @@
+apiVersion: hive.openshift.io/v1
+kind: SelectorSyncSet
+metadata:
+  labels:
+    managed.openshift.io/gitHash: ${IMAGE_TAG}
+    managed.openshift.io/gitRepoName: ${REPO_NAME}
+    managed.openshift.io/osd: 'true'
+  name: osd-ls-banner
+spec:
+  clusterDeploymentSelector:
+    matchLabels:
+      api.openshift.com/managed: 'true'
+    matchExpressions:
+    - key: api.openshift.com/limited-support
+      operator: In
+      values:
+      - 'true'
+  resourceApplyMode: Sync
+  resources:
+  - apiVersion: console.openshift.io/v1
+    kind: ConsoleNotification
+    metadata:
+      name: osd-limited-support
+    spec:
+      backgroundColor: '#EE0000'
+      location: BannerTop
+      text: This cluster is currently receiving Limited Support and requires attention
+        |
+      link:
+        href: ${CONSOLE_BASE_URL}/openshift/?plan_id=OSD,ROSA
+        text: Review Cluster History in OpenShift Cluster Manager for more information

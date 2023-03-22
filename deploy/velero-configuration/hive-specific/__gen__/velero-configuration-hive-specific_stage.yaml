@@ -1,0 +1,63 @@
+apiVersion: hive.openshift.io/v1
+kind: SelectorSyncSet
+metadata:
+  labels:
+    managed.openshift.io/gitHash: ${IMAGE_TAG}
+    managed.openshift.io/gitRepoName: ${REPO_NAME}
+    managed.openshift.io/osd: 'true'
+  name: velero-configuration-hive-specific
+spec:
+  clusterDeploymentSelector:
+    matchLabels:
+      api.openshift.com/managed: 'true'
+      ext-managed.openshift.io/hive-shard: 'true'
+    matchExpressions:
+    - key: api.openshift.com/fedramp
+      operator: NotIn
+      values:
+      - 'true'
+  resourceApplyMode: Sync
+  resources:
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRole
+    metadata:
+      labels:
+        managed.openshift.io/aggregate-to-dedicated-admins: cluster
+      name: velero-schedule-admins-cluster
+    rules:
+    - apiGroups:
+      - velero.io
+      attributeRestrictions: null
+      resources:
+      - schedules
+      verbs:
+      - '*'
+  - apiVersion: velero.io/v1
+    kind: Schedule
+    metadata:
+      name: 5min-object-backup
+      namespace: openshift-velero
+    spec:
+      schedule: '*/5 * * * *'
+      template:
+        includedNamespaces:
+        - '*'
+        excludedResources:
+        - imagetags.image.openshift.io
+        - images.image.openshift.io
+        - oauthaccesstokens.oauth.openshift.io
+        - oauthauthorizetokens.oauth.openshift.io
+        - templateinstances.template.openshift.io
+        - clusterserviceversions.operators.coreos.com
+        - packagemanifests.packages.operators.coreos.com
+        - operatorgroups.operators.coreos.com
+        - subscriptions.operators.coreos.com
+        - servicebrokers.servicecatalog.k8s.io
+        - servicebindings.servicecatalog.k8s.io
+        - serviceclasses.servicecatalog.k8s.io
+        - serviceinstances.servicecatalog.k8s.io
+        - serviceplans.servicecatalog.k8s.io
+        - events.events.k8s.io
+        - events
+        snapshotVolumes: false
+        ttl: 0h25m0s

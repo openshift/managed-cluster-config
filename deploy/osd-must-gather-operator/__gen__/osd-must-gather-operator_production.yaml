@@ -1,0 +1,23 @@
+apiVersion: hive.openshift.io/v1
+kind: SelectorSyncSet
+metadata:
+  labels:
+    managed.openshift.io/gitHash: ${IMAGE_TAG}
+    managed.openshift.io/gitRepoName: ${REPO_NAME}
+    managed.openshift.io/osd: 'true'
+  name: osd-must-gather-operator
+spec:
+  clusterDeploymentSelector:
+    matchLabels:
+      api.openshift.com/managed: 'true'
+  resourceApplyMode: Sync
+  resources:
+  - apiVersion: v1
+    kind: Namespace
+    metadata:
+      name: openshift-must-gather-operator
+      annotations:
+        openshift.io/node-selector: ''
+      labels:
+        openshift.io/cluster-logging: 'true'
+        openshift.io/cluster-monitoring: 'true'

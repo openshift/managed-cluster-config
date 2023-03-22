@@ -1,0 +1,159 @@
+apiVersion: hive.openshift.io/v1
+kind: SelectorSyncSet
+metadata:
+  labels:
+    managed.openshift.io/gitHash: ${IMAGE_TAG}
+    managed.openshift.io/gitRepoName: ${REPO_NAME}
+    managed.openshift.io/osd: 'true'
+  name: sre-pruning
+spec:
+  clusterDeploymentSelector:
+    matchLabels:
+      api.openshift.com/managed: 'true'
+  resourceApplyMode: Sync
+  resources:
+  - apiVersion: v1
+    kind: Namespace
+    metadata:
+      name: openshift-sre-pruning
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRole
+    metadata:
+      name: sre-pruner-buildsdeploys-cr
+    rules:
+    - apiGroups:
+      - ''
+      resources:
+      - pods
+      - replicationcontrollers
+      verbs:
+      - list
+      - get
+    - apiGroups:
+      - ''
+      resources:
+      - replicationcontrollers
+      verbs:
+      - delete
+    - apiGroups:
+      - apps.openshift.io
+      resources:
+      - deploymentconfigs
+      verbs:
+      - get
+      - list
+    - apiGroups:
+      - build.openshift.io
+      resources:
+      - buildconfigs
+      - builds
+      verbs:
+      - list
+      - get
+    - apiGroups:
+      - build.openshift.io
+      resources:
+      - builds
+      verbs:
+      - delete
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRoleBinding
+    metadata:
+      name: sre-pruner-buildsdeploys-pruning
+    roleRef:
+      kind: ClusterRole
+      name: sre-pruner-buildsdeploys-cr
+      apiGroup: rbac.authorization.k8s.io
+    subjects:
+    - kind: ServiceAccount
+      name: sre-pruner-sa
+      namespace: openshift-sre-pruning
+  - apiVersion: v1
+    kind: ServiceAccount
+    metadata:
+      name: sre-pruner-sa
+      namespace: openshift-sre-pruning
+  - apiVersion: batch/v1
+    kind: CronJob
+    metadata:
+      name: builds-pruner
+      namespace: openshift-sre-pruning
+    spec:
+      failedJobsHistoryLimit: 5
+      successfulJobsHistoryLimit: 3
+      concurrencyPolicy: Replace
+      schedule: 0 */1 * * *
+      jobTemplate:
+        spec:
+          ttlSecondsAfterFinished: 86400
+          template:
+            spec:
+              affinity:
+                nodeAffinity:
+                  preferredDuringSchedulingIgnoredDuringExecution:
+                  - preference:
+                      matchExpressions:
+                      - key: node-role.kubernetes.io/infra
+                        operator: Exists
+                    weight: 1
+              tolerations:
+              - effect: NoSchedule
+                key: node-role.kubernetes.io/infra
+                operator: Exists
+              serviceAccountName: sre-pruner-sa
+              restartPolicy: Never
+              containers:
+              - name: builds-pruner
+                image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+                imagePullPolicy: Always
+                command:
+                - oc
+                - adm
+                - prune
+                - builds
+                - --keep-younger-than=24h
+                - --keep-complete=1
+                - --keep-failed=1
+                - --confirm
+  - apiVersion: batch/v1
+    kind: CronJob
+    metadata:
+      name: deployments-pruner
+      namespace: openshift-sre-pruning
+    spec:
+      failedJobsHistoryLimit: 5
+      successfulJobsHistoryLimit: 3
+      concurrencyPolicy: Replace
+      schedule: 0 */1 * * *
+      jobTemplate:
+        spec:
+          ttlSecondsAfterFinished: 86400
+          template:
+            spec:
+              affinity:
+                nodeAffinity:
+                  preferredDuringSchedulingIgnoredDuringExecution:
+                  - preference:
+                      matchExpressions:
+                      - key: node-role.kubernetes.io/infra
+                        operator: Exists
+                    weight: 1
+              tolerations:
+              - effect: NoSchedule
+                key: node-role.kubernetes.io/infra
+                operator: Exists
+              serviceAccountName: sre-pruner-sa
+              restartPolicy: Never
+              containers:
+              - name: deployments-pruner
+                image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+                imagePullPolicy: Always
+                command:
+                - oc
+                - adm
+                - prune
+                - deployments
+                - --keep-complete=1
+                - --keep-younger-than=24h
+                - --keep-failed=1
+                - --confirm

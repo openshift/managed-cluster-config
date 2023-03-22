@@ -1,0 +1,28 @@
+apiVersion: hive.openshift.io/v1
+kind: SelectorSyncSet
+metadata:
+  labels:
+    managed.openshift.io/gitHash: ${IMAGE_TAG}
+    managed.openshift.io/gitRepoName: ${REPO_NAME}
+    managed.openshift.io/osd: 'true'
+  name: backplane-lpsre-reference-addon
+spec:
+  clusterDeploymentSelector:
+    matchLabels:
+      api.openshift.com/managed: 'true'
+      api.openshift.com/addon-reference-addon: 'true'
+  resourceApplyMode: Sync
+  resources:
+  - apiVersion: managed.openshift.io/v1alpha1
+    kind: SubjectPermission
+    metadata:
+      name: backplane-lpsre-reference-addon-admins
+      namespace: openshift-rbac-permissions
+    spec:
+      permissions:
+      - clusterRoleName: admin
+        namespacesAllowedRegex: (^redhat-reference-addon$)
+      - clusterRoleName: backplane-lpsre-monitoring
+        namespacesAllowedRegex: (^openshift-storage$)
+      subjectKind: Group
+      subjectName: system:serviceaccounts:openshift-backplane-lpsre

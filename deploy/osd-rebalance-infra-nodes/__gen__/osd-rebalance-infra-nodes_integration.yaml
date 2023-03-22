@@ -1,0 +1,443 @@
+apiVersion: hive.openshift.io/v1
+kind: SelectorSyncSet
+metadata:
+  labels:
+    managed.openshift.io/gitHash: ${IMAGE_TAG}
+    managed.openshift.io/gitRepoName: ${REPO_NAME}
+    managed.openshift.io/osd: 'true'
+  name: osd-rebalance-infra-nodes
+spec:
+  clusterDeploymentSelector:
+    matchLabels:
+      api.openshift.com/managed: 'true'
+  resourceApplyMode: Sync
+  resources:
+  - apiVersion: v1
+    kind: ServiceAccount
+    metadata:
+      name: osd-rebalance-infra-nodes
+      namespace: openshift-monitoring
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRole
+    metadata:
+      name: osd-rebalance-infra-nodes
+    rules:
+    - apiGroups:
+      - ''
+      resources:
+      - nodes
+      verbs:
+      - list
+  - kind: ClusterRoleBinding
+    apiVersion: rbac.authorization.k8s.io/v1
+    metadata:
+      name: osd-rebalance-infra-nodes
+    subjects:
+    - kind: ServiceAccount
+      name: osd-rebalance-infra-nodes
+      namespace: openshift-monitoring
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: osd-rebalance-infra-nodes
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: Role
+    metadata:
+      name: osd-rebalance-infra-nodes-openshift-dns
+      namespace: openshift-dns
+    rules:
+    - apiGroups:
+      - ''
+      resources:
+      - pods
+      verbs:
+      - get
+      - list
+      - delete
+  - kind: RoleBinding
+    apiVersion: rbac.authorization.k8s.io/v1
+    metadata:
+      name: osd-rebalance-infra-nodes-openshift-dns
+      namespace: openshift-dns
+    subjects:
+    - kind: ServiceAccount
+      name: osd-rebalance-infra-nodes
+      namespace: openshift-monitoring
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: Role
+      name: osd-rebalance-infra-nodes-openshift-dns
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: Role
+    metadata:
+      name: osd-rebalance-infra-nodes-openshift-monitoring
+      namespace: openshift-monitoring
+    rules:
+    - apiGroups:
+      - ''
+      resources:
+      - pods
+      verbs:
+      - get
+      - list
+      - delete
+    - apiGroups:
+      - ''
+      resources:
+      - persistentvolumeclaims
+      verbs:
+      - delete
+    - apiGroups:
+      - batch
+      resources:
+      - jobs
+      verbs:
+      - get
+  - kind: RoleBinding
+    apiVersion: rbac.authorization.k8s.io/v1
+    metadata:
+      name: osd-rebalance-infra-nodes-openshift-monitoring
+      namespace: openshift-monitoring
+    subjects:
+    - kind: ServiceAccount
+      name: osd-rebalance-infra-nodes
+      namespace: openshift-monitoring
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: Role
+      name: osd-rebalance-infra-nodes-openshift-monitoring
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: Role
+    metadata:
+      name: osd-rebalance-infra-nodes-openshift-user-workload-monitoring
+      namespace: openshift-user-workload-monitoring
+    rules:
+    - apiGroups:
+      - ''
+      resources:
+      - pods
+      verbs:
+      - get
+      - list
+      - delete
+    - apiGroups:
+      - ''
+      resources:
+      - persistentvolumeclaims
+      verbs:
+      - delete
+  - kind: RoleBinding
+    apiVersion: rbac.authorization.k8s.io/v1
+    metadata:
+      name: osd-rebalance-infra-nodes-openshift-user-workload-monitoring
+      namespace: openshift-user-workload-monitoring
+    subjects:
+    - kind: ServiceAccount
+      name: osd-rebalance-infra-nodes
+      namespace: openshift-monitoring
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: Role
+      name: osd-rebalance-infra-nodes-openshift-user-workload-monitoring
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: Role
+    metadata:
+      name: osd-rebalance-infra-nodes-openshift-security
+      namespace: openshift-security
+    rules:
+    - apiGroups:
+      - ''
+      resources:
+      - pods
+      verbs:
+      - get
+      - list
+      - delete
+  - kind: RoleBinding
+    apiVersion: rbac.authorization.k8s.io/v1
+    metadata:
+      name: osd-rebalance-infra-nodes-openshift-security
+      namespace: openshift-security
+    subjects:
+    - kind: ServiceAccount
+      name: osd-rebalance-infra-nodes
+      namespace: openshift-monitoring
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: Role
+      name: osd-rebalance-infra-nodes-openshift-security
+  - kind: RoleBinding
+    apiVersion: rbac.authorization.k8s.io/v1
+    metadata:
+      name: osd-rebalance-infra-nodes-openshift-pod-rebalance
+      namespace: openshift-custom-domains-operator
+    subjects:
+    - kind: ServiceAccount
+      name: osd-rebalance-infra-nodes
+      namespace: openshift-monitoring
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: osd-rebalance-infra-nodes-openshift-pod-rebalance
+  - kind: RoleBinding
+    apiVersion: rbac.authorization.k8s.io/v1
+    metadata:
+      name: osd-rebalance-infra-nodes-openshift-pod-rebalance
+      namespace: openshift-image-registry
+    subjects:
+    - kind: ServiceAccount
+      name: osd-rebalance-infra-nodes
+      namespace: openshift-monitoring
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: osd-rebalance-infra-nodes-openshift-pod-rebalance
+  - kind: RoleBinding
+    apiVersion: rbac.authorization.k8s.io/v1
+    metadata:
+      name: osd-rebalance-infra-nodes-openshift-pod-rebalance
+      namespace: openshift-monitoring
+    subjects:
+    - kind: ServiceAccount
+      name: osd-rebalance-infra-nodes
+      namespace: openshift-monitoring
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: osd-rebalance-infra-nodes-openshift-pod-rebalance
+  - kind: RoleBinding
+    apiVersion: rbac.authorization.k8s.io/v1
+    metadata:
+      name: osd-rebalance-infra-nodes-openshift-pod-rebalance
+      namespace: openshift-must-gather-operator
+    subjects:
+    - kind: ServiceAccount
+      name: osd-rebalance-infra-nodes
+      namespace: openshift-monitoring
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: osd-rebalance-infra-nodes-openshift-pod-rebalance
+  - kind: RoleBinding
+    apiVersion: rbac.authorization.k8s.io/v1
+    metadata:
+      name: osd-rebalance-infra-nodes-openshift-pod-rebalance
+      namespace: openshift-network-operator
+    subjects:
+    - kind: ServiceAccount
+      name: osd-rebalance-infra-nodes
+      namespace: openshift-monitoring
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: osd-rebalance-infra-nodes-openshift-pod-rebalance
+  - kind: RoleBinding
+    apiVersion: rbac.authorization.k8s.io/v1
+    metadata:
+      name: osd-rebalance-infra-nodes-openshift-pod-rebalance
+      namespace: openshift-rbac-permissions
+    subjects:
+    - kind: ServiceAccount
+      name: osd-rebalance-infra-nodes
+      namespace: openshift-monitoring
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: osd-rebalance-infra-nodes-openshift-pod-rebalance
+  - kind: RoleBinding
+    apiVersion: rbac.authorization.k8s.io/v1
+    metadata:
+      name: osd-rebalance-infra-nodes-openshift-pod-rebalance
+      namespace: openshift-route-monitor-operator
+    subjects:
+    - kind: ServiceAccount
+      name: osd-rebalance-infra-nodes
+      namespace: openshift-monitoring
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: osd-rebalance-infra-nodes-openshift-pod-rebalance
+  - kind: RoleBinding
+    apiVersion: rbac.authorization.k8s.io/v1
+    metadata:
+      name: osd-rebalance-infra-nodes-openshift-pod-rebalance
+      namespace: openshift-splunk-forwarder-operator
+    subjects:
+    - kind: ServiceAccount
+      name: osd-rebalance-infra-nodes
+      namespace: openshift-monitoring
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: osd-rebalance-infra-nodes-openshift-pod-rebalance
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRole
+    metadata:
+      name: osd-rebalance-infra-nodes-openshift-pod-rebalance
+    rules:
+    - apiGroups:
+      - ''
+      resources:
+      - pods
+      verbs:
+      - get
+      - list
+      - delete
+  - apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: osd-rebalance-infra-nodes
+      namespace: openshift-monitoring
+    data:
+      entrypoint: "#!/bin/bash\n\nCLUSTER_READY=$(oc get job -n openshift-monitoring\
+        \ osd-cluster-ready -o jsonpath='{.status.succeeded}')\n\nif [ \"$CLUSTER_READY\"\
+        \ != \"1\" ]; then\n    echo \"INFO: 'osd-cluster-ready' job hasn't succeeded\
+        \ yet, exiting...\"\n    exit 0\nfi\n\necho \"INFO: Attempting infra node\
+        \ pod rebalancing...\"\n\nAZ_COUNT=$(oc get nodes -o yaml | grep -E \"^\\\
+        s+failure-domain.beta.kubernetes.io/zone\" | sort | uniq | wc -l)\n\necho\
+        \ \"INFO: Number of AZs ${AZ_COUNT}\"\n\nINFRA_NODE_COUNT=$(oc get nodes -l\
+        \ node-role.kubernetes.io=infra --no-headers | wc -l)\n\necho \"INFO: Number\
+        \ of INFRA NODES ${INFRA_NODE_COUNT}\"\n\nREBALANCE_PODS=false\nPENDING_PODS=false\n\
+        \nrebalancePods() {\n    APP=$1\n    NS=$2\n    LABEL=$3\n    VOLUME_NAME=$4\n\
+        \    ALL_POD_NODES=$(oc get pods -n $NS -l $LABEL=$APP -o wide --no-headers\
+        \ | awk '{print $7}' | sort | wc -l)\n    UNIQUE_POD_NODES=$(oc get pods -n\
+        \ $NS -l $LABEL=$APP -o wide --no-headers | awk '{print $7}' | sort | uniq\
+        \ | wc -l)\n    echo \"INFO: $APP pods needing rebalance: $(( $UNIQUE_POD_NODES\
+        \ == $INFRA_NODE_COUNT ? 0 : ALL_POD_NODES - UNIQUE_POD_NODES ))\"\n\n   \
+        \ LAST_POD_NODE_NAME=\"\"\n    for POD in $( oc get pods -n $NS -l $LABEL=$APP\
+        \ -o jsonpath='{.items[*].metadata.name}' ) ; do\n        POD_NODE_NAME=$(oc\
+        \ get pod -n $NS $POD -o jsonpath='{.spec.nodeName}')\n        if [ $UNIQUE_POD_NODES\
+        \ -ne $INFRA_NODE_COUNT ] && [ \"${POD_NODE_NAME}\" == \"${LAST_POD_NODE_NAME}\"\
+        \ ]; then\n            if [ ${VOLUME_NAME} ] && [ \"${AZ_COUNT}\" != \"1\"\
+        \ ]; then\n                PVC=$(oc get pod -n $NS $POD -o jsonpath='{.spec.volumes[?(@.name==\"\
+        '$VOLUME_NAME'\")].persistentVolumeClaim.claimName}')\n                echo\
+        \ \"INFO: Deleting PVC $PVC\"\n                oc delete pvc --wait=false\
+        \ -n $NS $PVC\n            fi\n            echo \"INFO: Deleting pod $POD\"\
+        \n            oc delete pod -n $NS $POD --wait=true\n            REBALANCE_PODS=true\n\
+        \        fi\n        LAST_POD_NODE_NAME=$POD_NODE_NAME\n    done\n}\n\ncheckPendingPods()\
+        \ {\n    APP=$1\n    NS=$2\n    LABEL=$3\n    for POD in $( oc get pods -n\
+        \ $NS -l $LABEL=$APP -o jsonpath='{.items[*].metadata.name}' ) ; do\n    \
+        \    POD_STATUS_PHASE=$(oc get pods -n $NS $POD -o jsonpath='{.status.phase}')\n\
+        \        if [ \"${POD_STATUS_PHASE}\" == \"Pending\" ]; then\n           \
+        \ echo \"INFO: Deleting pod $POD\"\n            oc delete pod -n $NS $POD\
+        \ --wait=true\n            PENDING_PODS=true\n        fi\n    done\n}\n\n\
+        waitRunningPods() {\n    APP=$1\n    NS=$2\n    LABEL=$3\n    for POD in $(\
+        \ oc get pods -n $NS -l $LABEL=$APP -o jsonpath='{.items[*].metadata.name}'\
+        \ ) ; do\n        echo \"INFO: Waiting for $POD to be Running...\"\n     \
+        \   while [ ! -z \"$(oc get pod -n $NS $POD -o jsonpath='{.status.phase}'\
+        \ 2>/dev/null)\" ] && [ \"$(oc get pod -n $NS $POD -o jsonpath='{.status.phase}'\
+        \ 2>/dev/null)\" != \"Running\" ];\n        do\n            sleep 1\n    \
+        \    done\n    done\n}\n\n# kubeDaemonsetMisscheduled deletes pods running\
+        \ on infra nodes even though the daemonset doesn't tolerate\n# the infra node\
+        \ taint due to a race condition on how infra nodes are created\nkubeDaemonsetMisscheduled()\
+        \ {\n  NODE_TAINT=\"node-role.kubernetes.io=infra\"\n  NS=$1\n  LABEL=$2\n\
+        \n  readarray -t nodes < <(oc get no -l \"${NODE_TAINT}\" -o go-template='{{range\
+        \ .items}}{{.metadata.name}}{{\"\\n\"}}{{end}}');\n  for node in \"${nodes[@]}\"\
+        ; do\n    misscheduled_pods=\"$(oc get po -n \"${NS}\" -l \"${LABEL}\" -o\
+        \ go-template=\"{{range .items}}{{if eq .spec.nodeName \\\"${node}\\\"}}{{.metadata.name}}{{\\\
+        \"\\n\\\"}}{{end}}{{end}}\")\";\n    for pod in \"${misscheduled_pods[@]}\"\
+        ; do\n      if [[ -n \"${pod}\" ]]; then\n        echo \"Deleting misscheduled\
+        \ pod ${pod} running on ${node}\"\n        oc delete po -n \"${NS}\" \"${pod}\"\
+        \n      fi\n    done\n  done\n}\n\n# infraPodsMisscheduled finds pods from\
+        \ openshift- namespaces which are not scheduled on infra node \n#    but have\
+        \ nodeaffinity preferredDuringSchedulingIgnoredDuringExecution for infra nodes\n\
+        # Notes: this is done as a response to an escalation in https://issues.redhat.com/browse/OSD-13621\
+        \ \n# A long term fix will follow \ninfraPodsMisscheduled(){\n    NODE_TAINT=\"\
+        node-role.kubernetes.io=infra\"\n    # The 'none' at the end accounts for\
+        \ pods which are currently being scheduled.\n    # we do not want to reschedule\
+        \ them before knowing where they landed\n    # the output will look like \"\
+        <node1>|<node2>|none\"\n    infranodes_regexp=\"$(oc get no -l \"${NODE_TAINT}\"\
+        \ -o go-template='{{range .items}}{{.metadata.name}}{{\"|\"}}{{end}}')none\"\
+        \n    \n    # the output will look something like\n    # <namespace> | <pod>\
+        \ | <affinity> | <node>\n    # each pod on the list needs to be rescheduled\n\
+        \    misscheduled_pods=`for ns in $@; do oc -n $ns get po -o go-template='{{range\
+        \ .items}}{{$isjob := index .metadata.labels \"job-name\"}}{{$namespace :=\
+        \ .metadata.namespace}}{{$name := .metadata.name}}{{$affinity := .spec.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution\
+        \ }}{{if not $isjob}}{{if $affinity}}{{- $namespace }} | {{$name}} | {{$affinity}}\
+        \ | {{.spec.nodeName}} {{\"\\n\" -}} {{end}}{{end}}{{end}}';done |grep \"\
+        node-role.kubernetes.io/infra\" |grep -vE ${infranodes_regexp}`\n\n    if\
+        \ [ ! -z  \"$misscheduled_pods\" ]; then\n        # --ignore-not-found=true\
+        \ so that for STS clusters this doesn't fail when this can't find CIO or velero\
+        \ pods\n        while read line ; do cmd=`echo $line|awk -F'|' '{print \"\
+        oc -n \" $1 \" delete po --ignore-not-found=true \" $2}'`;echo \"INFO: $cmd\"\
+        ; eval $cmd;done <<< \"$misscheduled_pods\"\n    else\n        echo \"INFO:\
+        \ no misscheduled pods in openshift-* namespaces\"\n    fi\n}\n\necho \"INFO:\
+        \ Rebalancing openshift-dns/dns-default Daemonset...\"\nkubeDaemonsetMisscheduled\
+        \ \"openshift-dns\" \"dns.operator.openshift.io/daemonset-dns=default\"\n\n\
+        echo \"INFO: Rebalancing prometheus pods...\"\nrebalancePods prometheus openshift-monitoring\
+        \ app prometheus-data\n\necho \"INFO: Rebalancing UWM prometheus pods...\"\
+        \nrebalancePods prometheus openshift-user-workload-monitoring app prometheus-user-workload-db\n\
+        \necho \"INFO: Rebalancing alertmanager pods...\"\nrebalancePods alertmanager\
+        \ openshift-monitoring app alertmanager-data\n\necho \"INFO: Rebalancing splunk-heavy-forwarder\
+        \ pods...\"\nrebalancePods splunk-heavy-forwarder openshift-security name\n\
+        \nif $REBALANCE_PODS; then\n    echo \"INFO: Restarting prometheus operator...\"\
+        \n    OPERATOR_POD=$( oc get pod -n openshift-monitoring -l app.kubernetes.io/name=prometheus-operator\
+        \ -o jsonpath='{.items[*].metadata.name}' )\n    oc delete pod -n openshift-monitoring\
+        \ $OPERATOR_POD --wait=true\n    sleep 10\nfi\n\necho \"INFO: Check pending\
+        \ prometheus pods...\"\ncheckPendingPods prometheus openshift-monitoring app\n\
+        \necho \"INFO: Check pending UWM prometheus pods...\"\ncheckPendingPods prometheus\
+        \ openshift-user-workload-monitoring app\n\necho \"INFO: Check pending alertmanager\
+        \ pods...\"\ncheckPendingPods alertmanager openshift-monitoring app\n\necho\
+        \ \"INFO: Check pending splunk-heavy-forwarder pods...\"\ncheckPendingPods\
+        \ splunk-heavy-forwarder openshift-security name\n\nif $PENDING_PODS; then\n\
+        \    echo \"INFO: Restarting prometheus operator...\"\n    OPERATOR_POD=$(\
+        \ oc get pod -n openshift-monitoring -l app.kubernetes.io/name=prometheus-operator\
+        \ -o jsonpath='{.items[*].metadata.name}' )\n    oc delete pod -n openshift-monitoring\
+        \ $OPERATOR_POD --wait=true\n    sleep 10\nfi\n\necho \"INFO: Wait for running\
+        \ prometheus pods...\"\nwaitRunningPods prometheus openshift-monitoring app\n\
+        \necho \"INFO: Wait for running UWM prometheus pods...\"\nwaitRunningPods\
+        \ prometheus openshift-user-workload-monitoring app\n\necho \"INFO: Wait for\
+        \ running alertmanager pods...\"\nwaitRunningPods alertmanager openshift-monitoring\
+        \ app\n\necho \"INFO: Wait for running splunk-heavy-forwarder pods...\"\n\
+        waitRunningPods splunk-heavy-forwarder openshift-security name\n\necho \"\
+        INFO: Rebalancing misscheduled pods from openshift- namespaces\"\ninfraPodsMisscheduled\
+        \  openshift-cloud-ingress-operator openshift-custom-domains-operator openshift-image-registry\
+        \ openshift-managed-node-metadata-operator openshift-monitoring openshift-must-gather-operator\
+        \ openshift-network-operator openshift-ocm-agent-operator openshift-osd-metrics\
+        \ openshift-rbac-permissions openshift-route-monitor-operator openshift-splunk-forwarder-operator\
+        \ openshift-velero"
+  - apiVersion: batch/v1
+    kind: CronJob
+    metadata:
+      name: osd-rebalance-infra-nodes
+      namespace: openshift-monitoring
+    spec:
+      failedJobsHistoryLimit: 3
+      successfulJobsHistoryLimit: 3
+      concurrencyPolicy: Replace
+      schedule: '*/15 * * * *'
+      jobTemplate:
+        spec:
+          ttlSecondsAfterFinished: 86400
+          template:
+            spec:
+              affinity:
+                nodeAffinity:
+                  preferredDuringSchedulingIgnoredDuringExecution:
+                  - preference:
+                      matchExpressions:
+                      - key: node-role.kubernetes.io/infra
+                        operator: Exists
+                    weight: 1
+              tolerations:
+              - effect: NoSchedule
+                key: node-role.kubernetes.io/infra
+                operator: Exists
+              serviceAccountName: osd-rebalance-infra-nodes
+              restartPolicy: Never
+              containers:
+              - name: osd-rebalance-infra-nodes
+                image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+                command:
+                - /bin/sh
+                - -c
+                - /etc/config/entrypoint
+                volumeMounts:
+                - name: osd-rebalance-infra-nodes
+                  mountPath: /etc/config
+                  readOnly: true
+              volumes:
+              - name: osd-rebalance-infra-nodes
+                configMap:
+                  name: osd-rebalance-infra-nodes
+                  defaultMode: 493

@@ -1,0 +1,42 @@
+apiVersion: hive.openshift.io/v1
+kind: SelectorSyncSet
+metadata:
+  labels:
+    managed.openshift.io/gitHash: ${IMAGE_TAG}
+    managed.openshift.io/gitRepoName: ${REPO_NAME}
+    managed.openshift.io/osd: 'true'
+  name: sre-prometheus-aws-sts-privatelink
+spec:
+  clusterDeploymentSelector:
+    matchLabels:
+      api.openshift.com/managed: 'true'
+      hive.openshift.io/cluster-platform: aws
+    matchExpressions:
+    - key: api.openshift.com/sts
+      operator: NotIn
+      values:
+      - 'true'
+    - key: api.openshift.com/private-link
+      operator: NotIn
+      values:
+      - 'true'
+  resourceApplyMode: Sync
+  resources:
+  - apiVersion: monitoring.coreos.com/v1
+    kind: PrometheusRule
+    metadata:
+      labels:
+        prometheus: sre-cloud-ingress-operator-offline-alerts
+        role: alert-rules
+      name: sre-cloud-ingress-operator-offline-alerts
+      namespace: openshift-monitoring
+    spec:
+      groups:
+      - name: sre-cloud-ingress-operator-offline-alerts
+        rules:
+        - alert: CloudIngressOperatorOfflineSRE
+          expr: absent(up{service="cloud-ingress-operator", namespace="openshift-cloud-ingress-operator"})
+          for: 15m
+          labels:
+            severity: critical
+            namespace: openshift-monitoring

@@ -1,0 +1,101 @@
+apiVersion: hive.openshift.io/v1
+kind: SelectorSyncSet
+metadata:
+  labels:
+    managed.openshift.io/gitHash: ${IMAGE_TAG}
+    managed.openshift.io/gitRepoName: ${REPO_NAME}
+    managed.openshift.io/osd: 'true'
+  name: osd-user-workload-monitoring
+spec:
+  clusterDeploymentSelector:
+    matchLabels:
+      api.openshift.com/managed: 'true'
+  resourceApplyMode: Sync
+  resources:
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: RoleBinding
+    metadata:
+      name: dedicated-admins-uwm-config-edit
+      namespace: openshift-user-workload-monitoring
+    subjects:
+    - apiGroup: rbac.authorization.k8s.io
+      kind: Group
+      name: dedicated-admins
+    - kind: Group
+      name: system:serviceaccounts:dedicated-admin
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: Role
+      name: user-workload-monitoring-config-edit
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: Role
+    metadata:
+      name: dedicated-admins-user-workload-monitoring-create-cm
+      namespace: openshift-user-workload-monitoring
+    rules:
+    - apiGroups:
+      - ''
+      resources:
+      - configmaps
+      verbs:
+      - '*'
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: RoleBinding
+    metadata:
+      name: dedicated-admins-uwm-config-create
+      namespace: openshift-user-workload-monitoring
+    subjects:
+    - apiGroup: rbac.authorization.k8s.io
+      kind: Group
+      name: dedicated-admins
+    - kind: Group
+      name: system:serviceaccounts:dedicated-admin
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: Role
+      name: dedicated-admins-user-workload-monitoring-create-cm
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: Role
+    metadata:
+      name: dedicated-admins-user-workload-monitoring-manage-am-secret
+      namespace: openshift-user-workload-monitoring
+    rules:
+    - apiGroups:
+      - ''
+      resources:
+      - secrets
+      resourceNames:
+      - alertmanager-user-workload
+      verbs:
+      - get
+      - list
+      - watch
+      - update
+      - patch
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: RoleBinding
+    metadata:
+      name: dedicated-admins-uwm-managed-am-secret
+      namespace: openshift-user-workload-monitoring
+    subjects:
+    - apiGroup: rbac.authorization.k8s.io
+      kind: Group
+      name: dedicated-admins
+    - kind: Group
+      name: system:serviceaccounts:dedicated-admin
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: Role
+      name: dedicated-admins-user-workload-monitoring-manage-am-secret
+  - apiVersion: managed.openshift.io/v1alpha1
+    kind: SubjectPermission
+    metadata:
+      name: dedicated-admins-alert-routing-edit
+      namespace: openshift-rbac-permissions
+    spec:
+      subjectKind: Group
+      subjectName: dedicated-admins
+      permissions:
+      - clusterRoleName: alert-routing-edit
+        namespacesAllowedRegex: .*
+        namespacesDeniedRegex: (^kube-.*|^openshift.*|^ops-health-monitoring$|^management-infra$|^default$|^logging$|^sre-app-check$)

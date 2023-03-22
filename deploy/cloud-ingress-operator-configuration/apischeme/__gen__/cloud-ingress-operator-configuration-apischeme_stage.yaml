@@ -1,0 +1,39 @@
+apiVersion: hive.openshift.io/v1
+kind: SelectorSyncSet
+metadata:
+  labels:
+    managed.openshift.io/gitHash: ${IMAGE_TAG}
+    managed.openshift.io/gitRepoName: ${REPO_NAME}
+    managed.openshift.io/osd: 'true'
+  name: cloud-ingress-operator-configuration-apischeme
+spec:
+  clusterDeploymentSelector:
+    matchLabels:
+      api.openshift.com/managed: 'true'
+    matchExpressions:
+    - key: api.openshift.com/sts
+      operator: NotIn
+      values:
+      - 'true'
+    - key: api.openshift.com/private-link
+      operator: NotIn
+      values:
+      - 'true'
+    - key: api.openshift.com/fedramp
+      operator: NotIn
+      values:
+      - 'true'
+  resourceApplyMode: Upsert
+  resources:
+  - apiVersion: cloudingress.managed.openshift.io/v1alpha1
+    kind: APIScheme
+    metadata:
+      name: rh-api
+      namespace: openshift-cloud-ingress-operator
+      annotations:
+        allowedCIDRBlocks: ${ALLOWED_CIDR_BLOCKS}
+    spec:
+      managementAPIServerIngress:
+        enabled: true
+        dnsName: rh-api
+        allowedCIDRBlocks: ${{ALLOWED_CIDR_BLOCKS}}

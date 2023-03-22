@@ -1,0 +1,41 @@
+apiVersion: hive.openshift.io/v1
+kind: SelectorSyncSet
+metadata:
+  labels:
+    managed.openshift.io/gitHash: ${IMAGE_TAG}
+    managed.openshift.io/gitRepoName: ${REPO_NAME}
+    managed.openshift.io/osd: 'true'
+  name: osd-curated-operatorsources
+spec:
+  clusterDeploymentSelector:
+    matchLabels:
+      api.openshift.com/managed: 'true'
+    matchExpressions:
+    - key: api.openshift.com/ccs
+      operator: NotIn
+      values:
+      - 'true'
+    - key: api.openshift.com/extended-dedicated-admin
+      operator: In
+      values:
+      - 'false'
+    - key: api.openshift.com/environment
+      operator: NotIn
+      values:
+      - staging
+    - key: hive.openshift.io/cluster-platform
+      operator: NotIn
+      values:
+      - gcp
+    - key: api.openshift.com/cluster-admin
+      operator: NotIn
+      values:
+      - 'true'
+  resourceApplyMode: Sync
+  patches:
+  - apiVersion: config.openshift.io/v1
+    applyMode: AlwaysApply
+    kind: OperatorHub
+    name: cluster
+    patch: '{"spec":{"disableAllDefaultSources":true}}'
+    patchType: merge

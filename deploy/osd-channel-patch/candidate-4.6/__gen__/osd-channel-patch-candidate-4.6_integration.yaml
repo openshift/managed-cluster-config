@@ -1,0 +1,29 @@
+apiVersion: hive.openshift.io/v1
+kind: SelectorSyncSet
+metadata:
+  labels:
+    managed.openshift.io/gitHash: ${IMAGE_TAG}
+    managed.openshift.io/gitRepoName: ${REPO_NAME}
+    managed.openshift.io/osd: 'true'
+  name: osd-channel-patch-candidate-4.6
+spec:
+  clusterDeploymentSelector:
+    matchLabels:
+      api.openshift.com/managed: 'true'
+    matchExpressions:
+    - key: hive.openshift.io/version-major-minor
+      operator: In
+      values:
+      - '4.6'
+    - key: api.openshift.com/channel-group
+      operator: In
+      values:
+      - candidate
+  resourceApplyMode: Sync
+  patches:
+  - apiVersion: config.openshift.io/v1
+    kind: ClusterVersion
+    name: version
+    applyMode: AlwaysApply
+    patch: '{"spec":{"channel":"candidate-4.6"}}'
+    patchType: merge

@@ -1,0 +1,25 @@
+apiVersion: hive.openshift.io/v1
+kind: SelectorSyncSet
+metadata:
+  labels:
+    managed.openshift.io/gitHash: ${IMAGE_TAG}
+    managed.openshift.io/gitRepoName: ${REPO_NAME}
+    managed.openshift.io/osd: 'true'
+  name: cluster-ingress-backplane
+spec:
+  clusterDeploymentSelector:
+    matchLabels:
+      api.openshift.com/managed: 'true'
+    matchExpressions:
+    - key: ext-managed.openshift.io/backplane-shard
+      operator: In
+      values:
+      - 'true'
+  resourceApplyMode: Sync
+  patches:
+  - apiVersion: config.openshift.io/v1
+    kind: Ingress
+    name: cluster
+    patch: '{ "metadata": {"annotations": {"ingress.operator.openshift.io/default-enable-http2":
+      "false"} } }'
+    patchType: merge

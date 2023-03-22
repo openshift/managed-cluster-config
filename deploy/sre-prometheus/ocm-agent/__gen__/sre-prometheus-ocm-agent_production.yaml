@@ -1,0 +1,150 @@
+apiVersion: hive.openshift.io/v1
+kind: SelectorSyncSet
+metadata:
+  labels:
+    managed.openshift.io/gitHash: ${IMAGE_TAG}
+    managed.openshift.io/gitRepoName: ${REPO_NAME}
+    managed.openshift.io/osd: 'true'
+  name: sre-prometheus-ocm-agent
+spec:
+  clusterDeploymentSelector:
+    matchLabels:
+      api.openshift.com/managed: 'true'
+  resourceApplyMode: Sync
+  resources:
+  - apiVersion: monitoring.coreos.com/v1
+    kind: PrometheusRule
+    metadata:
+      labels:
+        prometheus: sre-proxy-managed-notification-alerts
+        role: alert-rules
+      name: sre-proxy-managed-notification-alerts
+      namespace: openshift-monitoring
+    spec:
+      groups:
+      - name: sre-proxy-managed-notification-alerts
+        rules:
+        - alert: AdditionalTrustBundleCAExpiringNotificationSRE
+          expr: cluster_proxy_ca_expiry_timestamp{name="osd_exporter"} - time() <
+            86400 * 30 > 0
+          for: 10m
+          labels:
+            severity: Info
+            namespace: openshift-monitoring
+            managed_notification_template: AdditionalTrustBundleCAExpiring
+            send_managed_notification: 'true'
+          annotations:
+            message: Additional Trust Bundle CA certificate will expire in {{ $value
+              | humanizeDuration }}. Ensure new certificate is provided prior to expiration
+              to avoid cluster degradation and/or unavailability
+        - alert: AdditionalTrustBundleCAExpiredNotificationSRE
+          expr: cluster_proxy_ca_expiry_timestamp{name="osd_exporter"} - time() <=
+            0
+          for: 10m
+          labels:
+            severity: Info
+            namespace: openshift-monitoring
+            managed_notification_template: AdditionalTrustBundleCAExpired
+            send_managed_notification: 'true'
+          annotations:
+            message: Additional Trust Bundle CA certificate will expire in {{ $value
+              | humanizeDuration }}. Ensure new certificate is provided prior to expiration
+              to avoid cluster degradation and/or unavailability
+        - alert: AdditionalTrustBundleCAInvalidNotificationSRE
+          expr: cluster_operator_conditions{job="cluster-version-operator", name="network",
+            condition="Degraded",reason="TrustBundleValidationFailure"} == 1
+          for: 5m
+          labels:
+            severity: Info
+            namespace: openshift-monitoring
+            managed_notification_template: AdditionalTrustBundleCAInvalid
+            send_managed_notification: 'true'
+          annotations:
+            message: Cluster proxy CA has failed validation. Ensure the CA is PEM-encoded
+              X.509.
+        - alert: ClusterProxyNetworkDegradedNotificationSRE
+          expr: cluster_operator_conditions{job="cluster-version-operator", name="network",
+            condition="Degraded",reason="InvalidProxyConfig"} == 1
+          for: 10m
+          labels:
+            severity: Info
+            namespace: openshift-monitoring
+            managed_notification_template: ClusterProxyNetworkDegraded
+            send_managed_notification: 'true'
+          annotations:
+            message: Cluster proxy is failing network readiness endpoint checks and
+              may be misconfigured or not running.
+  - apiVersion: monitoring.coreos.com/v1
+    kind: PrometheusRule
+    metadata:
+      labels:
+        prometheus: sre-upgrade-managed-notification-alerts
+        role: alert-rules
+      name: sre-upgrade-send-managed-notification-alerts
+      namespace: openshift-monitoring
+    spec:
+      groups:
+      - name: sre-upgrade-managed-notification-alerts
+        rules:
+        - alert: UpgradeControlPlaneUpgradeTimeoutNotificationSRE
+          expr: count(ALERTS{alertname="UpgradeControlPlaneUpgradeTimeoutSRE", alertstate="firing"})
+            >= 1
+          for: 30m
+          labels:
+            severity: info
+            namespace: openshift-monitoring
+            managed_notification_template: UpgradeControlPlaneUpgradeTimeout
+            send_managed_notification: 'true'
+          annotations:
+            summary: Controlplane upgrade timeout for {{ $labels.version }}
+            description: controlplane upgrade for {{ $labels.version }} cannot be
+              finished in the given time period
+  - apiVersion: monitoring.coreos.com/v1
+    kind: PrometheusRule
+    metadata:
+      labels:
+        prometheus: sre-managed-notification-alerts
+        role: alert-rules
+      name: sre-managed-notification-alerts
+      namespace: openshift-monitoring
+    spec:
+      groups:
+      - name: sre-managed-notification-alerts
+        rules:
+        - alert: MultipleIngressControllersDetectedNotificationSRE
+          expr: sum(max_over_time(splunkforwarder_audit_filter_exposed_splunk_event_total{alert="UserCreatedIngressControllerDetected"}[5m])
+            or vector(0)) - sum(max_over_time(splunkforwarder_audit_filter_exposed_splunk_event_total{alert="UserCreatedIngressControllerDetected"}[5m]
+            offset 5m) or vector(0)) > 0
+          for: 30m
+          labels:
+            severity: Info
+            namespace: openshift-logging
+            send_managed_notification: 'true'
+            managed_notification_template: MultipleIngressControllersDetected
+        - alert: LoggingVolumeFillingUpNotificationSRE
+          expr: count(ALERTS{alertname="KubePersistentVolumeFillingUp", alertstate="firing",
+            namespace="openshift-logging"}) >= 1
+          for: 30m
+          labels:
+            severity: Info
+            namespace: openshift-logging
+            send_managed_notification: 'true'
+            managed_notification_template: LoggingVolumeFillingUp
+        - alert: MultipleDefaultStorageClassesNotificationSRE
+          expr: count(ALERTS{alertname="MultipleDefaultStorageClasses", alertstate="firing",
+            namespace="openshift-cluster-storage-operator"}) >= 1
+          for: 30m
+          labels:
+            severity: Info
+            namespace: openshift-cluster-storage-operator
+            send_managed_notification: 'true'
+            managed_notification_template: MultipleDefaultStorageClasses
+        - alert: NonSystemChangeValidatingWebhookConfigurationsNotificationSRE
+          expr: sum(max_over_time(splunkforwarder_audit_filter_exposed_splunk_event_total{alert="NonSystemChangeValidationWebhookConfiguration"}[5m])
+            or vector(0)) - sum(max_over_time(splunkforwarder_audit_filter_exposed_splunk_event_total{alert="NonSystemChangeValidationWebhookConfiguration"}[5m]
+            offset 5m) or vector(0)) > 0
+          labels:
+            severity: Info
+            namespace: audit-exporter
+            send_managed_notification: 'true'
+            managed_notification_template: NonSystemChangeValidationWebhookConfigurations

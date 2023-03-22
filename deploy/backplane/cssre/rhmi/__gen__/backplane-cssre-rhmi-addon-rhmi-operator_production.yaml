@@ -1,0 +1,183 @@
+apiVersion: hive.openshift.io/v1
+kind: SelectorSyncSet
+metadata:
+  labels:
+    managed.openshift.io/gitHash: ${IMAGE_TAG}
+    managed.openshift.io/gitRepoName: ${REPO_NAME}
+    managed.openshift.io/osd: 'true'
+  name: backplane-cssre-rhmi-addon-rhmi-operator
+spec:
+  clusterDeploymentSelector:
+    matchLabels:
+      api.openshift.com/managed: 'true'
+      api.openshift.com/addon-rhmi-operator: 'true'
+  resourceApplyMode: Sync
+  resources:
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRole
+    metadata:
+      name: backplane-rhmi-cssre-admins-cluster-aggregate
+      labels:
+        managed.openshift.io/aggregate-to-cssre-admins: cluster
+    rules:
+    - apiGroups:
+      - config.openshift.io
+      resources:
+      - infrastructures
+      - oauths
+      verbs:
+      - get
+    - apiGroups:
+      - quota.openshift.io
+      resources:
+      - clusterresourcequotas/status
+      - clusterresourcequotas
+      verbs:
+      - '*'
+    - apiGroups:
+      - apiextensions.k8s.io
+      - admin-enmasse.io
+      - apicur.io
+      - applicationmonitoring.integreatly.org
+      - apps.3scale.net
+      - capabilities.3scale.net
+      - enmasse.io
+      - iot.enmasse.io
+      - keycloak.org
+      - monitoring.coreos.com
+      - push.aerogear.org
+      - org.eclipse.che
+      - syndesis.io
+      resources:
+      - '*'
+      verbs:
+      - create
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRole
+    metadata:
+      name: backplane-rhmi-cssre-admins-project
+    rules:
+    - apiGroups:
+      - ''
+      resources:
+      - pods/exec
+      verbs:
+      - create
+    - apiGroups:
+      - ''
+      resources:
+      - pods/portforward
+      verbs:
+      - create
+    - apiGroups:
+      - batch
+      resources:
+      - jobs
+      - cronjobs
+      verbs:
+      - delete
+      - deletecollection
+    - apiGroups:
+      - build.openshift.io
+      resources:
+      - builds
+      verbs:
+      - delete
+      - deletecollection
+    - apiGroups:
+      - ''
+      resources:
+      - pods
+      - pods/attach
+      verbs:
+      - create
+    - apiGroups:
+      - ''
+      resources:
+      - pods
+      - pods/log
+      verbs:
+      - get
+    - apiGroups:
+      - ''
+      resources:
+      - pods
+      verbs:
+      - delete
+    - apiGroups:
+      - integreatly.org
+      resources:
+      - '*'
+      verbs:
+      - create
+      - get
+      - list
+      - patch
+      - update
+      - watch
+    - apiGroups:
+      - ''
+      resources:
+      - secrets
+      - configmaps
+      - persistentvolumeclaims
+      verbs:
+      - '*'
+    - apiGroups:
+      - operators.coreos.com
+      resources:
+      - installplans
+      verbs:
+      - patch
+    - apiGroups:
+      - policy
+      resources:
+      - poddisruptionbudgets
+      verbs:
+      - list
+      - get
+    - apiGroups:
+      - apps
+      resources:
+      - statefulsets
+      verbs:
+      - list
+      - get
+    - apiGroups:
+      - ''
+      resources:
+      - events
+      verbs:
+      - list
+      - get
+    - apiGroups:
+      - ''
+      resources:
+      - endpoints
+      verbs:
+      - list
+      - get
+    - apiGroups:
+      - tekton.dev
+      resources:
+      - '*'
+      verbs:
+      - '*'
+  - apiVersion: managed.openshift.io/v1alpha1
+    kind: SubjectPermission
+    metadata:
+      name: backplane-rhmi-cssre-admins
+      namespace: openshift-rbac-permissions
+    spec:
+      permissions:
+      - clusterRoleName: backplane-rhmi-cssre-admins-project
+        namespacesAllowedRegex: ^redhat-.*$
+      - clusterRoleName: view
+        namespacesAllowedRegex: ^redhat-.*$
+      subjectKind: Group
+      subjectName: system:serviceaccounts:openshift-backplane-cssre

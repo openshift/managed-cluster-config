@@ -1,0 +1,48 @@
+apiVersion: hive.openshift.io/v1
+kind: SelectorSyncSet
+metadata:
+  labels:
+    managed.openshift.io/gitHash: ${IMAGE_TAG}
+    managed.openshift.io/gitRepoName: ${REPO_NAME}
+    managed.openshift.io/osd: 'true'
+  name: bz2068601
+spec:
+  clusterDeploymentSelector:
+    matchLabels:
+      api.openshift.com/managed: 'true'
+    matchExpressions:
+    - key: hive.openshift.io/version-major-minor
+      operator: In
+      values:
+      - '4.9'
+      - '4.10'
+  resourceApplyMode: Sync
+  resources:
+  - apiVersion: monitoring.coreos.com/v1
+    kind: PrometheusRule
+    metadata:
+      name: custom-etcd-prometheus-rules
+      namespace: openshift-etcd-operator
+    spec:
+      groups:
+      - name: etcd
+        rules:
+        - record: etcd_revision_stddev_sre
+          expr: "-etcd_debugging_mvcc_compact_revision\n  + on (job, namespace) group_left\
+            \ (max_instance, max_pod)\nlabel_replace(\n  label_replace(\n    topk\
+            \ by (job,namespace) (1, etcd_debugging_mvcc_compact_revision),\n    \"\
+            max_instance\", \"$1\", \"instance\", \"(.*)\"\n  ),\n  \"max_pod\", \"\
+            $1\", \"pod\", \"(.*)\"\n)\n"
+        - alert: etcdDivergentRevisionsSRE
+          annotations:
+            description: etcd is reporting divergent member revisions, with a pod
+              {{ $labels.pod }} on instance {{ $labels.instance }} trailing {{ $value
+              }} compacted revisions behind pod {{ $labels.max_pod }} on instance
+              {{ $labels.max_instance }}. Members may be stuck or, in extreme circumstances,
+              split brained.
+            summary: etcd is reporting divergent member revisions.
+          expr: etcd_revision_stddev_sre > 0
+          for: 40m
+          labels:
+            severity: critical
+            namespace: openshift-etcd-operator

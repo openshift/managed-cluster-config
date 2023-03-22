@@ -1,0 +1,29 @@
+apiVersion: hive.openshift.io/v1
+kind: SelectorSyncSet
+metadata:
+  labels:
+    managed.openshift.io/gitHash: ${IMAGE_TAG}
+    managed.openshift.io/gitRepoName: ${REPO_NAME}
+    managed.openshift.io/osd: 'true'
+  name: kubelet-config-legal-entity-id
+spec:
+  clusterDeploymentSelector:
+    matchLabels:
+      api.openshift.com/managed: 'true'
+    matchExpressions:
+    - key: api.openshift.com/legal-entity-id
+      operator: In
+      values:
+      - ${{DPTP_LEGAL_ENTITY_ID}}
+  resourceApplyMode: Upsert
+  resources:
+  - apiVersion: machineconfiguration.openshift.io/v1
+    kind: KubeletConfig
+    metadata:
+      name: custom-kubelet
+    spec:
+      machineConfigPoolSelector:
+        matchExpressions:
+        - key: machineconfiguration.openshift.io/mco-built-in
+          operator: Exists
+      autoSizingReserved: true

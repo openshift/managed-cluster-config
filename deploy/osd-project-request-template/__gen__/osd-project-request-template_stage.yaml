@@ -1,0 +1,48 @@
+apiVersion: hive.openshift.io/v1
+kind: SelectorSyncSet
+metadata:
+  labels:
+    managed.openshift.io/gitHash: ${IMAGE_TAG}
+    managed.openshift.io/gitRepoName: ${REPO_NAME}
+    managed.openshift.io/osd: 'true'
+  name: osd-project-request-template
+spec:
+  clusterDeploymentSelector:
+    matchLabels:
+      api.openshift.com/managed: 'true'
+  resourceApplyMode: Sync
+  resources:
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: Role
+    metadata:
+      name: dedicated-admins-project-request
+      namespace: openshift-config
+    rules:
+    - apiGroups:
+      - template.openshift.io
+      resources:
+      - templates
+      verbs:
+      - '*'
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: RoleBinding
+    metadata:
+      name: dedicated-admins-project-request
+      namespace: openshift-config
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: Role
+      name: dedicated-admins-project-request
+    subjects:
+    - apiGroup: rbac.authorization.k8s.io
+      kind: Group
+      name: dedicated-admins
+    - kind: Group
+      name: system:serviceaccounts:dedicated-admin
+  patches:
+  - kind: Namespace
+    apiVersion: v1
+    name: default
+    applyMode: AlwaysApply
+    patch: '{ "metadata": {"labels": {"name":"default"} } }'
+    patchType: merge

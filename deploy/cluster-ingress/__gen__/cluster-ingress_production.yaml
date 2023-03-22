@@ -1,0 +1,33 @@
+apiVersion: hive.openshift.io/v1
+kind: SelectorSyncSet
+metadata:
+  labels:
+    managed.openshift.io/gitHash: ${IMAGE_TAG}
+    managed.openshift.io/gitRepoName: ${REPO_NAME}
+    managed.openshift.io/osd: 'true'
+  name: cluster-ingress
+spec:
+  clusterDeploymentSelector:
+    matchLabels:
+      api.openshift.com/managed: 'true'
+    matchExpressions:
+    - key: hive.openshift.io/version-major-minor
+      operator: NotIn
+      values:
+      - '4.0'
+      - '4.1'
+      - '4.2'
+      - '4.3'
+      - '4.4'
+    - key: ext-managed.openshift.io/hive-shard
+      operator: NotIn
+      values:
+      - 'true'
+  resourceApplyMode: Sync
+  patches:
+  - apiVersion: config.openshift.io/v1
+    kind: Ingress
+    name: cluster
+    patch: '{ "metadata": {"annotations": {"ingress.operator.openshift.io/default-enable-http2":
+      "true"} } }'
+    patchType: merge

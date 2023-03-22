@@ -1,0 +1,37 @@
+apiVersion: hive.openshift.io/v1
+kind: SelectorSyncSet
+metadata:
+  labels:
+    managed.openshift.io/gitHash: ${IMAGE_TAG}
+    managed.openshift.io/gitRepoName: ${REPO_NAME}
+    managed.openshift.io/osd: 'true'
+  name: osd-gcp-ssd-storage
+spec:
+  clusterDeploymentSelector:
+    matchLabels:
+      api.openshift.com/managed: 'true'
+    matchExpressions:
+    - key: api.openshift.com/ccs
+      operator: In
+      values:
+      - 'true'
+    - key: hive.openshift.io/cluster-platform
+      operator: In
+      values:
+      - gcp
+  resourceApplyMode: Sync
+  applyBehavior: CreateOnly
+  resources:
+  - apiVersion: storage.k8s.io/v1
+    kind: StorageClass
+    metadata:
+      name: ssd
+      annotations:
+        storageclass.kubernetes.io/is-default-class: 'false'
+    provisioner: kubernetes.io/gce-pd
+    parameters:
+      type: pd-ssd
+      replication-type: none
+    volumeBindingMode: WaitForFirstConsumer
+    allowVolumeExpansion: true
+    reclaimPolicy: Delete

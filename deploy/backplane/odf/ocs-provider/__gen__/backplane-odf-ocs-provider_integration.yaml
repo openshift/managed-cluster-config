@@ -1,0 +1,28 @@
+apiVersion: hive.openshift.io/v1
+kind: SelectorSyncSet
+metadata:
+  labels:
+    managed.openshift.io/gitHash: ${IMAGE_TAG}
+    managed.openshift.io/gitRepoName: ${REPO_NAME}
+    managed.openshift.io/osd: 'true'
+  name: backplane-odf-ocs-provider
+spec:
+  clusterDeploymentSelector:
+    matchLabels:
+      api.openshift.com/managed: 'true'
+      api.openshift.com/addon-ocs-provider: 'true'
+  resourceApplyMode: Sync
+  resources:
+  - apiVersion: managed.openshift.io/v1alpha1
+    kind: SubjectPermission
+    metadata:
+      name: backplane-odf-ocs-provider-admins
+      namespace: openshift-rbac-permissions
+    spec:
+      permissions:
+      - clusterRoleName: admin
+        namespacesAllowedRegex: (^openshift-storage$)
+      - clusterRoleName: backplane-ocs-provider-cr-admins
+        namespacesAllowedRegex: (^openshift-storage$)
+      subjectKind: Group
+      subjectName: system:serviceaccounts:openshift-backplane-odf

@@ -1,0 +1,34 @@
+apiVersion: hive.openshift.io/v1
+kind: SelectorSyncSet
+metadata:
+  labels:
+    managed.openshift.io/gitHash: ${IMAGE_TAG}
+    managed.openshift.io/gitRepoName: ${REPO_NAME}
+    managed.openshift.io/osd: 'true'
+  name: rosa-console-branding
+spec:
+  clusterDeploymentSelector:
+    matchLabels:
+      api.openshift.com/managed: 'true'
+    matchExpressions:
+    - key: api.openshift.com/product
+      operator: In
+      values:
+      - rosa
+  resourceApplyMode: Upsert
+  applyBehavior: CreateOrUpdate
+  resources:
+  - apiVersion: operator.openshift.io/v1
+    kind: Console
+    metadata:
+      name: cluster
+    spec:
+      managementState: Managed
+      route: null
+      customization:
+        brand: null
+        documentationBaseURL: https://docs.openshift.com/rosa/
+        customProductName: Red Hat OpenShift Service on AWS
+        customLogoFile:
+          name: rosa-brand-logo
+          key: rosa-brand-logo.svg

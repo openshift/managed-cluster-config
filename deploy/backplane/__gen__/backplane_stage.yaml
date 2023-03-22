@@ -1,0 +1,32 @@
+apiVersion: hive.openshift.io/v1
+kind: SelectorSyncSet
+metadata:
+  labels:
+    managed.openshift.io/gitHash: ${IMAGE_TAG}
+    managed.openshift.io/gitRepoName: ${REPO_NAME}
+    managed.openshift.io/osd: 'true'
+  name: backplane
+spec:
+  clusterDeploymentSelector:
+    matchLabels:
+      api.openshift.com/managed: 'true'
+  resourceApplyMode: Sync
+  resources:
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRole
+    metadata:
+      name: backplane-readers-cluster
+    aggregationRule:
+      clusterRoleSelectors:
+      - matchExpressions:
+        - key: rbac.authorization.k8s.io/aggregate-to-view
+          operator: In
+          values:
+          - 'true'
+        - key: kubernetes.io/bootstrapping
+          operator: DoesNotExist
+      - matchExpressions:
+        - key: managed.openshift.io/aggregate-to-dedicated-readers
+          operator: In
+          values:
+          - 'true'

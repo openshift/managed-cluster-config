@@ -1,0 +1,139 @@
+apiVersion: hive.openshift.io/v1
+kind: SelectorSyncSet
+metadata:
+  labels:
+    managed.openshift.io/gitHash: ${IMAGE_TAG}
+    managed.openshift.io/gitRepoName: ${REPO_NAME}
+    managed.openshift.io/osd: 'true'
+  name: ocm-agent-operator-managednotifications
+spec:
+  clusterDeploymentSelector:
+    matchLabels:
+      api.openshift.com/managed: 'true'
+    matchExpressions:
+    - key: api.openshift.com/fedramp
+      operator: NotIn
+      values:
+      - 'true'
+  resourceApplyMode: Sync
+  resources:
+  - apiVersion: ocmagent.managed.openshift.io/v1alpha1
+    kind: ManagedNotification
+    metadata:
+      name: sre-managed-notifications
+      namespace: openshift-ocm-agent-operator
+    spec:
+      notifications:
+      - activeBody: Your cluster requires you to take action as there are multiple
+          ingress controllers detected. Red Hat SRE strongly recommends using Openshift-managed
+          Custom Domains instead, as multiple ingress controllers, if improperly configured,
+          can lead to problems with internal and external networking.
+        name: MultipleIngressControllersDetected
+        resendWait: 24
+        resolvedBody: Your cluster no longer has multiple Ingress Controllers installed.
+          No additional action on this issue is required.
+        severity: Info
+        summary: Multiple ingress controllers detected
+      - activeBody: Your cluster requires you to take action as its ElasticSearch
+          cluster logging deployment has been detected as reaching a high disk usage
+          threshold. Red Hat SRE strongly recommends reducing application logging
+          on your cluster to ensure logging continues to function. If logging disk
+          consumption exceeds 95%, data will be at risk of becoming unavailable or
+          lost and the stability of your ElasticSearch deployment may be impacted.
+        name: LoggingVolumeFillingUp
+        resendWait: 24
+        resolvedBody: Your cluster's ElasticSearch deployment is detected as being
+          at safe disk consumption levels and no additional action on this issue is
+          required.
+        severity: Info
+        summary: ElasticSearch reaching disk capacity
+      - activeBody: 'Your cluster requires you to take action. SRE has observed that
+          there is more than one default Storage Class configured for your cluster.
+          Please specify one default storage class for your persistent volume claims.
+          Consult the documentation for details: https://docs.openshift.com/container-platform/latest/storage/understanding-persistent-storage.html#pvc-storage-class_understanding-persistent-storage'
+        name: MultipleDefaultStorageClasses
+        resendWait: 24
+        resolvedBody: Your cluster no longer has multiple default storage classes
+          defined. No further action is required.
+        severity: Info
+        summary: Multiple Default Storage Classes Configured
+      - activeBody: A user on your system has removed a platform protection webhook.
+          This protection has already been automatically replaced, and no further
+          action is required. Tampering with platform protections can endanger SLAs.
+        name: NonSystemChangeValidationWebhookConfigurations
+        resendWait: 1
+        severity: Error
+        summary: Platform protections removed by non-Red Hat user
+  - apiVersion: ocmagent.managed.openshift.io/v1alpha1
+    kind: ManagedNotification
+    metadata:
+      name: sre-proxy-managed-notifications
+      namespace: openshift-ocm-agent-operator
+    spec:
+      notifications:
+      - name: AdditionalTrustBundleCAExpiring
+        severity: Warning
+        summary: Additional Trust Bundle CA Expiring
+        activeBody: Your cluster requires you to take action because one of the Certificate
+          Authority (CA) certificates in the Additional Trusted CA Bundle you have
+          set for your cluster is due to expire. To avoid any potential disruption
+          of service or cluster availability caused by the expiration of the CA certificate,
+          please ensure your Additional Trusted CA Bundle is updated with any new
+          CA certificates required. For more information, please refer to https://docs.openshift.com/rosa/networking/configuring-cluster-wide-proxy.html#trust_bundle_responsibilities_cluster-wide-proxy-configuration
+        resendWait: 48
+        resolvedBody: Your cluster's Additional Trusted CA Bundle is detected as no
+          longer containing any Certificate Authority (CA) certificates that are due
+          for imminent expiry. No further action on this issue is required.
+      - name: AdditionalTrustBundleCAExpired
+        severity: Error
+        summary: Additional Trust Bundle CA Expired
+        activeBody: Your cluster requires you to take action because one of the Certificate
+          Authority (CA) certificates in the Additional Trusted CA Bundle you have
+          added to your cluster has now reached its expiration date. To avoid any
+          potential disruption of service or cluster availability caused by the expiration
+          of the CA certificate, please ensure your Additional Trusted CA Bundle is
+          updated with any new CA certificates required and remove the expired CA
+          certficates. For more information, please refer to https://docs.openshift.com/rosa/networking/configuring-cluster-wide-proxy.html#trust_bundle_responsibilities_cluster-wide-proxy-configuration
+        resendWait: 24
+        resolvedBody: Your cluster's Additional Trusted CA Bundle is detected as no
+          longer containing any Certificate Authority (CA) certificates that are expired.
+          No further action on this issue is required.
+      - name: AdditionalTrustBundleCAInvalid
+        severity: Error
+        summary: Additional Trust Bundle CA Invalid
+        activeBody: 'Your cluster requires you to take action because one of the Certificate
+          Authority (CA) certificates in the Additional Trusted CA Bundle you have
+          added to your cluster is detected as unparseable or invalid. Please ensure
+          your Additional Trusted CA Bundle represents a bundle of one or more PEM-encoded
+          X.509 certificates that are all concatenated together. For more information,
+          please refer to https://docs.openshift.com/rosa/networking/configuring-cluster-wide-proxy.html#trust_bundle_responsibilities_cluster-wide-proxy-configuration '
+        resendWait: 24
+        resolvedBody: Your cluster's Additional Trusted CA Bundle is detected as no
+          longer containing any invalid Certificate Authority (CA) certificates. No
+          further action on this issue is required.
+      - name: ClusterProxyNetworkDegraded
+        severity: Error
+        summary: Cluster-wide Proxy failing readiness checks
+        activeBody: Your cluster requires you to take action because your configured
+          cluster-wide proxy is failing to satisfy readiness endpoint reachability
+          checks that can confirm its correct operation. Please verify the availability
+          of your cluster-wide proxy and its ability to proxy egress network traffic
+          from the cluster. For more information on management of the cluster-wide
+          proxy, please refer to https://docs.openshift.com/rosa/networking/configuring-cluster-wide-proxy.html
+        resendWait: 24
+        resolvedBody: Your cluster's cluster-wide proxy is no longer raising any errors
+          concerning network egress. No further action on this issue is required.
+  - apiVersion: ocmagent.managed.openshift.io/v1alpha1
+    kind: ManagedNotification
+    metadata:
+      name: sre-upgrade-managed-notifications
+      namespace: openshift-ocm-agent-operator
+    spec:
+      notifications:
+      - name: UpgradeControlPlaneUpgradeTimeout
+        severity: Error
+        summary: Control plane upgrade completion delayed
+        activeBody: There has been a delay observed in the anticipated completion
+          time of your cluster's Control Plane upgrade. Red Hat SRE has been notified
+          of the situation
+        resendWait: 72

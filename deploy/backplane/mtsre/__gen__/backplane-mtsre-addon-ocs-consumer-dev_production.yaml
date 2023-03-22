@@ -1,0 +1,107 @@
+apiVersion: hive.openshift.io/v1
+kind: SelectorSyncSet
+metadata:
+  labels:
+    managed.openshift.io/gitHash: ${IMAGE_TAG}
+    managed.openshift.io/gitRepoName: ${REPO_NAME}
+    managed.openshift.io/osd: 'true'
+  name: backplane-mtsre-addon-ocs-consumer-dev
+spec:
+  clusterDeploymentSelector:
+    matchLabels:
+      api.openshift.com/managed: 'true'
+      api.openshift.com/addon-ocs-consumer-dev: 'true'
+  resourceApplyMode: Sync
+  resources:
+  - apiVersion: v1
+    kind: Namespace
+    metadata:
+      name: openshift-backplane-mtsre
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRole
+    metadata:
+      name: backplane-mtsre-addon-operator-admin
+    rules:
+    - apiGroups:
+      - addons.managed.openshift.io
+      resources:
+      - addonoperators
+      - addons
+      - addoninstances
+      verbs:
+      - get
+      - list
+      - watch
+      - patch
+      - update
+      - delete
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRole
+    metadata:
+      name: backplane-mtsre-addon-operator-olm-admin
+    rules:
+    - apiGroups:
+      - operators.coreos.com
+      resources:
+      - clusterserviceversions
+      - installplans
+      - subscriptions
+      verbs:
+      - get
+      - list
+      - watch
+      - patch
+      - update
+      - delete
+    - apiGroups:
+      - operators.coreos.com
+      resources:
+      - operators
+      verbs:
+      - get
+      - list
+      - watch
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRole
+    metadata:
+      name: backplane-mtsre-monitoring
+    rules:
+    - apiGroups:
+      - monitoring.coreos.com
+      resources:
+      - servicemonitors
+      verbs:
+      - get
+      - list
+      - watch
+      - patch
+      - update
+    - apiGroups:
+      - monitoring.rhobs
+      resources:
+      - monitoringstacks
+      - thanosqueriers
+      verbs:
+      - get
+      - list
+      - watch
+      - patch
+      - update
+  - apiVersion: managed.openshift.io/v1alpha1
+    kind: SubjectPermission
+    metadata:
+      name: backplane-mtsre-addon-operator-admins
+      namespace: openshift-rbac-permissions
+    spec:
+      clusterPermissions:
+      - backplane-mtsre-addon-operator-admin
+      - backplane-readers-cluster
+      permissions:
+      - clusterRoleName: admin
+        namespacesAllowedRegex: (^openshift-addon-operator$)
+      - clusterRoleName: backplane-mtsre-monitoring
+        namespacesAllowedRegex: (^openshift-addon-operator$)
+      - clusterRoleName: backplane-mtsre-addon-operator-olm-admin
+        namespacesAllowedRegex: (^openshift-addon-operator$)
+      subjectKind: Group
+      subjectName: system:serviceaccounts:openshift-backplane-mtsre

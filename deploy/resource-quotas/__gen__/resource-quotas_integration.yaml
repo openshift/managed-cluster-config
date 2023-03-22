@@ -1,0 +1,42 @@
+apiVersion: hive.openshift.io/v1
+kind: SelectorSyncSet
+metadata:
+  labels:
+    managed.openshift.io/gitHash: ${IMAGE_TAG}
+    managed.openshift.io/gitRepoName: ${REPO_NAME}
+    managed.openshift.io/osd: 'true'
+  name: resource-quotas
+spec:
+  clusterDeploymentSelector:
+    matchLabels:
+      api.openshift.com/managed: 'true'
+  resourceApplyMode: Sync
+  patches:
+  - kind: Namespace
+    apiVersion: v1
+    name: openshift-etcd
+    applyMode: AlwaysApply
+    patch: '{ "metadata": {"labels": {"managed.openshift.io/storage-pv-quota-exempt":"true"}
+      } }'
+    patchType: merge
+  - kind: Namespace
+    apiVersion: v1
+    name: openshift-ingress
+    applyMode: AlwaysApply
+    patch: '{ "metadata": {"labels": {"managed.openshift.io/service-lb-quota-exempt":"true"}
+      } }'
+    patchType: merge
+  - kind: Namespace
+    apiVersion: v1
+    name: openshift-kube-apiserver
+    applyMode: AlwaysApply
+    patch: '{ "metadata": {"labels": {"managed.openshift.io/service-lb-quota-exempt":"true"}
+      } }'
+    patchType: merge
+  - kind: Namespace
+    apiVersion: v1
+    name: openshift-monitoring
+    applyMode: AlwaysApply
+    patch: '{ "metadata": {"labels": {"managed.openshift.io/storage-pv-quota-exempt":"true"}
+      } }'
+    patchType: merge

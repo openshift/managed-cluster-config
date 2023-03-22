@@ -1,0 +1,42 @@
+apiVersion: hive.openshift.io/v1
+kind: SelectorSyncSet
+metadata:
+  labels:
+    managed.openshift.io/gitHash: ${IMAGE_TAG}
+    managed.openshift.io/gitRepoName: ${REPO_NAME}
+    managed.openshift.io/osd: 'true'
+  name: osd-hsts-routes
+spec:
+  clusterDeploymentSelector:
+    matchLabels:
+      api.openshift.com/managed: 'true'
+  resourceApplyMode: Sync
+  patches:
+  - apiVersion: route.openshift.io/v1
+    applyMode: Sync
+    kind: Route
+    name: alertmanager-main
+    namespace: openshift-monitoring
+    patch: '{"metadata":{"annotations":{"haproxy.router.openshift.io/hsts_header":"max-age=31536000;preload"}}}'
+    patchType: merge
+  - apiVersion: route.openshift.io/v1
+    applyMode: Sync
+    kind: Route
+    name: console
+    namespace: openshift-console
+    patch: '{"metadata":{"annotations":{"haproxy.router.openshift.io/hsts_header":"max-age=31536000;preload"}}}'
+    patchType: merge
+  - apiVersion: route.openshift.io/v1
+    applyMode: Sync
+    kind: Route
+    name: prometheus-k8s
+    namespace: openshift-monitoring
+    patch: '{"metadata":{"annotations":{"haproxy.router.openshift.io/hsts_header":"max-age=31536000;preload"}}}'
+    patchType: merge
+  - apiVersion: route.openshift.io/v1
+    applyMode: Sync
+    kind: Route
+    name: thanos-querier
+    namespace: openshift-monitoring
+    patch: '{"metadata":{"annotations":{"haproxy.router.openshift.io/hsts_header":"max-age=31536000;preload"}}}'
+    patchType: merge

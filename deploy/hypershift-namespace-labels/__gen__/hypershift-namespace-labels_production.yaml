@@ -1,0 +1,27 @@
+apiVersion: hive.openshift.io/v1
+kind: SelectorSyncSet
+metadata:
+  labels:
+    managed.openshift.io/gitHash: ${IMAGE_TAG}
+    managed.openshift.io/gitRepoName: ${REPO_NAME}
+    managed.openshift.io/osd: 'true'
+  name: hypershift-namespace-labels
+spec:
+  clusterDeploymentSelector:
+    matchLabels:
+      api.openshift.com/managed: 'true'
+    matchExpressions:
+    - key: ext-hypershift.openshift.io/cluster-type
+      operator: In
+      values:
+      - management-cluster
+      - service-cluster
+  resourceApplyMode: Sync
+  patches:
+  - kind: Namespace
+    apiVersion: v1
+    name: openshift-observability-operator
+    applyMode: AlwaysApply
+    patch: '{ "metadata": {"labels": {"network.openshift.io/policy-group":"monitoring"}
+      } }'
+    patchType: merge

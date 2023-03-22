@@ -1,0 +1,79 @@
+apiVersion: hive.openshift.io/v1
+kind: SelectorSyncSet
+metadata:
+  labels:
+    managed.openshift.io/gitHash: ${IMAGE_TAG}
+    managed.openshift.io/gitRepoName: ${REPO_NAME}
+    managed.openshift.io/osd: 'true'
+  name: backplane-cssre-redhat-kas-fleetshard-addon-kas-fleetshard-operator
+spec:
+  clusterDeploymentSelector:
+    matchLabels:
+      api.openshift.com/managed: 'true'
+      api.openshift.com/addon-kas-fleetshard-operator: 'true'
+  resourceApplyMode: Sync
+  resources:
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRole
+    metadata:
+      name: backplane-cssre-mkafka-project
+    rules:
+    - apiGroups:
+      - ''
+      resources:
+      - pods
+      - pods/attach
+      verbs:
+      - create
+    - apiGroups:
+      - ''
+      resources:
+      - pods
+      verbs:
+      - delete
+      - deletecollection
+    - apiGroups:
+      - ''
+      resources:
+      - replicasets
+      verbs:
+      - delete
+      - deletecollection
+    - apiGroups:
+      - ''
+      resources:
+      - pods/portforward
+      verbs:
+      - create
+    - apiGroups:
+      - ''
+      resources:
+      - pods/exec
+      verbs:
+      - create
+    - apiGroups:
+      - kafka.strimzi.io
+      resources:
+      - kafkarebalances
+      verbs:
+      - create
+      - get
+      - list
+      - watch
+      - patch
+      - update
+      - delete
+      - deletecollection
+  - apiVersion: managed.openshift.io/v1alpha1
+    kind: SubjectPermission
+    metadata:
+      name: backplane-cssre-mkafka
+      namespace: openshift-rbac-permissions
+    spec:
+      permissions:
+      - clusterRoleName: backplane-cssre-mkafka-project
+        namespacesAllowedRegex: (^redhat-managed-kafka-.*|^redhat-kas-fleetshard-.*|^managed-application-services-observability|^kafka-.*)
+      - clusterRoleName: view
+        namespacesAllowedRegex: (^redhat-managed-kafka-.*|^redhat-kas-fleetshard-.*|^managed-application-services-observability|^kafka-.*)
+      subjectKind: Group
+      subjectName: system:serviceaccounts:openshift-backplane-cssre

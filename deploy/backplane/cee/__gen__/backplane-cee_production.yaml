@@ -1,0 +1,147 @@
+apiVersion: hive.openshift.io/v1
+kind: SelectorSyncSet
+metadata:
+  labels:
+    managed.openshift.io/gitHash: ${IMAGE_TAG}
+    managed.openshift.io/gitRepoName: ${REPO_NAME}
+    managed.openshift.io/osd: 'true'
+  name: backplane-cee
+spec:
+  clusterDeploymentSelector:
+    matchLabels:
+      api.openshift.com/managed: 'true'
+  resourceApplyMode: Sync
+  resources:
+  - apiVersion: v1
+    kind: Namespace
+    metadata:
+      name: openshift-backplane-cee
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRole
+    metadata:
+      name: backplane-cee-readers-cluster
+    rules:
+    - apiGroups:
+      - machineconfiguration.openshift.io
+      resources:
+      - '*'
+      verbs:
+      - get
+      - list
+      - watch
+    - apiGroups:
+      - machine.openshift.io
+      resources:
+      - '*'
+      verbs:
+      - get
+      - list
+      - watch
+    - apiGroups:
+      - apiserver.openshift.io
+      resources:
+      - apirequestcounts
+      verbs:
+      - get
+      - list
+      - watch
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: Role
+    metadata:
+      name: backplane-cee
+      namespace: openshift-monitoring
+    rules:
+    - apiGroups:
+      - ''
+      resources:
+      - pods/portforward
+      verbs:
+      - create
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: RoleBinding
+    metadata:
+      name: backplane-cee
+      namespace: openshift-monitoring
+    subjects:
+    - apiGroup: rbac.authorization.k8s.io
+      kind: Group
+      name: system:serviceaccounts:openshift-backplane-cee
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: Role
+      name: backplane-cee
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: Role
+    metadata:
+      name: backplane-cee-mustgather
+      namespace: openshift-must-gather-operator
+    rules:
+    - apiGroups:
+      - ''
+      resources:
+      - secrets
+      verbs:
+      - create
+    - apiGroups:
+      - managed.openshift.io
+      resources:
+      - mustgathers
+      verbs:
+      - create
+      - delete
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: RoleBinding
+    metadata:
+      name: backplane-cee-mustgather
+      namespace: openshift-must-gather-operator
+    subjects:
+    - apiGroup: rbac.authorization.k8s.io
+      kind: Group
+      name: system:serviceaccounts:openshift-backplane-cee
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: Role
+      name: backplane-cee-mustgather
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: Role
+    metadata:
+      name: backplane-cee-pcap-collector
+      namespace: openshift-backplane-managed-scripts
+    rules:
+    - verbs:
+      - create
+      - delete
+      apiGroups:
+      - ''
+      resources:
+      - secrets
+      resourceNames:
+      - pcap-collector-creds
+  - apiVersion: managed.openshift.io/v1alpha1
+    kind: SubjectPermission
+    metadata:
+      name: backplane-cee
+      namespace: openshift-rbac-permissions
+    spec:
+      clusterPermissions:
+      - backplane-cee-readers-cluster
+      - backplane-readers-cluster
+      permissions:
+      - clusterRoleName: dedicated-readers
+        namespacesAllowedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
+        namespacesDeniedRegex: openshift-backplane-cluster-admin
+      subjectKind: Group
+      subjectName: system:serviceaccounts:openshift-backplane-cee
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: RoleBinding
+    metadata:
+      name: backplane-cee-mustgather
+      namespace: openshift-backplane-managed-scripts
+    subjects:
+    - apiGroup: rbac.authorization.k8s.io
+      kind: Group
+      name: system:serviceaccounts:openshift-backplane-cee
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: Role
+      name: backplane-cee-pcap-collector

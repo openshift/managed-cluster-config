@@ -1,0 +1,806 @@
+apiVersion: hive.openshift.io/v1
+kind: SelectorSyncSet
+metadata:
+  labels:
+    managed.openshift.io/gitHash: ${IMAGE_TAG}
+    managed.openshift.io/gitRepoName: ${REPO_NAME}
+    managed.openshift.io/osd: 'true'
+  name: sre-prometheus
+spec:
+  clusterDeploymentSelector:
+    matchLabels:
+      api.openshift.com/managed: 'true'
+  resourceApplyMode: Sync
+  resources:
+  - apiVersion: monitoring.coreos.com/v1
+    kind: PrometheusRule
+    metadata:
+      labels:
+        prometheus: sre-alertmanager-silences-active
+        role: alert-rules
+      name: sre-alertmanager-silences-active
+      namespace: openshift-monitoring
+    spec:
+      groups:
+      - name: sre-alertmanager-silences-active
+        rules:
+        - alert: AlertmanagerSilencesActiveSRE
+          expr: avg without (instance,pod,endpoint,job,service,state,container)(alertmanager_silences{state="active"})
+            > 0 unless (count(cluster_version{type="updating"}) > 0 or sum by(namespace)
+            (time() - kube_pod_created{namespace="openshift-monitoring",pod=~"osd-cluster-ready.*"}
+            < 4500))
+          for: 15m
+          labels:
+            severity: warning
+            namespace: openshift-monitoring
+          annotations:
+            message: Active AlertManager silences have been detected on the cluster
+              for the last 15 minutes. As a result, active alerts may potentially
+              not be being reported back.
+  - apiVersion: monitoring.coreos.com/v1
+    kind: PrometheusRule
+    metadata:
+      labels:
+        prometheus: sre-configure-alertmanager-operator-offline-alerts
+        role: alert-rules
+      name: sre-configure-alertmanager-operator-offline-alerts
+      namespace: openshift-monitoring
+    spec:
+      groups:
+      - name: sre-configure-alertmanager-operator-offline-alerts
+        rules:
+        - alert: ConfigureAlertmanagerOperatorOfflineSRE
+          expr: absent(up{service="configure-alertmanager-operator"})
+          for: 15m
+          labels:
+            severity: critical
+            namespace: openshift-monitoring
+  - apiVersion: monitoring.coreos.com/v1
+    kind: PrometheusRule
+    metadata:
+      labels:
+        prometheus: sre-leader-election-master-status-alerts
+        role: alert-rules
+      name: sre-leader-election-master-status-alerts
+      namespace: openshift-monitoring
+    spec:
+      groups:
+      - name: sre-leader-election-master-status-alerts
+        rules:
+        - alert: ControlPlaneLeaderElectionFailingSRE
+          expr: sum(leader_election_master_status{container=~"kube-scheduler|provisioner-kube-rbac-proxy|kube-controller-manager"
+            }) by (container) < 1
+          for: 10m
+          labels:
+            severity: warning
+            namespace: openshift-monitoring
+          annotations:
+            message: Control plane has failing leader election for 10 minutes and
+              should be scaled to support cluster.
+            link: https://github.com/openshift/ops-sop/blob/master/v4/alerts/ControlPlaneLeaderElectionFailingSRE.md
+  - apiVersion: monitoring.coreos.com/v1
+    kind: PrometheusRule
+    metadata:
+      labels:
+        prometheus: sre-control-plane-resizing-alerts
+        role: alert-rules
+      name: sre-control-plane-resizing-alerts
+      namespace: openshift-monitoring
+    spec:
+      groups:
+      - name: sre-control-plane-resizing-recording.rules
+        rules:
+        - expr: label_replace(cluster:nodes_roles, "instance", "$1", "node", "(.*)")
+            * on(instance) group_left node_memory_MemTotal_bytes
+          record: sre:node_roles:memory_total_bytes
+        - expr: label_replace(cluster:nodes_roles, "instance", "$1", "node", "(.*)")
+            * on(instance) group_left instance:node_num_cpu:sum
+          record: sre:node_roles:node_num_cpu
+        - expr: count(cluster:nodes_roles{label_node_role_kubernetes_io!~"(master|infra)"})
+          record: sre:node_workers:count
+        - expr: ( avg(sre:node_roles:memory_total_bytes{label_node_role_kubernetes_io="master"})
+            < 16*1024*1024*1024 AND sre:node_workers:count > 25 AND sre:node_workers:count
+            <= 100 ) OR ( avg(sre:node_roles:memory_total_bytes{label_node_role_kubernetes_io="master"})
+            < 32*1024*1024*1024 AND sre:node_workers:count > 100 AND sre:node_workers:count
+            <= 250 ) OR ( avg(sre:node_roles:memory_total_bytes{label_node_role_kubernetes_io="master"})
+            < 64*1024*1024*1024 AND sre:node_workers:count > 250 )
+          record: sre:node_masters:need_resize
+        - expr: ( ( avg(sre:node_roles:memory_total_bytes{label_node_role_kubernetes_io="infra"})
+            < 16*1024*1024*1024 OR avg(sre:node_roles:node_num_cpu{label_node_role_kubernetes_io="infra"})
+            <= 4 ) AND sre:node_workers:count > 25 AND sre:node_workers:count <= 100
+            ) OR ( ( avg(sre:node_roles:memory_total_bytes{label_node_role_kubernetes_io="infra"})
+            < 32*1024*1024*1024 OR avg(sre:node_roles:node_num_cpu{label_node_role_kubernetes_io="infra"})
+            <= 8 ) AND sre:node_workers:count > 100 AND sre:node_workers:count <=
+            250 ) OR ( ( avg(sre:node_roles:memory_total_bytes{label_node_role_kubernetes_io="infra"})
+            < 128*1024*1024*1024 OR avg(sre:node_roles:node_num_cpu{label_node_role_kubernetes_io="infra"})
+            <= 16 ) AND sre:node_workers:count > 250 ) OR ( avg(sre:node_roles:memory_total_bytes{label_node_role_kubernetes_io="infra"})
+            < 128*1024*1024*1024 AND avg(sre:node_roles:node_num_cpu{label_node_role_kubernetes_io="infra"})
+            <= 32 AND sre:node_workers:count > 500 )
+          record: sre:node_infras:need_resize
+      - name: sre-control-plane-resizing-alerts
+        rules:
+        - alert: MasterNodesNeedResizingSRE
+          expr: sre:node_masters:need_resize > 0
+          for: 15m
+          labels:
+            severity: warning
+            namespace: openshift-monitoring
+          annotations:
+            message: The cluster's master instance has been undersized for 15 minutes
+              and should be vertically scaled to support the existing workers.  See
+              linked SOP for details.  Critical alert will be raised at 2 hours.
+        - alert: MasterNodesNeedResizingSRE
+          expr: sre:node_masters:need_resize > 0
+          for: 2h
+          labels:
+            severity: critical
+            namespace: openshift-monitoring
+          annotations:
+            message: The cluster's master instance has been undersized for 2 hours
+              and must be vertically scaled to support the existing workers.  See
+              linked SOP for details.
+        - alert: InfraNodesNeedResizingSRE
+          expr: sre:node_infras:need_resize > 0
+          for: 2h
+          labels:
+            severity: critical
+            namespace: openshift-monitoring
+          annotations:
+            message: The cluster's infra instance has been undersized for 2 hours
+              and must be vertically scaled to support the existing workers.  See
+              linked SOP for details.
+  - apiVersion: monitoring.coreos.com/v1
+    kind: PrometheusRule
+    metadata:
+      labels:
+        prometheus: sre-dns-alerts
+        role: alert-rules
+      name: sre-dns-alerts
+      namespace: openshift-monitoring
+    spec:
+      groups:
+      - name: sre-dns-alerts
+        rules:
+        - alert: DNSErrors10MinSRE
+          expr: increase(dns_failure_failure_total[10m]) >= 3
+          for: 10m
+          labels:
+            severity: critical
+            namespace: openshift-monitoring
+          annotations:
+            message: At least 3 DNS checks have been failing for the past 10 minutes
+              on pod- {{ $labels.pod }}
+  - apiVersion: monitoring.coreos.com/v1
+    kind: PrometheusRule
+    metadata:
+      labels:
+        prometheus: sre-elasticsearch-jobs
+        role: alert-rules
+      name: sre-elasticsearch-jobs
+      namespace: openshift-monitoring
+    spec:
+      groups:
+      - name: sre-elasticsearch-jobs
+        rules:
+        - alert: ElasticsearchJobFailedSRE
+          expr: kube_job_failed{job="kube-state-metrics",namespace="openshift-logging",job_name=~"^elasticsearch.*"}
+            > 1
+          for: 15m
+          labels:
+            severity: warning
+            namespace: '{{ $labels.namespace }}'
+          annotations:
+            message: Elasticsearch job {{ $labels.job_name }} has failed 2 or more
+              times in the last 15 minutes in namespace {{ $labels.namespace }}.
+  - apiVersion: monitoring.coreos.com/v1
+    kind: PrometheusRule
+    metadata:
+      labels:
+        prometheus: sre-excessive-memory
+        role: alert-rules
+      name: sre-excessive-memory
+      namespace: openshift-monitoring
+    spec:
+      groups:
+      - name: sre-excessive-memory
+        rules:
+        - alert: ExcessiveContainerMemoryWarningSRE
+          expr: container_memory_rss{namespace=~"(^openshift.*|^kube.*|^default$)",namespace!="openshift-customer-monitoring",container_name!="",container_name!="POD",pod!~"(^prometheus-k8s-.*|^elasticsearch-.*)"}/1024/1024/1024>3
+          for: 30m
+          labels:
+            severity: warning
+            namespace: '{{ $labels.namespace }}'
+          annotations:
+            message: System container {{ $labels.namespace }}/{{ $labels.pod_name
+              }}/{{ $labels.container_name }} is using in excess of 3G of memory for
+              over 30 minutes.
+        - alert: ExcessiveContainerMemoryCriticalSRE
+          expr: container_memory_rss{namespace=~"(^openshift.*|^kube.*|^default$)",namespace!="openshift-customer-monitoring",container_name!="",container_name!="POD",pod!~"(^prometheus-k8s-.*|^elasticsearch-.*)"}/1024/1024/1024>5
+          for: 30m
+          labels:
+            severity: critical
+            namespace: '{{ $labels.namespace }}'
+          annotations:
+            message: System container {{ $labels.namespace }}/{{ $labels.pod_name
+              }}/{{ $labels.container_name }} is using in excess of 5G of memory for
+              over 30 minutes.
+  - apiVersion: monitoring.coreos.com/v1
+    kind: PrometheusRule
+    metadata:
+      labels:
+        prometheus: sre-haproxy-reload-fail
+        role: alert-rules
+      name: sre-haproxy-reload-fail
+      namespace: openshift-monitoring
+    spec:
+      groups:
+      - name: sre-haproxy-reload-fails
+        rules:
+        - alert: HAProxyReloadFailSRE
+          expr: increase(template_router_reload_fails[5m]) > 0
+          for: 15m
+          labels:
+            severity: warning
+            namespace: '{{ $labels.namespace }}'
+          annotations:
+            message: HAProxy reloads have failed on {{ $labels.pod }}. Router is not
+              respecting recently created or modified routes
+            link: https://github.com/openshift/ops-sop/blob/master/v4/alerts/HAProxyReloadFailSRE.md
+  - apiVersion: monitoring.coreos.com/v1
+    kind: PrometheusRule
+    metadata:
+      labels:
+        prometheus: sre-managed-kube-apiserver-missing-on-node
+        role: alert-rules
+      name: sre-managed-kube-apiserver-missing-on-node
+      namespace: openshift-monitoring
+    spec:
+      groups:
+      - name: sre-managed-kube-apiserver-missing-on-node
+        rules:
+        - alert: KubeAPIServerMissingOnNode60Minutes
+          expr: 'count(cluster:master_nodes{}) by (node) unless count(kube_pod_info{namespace="openshift-kube-apiserver",
+            pod=~"kube-apiserver-.*", pod!~".*guard.*"}) by (node) >= 1
+
+            '
+          for: 60m
+          labels:
+            severity: warning
+            maturity: immature
+            source: https://issues.redhat.com/browse/OSD-13647
+            link: https://github.com/openshift/ops-sop/blob/master/v4/alerts/StaticPodMissing.md
+          annotations:
+            message: Static pod kube-apiserver is not running on node {{ $labels.node
+              }} for 60 minutes.
+  - apiVersion: monitoring.coreos.com/v1
+    kind: PrometheusRule
+    metadata:
+      labels:
+        prometheus: sre-managed-kube-controller-manager-missing-on-node
+        role: alert-rules
+      name: sre-managed-kube-controller-manager-missing-on-node
+      namespace: openshift-monitoring
+    spec:
+      groups:
+      - name: sre-managed-kube-controller-manager-missing-on-node
+        rules:
+        - alert: KubeControllerManagerMissingOnNode60Minutes
+          expr: 'count(cluster:master_nodes{}) by (node) unless count(kube_pod_info{namespace="openshift-kube-controller-manager",
+            pod=~"kube-controller-manager-.*", pod!~".*guard.*"}) by (node) >= 1
+
+            '
+          for: 60m
+          labels:
+            severity: warning
+            maturity: immature
+            source: https://issues.redhat.com/browse/OSD-13647
+            link: https://github.com/openshift/ops-sop/blob/master/v4/alerts/StaticPodMissing.md
+          annotations:
+            message: Static pod kube-controller-manager is not running on node {{
+              $labels.node }} for 60 minutes.
+  - apiVersion: monitoring.coreos.com/v1
+    kind: PrometheusRule
+    metadata:
+      labels:
+        prometheus: sre-managed-kube-scheduler-missing-on-node
+        role: alert-rules
+      name: sre-managed-kube-scheduler-missing-on-node
+      namespace: openshift-monitoring
+    spec:
+      groups:
+      - name: sre-managed-kube-scheduler-missing-on-node
+        rules:
+        - alert: KubeSchedulerMissingOnNode60Minutes
+          expr: 'count(cluster:master_nodes{}) by (node) unless count(kube_pod_info{namespace="openshift-kube-scheduler",
+            pod=~"openshift-kube-scheduler-.*", pod!~".*guard.*"}) by (node) >= 1
+
+            '
+          for: 60m
+          labels:
+            severity: warning
+            maturity: immature
+            source: https://issues.redhat.com/browse/OSD-13647
+            link: https://github.com/openshift/ops-sop/blob/master/v4/alerts/StaticPodMissing.md
+          annotations:
+            message: Static pod kube-scheduler is not running on node {{ $labels.node
+              }} for 60 minutes.
+  - apiVersion: monitoring.coreos.com/v1
+    kind: PrometheusRule
+    metadata:
+      labels:
+        prometheus: sre-managed-node-metadata-operator-alerts
+        role: alert-rules
+      name: sre-managed-node-metadata-operator-alerts
+      namespace: openshift-monitoring
+    spec:
+      groups:
+      - name: sre-managed-node-metadata-operator-alerts
+        rules:
+        - alert: MNMOTooManyReconcileErrors15MinSRE
+          expr: increase(controller_runtime_reconcile_total{controller="machineset_controller",
+            service="managed-node-metadata-operator-metrics-service", result="error"}[20m])>0
+          for: 15m
+          labels:
+            severity: warning
+            namespace: '{{ $labels.namespace }}'
+            maturity: immature
+            source: https://issues.redhat.com//browse/OSD-9911
+          annotations:
+            message: Reconciliations of the MNMO operator ( {{ $labels.name }} ) have
+              failed in the past 15 minutes.
+            link: https://github.com/openshift/ops-sop/blob/master/v4/alerts/MNMOTooManyReconcileFailures.md
+  - apiVersion: monitoring.coreos.com/v1
+    kind: PrometheusRule
+    metadata:
+      labels:
+        prometheus: sre-managed-upgrade-operator-alerts
+        role: alert-rules
+      name: sre-managed-upgrade-operator-alerts
+      namespace: openshift-monitoring
+    spec:
+      groups:
+      - name: sre-managed-upgrade-operator-alerts
+        rules:
+        - alert: UpgradeConfigValidationFailedSRE
+          expr: avg_over_time(upgradeoperator_upgradeconfig_validation_failed[10m])
+            == 1
+          for: 10m
+          labels:
+            severity: critical
+            namespace: openshift-monitoring
+          annotations:
+            summary: Upgrade config validation failed
+            description: Upgrade config validation failed
+        - alert: UpgradeControlPlaneUpgradeTimeoutSRE
+          expr: avg_over_time(upgradeoperator_controlplane_timeout[10m]) == 1
+          for: 10m
+          labels:
+            severity: critical
+            namespace: openshift-monitoring
+          annotations:
+            summary: Controlplane upgrade timeout for {{ $labels.version }}
+            description: controlplane upgrade for {{ $labels.version }} cannot be
+              finished in the given time period
+        - alert: UpgradeNodeUpgradeTimeoutSRE
+          expr: avg_over_time(upgradeoperator_worker_timeout[10m]) == 1
+          for: 10m
+          labels:
+            severity: critical
+            namespace: openshift-monitoring
+          annotations:
+            summary: Nodes upgrade timeout for {{ $labels.version }}
+            description: nodes upgrade for {{ $labels.version }} cannot be finished
+              after the silence expired
+        - alert: UpgradeNodeDrainFailedSRE
+          expr: avg_over_time(upgradeoperator_node_drain_timeout[10m]) == 1
+          for: 10m
+          labels:
+            severity: critical
+            namespace: openshift-monitoring
+          annotations:
+            summary: Node drain failed in the given time period which is not caused
+              by the PDB
+            description: node drain takes too long and cannot be finished in the given
+              time period during cluster upgrade
+        - alert: UpgradeConfigSyncFailureOver4HrSRE
+          expr: absent_over_time(upgradeoperator_upgradeconfig_sync_timestamp[4h])
+            or time() - upgradeoperator_upgradeconfig_sync_timestamp > 14400
+          for: 2m
+          labels:
+            severity: critical
+            namespace: openshift-monitoring
+          annotations:
+            summary: UpgradeConfig has not successfully synced in 4 hours.
+            description: This clusters UpgradeConfig has not been synced in 4 hours
+              and may be out of date
+  - apiVersion: monitoring.coreos.com/v1
+    kind: PrometheusRule
+    metadata:
+      labels:
+        prometheus: sre-managed-velero-operator-alerts
+        role: alert-rules
+      name: sre-managed-velero-operator-alerts
+      namespace: openshift-monitoring
+    spec:
+      groups:
+      - name: sre-managed-velero-operator-alerts
+        rules:
+        - alert: VeleroHourlyObjectBackupsMissedConsecutively
+          expr: 'time() - clamp_min(velero_backup_last_successful_timestamp{namespace="openshift-velero",schedule="hourly-object-backup"},
+
+            scalar(max(kube_deployment_created{namespace="openshift-velero",deployment="velero"})))
+            > 10800 + 600
+
+            '
+          labels:
+            severity: warning
+            namespace: '{{ $labels.namespace }}'
+          annotations:
+            message: Consecutive hourly Velero backups have not successfully completed
+        - alert: VeleroDailyFullBackupMissed
+          expr: 'time() - clamp_min(velero_backup_last_successful_timestamp{namespace="openshift-velero",schedule="daily-full-backup"},
+
+            scalar(max(kube_deployment_created{namespace="openshift-velero",deployment="velero"})))
+            > 86400 + 600
+
+            '
+          labels:
+            severity: warning
+            namespace: '{{ $labels.namespace }}'
+          annotations:
+            message: The daily Velero backup has not successfully completed
+        - alert: VeleroWeeklyFullBackupMissed
+          expr: 'time() - clamp_min(velero_backup_last_successful_timestamp{namespace="openshift-velero",schedule="weekly-full-backup"},
+
+            scalar(max(kube_deployment_created{namespace="openshift-velero",deployment="velero"})))
+            > 604800 + 600
+
+            '
+          labels:
+            severity: warning
+            namespace: '{{ $labels.namespace }}'
+          annotations:
+            message: The weekly Velero backup has not successfully completed
+  - apiVersion: monitoring.coreos.com/v1
+    kind: PrometheusRule
+    metadata:
+      labels:
+        prometheus: sre-node-unschedulable
+        role: alert-rules
+      name: sre-node-unschedulable
+      namespace: openshift-monitoring
+    spec:
+      groups:
+      - name: sre-node-unschedulable
+        rules:
+        - alert: KubeNodeUnschedulableSRE
+          expr: (kube_node_spec_unschedulable > 0 and on(node) kube_node_role{role="master"})
+            or (kube_node_spec_unschedulable > 0 unless ignoring(node,container,endpoint,job,namespace,service)
+            sum(mapi_machine_set_status_replicas{name=~".*upgrade$"}) > 0)
+          for: 60m
+          labels:
+            severity: critical
+            namespace: openshift-monitoring
+          annotations:
+            message: The node {{ $labels.node }} has been unschedulable for more than
+              an hour.
+  - apiVersion: monitoring.coreos.com/v1
+    kind: PrometheusRule
+    metadata:
+      labels:
+        prometheus: sre-oauth-server
+        role: recording-rules
+      name: sre-oauth-server
+      namespace: openshift-monitoring
+    spec:
+      groups:
+      - name: sre-oauth-server
+        rules:
+        - record: oauth_server_requests_total
+          expr: apiserver_request_total{container="oauth-openshift"}
+  - apiVersion: monitoring.coreos.com/v1
+    kind: PrometheusRule
+    metadata:
+      labels:
+        prometheus: sre-pending-csr-alert
+        role: alert-rules
+      name: sre-pending-csr-alert
+      namespace: openshift-monitoring
+    spec:
+      groups:
+      - name: sre-pending-csr-alert
+        rules:
+        - alert: CSRPendingLongDurationSRE
+          expr: sum(mapi_current_pending_csr) > 1
+          for: 15m
+          labels:
+            severity: critical
+            namespace: openshift-monitoring
+          annotations:
+            message: MAPI CSR requests have been pending for more then 15 minutes.
+              This can indicate that orphaned VMs are being created and requires immeditate
+              remediation.
+  - apiVersion: monitoring.coreos.com/v1
+    kind: PrometheusRule
+    metadata:
+      labels:
+        prometheus: rhmi-sre-cluster-admins
+        role: alert-rules
+      name: rhmi-sre-cluster-admins
+      namespace: openshift-monitoring
+    spec:
+      groups:
+      - name: rhmi-sre-cluster-admins
+        rules:
+        - alert: ElevatingClusterAdminRHMISRE
+          expr: openshift_group_user_account{group="layered-sre-cluster-admins"} ==
+            1
+          for: 130m
+          labels:
+            severity: warning
+            namespace: redhat-rhmi
+          annotations:
+            message: RHMI SRE "{{ $labels.user }}" elevated to cluster-admin({{ $labels.group
+              }}) more than 2 hours.
+  - apiVersion: monitoring.coreos.com/v1
+    kind: PrometheusRule
+    metadata:
+      labels:
+        prometheus: rhoam-sre-cluster-admins
+        role: alert-rules
+      name: rhoam-sre-cluster-admins
+      namespace: openshift-monitoring
+    spec:
+      groups:
+      - name: rhoam-sre-cluster-admins
+        rules:
+        - alert: ElevatingClusterAdminRHOAMSRE
+          expr: openshift_group_user_account{group="rhoam-sre-cluster-admins"} ==
+            1
+          for: 130m
+          labels:
+            severity: warning
+            namespace: redhat-rhoam
+          annotations:
+            message: RHOAM SRE "{{ $labels.user }}" elevated to cluster-admin({{ $labels.group
+              }}) more than 2 hours.
+  - apiVersion: monitoring.coreos.com/v1
+    kind: PrometheusRule
+    metadata:
+      labels:
+        prometheus: sre-router-health
+        role: alert-rules
+      name: sre-router-health
+      namespace: openshift-monitoring
+    spec:
+      groups:
+      - name: sre-router-health
+        rules:
+        - alert: RouterAvailabilityLT50PctSRE
+          expr: "(sum(avg_over_time(kube_replicationcontroller_status_ready_replicas[1h]))\
+            \ by (replicationcontroller,namespace) \n/\non(replicationcontroller,namespace)\n\
+            max(kube_replicationcontroller_status_replicas{namespace=\"default\",replicationcontroller=~\"\
+            router.?-.*\"} >0) by (replicationcontroller,namespace)) < 0.5\n"
+          labels:
+            severity: warning
+            namespace: openshift-monitoring
+        - alert: RouterAvailabilityLT30PctSRE
+          expr: "(sum(avg_over_time(kube_replicationcontroller_status_ready_replicas[1h]))\
+            \ by (replicationcontroller,namespace) \n/\non(replicationcontroller,namespace)\n\
+            max(kube_replicationcontroller_status_replicas{namespace=\"default\",replicationcontroller=~\"\
+            router.?-.*\"} >0) by (replicationcontroller,namespace)) < 0.3\n"
+          labels:
+            severity: critical
+            namespace: openshift-monitoring
+  - apiVersion: monitoring.coreos.com/v1
+    kind: PrometheusRule
+    metadata:
+      labels:
+        prometheus: sre-runaway-sdn-preventing-container-creation
+        role: alert-rules
+      name: sre-runaway-sdn-preventing-container-creation
+      namespace: openshift-monitoring
+    spec:
+      groups:
+      - name: sre-runaway-sdn-preventing-container-creation
+        rules:
+        - alert: RunawaySDNPreventingContainerCreationSRE
+          expr: sum(sum(kube_pod_container_status_waiting_reason{reason="ContainerCreating"})
+            by (pod,namespace) * on (pod,namespace) group_right kube_pod_info) by
+            (node) > 0 and sum(container_memory_usage_bytes{namespace="openshift-sdn"}
+            > 8000000000) by (node)
+          for: 10m
+          labels:
+            severity: critical
+            namespace: openshift-monitoring
+          annotations:
+            description: SDN is consuming excessive memory rendering {{ $labels.node
+              }} unusable. The SDN pod on this node may need to be cycled or the node
+              may need to be replaced until OCPBUGS-773 or RHOCPPRIO-33 is addressed.
+  - apiVersion: monitoring.coreos.com/v1
+    kind: PrometheusRule
+    metadata:
+      labels:
+        prometheus: k8s
+        role: alert-rules
+      name: sre-uptime-sla
+      namespace: openshift-monitoring
+    spec:
+      groups:
+      - name: sre-uptime-sla
+        rules:
+        - alert: SLAUptimeSRE
+          annotations:
+            message: The API server has had 100 percent request failures for 300 seconds.
+          expr: '(sum(rate(apiserver_request_total{job="apiserver", code=~"(400|5..)"}[5m]))
+            / sum(rate(apiserver_request_total{job="apiserver", code=~"([1-5]..)"}[5m]))
+            >= 1)
+
+            '
+          for: 5m
+          labels:
+            severity: critical
+            namespace: openshift-monitoring
+  - apiVersion: monitoring.coreos.com/v1
+    kind: PrometheusRule
+    metadata:
+      labels:
+        prometheus: sre-kubequotaexceeded
+        role: alert-rules
+      name: sre-kubequotaexceeded
+      namespace: openshift-monitoring
+    spec:
+      groups:
+      - name: sre-kubequotaexceeded
+        rules:
+        - alert: KubeQuotaExceededSRE
+          expr: 'kube_resourcequota{namespace=~"(^kube$|^kube-.*|^openshift$|^openshift-.*|^default$)",job="kube-state-metrics",
+            type="used"}
+
+            / ignoring(instance, job, type)
+
+            (kube_resourcequota{namespace=~"(^kube$|^kube-.*|^openshift$|^openshift-.*|^default$)",job="kube-state-metrics",
+            type="hard"} > 0)
+
+            > 1
+
+            '
+          for: 30m
+          labels:
+            severity: warning
+            namespace: openshift-monitoring
+          annotations:
+            message: Quota limit exceeded in namespace {{ $labels.namespace }}.
+  - apiVersion: monitoring.coreos.com/v1
+    kind: PrometheusRule
+    metadata:
+      labels:
+        prometheus: sre-pruning
+        role: alert-rules
+      name: sre-pruning
+      namespace: openshift-monitoring
+    spec:
+      groups:
+      - name: sre-pruning
+        rules:
+        - alert: PruningCronjobErrorSRE
+          expr: kube_cronjob_status_active{namespace="openshift-sre-pruning"}>0
+          for: 30m
+          labels:
+            severity: critical
+            namespace: openshift-sre-pruning
+          annotations:
+            message: SRE Pruning Job {{ $labels.namespace }}/{{ $labels.cronjob }}
+              is taking more than thirty minutes to complete.
+  - apiVersion: monitoring.coreos.com/v1
+    kind: PrometheusRule
+    metadata:
+      labels:
+        prometheus: sre-pv
+        role: alert-rules
+      name: sre-pv
+      namespace: openshift-monitoring
+    spec:
+      groups:
+      - name: sre-pv-customer
+        rules:
+        - alert: KubePersistentVolumeUsageCriticalCustomer
+          expr: '100
+
+            * kubelet_volume_stats_available_bytes{job="kubelet",namespace!~"(^openshift-.*|^kube-.*|^default$|^redhat-.*)"}
+
+            / kubelet_volume_stats_capacity_bytes{job="kubelet",namespace!~"(^openshift-.*|^kube-.*|^default$|^redhat-.*)"}
+
+            < 3
+
+            '
+          labels:
+            severity: critical
+            namespace: '{{ $labels.namespace }}'
+          annotations:
+            message: The customer PersistentVolume claimed by {{ $labels.persistentvolumeclaim
+              }} in Namespace {{ $labels.namespace }} is only {{ printf "%0.2f" $value
+              }}% free.
+        - alert: KubePersistentVolumeFullInFourDaysCustomer
+          expr: '100
+
+            * (kubelet_volume_stats_available_bytes{job="kubelet",namespace!~"(^openshift-.*|^kube-.*|^default$|^redhat-.*)"}
+
+            / kubelet_volume_stats_capacity_bytes{job="kubelet",namespace!~"(^openshift-.*|^kube-.*|^default$|^redhat-.*)"})
+
+            < 15 and predict_linear(kubelet_volume_stats_available_bytes{job="kubelet",namespace!~"(^openshift-.*|^kube-.*|^default$|^redhat-.*)"}[6h],
+
+            4 * 24 * 3600) < 0
+
+            '
+          labels:
+            severity: warning
+            namespace: '{{ $labels.namespace }}'
+          annotations:
+            message: Based on recent sampling, the customer PersistentVolume claimed
+              by {{ $labels.persistentvolumeclaim }} in Namespace {{ $labels.namespace
+              }} is expected to fill up within four days. Currently {{ printf "%0.2f"
+              $value }}% is available.
+      - name: sre-pv-lp
+        rules:
+        - alert: KubePersistentVolumeUsageCriticalLayeredProduct
+          expr: '100
+
+            * kubelet_volume_stats_available_bytes{job="kubelet",namespace=~"(^redhat-.*)",namespace!~"(^redhat-rhmi.*)"}
+
+            / kubelet_volume_stats_capacity_bytes{job="kubelet",namespace=~"(^redhat-.*)",namespace!~"(^redhat-rhmi.*)"}
+
+            < 3
+
+            '
+          labels:
+            severity: critical
+            namespace: '{{ $labels.namespace }}'
+          annotations:
+            message: The customer PersistentVolume claimed by {{ $labels.persistentvolumeclaim
+              }} in Namespace {{ $labels.namespace }} is only {{ printf "%0.2f" $value
+              }}% free.
+        - alert: KubePersistentVolumeFullInFourDaysLayeredProduct
+          expr: '100
+
+            * (kubelet_volume_stats_available_bytes{job="kubelet",namespace=~"(^redhat-.*)",namespace!~"(^redhat-rhmi.*)"}
+
+            / kubelet_volume_stats_capacity_bytes{job="kubelet",namespace=~"(^redhat-.*)",namespace!~"(^redhat-rhmi.*)"})
+
+            < 15 and predict_linear(kubelet_volume_stats_available_bytes{job="kubelet",namespace=~"(^redhat-.*)",namespace!~"(^redhat-rhmi.*)"}[6h],
+
+            4 * 24 * 3600) < 0
+
+            '
+          labels:
+            severity: warning
+            namespace: '{{ $labels.namespace }}'
+          annotations:
+            message: Based on recent sampling, the customer PersistentVolume claimed
+              by {{ $labels.persistentvolumeclaim }} in Namespace {{ $labels.namespace
+              }} is expected to fill up within four days. Currently {{ printf "%0.2f"
+              $value }}% is available.
+  - apiVersion: monitoring.coreos.com/v1
+    kind: PrometheusRule
+    metadata:
+      labels:
+        prometheus: sre-telemeter-client
+        role: alert-rules
+      name: sre-telemeter-client
+      namespace: openshift-monitoring
+    spec:
+      groups:
+      - name: sre-telemeter-client
+        rules:
+        - alert: MetricsClientSendFailingSRE
+          expr: sum by (job) (rate(metricsclient_request_send{status_code!="200"}[10m]))
+            / sum by (job) (rate(metricsclient_request_send[10m])) > (16.12 - (1-0.90000))
+            and sum by (job) (rate(metricsclient_request_send{status_code!="200"}[2h]))
+            / sum by (job) (rate(metricsclient_request_send[2h])) > (16.12 - (1-0.90000))
+          for: 10m
+          labels:
+            severity: critical
+            namespace: openshift-monitoring
+          annotations:
+            description: Telemeter client is experiencing a high error rate over the
+              past hour

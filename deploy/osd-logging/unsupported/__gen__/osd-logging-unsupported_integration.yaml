@@ -1,0 +1,160 @@
+apiVersion: hive.openshift.io/v1
+kind: SelectorSyncSet
+metadata:
+  labels:
+    managed.openshift.io/gitHash: ${IMAGE_TAG}
+    managed.openshift.io/gitRepoName: ${REPO_NAME}
+    managed.openshift.io/osd: 'true'
+  name: osd-logging-unsupported
+spec:
+  clusterDeploymentSelector:
+    matchLabels:
+      api.openshift.com/managed: 'true'
+    matchExpressions:
+    - key: ext-managed.openshift.io/extended-logging-support
+      operator: NotIn
+      values:
+      - 'true'
+  resourceApplyMode: Upsert
+  resources:
+  - apiVersion: v1
+    kind: Namespace
+    metadata:
+      name: openshift-logging
+      annotations:
+        openshift.io/node-selector: ''
+      labels:
+        openshift.io/cluster-logging: 'true'
+  - apiVersion: operators.coreos.com/v1
+    kind: OperatorGroup
+    metadata:
+      annotations:
+        olm.providedAPIs: ClusterLogging.v1.logging.openshift.io
+      name: openshift-logging
+      namespace: openshift-logging
+    spec:
+      serviceAccount:
+        metadata:
+          creationTimestamp: null
+      targetNamespaces:
+      - openshift-logging
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: Role
+    metadata:
+      name: dedicated-admins-openshift-logging
+      namespace: openshift-logging
+    rules:
+    - apiGroups:
+      - ''
+      resources:
+      - events
+      - namespaces
+      - persistentvolumeclaims
+      - persistentvolumes
+      - pods
+      - pods/log
+      verbs:
+      - list
+      - get
+      - watch
+    - apiGroups:
+      - ''
+      resources:
+      - secrets
+      verbs:
+      - '*'
+    - apiGroups:
+      - logging.openshift.io
+      resources:
+      - clusterloggings
+      verbs:
+      - create
+      - delete
+      - deletecollection
+      - get
+      - list
+      - patch
+      - update
+      - watch
+    - apiGroups:
+      - operators.coreos.com
+      resources:
+      - subscriptions
+      - clusterserviceversions
+      verbs:
+      - '*'
+    - apiGroups:
+      - operators.coreos.com
+      resources:
+      - installplans
+      verbs:
+      - update
+    - apiGroups:
+      - ''
+      resources:
+      - persistentvolumeclaims
+      verbs:
+      - '*'
+    - apiGroups:
+      - apps
+      - extensions
+      resources:
+      - daemonsets
+      verbs:
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: RoleBinding
+    metadata:
+      name: admin-dedicated-admins
+      namespace: openshift-logging
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: admin
+    subjects:
+    - apiGroup: rbac.authorization.k8s.io
+      kind: Group
+      name: dedicated-admins
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: RoleBinding
+    metadata:
+      name: admin-system:serviceaccounts:dedicated-admin
+      namespace: openshift-logging
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: admin
+    subjects:
+    - apiGroup: rbac.authorization.k8s.io
+      kind: Group
+      name: system:serviceaccounts:dedicated-admin
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: RoleBinding
+    metadata:
+      name: openshift-logging-dedicated-admins
+      namespace: openshift-logging
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: dedicated-admins-project
+    subjects:
+    - apiGroup: rbac.authorization.k8s.io
+      kind: Group
+      name: dedicated-admins
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: RoleBinding
+    metadata:
+      name: openshift-logging:serviceaccounts:dedicated-admin
+      namespace: openshift-logging
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: dedicated-admins-project
+    subjects:
+    - apiGroup: rbac.authorization.k8s.io
+      kind: Group
+      name: system:serviceaccounts:dedicated-admin

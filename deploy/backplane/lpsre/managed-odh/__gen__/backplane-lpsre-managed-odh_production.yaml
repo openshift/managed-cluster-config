@@ -1,0 +1,30 @@
+apiVersion: hive.openshift.io/v1
+kind: SelectorSyncSet
+metadata:
+  labels:
+    managed.openshift.io/gitHash: ${IMAGE_TAG}
+    managed.openshift.io/gitRepoName: ${REPO_NAME}
+    managed.openshift.io/osd: 'true'
+  name: backplane-lpsre-managed-odh
+spec:
+  clusterDeploymentSelector:
+    matchLabels:
+      api.openshift.com/managed: 'true'
+      api.openshift.com/addon-managed-odh: 'true'
+  resourceApplyMode: Sync
+  resources:
+  - apiVersion: managed.openshift.io/v1alpha1
+    kind: SubjectPermission
+    metadata:
+      name: backplane-lpsre-managed-odh-admins
+      namespace: openshift-rbac-permissions
+    spec:
+      permissions:
+      - clusterRoleName: admin
+        namespacesAllowedRegex: (^rhods-notebooks$|^redhat-ods-applications$|^redhat-ods-monitoring$|^redhat-ods-operator$)
+      - clusterRoleName: system:openshift:cloud-credential-operator:cluster-reader
+        namespacesAllowedRegex: (^rhods-notebooks$|^redhat-ods-applications$|^redhat-ods-monitoring$|^redhat-ods-operator$)
+      - clusterRoleName: backplane-lpsre-monitoring
+        namespacesAllowedRegex: (^redhat-ods-monitoring$)
+      subjectKind: Group
+      subjectName: system:serviceaccounts:openshift-backplane-lpsre

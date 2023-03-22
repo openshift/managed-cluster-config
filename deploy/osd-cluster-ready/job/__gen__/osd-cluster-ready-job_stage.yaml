@@ -1,0 +1,35 @@
+apiVersion: hive.openshift.io/v1
+kind: SelectorSyncSet
+metadata:
+  labels:
+    managed.openshift.io/gitHash: ${IMAGE_TAG}
+    managed.openshift.io/gitRepoName: ${REPO_NAME}
+    managed.openshift.io/osd: 'true'
+  name: osd-cluster-ready-job
+spec:
+  clusterDeploymentSelector:
+    matchLabels:
+      api.openshift.com/managed: 'true'
+  resourceApplyMode: Sync
+  applyBehavior: CreateOnly
+  resources:
+  - apiVersion: batch/v1
+    kind: Job
+    metadata:
+      name: osd-cluster-ready
+      namespace: openshift-monitoring
+    spec:
+      backoffLimit: 500
+      template:
+        metadata:
+          name: osd-cluster-ready
+          labels:
+            managed.openshift.io/version: v0.1.108-cd4483a
+        spec:
+          containers:
+          - name: osd-cluster-ready
+            image: quay.io/app-sre/osd-cluster-ready@sha256:f70aa8033565fc73c006acb9199845242b1f729cb5a407b5174cf22656b4e2d5
+            command:
+            - /root/main
+          restartPolicy: OnFailure
+          serviceAccountName: osd-cluster-ready

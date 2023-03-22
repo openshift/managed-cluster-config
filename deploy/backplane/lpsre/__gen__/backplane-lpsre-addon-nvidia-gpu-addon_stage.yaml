@@ -1,0 +1,193 @@
+apiVersion: hive.openshift.io/v1
+kind: SelectorSyncSet
+metadata:
+  labels:
+    managed.openshift.io/gitHash: ${IMAGE_TAG}
+    managed.openshift.io/gitRepoName: ${REPO_NAME}
+    managed.openshift.io/osd: 'true'
+  name: backplane-lpsre-addon-nvidia-gpu-addon
+spec:
+  clusterDeploymentSelector:
+    matchLabels:
+      api.openshift.com/managed: 'true'
+      api.openshift.com/addon-nvidia-gpu-addon: 'true'
+  resourceApplyMode: Sync
+  resources:
+  - apiVersion: v1
+    kind: Namespace
+    metadata:
+      name: openshift-backplane-lpsre
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRole
+    metadata:
+      name: backplane-lpsre-admins-cluster
+    aggregationRule:
+      clusterRoleSelectors:
+      - matchExpressions:
+        - key: managed.openshift.io/aggregate-to-lpsre-admins
+          operator: In
+          values:
+          - cluster
+    rules: []
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: Role
+    metadata:
+      name: backplane-lpsre
+      namespace: openshift-monitoring
+    rules:
+    - apiGroups:
+      - ''
+      resources:
+      - pods/portforward
+      verbs:
+      - create
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: RoleBinding
+    metadata:
+      name: backplane-lpsre
+      namespace: openshift-monitoring
+    subjects:
+    - apiGroup: rbac.authorization.k8s.io
+      kind: Group
+      name: system:serviceaccounts:openshift-backplane-lpsre
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: Role
+      name: backplane-lpsre
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRole
+    metadata:
+      name: backplane-lpsre-addon-operator-admin
+    rules:
+    - apiGroups:
+      - addons.managed.openshift.io
+      resources:
+      - addonoperators
+      - addons
+      verbs:
+      - get
+      - list
+      - watch
+      - patch
+      - update
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRole
+    metadata:
+      name: backplane-lpsre-addon-operator-olm-admin
+    rules:
+    - apiGroups:
+      - operators.coreos.com
+      resources:
+      - clusterserviceversions
+      - installplans
+      - subscriptions
+      verbs:
+      - get
+      - list
+      - watch
+      - patch
+      - update
+      - delete
+    - apiGroups:
+      - operators.coreos.com
+      resources:
+      - operators
+      verbs:
+      - get
+      - list
+      - watch
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: ClusterRole
+    metadata:
+      name: backplane-lpsre-monitoring
+    rules:
+    - apiGroups:
+      - monitoring.coreos.com
+      resources:
+      - servicemonitors
+      verbs:
+      - get
+      - list
+      - watch
+      - patch
+      - update
+    - apiGroups:
+      - monitoring.rhobs
+      resources:
+      - monitoringstacks
+      - thanosqueriers
+      verbs:
+      - get
+      - list
+      - watch
+      - patch
+      - update
+  - apiVersion: managed.openshift.io/v1alpha1
+    kind: SubjectPermission
+    metadata:
+      name: backplane-lpsre-addon-operator-admins
+      namespace: openshift-rbac-permissions
+    spec:
+      clusterPermissions:
+      - backplane-lpsre-addon-operator-admin
+      - backplane-readers-cluster
+      permissions:
+      - clusterRoleName: admin
+        namespacesAllowedRegex: (^openshift-addon-operator$)
+      - clusterRoleName: backplane-lpsre-monitoring
+        namespacesAllowedRegex: (^openshift-addon-operator$)
+      - clusterRoleName: backplane-lpsre-addon-operator-olm-admin
+        namespacesAllowedRegex: (^openshift-addon-operator$)
+      subjectKind: Group
+      subjectName: system:serviceaccounts:openshift-backplane-lpsre
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: Role
+    metadata:
+      name: backplane-lpsre-mustgather
+      namespace: openshift-must-gather-operator
+    rules:
+    - apiGroups:
+      - ''
+      resources:
+      - secrets
+      verbs:
+      - create
+      - list
+      - get
+    - apiGroups:
+      - managed.openshift.io
+      resources:
+      - mustgathers
+      verbs:
+      - create
+      - list
+      - get
+      - delete
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: RoleBinding
+    metadata:
+      name: backplane-lpsre-mustgather
+      namespace: openshift-must-gather-operator
+    subjects:
+    - apiGroup: rbac.authorization.k8s.io
+      kind: Group
+      name: system:serviceaccounts:openshift-backplane-lpsre
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: Role
+      name: backplane-lpsre-mustgather
+  - apiVersion: managed.openshift.io/v1alpha1
+    kind: SubjectPermission
+    metadata:
+      name: backplane-lpsre
+      namespace: openshift-rbac-permissions
+    spec:
+      clusterPermissions:
+      - backplane-lpsre-admins-cluster
+      - backplane-readers-cluster
+      permissions:
+      - clusterRoleName: dedicated-readers
+        namespacesAllowedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
+        namespacesDeniedRegex: openshift-backplane-cluster-admin
+      subjectKind: Group
+      subjectName: system:serviceaccounts:openshift-backplane-lpsre

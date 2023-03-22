@@ -1,0 +1,27 @@
+apiVersion: hive.openshift.io/v1
+kind: SelectorSyncSet
+metadata:
+  labels:
+    managed.openshift.io/gitHash: ${IMAGE_TAG}
+    managed.openshift.io/gitRepoName: ${REPO_NAME}
+    managed.openshift.io/osd: 'true'
+  name: osd-namespace-labels
+spec:
+  clusterDeploymentSelector:
+    matchLabels:
+      api.openshift.com/managed: 'true'
+  resourceApplyMode: Sync
+  patches:
+  - kind: Namespace
+    apiVersion: v1
+    name: openshift-kube-apiserver
+    applyMode: AlwaysApply
+    patch: '{ "metadata": {"labels": {"name":"openshift-kube-apiserver"} } }'
+    patchType: merge
+  - kind: Namespace
+    apiVersion: v1
+    name: openshift-operator-lifecycle-manager
+    applyMode: AlwaysApply
+    patch: '{ "metadata": {"labels": {"name":"openshift-operator-lifecycle-manager"}
+      } }'
+    patchType: merge
