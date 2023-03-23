@@ -1,64 +1,8 @@
----
-apiVersion: policy.open-cluster-management.io/v1
-kind: Policy
+apiVersion: v1
+data:
+  tls.crt: '{{hub fromSecret "openshift-acm-policies" .ManagedClusterName "tls.crt" hub}}'
+  tls.key: '{{hub fromSecret "openshift-acm-policies" .ManagedClusterName "tls.key" hub}}'
+kind: Secret
 metadata:
-    annotations:
-        policy.open-cluster-management.io/categories: CM Configuration Management
-        policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
-        policy.open-cluster-management.io/standards: NIST SP 800-53
-    name: rosa-ingress-certificate
-    namespace: openshift-acm-policies
-spec:
-    disabled: false
-    policy-templates:
-        - objectDefinition:
-            apiVersion: policy.open-cluster-management.io/v1
-            kind: ConfigurationPolicy
-            metadata:
-                name: rosa-ingress-certificate
-            spec:
-                evaluationInterval:
-                    compliant: 2h
-                    noncompliant: 45s
-                object-templates:
-                    - complianceType: musthave
-                      metadataComplianceType: musthave
-                      objectDefinition:
-                        apiVersion: v1
-                        data:
-                          tls.crt: '{{hub fromSecret "openshift-acm-policies" .ManagedClusterName "tls.crt" hub}}'
-                          tls.key: '{{hub fromSecret "openshift-acm-policies" .ManagedClusterName "tls.key" hub}}'
-                        kind: Secret
-                        metadata:
-                          name: ingress-certificate-secret
-                          namespace: openshift-ingress
-                pruneObjectBehavior: DeleteIfCreated
-                remediationAction: enforce
-                severity: low
-        - extraDependencies:
-            - apiVersion: policy.open-cluster-management.io/v1
-              kind: ConfigurationPolicy
-              name: rosa-ingress-certificate
-              namespace: ""
-              compliance: Compliant
-          objectDefinition:
-            apiVersion: policy.open-cluster-management.io/v1
-            kind: ConfigurationPolicy
-            metadata:
-                name: rosa-ingress-replace-default-cert
-            spec:
-                object-templates:
-                    - complianceType: musthave
-                      objectDefinition:
-                        apiVersion: operator.openshift.io/v1
-                        kind: IngressController
-                        metadata:
-                          name: default
-                          namespace: openshift-ingress-operator
-                        spec:
-                          defaultCertificate:
-                            name: ingress-certificate-secret
-                pruneObjectBehavior: DeleteAll
-                remediationAction: inform
-                severity: low
-    remediationAction: enforce
+  name: '{{hub (printf "%s-primary-cert-bundle-secret" .ManagedClusterName) hub}}'
+  namespace: openshift-ingress
