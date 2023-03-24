@@ -1,0 +1,94 @@
+apiVersion: hive.openshift.io/v1
+kind: SelectorSyncSet
+metadata:
+  labels:
+    managed.openshift.io/gitHash: ${IMAGE_TAG}
+    managed.openshift.io/gitRepoName: ${REPO_NAME}
+    managed.openshift.io/osd: 'true'
+  name: osd-14634-disable-cpms
+spec:
+  clusterDeploymentSelector:
+    matchLabels:
+      api.openshift.com/managed: 'true'
+    matchExpressions:
+    - key: hive.openshift.io/version-major-minor-patch
+      operator: In
+      values:
+      - 4.12.0
+      - 4.12.1
+      - 4.12.2
+  resourceApplyMode: Sync
+  resources:
+  - apiVersion: v1
+    kind: ServiceAccount
+    metadata:
+      name: osd-disable-cpms
+      namespace: openshift-machine-api
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: Role
+    metadata:
+      name: osd-disable-cpms
+      namespace: openshift-machine-api
+    rules:
+    - apiGroups:
+      - machine.openshift.io
+      resources:
+      - controlplanemachinesets
+      verbs:
+      - delete
+  - apiVersion: rbac.authorization.k8s.io/v1
+    kind: RoleBinding
+    metadata:
+      name: osd-disable-cpms
+      namespace: openshift-machine-api
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: Role
+      name: osd-disable-cpms
+    subjects:
+    - kind: ServiceAccount
+      name: osd-disable-cpms
+      namespace: openshift-machine-api
+  - apiVersion: batch/v1
+    kind: CronJob
+    metadata:
+      name: osd-disable-cpms
+      namespace: openshift-machine-api
+    spec:
+      failedJobsHistoryLimit: 3
+      successfulJobsHistoryLimit: 1
+      concurrencyPolicy: Replace
+      schedule: '*/15 * * * *'
+      jobTemplate:
+        spec:
+          ttlSecondsAfterFinished: 180
+          template:
+            spec:
+              affinity:
+                nodeAffinity:
+                  preferredDuringSchedulingIgnoredDuringExecution:
+                  - preference:
+                      matchExpressions:
+                      - key: node-role.kubernetes.io/infra
+                        operator: Exists
+                    weight: 1
+              tolerations:
+              - effect: NoSchedule
+                key: node-role.kubernetes.io/infra
+                operator: Exists
+              serviceAccountName: osd-disable-cpms
+              restartPolicy: Never
+              containers:
+              - name: osd-disable-cpms
+                image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+                imagePullPolicy: Always
+                args:
+                - /bin/bash
+                - -c
+                - '# the appropriate way to disable CPMS is to delete the CPMS CR.
+
+                  oc delete controlplanemachineset.machine.openshift.io/cluster -n
+                  openshift-machine-api --ignore-not-found
+                  echo "done"
+
+                  '
