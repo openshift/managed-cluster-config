@@ -21811,7 +21811,7 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: cluster-monitoring-config-non-uwm-version-major-minor
+    name: cluster-monitoring-config-4.5
   spec:
     clusterDeploymentSelector:
       matchLabels:
@@ -21861,16 +21861,24 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: cluster-monitoring-config-non-uwm-uwm-disabled
+    name: cluster-monitoring-config-non-uwm
   spec:
     clusterDeploymentSelector:
       matchLabels:
         api.openshift.com/managed: 'true'
       matchExpressions:
+      - key: hive.openshift.io/version-major-minor
+        operator: NotIn
+        values:
+        - '4.5'
       - key: ext-managed.openshift.io/uwm-disabled
         operator: In
         values:
         - 'true'
+      - key: ext-hypershift.openshift.io/cluster-type
+        operator: NotIn
+        values:
+        - management-cluster
     resourceApplyMode: Sync
     resources:
     - apiVersion: v1
