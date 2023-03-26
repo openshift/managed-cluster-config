@@ -31980,6 +31980,33 @@ objects:
       kind: PrometheusRule
       metadata:
         labels:
+          prometheus: sre-managed-kube-controller-manager-crashlooping
+          role: alert-rules
+        name: sre-managed-kube-controller-manager-crashlooping
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-managed-kube-controller-manager-crashlooping
+          rules:
+          - alert: KubeControllerManagerCrashloopingSRE
+            expr: 'sum(kube_pod_container_status_waiting_reason{reason="CrashLoopBackOff",
+              namespace="openshift-kube-controller-manager",pod=~"kube-controller-manager-.*",job="kube-state-metrics"})
+              >= 2
+
+              '
+            for: 60m
+            labels:
+              severity: warning
+              maturity: immature
+              source: https://issues.redhat.com/browse/OSD-15442
+              link: https://github.com/openshift/ops-sop/blob/master/v4/alerts/KubeControllerManagerCrashloopingSRE.md
+            annotations:
+              message: Static pod kube-controller-manager pods have been crashlooping
+                for 60 minutes.
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
           prometheus: sre-managed-kube-controller-manager-missing-on-node
           role: alert-rules
         name: sre-managed-kube-controller-manager-missing-on-node
