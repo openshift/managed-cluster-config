@@ -49,11 +49,22 @@ do
     ROLEREF_PR=$(cat ${fl} | python -c 'import json, sys, yaml ; y=yaml.safe_load(sys.stdin.read()) ; print(json.dumps(y))' | jq -r '.roleRef' )
     # see if roleref has changed compared to master
     if ! jq -ne --argjson a "$ROLEREF_MASTER" --argjson b "$ROLEREF_PR" '$a == $b'; then
-      echo "roleref modification is not supported. Please create a new ClusterRoleBinding/RoleBinding instead. See https://github.com/openshift/ops-sop/blob/master/v4/knowledge_base/mcc-modify-roleref.md"
+      echo "ERROR: roleref modification is not supported. Please create a new ClusterRoleBinding/RoleBinding instead. See https://github.com/openshift/ops-sop/blob/master/v4/knowledge_base/mcc-modify-roleref.md"
       exit 1
     fi
   fi
 done
+
+# there should be no local changes after running all these checks
+# ignore the "hack" dir as template updates are handled above
+UNCOMMITTED_CHANGES=$(git status --porcelain  | grep -v -e ".*sorted.*tmpl" -e "...hack.*" | wc -l)
+if [ "$UNCOMMITTED_CHANGES" != "0" ];
+then
+  echo "ERROR: uncommitted changes indicate generating content resulted in some file changes:"
+  git status --porcelain  | grep -v -e ".*sorted.*tmpl" -e "...hack.*"
+  echo "ERROR: run 'make' and commit changes before attempting PR check again"
+  exit 1
+fi
 
 # script needs to pass for app-sre workflow
 exit 0
