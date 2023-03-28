@@ -32,7 +32,7 @@ All resources in `deploy/` are bundled into a template that is used by config ma
 
 Direct deployment (#1) supports resources that are not synced down to OSD clusters.  SelectorSyncSet deployment (#2) supports resoures that _are_ synced down to OSD clusters.  Each are explained in detail here.  The general configuration is managed in a `config.yaml` file in each deploy directory.  Key things of note:
 
-* This file is **optional**!  If not present it's assumed `deploymentMode` is `"SelectorSyncSet"` with no additional configuration.
+* This file will become mandatory in the near future in the scope of OSD-15267 and have been added to all folders as a first step. If not present it's assumed `deploymentMode` is `"SelectorSyncSet"` with no additional configuration.
 * Configuration is _not_ inherited by sub-directories!  Every (EVERY) directory in the `deploy/` hierarchy must define a `config.yaml` file.
 
 You must specify a `deploymentMode` property in `config.yaml`.
@@ -69,7 +69,7 @@ In the `config.yaml` file you define a top level property `selectorSyncSet`.  Wi
 * `matchLabelsApplyMode` (optional, default: `"AND"`) - When set as `"OR"` generates a separate SSS per `matchLabels` conditions. Default behavior creates a single SSS with all `matchLabels` conditions.  This is to tackle a situation where we want to apply configuration for one of many label conditions.
 * `applyBehavior` (optional, default: None, [see hive default](https://github.com/openshift/hive/blob/master/config/crds/hive.openshift.io_selectorsyncsets.yaml)) - sets the SelectorSyncSet's `applyBehavior`
 
-You can also define a top level property `policy` to specify the behaviour of `./scripts/generate-policy-config.py` for the resource. Supported sub-properties : 
+You can also define a top level property `policy` to specify the behaviour of `./scripts/generate-policy-config.py` for the resource. Supported sub-properties :
 * `complianceType` (optional, default: `"mustonlyhave"`, [see operator values](https://github.com/open-cluster-management-io/config-policy-controller/blob/main/api/v1/configurationpolicy_types.go) - select the compliance type for the policy when used by `./scripts/generate-policy-config.py`)
 * `metadataComplianceType` (optional, default: `"musthave"`, [see operator values](https://github.com/open-cluster-management-io/config-policy-controller/blob/main/api/v1/configurationpolicy_types.go) - select the compliance type for metadata for the policy when used by `./scripts/generate-policy-config.py`)
 
