@@ -1,11 +1,13 @@
 apiVersion: managed.openshift.io/v1alpha1
 kind: SubjectPermission
 metadata:
-  name: backplane-lpsre-rhoc-admins-project
+  name: backplane-rhmi-lpsre
   namespace: openshift-rbac-permissions
 spec:
   permissions:
-  - clusterRoleName: backplane-lpsre-rhoc-admins-project
-    namespacesAllowedRegex: (^redhat-openshift-connectors$)
+  - clusterRoleName: backplane-rhmi-lpsre-project
+    namespacesAllowedRegex: ^redhat-.*$
+  - clusterRoleName: view
+    namespacesAllowedRegex: ^redhat-.*$
   subjectKind: Group
   subjectName: system:serviceaccounts:openshift-backplane-lpsre

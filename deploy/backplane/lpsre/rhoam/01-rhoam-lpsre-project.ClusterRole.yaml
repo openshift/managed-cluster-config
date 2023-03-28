@@ -1,7 +1,7 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: backplane-lpsre-rhoc-admins-project
+  name: backplane-rhoam-lpsre-project
 rules:
  # LP SRE can run commands in pods
 - apiGroups:
@@ -56,10 +56,23 @@ rules:
   - pods
   verbs:
   - delete
+# LP SRE can interact with RHMI
+- apiGroups:
+  - integreatly.org
+  resources:
+  - '*'
+  verbs:
+  - create
+  - get
+  - list
+  - patch
+  - update
+  - watch
 # LP SRE can interact with secrets, configmaps and PVC's
 - apiGroups:
   - ""
   resources:
+  - secrets
   - configmaps
   - persistentvolumeclaims
   verbs:
@@ -110,3 +123,31 @@ rules:
   - '*'
   verbs:
   - '*'
+# LP SRE can scale deployments
+- apiGroups:
+  - apps
+  resources:
+  - deployments/scale
+  verbs:
+  - patch
+# LP SRE can restart deployments/statefulsets/deploymentconfigs
+- apiGroups:
+  - apps
+  resources:
+  - statefulsets
+  - deployments
+  verbs:
+  - patch
+- apiGroups:
+  - apps.openshift.io
+  resources:
+  - deploymentconfigs
+  verbs:
+  - patch
+# LP SRE can patch routes
+- apiGroups:
+  - route.openshift.io
+  resources:
+  - routes
+  verbs:
+  - patch  
