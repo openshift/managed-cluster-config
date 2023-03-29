@@ -11,14 +11,36 @@ rules:
   - pods/attach
   verbs:
   - create
-# SRE can delete pods
+# SRE can annotate, delete pods
 - apiGroups:
   - ""
   resources:
   - pods
   verbs:
+  - patch
   - delete
   - deletecollection
+# SRE can annotate deployments/statefulsets
+- apiGroups:
+  - apps
+  resources:
+  - statefulsets
+  - deployments
+  verbs:
+  - patch
+# SRE can interact with secrets, configmaps
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  - configmaps
+  verbs:
+  - create
+  - get
+  - list
+  - patch
+  - update
+  - delete
 # SRE can delete replicasets
 - apiGroups:
   - ""
@@ -41,7 +63,7 @@ rules:
   - pods/exec
   verbs:
   - create
-# SRE can run commands in pods
+# SRE manage kafkarebalances
 - apiGroups:
   - "kafka.strimzi.io"
   resources:
@@ -55,3 +77,12 @@ rules:
   - update
   - delete
   - deletecollection
+# SRE manage strimzipodsets
+- apiGroups:
+  - "core.strimzi.io"
+  resources:
+  - strimzipodsets
+  verbs:
+  - get
+  - list
+  - patch
