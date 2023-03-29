@@ -31,6 +31,9 @@ do
     cat hack/00-osd-managed-cluster-config-${environment}.yaml.tmpl | sort > sorted-before-${environment}.yaml.tmpl
 done
 
+# remove all generated acm policies files in order to determine if they have changed
+rm -f deploy/acm-policies/50-GENERATED-*.yaml
+
 make
 
 for environment in integration stage production;
