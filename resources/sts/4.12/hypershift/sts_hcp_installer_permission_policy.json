@@ -17,6 +17,8 @@
                 "ec2:DescribeVpcAttribute",
                 "ec2:DescribeVpcs",
                 "ec2:DescribeInstanceTypeOfferings",
+                "ec2:DescribeInstanceTypes",
+                "ec2:DescribeInstances",
                 "elasticloadbalancing:DescribeLoadBalancers",
                 "elasticloadbalancing:DeleteLoadBalancer",
                 "kms:DescribeKey",
@@ -42,6 +44,105 @@
                     "iam:PassedToService": [
                         "ec2.amazonaws.com"
                     ]
+                }
+            }
+        },
+        {
+            "Sid": "RunInstancesNoCondition",
+            "Effect": "Allow",
+            "Action": "ec2:RunInstances",
+            "Resource": [
+                "arn:aws:ec2:*::image/*",
+                "arn:aws:ec2:*:*:keypair/*",
+                "arn:aws:ec2:*:*:subnet/*",
+                "arn:aws:ec2:*:*:network-interface/*",
+                "arn:aws:ec2:*:*:security-group/*",
+                "arn:aws:ec2:*:*:snapshot/*"
+            ]
+        },
+        {
+            "Sid": "RunInstancesWithCondition",
+            "Effect": "Allow",
+            "Action": "ec2:RunInstances",
+            "Resource": [
+                "arn:aws:ec2:*:*:instance/*",
+                "arn:aws:ec2:*:*:volume/*"
+            ],
+            "Condition": {
+                "StringEquals": {
+                    "aws:RequestTag/red-hat-managed": "true"
+                }
+            }
+        },
+        {
+            "Sid": "VerifyTerminateInstances",
+            "Effect": "Allow",
+            "Action": [
+                "ec2:TerminateInstances",
+                "ec2:GetConsoleOutput"
+            ],
+            "Resource": [
+                "arn:aws:ec2:*:*:instance/*"
+            ],
+            "Condition": {
+                "StringEquals": {
+                    "aws:ResourceTag/red-hat-managed": "true"
+                }
+            }
+        },
+        {
+            "Sid": "CreateSecurityGroups",
+            "Effect": "Allow",
+            "Action": [
+                "ec2:CreateSecurityGroup"
+            ],
+            "Resource": [
+                "arn:aws:ec2:*:*:security-group*/*"
+            ],
+            "Condition": {
+                "StringEquals": {
+                    "aws:RequestTag/red-hat-managed": "true"
+                }
+            }
+        },
+        {
+            "Sid": "CreateSecurityGroupsVPCNoCondition",
+            "Effect": "Allow",
+            "Action": [
+                "ec2:CreateSecurityGroup"
+            ],
+            "Resource": [
+                "arn:aws:ec2:*:*:vpc/*"
+            ]
+        },
+        {
+            "Sid": "DeleteSecurityGroup",
+            "Effect": "Allow",
+            "Action": [
+                "ec2:DeleteSecurityGroup"
+            ],
+            "Resource": [
+                "arn:aws:ec2:*:*:security-group*/*"
+            ],
+            "Condition": {
+                "StringEquals": {
+                    "aws:ResourceTag/red-hat-managed": "true"
+                }
+            }
+        },
+        {
+            "Sid": "SecurityGroupIngressEgress",
+            "Effect": "Allow",
+            "Action": [
+                "ec2:AuthorizeSecurityGroupEgress",
+                "ec2:RevokeSecurityGroupEgress"
+            ],
+            "Resource": [
+                "arn:aws:ec2:*:*:security-group*/*"
+            ],
+            "Condition": {
+                "StringEquals": {
+                    "aws:ResourceTag/red-hat-managed": "true"
                 }
             }
         },
