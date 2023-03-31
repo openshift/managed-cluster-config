@@ -4263,6 +4263,218 @@ objects:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
           policy.open-cluster-management.io/standards: NIST SP 800-53
+        name: osd-logging-unsupported
+        namespace: openshift-acm-policies
+      spec:
+        disabled: false
+        policy-templates:
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+              name: osd-logging-unsupported
+            spec:
+              evaluationInterval:
+                compliant: 2h
+                noncompliant: 45s
+              object-templates:
+              - complianceType: mustonlyhave
+                metadataComplianceType: musthave
+                objectDefinition:
+                  apiVersion: v1
+                  kind: Namespace
+                  metadata:
+                    annotations:
+                      openshift.io/node-selector: ''
+                    labels:
+                      openshift.io/cluster-logging: 'true'
+                    name: openshift-logging
+              - complianceType: mustonlyhave
+                metadataComplianceType: musthave
+                objectDefinition:
+                  apiVersion: operators.coreos.com/v1
+                  kind: OperatorGroup
+                  metadata:
+                    annotations:
+                      olm.providedAPIs: ClusterLogging.v1.logging.openshift.io
+                    name: openshift-logging
+                    namespace: openshift-logging
+                  spec:
+                    serviceAccount:
+                      metadata:
+                        creationTimestamp: null
+                    targetNamespaces:
+                    - openshift-logging
+              - complianceType: mustonlyhave
+                metadataComplianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: Role
+                  metadata:
+                    name: dedicated-admins-openshift-logging
+                    namespace: openshift-logging
+                  rules:
+                  - apiGroups:
+                    - ''
+                    resources:
+                    - events
+                    - namespaces
+                    - persistentvolumeclaims
+                    - persistentvolumes
+                    - pods
+                    - pods/log
+                    verbs:
+                    - list
+                    - get
+                    - watch
+                  - apiGroups:
+                    - ''
+                    resources:
+                    - secrets
+                    verbs:
+                    - '*'
+                  - apiGroups:
+                    - logging.openshift.io
+                    resources:
+                    - clusterloggings
+                    verbs:
+                    - create
+                    - delete
+                    - deletecollection
+                    - get
+                    - list
+                    - patch
+                    - update
+                    - watch
+                  - apiGroups:
+                    - operators.coreos.com
+                    resources:
+                    - subscriptions
+                    - clusterserviceversions
+                    verbs:
+                    - '*'
+                  - apiGroups:
+                    - operators.coreos.com
+                    resources:
+                    - installplans
+                    verbs:
+                    - update
+                  - apiGroups:
+                    - ''
+                    resources:
+                    - persistentvolumeclaims
+                    verbs:
+                    - '*'
+                  - apiGroups:
+                    - apps
+                    - extensions
+                    resources:
+                    - daemonsets
+                    verbs:
+                    - get
+                    - list
+                    - patch
+                    - update
+                    - watch
+              - complianceType: mustonlyhave
+                metadataComplianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: RoleBinding
+                  metadata:
+                    name: admin-dedicated-admins
+                    namespace: openshift-logging
+                  roleRef:
+                    apiGroup: rbac.authorization.k8s.io
+                    kind: ClusterRole
+                    name: admin
+                  subjects:
+                  - apiGroup: rbac.authorization.k8s.io
+                    kind: Group
+                    name: dedicated-admins
+              - complianceType: mustonlyhave
+                metadataComplianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: RoleBinding
+                  metadata:
+                    name: admin-system:serviceaccounts:dedicated-admin
+                    namespace: openshift-logging
+                  roleRef:
+                    apiGroup: rbac.authorization.k8s.io
+                    kind: ClusterRole
+                    name: admin
+                  subjects:
+                  - apiGroup: rbac.authorization.k8s.io
+                    kind: Group
+                    name: system:serviceaccounts:dedicated-admin
+              - complianceType: mustonlyhave
+                metadataComplianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: RoleBinding
+                  metadata:
+                    name: openshift-logging-dedicated-admins
+                    namespace: openshift-logging
+                  roleRef:
+                    apiGroup: rbac.authorization.k8s.io
+                    kind: ClusterRole
+                    name: dedicated-admins-project
+                  subjects:
+                  - apiGroup: rbac.authorization.k8s.io
+                    kind: Group
+                    name: dedicated-admins
+              - complianceType: mustonlyhave
+                metadataComplianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: RoleBinding
+                  metadata:
+                    name: openshift-logging:serviceaccounts:dedicated-admin
+                    namespace: openshift-logging
+                  roleRef:
+                    apiGroup: rbac.authorization.k8s.io
+                    kind: ClusterRole
+                    name: dedicated-admins-project
+                  subjects:
+                  - apiGroup: rbac.authorization.k8s.io
+                    kind: Group
+                    name: system:serviceaccounts:dedicated-admin
+              pruneObjectBehavior: DeleteIfCreated
+              remediationAction: enforce
+              severity: low
+    - apiVersion: apps.open-cluster-management.io/v1
+      kind: PlacementRule
+      metadata:
+        name: placement-osd-logging-unsupported
+        namespace: openshift-acm-policies
+      spec:
+        clusterSelector:
+          matchExpressions:
+          - key: hypershift.open-cluster-management.io/hosted-cluster
+            operator: In
+            values:
+            - 'true'
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: PlacementBinding
+      metadata:
+        name: binding-osd-logging-unsupported
+        namespace: openshift-acm-policies
+      placementRef:
+        apiGroup: apps.open-cluster-management.io
+        kind: PlacementRule
+        name: placement-osd-logging-unsupported
+      subjects:
+      - apiGroup: policy.open-cluster-management.io
+        kind: Policy
+        name: osd-logging-unsupported
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: Policy
+      metadata:
+        annotations:
+          policy.open-cluster-management.io/categories: CM Configuration Management
+          policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/standards: NIST SP 800-53
         name: osd-must-gather-operator
         namespace: openshift-acm-policies
       spec:
