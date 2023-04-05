@@ -15,8 +15,7 @@ spec:
         count(cluster:master_nodes{}) by (node) unless count(kube_pod_info{namespace="openshift-kube-controller-manager", pod=~"kube-controller-manager-.*", pod!~".*guard.*"}) by (node) >= 1
       for: 60m
       labels:
-        severity: warning
-        maturity: "immature"
+        severity: critical
         source: "https://issues.redhat.com/browse/OSD-13647"
         link: "https://github.com/openshift/ops-sop/blob/master/v4/alerts/StaticPodMissing.md"
       annotations:
