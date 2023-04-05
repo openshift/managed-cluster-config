@@ -4807,15 +4807,6 @@ objects:
                     name: dedicated-admins
                   - kind: Group
                     name: system:serviceaccounts:dedicated-admin
-              - complianceType: mustonlyhave
-                metadataComplianceType: musthave
-                objectDefinition:
-                  apiVersion: v1
-                  applyMode: AlwaysApply
-                  kind: Namespace
-                  name: default
-                  patch: '{ "metadata": {"labels": {"name":"default"} } }'
-                  patchType: merge
               pruneObjectBehavior: DeleteIfCreated
               remediationAction: enforce
               severity: low
@@ -28473,6 +28464,19 @@ objects:
         name: dedicated-admins
       - kind: Group
         name: system:serviceaccounts:dedicated-admin
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-project-request-template-nonhypershift
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+    resourceApplyMode: Sync
     patches:
     - kind: Namespace
       apiVersion: v1
