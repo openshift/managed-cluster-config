@@ -10,3 +10,17 @@ This directory is focused around managing roles for backplane users based on the
 | lpsre | RBAC for SRE Layered Products team (Combining of CS and MT SRE teams) |
 | srep  | RBAC for SRE Platform team  |
 | mkrts | RBAC for RTS team |
+
+## Guidelines
+
+- ClusterRole names must be suffixed with `-project` for namespace scoped permissions and `-cluster` for cluster scoped permissions.
+- ClusterRoles must not include permission to get/list/watch Secrets in any namespace.
+- SubjectPermissions must only permit ClusterRoles with `-cluster` suffix in clusterPermissions (cluster scope).
+- SubjectPermissions must only permit ClusterRoles with `-project` suffix in permissions (namespace scope).
+- SubjectPermissions allowed namespace regex must constrain bindings to only the subset of namespaces access is required in.
+- SubjectPermissions must deny the `openshift-backplane-cluster-admin` namespace.
+- API Groups, resources, verbs, and namespace/resource names must be explicitly defined without using glob patterns (where applicable).
+- View access is generally permitted in `redhat-` and `openshift-` prefixed namespaces.
+- All other access (non-read) must be justified by referencing a documented need (bug or missing capability).
+- Access that would allow bypassing RBAC cannot be granted e.g. creating/execing into pods which have access to the default service account for a namespace.
+- RBAC for Layered Products teams is only provisioned on clusters where the respective Layered Products are installed.
