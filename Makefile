@@ -29,6 +29,9 @@ endif
 ifndef GEN_POLICY_CONFIG_SP
 $(error GEN_POLICY_CONFIG_SP is not set; check project.mk file)
 endif
+ifndef ENFORCE_BACKPLANE_RULES
+$(error ENFORCE_BACKPLANE_RULES is not set; check project.mk file)
+endif
 
 
 CONTAINER_ENGINE?=$(shell command -v docker 2>/dev/null || command -v podman 2>/dev/null)
@@ -43,7 +46,7 @@ OC := $(CONTAINER_ENGINE) run $(CONTAINER_RUN_FLAGS) quay.io/openshift/origin-cl
 endif
 
 .PHONY: default
-default: generate-oauth-templates generate-rosa-brand-logo generate-hive-templates
+default: enforce-backplane-rules generate-oauth-templates generate-rosa-brand-logo generate-hive-templates
 
 .PHONY: generate-oauth-templates
 generate-oauth-templates:
