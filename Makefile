@@ -37,7 +37,7 @@ OC := $(CONTAINER_ENGINE) run $(CONTAINER_RUN_FLAGS) quay.io/openshift/origin-cl
 endif
 
 .PHONY: default
-default: generate-oauth-templates generate-rosa-brand-logo generate-hive-templates
+default: generate-oauth-templates generate-rosa-brand-logo generate-hive-templates enforce-backplane-rules
 
 .PHONY: generate-oauth-templates
 generate-oauth-templates:
@@ -61,4 +61,12 @@ generate-hive-templates: generate-oauth-templates
 	else \
 		${GEN_POLICY_CONFIG};\
 		${GEN_TEMPLATE}; \
+	fi
+
+.PHONY: enforce-backplane-rules
+enforce-backplane-rules:
+	if [ -z ${IN_CONTAINER} ]; then \
+		$(CONTAINER_ENGINE) run $(CONTAINER_RUN_FLAGS) registry.access.redhat.com/ubi8/python-39 /bin/bash -xc "cd `pwd -P`; pip install --disable-pip-version-check oyaml; ${ENFORCE_BACKPLANE_RULES}"; \
+	else \
+		${ENFORCE_BACKPLANE_RULES};\
 	fi
