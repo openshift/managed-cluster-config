@@ -31,19 +31,43 @@ class _BackplaneRuleException(Exception):
 
 
 class _Rule(ABC):
+    """Rule applied to enforce proper usage of backplane
+    resources and the access they provide.
+    """
+
     def __init__(self, name, logger):
         self.name = name
         self.logger = logger
 
     @abstractmethod
     def run(self, registry):
-        pass
+        """Runs the rule against a given registry of resources
+        and returns 'True' if the rule fails. Any rule
+        violations should be reported by using the 'log_failure'
+        method of this class.
+
+        :param registry: _ResourceRegistry containing resources
+            to be tested
+        :type registry: _ResourceRegistry
+        """
 
     def log_failure(self, file, message):
         self.logger.error(f'{self.name}: {file}: {message}')
 
 
 class _ClusterRoleSuffixRule(_Rule):
+    """Ensures ClusterRole names are properly suffixed
+    and that the files containing them have matching
+    suffixes.
+    """
+
+    _VALID_SUFFIXES = (
+        '-aggregate',
+        '-project',
+        '-cluster',
+        'backplane-impersonate-cluster-admin',
+    )
+
     def __init__(self, logger):
         super().__init__('cluster-role-suffix', logger)
 
@@ -51,59 +75,63 @@ class _ClusterRoleSuffixRule(_Rule):
         failed = False
 
         for path, cluster_role in registry.get_resources_of_type('ClusterRole').items():
-            name = cluster_role.content['metadata']['name']
-
-            if not self._has_valid_name_suffix(name):
+            if not self._has_valid_name_suffix(cluster_role.name):
                 failed = True
 
                 self.log_failure(
                     path,
-                    f"ClusterRole '{name}' is not suffixed with"
-                    " '-aggregate', '-cluster' or '-project'"
+                    f"ClusterRole '{cluster_role.name}' is not suffixed with"
+                    f" one of '{', '.join(self._VALID_SUFFIXES)}'"
                 )
 
-            if not self._file_suffix_matches_name_suffix(path, name):
+            if not self._file_suffix_matches_name_suffix(path, cluster_role.name):
                 failed = True
 
                 self.log_failure(
                     path,
-                    f"ClusterRole '{name}' has suffix different than its containing file"
+                    f"ClusterRole '{cluster_role.name}' has suffix different"
+                    " from its containing file"
                 )
 
         return failed
 
-    @staticmethod
-    def _has_valid_name_suffix(name):
-        valid_suffixes = ('-aggregate', '-project', '-cluster',
-                          'backplane-impersonate-cluster-admin')
-
-        return any(name.endswith(s) for s in valid_suffixes)
+    def _has_valid_name_suffix(self, name):
+        return any(name.endswith(s) for s in self._VALID_SUFFIXES)
 
     @staticmethod
     def _file_suffix_matches_name_suffix(path, name):
-        return path.stem.split('.', 1)[0].rsplit('-', 1)[-1] == name.rsplit('-', 1)[-1]
+        # a-<suffix>.b.c
+        path_suffix = path.stem.split('.', 1)[0].rsplit('-', 1)[-1]
+
+        # a-b-<suffix>
+        name_suffix = name.rsplit('-', 1)[-1]
+
+        return path_suffix == name_suffix
 
 
 class _NoWildcardsRule(_Rule):
+    """Enforces the usage restrictions on wildcards '*'
+    in RBAC rules for Roles and ClusterRoles.
+    """
+
     def __init__(self, logger):
         super().__init__('no-wildcards', logger)
 
     def run(self, registry):
         failed = False
 
-        roles = registry.get_resources_of_type('Role').items(
-        ) | registry.get_resources_of_type('ClusterRole').items()
+        roles = (
+            registry.get_resources_of_type('Role').items() |
+            registry.get_resources_of_type('ClusterRole').items()
+        )
 
         for path, role in roles:
-            name = role.content['metadata']['name']
-            kind = role.content['kind']
-
             if self._has_invalid_api_groups(role):
                 failed = True
 
                 self.log_failure(
                     path,
-                    f"{kind} '{name}' has apiGroups which contain wildcard '*'"
+                    f"{role.kind} '{role.name}' has apiGroups which contain wildcard '*'"
                 )
 
             if self._has_invalid_resources(role):
@@ -111,7 +139,7 @@ class _NoWildcardsRule(_Rule):
 
                 self.log_failure(
                     path,
-                    f"{kind} '{name}' has resources which contain the wildcard '*'"
+                    f"{role.kind} '{role.name}' has resources which contain the wildcard '*'"
                     " for either \"\" apiGroups or with verbs delete / deletecollection"
                 )
 
@@ -120,94 +148,96 @@ class _NoWildcardsRule(_Rule):
 
                 self.log_failure(
                     path,
-                    f"{kind} '{name}' has verbs which contain the wildcard '*'"
+                    f"{role.kind} '{role.name}' has verbs which contain the wildcard '*'"
                 )
 
         return failed
 
     @staticmethod
     def _has_invalid_api_groups(role_like):
-        for rule in role_like.content.get('rules', []):
-            if 'apiGroups' in rule:
-                api_groups = rule['apiGroups']
+        rules = role_like.content.get('rules', [])
 
-                if '*' in api_groups:
-                    return True
-
-        return False
+        return any('*' in r.get('apiGroups', []) for r in rules)
 
     def _has_invalid_resources(self, role_like):
         for rule in role_like.content.get('rules', []):
-            if "apiGroups" in rule and "resources" in rule and "verbs" in rule:
-                api_groups = rule['apiGroups']
-                resources = rule['resources']
-                verbs = rule['verbs']
+            if not all(f in rule for f in ('apiGroups', 'resources', 'verbs')):
+                continue
 
-                has_wildcard = False
-                if '*' in resources and "tekton.dev" not in api_groups:
-                    has_wildcard = True
+            api_groups = rule['apiGroups']
+            resources = rule['resources']
+            verbs = rule['verbs']
 
-                # cannot have * resource with "" apiGroup since it include Secret
-                if has_wildcard and "" in api_groups:
-                    return True
+            has_wildcard = False
+            if '*' in resources:
+                has_wildcard = True
 
-                # cannot have * resource for delete or deletecollection
-                verbs = [x.lower() for x in verbs]
-                if all([
-                    has_wildcard,
-                    not self._is_allowed_api_groups(api_groups),
-                    "delete" in verbs or "deletecollection" in verbs or "*" in verbs,
-                ]):
-                    return True
+            # cannot have '*' resource with "" apiGroup since it includes Secrets
+            if has_wildcard and "" in api_groups:
+                return True
+
+            # cannot have '*' resource for delete or deletecollection
+            has_bad_verbs = (
+                {x.lower() for x in verbs} &
+                {'delete', 'deletecollection', '*'}
+            )
+
+            if all([
+                has_wildcard,
+                not self._is_allowed_api_groups(api_groups),
+                has_bad_verbs,
+            ]):
+                return True
 
         return False
 
     def _has_invalid_verbs(self, role_like):
         for rule in role_like.content.get('rules', []):
-            if "apiGroups" in rule and "verbs" in rule:
-                api_groups = rule['apiGroups']
-                verbs = rule['verbs']
+            if not all(f in rule for f in ('apiGroups', 'verbs')):
+                continue
 
-                if '*' in verbs and not self._is_allowed_api_groups(api_groups):
-                    return True
+            api_groups = rule['apiGroups']
+            verbs = rule['verbs']
+
+            if '*' in verbs and not self._is_allowed_api_groups(api_groups):
+                return True
 
         return False
 
     @staticmethod
     def _is_allowed_api_groups(api_groups):
         # specific apiGroups we permit any verbs against
-        allowed_api_groups = [
-            "tekton.dev",
-            "logging.openshift.io",
-            "velero.io",
-        ]
+        allowed_api_groups = (
+            'tekton.dev',
+            'logging.openshift.io',
+            'velero.io',
+        )
 
-        for api_group in api_groups:
-            if not api_group in allowed_api_groups:
-                return False
-
-        return True
+        return all(g in allowed_api_groups for g in api_groups)
 
 
 class _SubjectPermissionRoleNamesRule(_Rule):
+    """Enforces that proper role names are used
+    with SubjectPermissions based on whether they
+    are cluster or namespace scoped.
+    """
+
     def __init__(self, logger):
         super().__init__('subject-permission-role-names', logger)
 
     def run(self, registry):
         failed = False
 
-        subject_permission_entries = registry.get_resources_of_type(
+        subject_permissions = registry.get_resources_of_type(
             'SubjectPermission').items()
 
-        for path, subject_permission in subject_permission_entries:
-            name = subject_permission.content['metadata']['name']
-
+        for path, subject_permission in subject_permissions:
             if invalid_perms := self._invalid_cluster_permission_names(subject_permission):
                 failed = True
 
                 self.log_failure(
                     path,
-                    f"SubjectPermission '{name}' has clusterPermission(s)"
+                    f"SubjectPermission '{subject_permission.name}' has clusterPermission(s)"
                     f"'{', '.join(invalid_perms)}' without the '-cluster' suffix"
                 )
 
@@ -216,39 +246,48 @@ class _SubjectPermissionRoleNamesRule(_Rule):
 
                 self.log_failure(
                     path,
-                    f"SubjectPermission '{name}' has permission(s) '{', '.join(invalid_perms)}'"
-                    " without the '-project' suffix"
+                    f"SubjectPermission '{subject_permission.name}' has permission(s)"
+                    f" '{', '.join(invalid_perms)}' without the '-project' suffix"
                 )
 
         return failed
 
     def _invalid_cluster_permission_names(self, subject_permission):
-        cluster_permissions = subject_permission.content['spec'].get(
-            'clusterPermissions', [])
+        spec = subject_permission.content['spec']
+        cluster_permissions = spec.get('clusterPermissions', [])
         unknown_role_names = self._filter_known_roles(cluster_permissions)
 
         return [n for n in unknown_role_names if not n.endswith('-cluster')]
 
     def _invalid_permission_names(self, subject_permission):
-        permissions = subject_permission.content['spec'].get('permissions', [])
-        role_names = [name for p in permissions if (
-            name := p.get('clusterRoleName'))]
-        unknown_role_names = self._filter_known_roles(role_names)
+        spec = subject_permission.content['spec']
+        permissions = spec.get('permissions', [])
+        unknown_role_names = self._filter_known_roles(
+            name for p in permissions if (name := p.get('clusterRoleName'))
+        )
 
         return [n for n in unknown_role_names if not n.endswith('-project')]
 
     @staticmethod
     def _filter_known_roles(role_names):
-        known_roles = ('admin', 'dedicated-readers', 'view',
-                       'system:openshift:cloud-credential-operator:cluster-reader')
+        known_roles = (
+            'admin',
+            'dedicated-readers',
+            'view',
+            'system:openshift:cloud-credential-operator:cluster-reader',
+        )
 
-        return [n for n in role_names if not n in known_roles]
+        return [n for n in role_names if n not in known_roles]
 
 
 _CLUSTER_ADMIN_NAMESPACE = 'openshift-backplane-cluster-admin'
 
 
 class _SubjectPermissionDenyClusterAdminRule(_Rule):
+    """Enforces all SubjectPermissions to explicitly deny
+    privileges to the cluster-admin namespace.
+    """
+
     def __init__(self, logger):
         super().__init__('subject-permission-deny-cluster-admin', logger)
 
@@ -256,34 +295,32 @@ class _SubjectPermissionDenyClusterAdminRule(_Rule):
         failed = False
 
         for path, subject_permission in registry.get_resources_of_type('SubjectPermission').items():
-            name = subject_permission.content['metadata']['name']
-
             if invalid_permissions := self._invalid_permissions(subject_permission):
                 failed = True
 
                 self.log_failure(
                     path,
-                    f"SubjectPermission '{name}' has permission(s) which do not"
+                    f"SubjectPermission '{subject_permission.name}' has permission(s) which do not"
                     f" explicitly deny clusterRole(s) '{', '.join(invalid_permissions)}'"
                     f" access to '{_CLUSTER_ADMIN_NAMESPACE}'"
                 )
 
         return failed
 
-    @staticmethod
-    def _invalid_permissions(subject_permission):
+    def _invalid_permissions(self, subject_permission):
         permissions = subject_permission.content['spec'].get('permissions', [])
 
-        invalid = []
+        return [
+            p['clusterRoleName']
+            for p in permissions
+            if not self._denies_cluster_admin_namespace(p)
+        ]
 
-        for perm in permissions:
-            denied_re = perm.get('namespacesDeniedRegex')
-            if denied_re and re.match(denied_re, _CLUSTER_ADMIN_NAMESPACE):
-                continue
+    @staticmethod
+    def _denies_cluster_admin_namespace(permission):
+        denied_re = permission.get('namespacesDeniedRegex')
 
-            invalid.append(perm['clusterRoleName'])
-
-        return invalid
+        return denied_re and re.match(denied_re, _CLUSTER_ADMIN_NAMESPACE)
 
 
 class _Config:
@@ -295,8 +332,16 @@ class _Config:
     @classmethod
     def from_args(cls):
         parser = ArgumentParser()
-        parser.add_argument('--directory', type=Path, default=_DEFAULT_DIR)
-        parser.add_argument('--rules', nargs='*', default=_DEFAULT_RULES)
+        parser.add_argument(
+            '--directory',
+            type=Path, default=_DEFAULT_DIR,
+            help='Root directory to descend into when searching for resources',
+        )
+        parser.add_argument(
+            '--rules',
+            nargs='*', default=_DEFAULT_RULES,
+            help=f"List of rules to enforce. Available Rules: {', '.join(_NAME_TO_RULE.keys())}",
+        )
 
         args = parser.parse_args()
 
@@ -334,9 +379,15 @@ class _RuleRunner:
         )
 
     def run_rules(self):
+        """Run rules against the supplied registry.
+
+        :return: 'True' when any rules have failed.
+        :rtype: bool
+        """
         # pre-computing to avoid short-circuiting behavior of 'any'
-        results = [rule(self._logger).run(self._registry)
-                   for rule in self._rules]
+        results = [
+            rule(self._logger).run(self._registry) for rule in self._rules
+        ]
 
         return any(results)
 
@@ -362,7 +413,8 @@ class _ResourceRegistry:
 
             if len(configs) > 1:
                 raise _BackplaneRuleException(
-                    f"multiple 'config.yaml' files exist in directory '{root}'")
+                    f"multiple 'config.yaml' files exist in directory '{root}'"
+                )
 
             config_ref = None
 
@@ -378,7 +430,7 @@ class _ResourceRegistry:
             }
 
             for path, resource in k8s_resources.items():
-                all_k8s_resources[resource.content['kind']][path] = resource
+                all_k8s_resources[resource.kind][path] = resource
 
         return cls(
             entry_map=all_k8s_resources,
@@ -399,17 +451,25 @@ def _is_yaml(path):
 
 
 def _is_k8s_resource(yaml_dict):
-    return "kind" in yaml_dict
+    return 'kind' in yaml_dict
 
 
 def _is_config(yaml_dict):
-    return "deploymentMode" in yaml_dict
+    return 'deploymentMode' in yaml_dict
 
 
 class _ResourceEntry:
     def __init__(self, content, config_ref):
         self.content = content
         self.config_ref = config_ref
+
+    @property
+    def kind(self):
+        return self.content['kind']
+
+    @property
+    def name(self):
+        return self.content['metadata']['name']
 
 
 def main():
