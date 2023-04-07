@@ -61,7 +61,6 @@
             "Effect": "Allow",
             "Action": "ec2:RunInstances",
             "Resource": [
-                "arn:aws:ec2:*::image/*",
                 "arn:aws:ec2:*:*:keypair/*",
                 "arn:aws:ec2:*:*:subnet/*",
                 "arn:aws:ec2:*:*:network-interface/*",
@@ -81,6 +80,26 @@
                     "aws:RequestTag/red-hat-managed": "true"
                 }
             }
+        },
+        {
+          "Sid": "RunInstancesRestrictedAMISources",
+          "Effect": "Allow",
+          "Action": [
+            "ec2:RunInstances"
+          ],
+          "Resource": [
+            "arn:aws:ec2:*:*:image/*"
+          ],
+          "Condition": {
+            "StringEquals": {
+              "ec2:Owner": [
+                "531415883065",
+                "251351625822",
+                "210686502322",
+                "137112412989"
+              ]
+            }
+          }
         },
         {
             "Effect": "Allow",
