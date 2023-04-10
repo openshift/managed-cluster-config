@@ -146,6 +146,67 @@
                 "route53:DeleteHostedZone"
             ],
             "Resource": "*"
+        },
+        {
+            "Sid": "CreateTags",
+            "Effect": "Allow",
+            "Action": [
+              "ec2:CreateTags"
+            ],
+            "Resource": [
+              "arn:aws:ec2:*:*:instance/*",
+              "arn:aws:ec2:*:*:volume/*"
+            ],
+            "Condition": {
+              "StringEquals": {
+                  "ec2:CreateAction": [
+                      "RunInstances",
+                      "CreateVolume"
+                  ]
+              }
+            }
+        },
+        {
+            "Effect": "Allow",
+            "Action": "ec2:RunInstances",
+            "Resource": [
+                "arn:aws:ec2:*:*:subnet/*",
+                "arn:aws:ec2:*:*:network-interface/*",
+                "arn:aws:ec2:*:*:security-group/*",
+                "arn:aws:ec2:*:*:snapshot/*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": "ec2:RunInstances",
+            "Resource": [
+                "arn:aws:ec2:*:*:instance/*",
+                "arn:aws:ec2:*:*:volume/*"
+            ],
+            "Condition": {
+                "StringEquals": {
+                    "aws:RequestTag/red-hat-managed": "true"
+                }
+            }
+        },
+        {
+          "Sid": "RunInstancesRestrictedAMISources",
+          "Effect": "Allow",
+          "Action": [
+            "ec2:RunInstances"
+          ],
+          "Resource": [
+            "arn:aws:ec2:*:*:image/*"
+          ],
+          "Condition": {
+            "StringEquals": {
+              "ec2:Owner": [
+                "531415883065",
+                "251351625822",
+                "210686502322"
+              ]
+            }
+          }
         }
     ]
 }
