@@ -32,7 +32,13 @@ All resources in `deploy/` are bundled into a template that is used by config ma
 
 Direct deployment (#1) supports resources that are not synced down to OSD clusters.  SelectorSyncSet deployment (#2) supports resoures that _are_ synced down to OSD clusters.  Each are explained in detail here.  The general configuration is managed in a `config.yaml` file in each deploy directory.  Key things of note:
 
-* This file will become mandatory in the near future in the scope of OSD-15267 and have been added to all folders as a first step. If not present it's assumed `deploymentMode` is `"SelectorSyncSet"` with no additional configuration.
+* This file is now mandatory in the scope of OSD-15267 and have been added to all folders. In case it is not define, `make` will fail
+```
++ scripts/generate_template.py -t scripts/templates/ -y deploy -d /Users/bdematte/git/managed-cluster-config/hack/ -r managed-cluster-config
+ERROR : Missing config.yaml for resource defined in deploy/acm-policies
+Some config.yaml files are missing, exiting...
+make: *** [generate-hive-templates] Error 1
+```
 * Configuration is _not_ inherited by sub-directories!  Every (EVERY) directory in the `deploy/` hierarchy must define a `config.yaml` file.
 
 You must specify a `deploymentMode` property in `config.yaml`.
