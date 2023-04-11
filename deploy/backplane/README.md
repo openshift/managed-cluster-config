@@ -10,4 +10,3 @@ This directory is focused around managing roles for backplane users based on the
 | lpsre | RBAC for SRE Layered Products team (Combining of CS and MT SRE teams) |
 | srep  | RBAC for SRE Platform team  |
 | mkrts | RBAC for RTS team |
-| osdfm | RBAC for Engineering teams responsible for clusters provisioned by OSD Fleet Manager |
