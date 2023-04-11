@@ -115,6 +115,8 @@ if __name__ == '__main__':
     arguments = parser.parse_args()
 
     dirpaths = []
+    missing_config = False
+
     for (dirpath, dirnames, filenames) in os.walk(arguments.yaml_directory):
         if filenames:
             dirpaths.append(dirpath)
@@ -125,6 +127,11 @@ if __name__ == '__main__':
         path_config = os.path.join(dirpath, config_filename)
         if os.path.exists(path_config):
             config = get_yaml(path_config)
+        else:
+            if len(get_all_yaml_files(dirpath)) > 0 :
+                missing_config = True
+                print("ERROR : Missing config.yaml for resource defined in {}".format(dirpath))
+                continue
 
         deploymentMode = "SelectorSyncSet"
 
@@ -193,6 +200,10 @@ if __name__ == '__main__':
                 # Catches anyone with a rouge value
                 add_sss_for(sss_name, dirpath, config["selectorSyncSet"])
 
+    if missing_config :
+        print("Some config.yaml files are missing, exiting...")
+        sys.exit(1)
+
     # Get the template
     template_data = get_yaml(os.path.join(arguments.template_dir, "template.yaml"))
 
@@ -214,4 +225,3 @@ if __name__ == '__main__':
         # and write the env specific output
         with open(os.path.join(arguments.destination, "00-osd-managed-cluster-config-{}.yaml.tmpl".format(environment)), "w") as outfile:
             yaml.dump(data_out, outfile)
-
