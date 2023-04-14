@@ -6,10 +6,14 @@ metadata:
 spec:
   clusterPermissions:
   - backplane-srep-service-cluster-cluster
+  # permit get at global scope https://issues.redhat.com/browse/OSD-15997
+  - view
   permissions:
   - clusterRoleName: backplane-srep-service-cluster-project
     namespacesAllowedRegex: "(^uhc.*|^ocm.*|^klusterlet.*)"
   - clusterRoleName: dedicated-readers
     namespacesAllowedRegex: "(^hypershift.*|^uhc.*|^ocm.*|^klusterlet.*|^open-cluster-management.*)"
+  - clusterRoleName: backplane-srep # apply standard srep access to hcp namespaces https://issues.redhat.com/browse/OSD-15997
+    namespaceAllowedRegex: "(^hypershift.*|^uhc.*|^ocm.*|^klusterlet.*|^open-cluster-management.*)"
   subjectKind: Group
   subjectName: system:serviceaccounts:openshift-backplane-srep
