@@ -214,6 +214,21 @@
               ]
             }
           }
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "kms:CreateGrant"
+            ],
+            "Resource": "*",
+            "Condition": {
+                "Bool": {
+                    "kms:GrantIsForAWSResource": true
+                },
+                "StringEquals": {
+                    "aws:ResourceTag/red-hat": "true"
+                }
+            }
         }
     ]
 }
