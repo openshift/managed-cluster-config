@@ -1,0 +1,13 @@
+apiVersion: managed.openshift.io/v1alpha1
+kind: SubjectPermission
+metadata:
+  name: backplane-mcg-mcg-osd-admins
+  namespace: openshift-rbac-permissions
+spec:
+  permissions:
+  - clusterRoleName: admin
+    namespacesAllowedRegex: (^redhat-data-federation$)
+  - clusterRoleName: backplane-mcg-osd-cr-admins
+    namespacesAllowedRegex: (^redhat-data-federation$)
+  subjectKind: Group
+  subjectName: system:serviceaccounts:openshift-backplane-mcg

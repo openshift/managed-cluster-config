@@ -1,0 +1,13 @@
+apiVersion: managed.openshift.io/v1alpha1
+kind: SubjectPermission
+metadata:
+  name: backplane-mtsre-reference-addon-admins
+  namespace: openshift-rbac-permissions
+spec:
+  permissions:
+  - clusterRoleName: admin
+    namespacesAllowedRegex: (^redhat-reference-addon$)
+  - clusterRoleName: backplane-mtsre-monitoring
+    namespacesAllowedRegex: (^openshift-storage$)
+  subjectKind: Group
+  subjectName: system:serviceaccounts:openshift-backplane-mtsre

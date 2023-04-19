@@ -1,0 +1,18 @@
+apiVersion: managed.openshift.io/v1alpha1
+kind: SubjectPermission
+metadata:
+  name: backplane-mtsre-addon-operator-admins
+  namespace: openshift-rbac-permissions
+spec:
+  clusterPermissions:
+  - backplane-mtsre-addon-operator-admin
+  - backplane-readers-cluster
+  permissions:
+  - clusterRoleName: admin
+    namespacesAllowedRegex: (^openshift-addon-operator$)
+  - clusterRoleName: backplane-mtsre-monitoring
+    namespacesAllowedRegex: (^openshift-addon-operator$)
+  - clusterRoleName: backplane-mtsre-addon-operator-olm-admin
+    namespacesAllowedRegex: (^openshift-addon-operator$)
+  subjectKind: Group
+  subjectName: system:serviceaccounts:openshift-backplane-mtsre

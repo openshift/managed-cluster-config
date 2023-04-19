@@ -1,0 +1,102 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: logger
+  namespace: openshift-scanning
+spec:
+  selector:
+    matchLabels:
+      name: logger
+  template:
+    metadata:
+      labels:
+        name: logger
+    spec:
+      containers:
+      - env:
+        - name: OO_PAUSE_ON_START
+          value: "false"
+        - name: LOG_WRITER_URL
+          value: http://logger.openshift-scanning.svc:8443/api/log
+        - name: SCAN_LOG_FILE
+          value: /host/var/log/openshift_managed_malware_scan.log
+        - name: POD_LOG_FILE
+          value: /host/var/log/openshift_managed_pod_creation.log
+        - name: POD_SOCK
+          value: "@rpc.pod.sock"
+        - name: SCAN_SOCK
+          value: "@rpc.scan.sock"
+        - name: APP_SECRETS_PATH
+          value: "/secrets/api_config.json"
+        - name: SA_TOKEN_PATH
+          value: "/var/run/secrets/kubernetes.io/serviceaccount/token"
+        - name: OAPI_URL
+          value: "https://openshift.default.svc.cluster.local"
+        - name: CV_URL
+          value: "/apis/config.openshift.io/v1/clusterversions"
+        - name: MIDDLEWARE_LOGGER
+          value: "true"
+        - name: LISTEN_PORT
+          value: "8443"
+        - name: TLS_CERT_FILE
+          value: /certs/tls.crt
+        - name: TLS_KEY_FILE
+          value: /certs/tls.key
+        image: quay.io/app-sre/pod-logger@sha256:0e1eb7df212641a5bd6c6655ad9e613f59cee32fd0075e5c46df6fe88cab025e 
+        name: logger
+        ports:
+        - containerPort: 8443
+          name: logger
+          protocol: TCP
+        resources:
+          limits:
+            cpu: 100m
+            memory: 100Mi
+          requests:
+            cpu: 100m
+            memory: 50Mi
+        volumeMounts:
+        - mountPath: /secrets
+          name: logger-secrets
+        - mountPath: /certs
+          name: logger-certs
+      - env:
+        - name: OO_PAUSE_ON_START
+          value: "false"
+        - name: SOCK
+          value: "@rpc.pod.sock"
+        image: quay.io/app-sre/log-printer@sha256:9e04ed57a497243ad54bc8f432eab0da8958f710baa92c11fdb77e27498a199e 
+        name: pod-printer
+        resources:
+          limits:
+            cpu: 100m
+            memory: 100Mi
+          requests:
+            cpu: 100m
+            memory: 50Mi
+      - env:
+        - name: OO_PAUSE_ON_START
+          value: "false"
+        - name: SOCK
+          value: "@rpc.scan.sock"
+        image: quay.io/app-sre/log-printer@sha256:9e04ed57a497243ad54bc8f432eab0da8958f710baa92c11fdb77e27498a199e 
+        name: scan-printer
+        resources:
+          limits:
+            cpu: 100m
+            memory: 100Mi
+          requests:
+            cpu: 100m
+            memory: 50Mi
+      nodeSelector:
+        node-role.kubernetes.io/master: ""
+      serviceAccountName: logger-sa
+      tolerations:
+      - operator: Exists
+      volumes:
+      - name: logger-secrets
+        secret:
+          secretName: logger-secrets
+      - name: logger-certs
+        secret:
+          secretName: loggerservice

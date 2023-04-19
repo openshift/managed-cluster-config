@@ -1,0 +1,14 @@
+apiVersion: managed.openshift.io/v1alpha1
+kind: SubjectPermission
+metadata:
+  name: backplane-csm
+  namespace: openshift-rbac-permissions
+spec:
+  clusterPermissions:
+  - backplane-readers-cluster
+  permissions:
+  - clusterRoleName: dedicated-readers
+    namespacesAllowedRegex: "(^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)"
+    namespacesDeniedRegex: openshift-backplane-cluster-admin
+  subjectKind: Group
+  subjectName: system:serviceaccounts:openshift-backplane-csm

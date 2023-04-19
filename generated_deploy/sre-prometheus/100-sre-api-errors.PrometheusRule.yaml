@@ -1,0 +1,21 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: k8s
+    role: alert-rules
+  name: sre-uptime-sla
+  namespace: openshift-monitoring
+spec:
+  groups:
+  - name: sre-uptime-sla
+    rules:
+    - alert: SLAUptimeSRE
+      annotations:
+        message: The API server has had 100 percent request failures for 300 seconds.
+      expr: |
+        (sum(rate(apiserver_request_total{job="apiserver", code=~"(400|5..)"}[5m])) / sum(rate(apiserver_request_total{job="apiserver", code=~"([1-5]..)"}[5m])) >= 1)
+      for: 5m
+      labels:
+        severity: critical
+        namespace: openshift-monitoring

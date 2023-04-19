@@ -1,0 +1,23 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: sre-pending-csr-alert
+    role: alert-rules
+  name: sre-pending-csr-alert
+  namespace: openshift-monitoring
+spec:
+  groups:
+    # https://bugzilla.redhat.com/show_bug.cgi?id=2025767
+    # MAPI currently has a bug that leaves orphaned-vms. Pending CSRs are indications of this occurring
+    - name: sre-pending-csr-alert
+      rules:
+        - alert: CSRPendingLongDurationSRE
+          # set to 1 as per https://access.redhat.com/solutions/6411541
+          expr: sum(mapi_current_pending_csr) > 1
+          for: 15m
+          labels:
+            severity: critical
+            namespace: openshift-monitoring
+          annotations:
+            message: "MAPI CSR requests have been pending for more then 15 minutes. This can indicate that orphaned VMs are being created and requires immeditate remediation."

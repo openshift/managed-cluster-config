@@ -1,0 +1,73 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: osd-patch-subscription-source
+  namespace: openshift-marketplace
+spec:
+  failedJobsHistoryLimit: 5
+  successfulJobsHistoryLimit: 3
+  concurrencyPolicy: Replace
+  schedule: "0 */1 * * *"
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: 86400
+      template:
+        spec:
+          affinity:
+            nodeAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+              - preference:
+                  matchExpressions:
+                  - key: node-role.kubernetes.io/infra
+                    operator: Exists
+                weight: 1
+          tolerations:
+            - effect: NoSchedule
+              key: node-role.kubernetes.io/infra
+              operator: Exists
+          serviceAccountName: osd-patch-subscription-source
+          restartPolicy: Never
+          containers:
+          - name: osd-patch-subscription-source
+            image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+            imagePullPolicy: Always
+            args:
+            - /bin/bash
+            - -c
+            - |
+              # Script run as an idempotent cronjob to fix existing subscriptions when disabling OSD operator curation.
+
+              # for each type of source (redhat, certified, communit)
+              # AND for each namespace having a subscription with a curated community source
+              # AND for each subscription having a curated source
+              # patch the source
+              # NOTE there are loops for each source to keep the jsonpath simple and the logic easy to read
+
+              echo START
+              for NS in $(oc get subscription -A -o jsonpath='{.items[?(@.spec.source=="osd-curated-redhat-operators")].metadata.namespace}');
+              do
+                for SUB in $(oc -n $NS get subscription -o jsonpath='{.items[?(@.spec.source=="osd-curated-redhat-operators")].metadata.name}');
+                do
+                  echo "Patching subscription '$SUB' in namespace '$NS'"
+                  oc -n $NS patch subscription $SUB --patch '{"spec":{"source":"redhat-operators"}}' --type merge
+                done
+              done
+
+              for NS in $(oc get subscription -A -o jsonpath='{.items[?(@.spec.source=="osd-curated-certified-operators")].metadata.namespace}');
+              do
+                for SUB in $(oc -n $NS get subscription -o jsonpath='{.items[?(@.spec.source=="osd-curated-certified-operators")].metadata.name}');
+                do
+                  echo "Patching subscription '$SUB' in namespace '$NS'"
+                  oc -n $NS patch subscription $SUB --patch '{"spec":{"source":"certified-operators"}}' --type merge
+                done
+              done
+
+              for NS in $(oc get subscription -A -o jsonpath='{.items[?(@.spec.source=="osd-curated-community-operators")].metadata.namespace}');
+              do
+                for SUB in $(oc -n $NS get subscription -o jsonpath='{.items[?(@.spec.source=="osd-curated-community-operators")].metadata.name}');
+                do
+                  echo "Patching subscription '$SUB' in namespace '$NS'"
+                  oc -n $NS patch subscription $SUB --patch '{"spec":{"source":"community-operators"}}' --type merge
+                done
+              done
+              echo FINISH

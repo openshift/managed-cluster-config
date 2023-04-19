@@ -1,0 +1,13 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: backplane-cssre-admins-cluster
+aggregationRule:
+  clusterRoleSelectors:
+    # aggregate all "cluster" scope rbac for CSSRE
+    - matchExpressions:
+      - key: managed.openshift.io/aggregate-to-cssre-admins
+        operator: In
+        values:
+          - "cluster"
+rules: []
