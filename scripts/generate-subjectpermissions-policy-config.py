@@ -21,6 +21,7 @@ directories = [
         'osd-delete-backplane-serviceaccounts',
         'osd-user-workload-monitoring',
         'rbac-permissions-operator-config',
+        'ccs-dedicated-admins',
         ]
 rolebinding = \
 {'apiVersion': 'rbac.authorization.k8s.io/v1',
