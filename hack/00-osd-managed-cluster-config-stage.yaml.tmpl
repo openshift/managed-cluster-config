@@ -27549,6 +27549,43 @@ objects:
       kind: Namespace
       metadata:
         name: openshift-keda
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: dedicated-admins-openshift-keda
+        namespace: openshift-keda
+      rules:
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - installplans
+        - subscriptions
+        - clusterserviceversions
+        verbs:
+        - '*'
+      - apiGroups:
+        - ''
+        resources:
+        - events
+        verbs:
+        - list
+        - get
+        - watch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: dedicated-admins-openshift-keda
+        namespace: openshift-keda
+      subjects:
+      - apiGroup: rbac.authorization.k8s.io
+        kind: Group
+        name: dedicated-admins
+      - kind: Group
+        name: system:serviceaccounts:dedicated-admin
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: dedicated-admins-openshift-keda
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
