@@ -32,7 +32,12 @@
             "Action": [
                 "elasticloadbalancing:DeleteLoadBalancer"
             ],
-            "Resource": "*"
+            "Resource": "*",
+            "Condition" : {
+                "StringEquals": {
+                    "aws:ResourceTag/red-hat-managed": "true"
+                }
+            }
         },
         {
             "Sid": "PassRoleToEC2",
