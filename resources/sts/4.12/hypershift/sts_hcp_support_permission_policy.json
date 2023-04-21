@@ -2,6 +2,7 @@
   "Version": "2012-10-17",
   "Statement": [
     {
+      "Sid": "ReadPermissions",
       "Effect": "Allow",
       "Action": [
         "cloudtrail:DescribeTrails",
@@ -110,7 +111,6 @@
         "elasticloadbalancing:DescribeTargetHealth",
         "iam:GetRole",
         "iam:ListRoles",
-        "kms:CreateGrant",
         "route53:GetHostedZone",
         "route53:GetHostedZoneCount",
         "route53:ListHostedZones",
@@ -224,14 +224,47 @@
       }
     },
     {
-      "Sid": "StartInstances",
+      "Sid": "RunInstancesNoCondition",
       "Effect": "Allow",
-      "Action": "ec2:StartInstances",
-      "Resource": "arn:aws:ec2:*:*:instance/*",
+      "Action": "ec2:RunInstances",
+      "Resource": [
+          "arn:aws:ec2:*:*:subnet/*",
+          "arn:aws:ec2:*:*:network-interface/*",
+          "arn:aws:ec2:*:*:security-group/*",
+          "arn:aws:ec2:*:*:snapshot/*"
+      ]
+    },
+    {
+      "Sid": "RunInstancesRestrictedRequestTag",
+      "Effect": "Allow",
+      "Action": "ec2:RunInstances",
+      "Resource": [
+          "arn:aws:ec2:*:*:instance/*",
+          "arn:aws:ec2:*:*:volume/*"
+      ],
       "Condition": {
-        "StringEquals": {
-          "aws:ResourceTag/red-hat-managed": "true"
-        }
+          "StringEquals": {
+              "aws:RequestTag/red-hat-managed": "true"
+          }
+      }
+    },
+    {
+      "Sid": "RunInstancesRedHatOwnedAMIs",
+      "Effect": "Allow",
+      "Action": [
+          "ec2:RunInstances"
+      ],
+      "Resource": [
+          "arn:aws:ec2:*:*:image/*"
+      ],
+      "Condition": {
+          "StringEquals": {
+              "ec2:Owner": [
+                  "531415883065",
+                  "251351625822",
+                  "210686502322"
+              ]
+          }
       }
     },
     {
@@ -455,6 +488,20 @@
         "StringEquals": {
           "aws:ResourceTag/red-hat-managed": "true"
         }
+      }
+    },
+    {
+      "Sid": "CreateGrantRestrictedResourceTag",
+      "Effect": "Allow",
+      "Action": [
+          "kms:CreateGrant",
+          "kms:GenerateDataKey*"
+      ],
+      "Resource": "*",
+      "Condition": {
+          "StringEquals": {
+              "aws:ResourceTag/red-hat": "true"
+          }
       }
     }
   ]
