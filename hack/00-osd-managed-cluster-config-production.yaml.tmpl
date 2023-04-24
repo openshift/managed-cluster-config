@@ -23763,6 +23763,190 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: ocpbugs-773
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/version-major-minor-patch
+        operator: In
+        values:
+        - 4.10.0
+        - 4.10.1
+        - 4.10.2
+        - 4.10.3
+        - 4.10.4
+        - 4.10.5
+        - 4.10.6
+        - 4.10.7
+        - 4.10.8
+        - 4.10.9
+        - 4.10.10
+        - 4.10.11
+        - 4.10.12
+        - 4.10.13
+        - 4.10.14
+        - 4.10.15
+        - 4.10.16
+        - 4.10.17
+        - 4.10.18
+        - 4.10.19
+        - 4.10.20
+        - 4.10.21
+        - 4.10.22
+        - 4.10.23
+        - 4.10.24
+        - 4.10.25
+        - 4.10.26
+        - 4.10.27
+        - 4.10.28
+        - 4.10.29
+        - 4.10.30
+        - 4.10.31
+        - 4.10.32
+        - 4.10.33
+        - 4.10.34
+        - 4.10.35
+        - 4.10.36
+        - 4.10.37
+        - 4.10.38
+        - 4.10.39
+        - 4.10.40
+        - 4.10.41
+        - 4.10.42
+        - 4.10.43
+        - 4.10.44
+        - 4.10.45
+        - 4.11.0
+        - 4.11.1
+        - 4.11.2
+        - 4.11.3
+        - 4.11.4
+        - 4.11.5
+        - 4.11.6
+        - 4.11.7
+        - 4.11.8
+        - 4.11.9
+        - 4.11.10
+        - 4.11.11
+        - 4.11.12
+        - 4.11.13
+        - 4.11.14
+        - 4.11.15
+        - 4.11.16
+        - 4.11.17
+        - 4.11.18
+    resourceApplyMode: Sync
+    resources:
+    - kind: ServiceAccount
+      apiVersion: v1
+      metadata:
+        name: ocpbugs-773
+        namespace: openshift-sre-pruning
+        annotations:
+          kubernetes.io/description: Mitigate https://issues.redhat.com/browse/OCPBUGS-773
+            by checking podman version
+    - kind: ClusterRole
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        name: ocpbugs-773
+        namespace: openshift-sre-pruning
+        annotations:
+          kubernetes.io/description: Mitigate https://issues.redhat.com/browse/OCPBUGS-773
+            by checking podman version
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - get
+        - list
+      - apiGroups:
+        - ''
+        resources:
+        - pods/exec
+        verbs:
+        - create
+    - kind: ClusterRoleBinding
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        name: ocpbugs-773
+      subjects:
+      - kind: ServiceAccount
+        name: ocpbugs-773
+        namespace: openshift-sre-pruning
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: ocpbugs-773
+    - apiVersion: batch/v1
+      kind: CronJob
+      metadata:
+        name: ocpbugs-773
+        namespace: openshift-sre-pruning
+        annotations:
+          kubernetes.io/description: Mitigate https://issues.redhat.com/browse/OCPBUGS-773
+            by checking podman version
+      spec:
+        schedule: '*/30 * * * *'
+        concurrencyPolicy: Replace
+        jobTemplate:
+          spec:
+            backoffLimit: 0
+            ttlSecondsAfterFinished: 3600
+            template:
+              metadata:
+                name: ocpbugs-773
+                namespace: openshift-sre-pruning
+                annotations:
+                  kubernetes.io/description: Mitigate https://issues.redhat.com/browse/OCPBUGS-773
+                    by checking podman version
+              spec:
+                affinity:
+                  nodeAffinity:
+                    preferredDuringSchedulingIgnoredDuringExecution:
+                    - preference:
+                        matchExpressions:
+                        - key: node-role.kubernetes.io/infra
+                          operator: Exists
+                      weight: 1
+                tolerations:
+                - effect: NoSchedule
+                  key: node-role.kubernetes.io/infra
+                  operator: Exists
+                containers:
+                - name: ocpbugs-773
+                  image: image-registry.openshift-image-registry.svc:5000/openshift/tools:latest
+                  imagePullPolicy: Always
+                  securityContext:
+                    allowPrivilegeEscalation: false
+                    capabilities:
+                      drop:
+                      - ALL
+                    runAsNonRoot: true
+                    seccompProfile:
+                      type: RuntimeDefault
+                  command:
+                  - /bin/bash
+                  args:
+                  - -c
+                  - "pods=$(oc get pod -n openshift-sdn -l app=sdn -oname)\n\nif [[\
+                    \ -z \"${pods}\" ]]; then\n   # no SDN pods found, this is fine\n\
+                    \   exit 0\nfi\n\nwhile IFS= read -r pod; do\n  echo $pod\n  oc\
+                    \ exec -n openshift-sdn $pod -c sdn -- chroot /host podman version\n\
+                    done <<< \"$pods\"            \n"
+                serviceAccountName: ocpbugs-773
+                automountServiceAccountToken: true
+                restartPolicy: Never
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: osd-14634-disable-cpms
   spec:
     clusterDeploymentSelector:
