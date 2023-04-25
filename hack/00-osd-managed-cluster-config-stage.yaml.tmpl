@@ -32833,6 +32833,46 @@ objects:
       kind: PrometheusRule
       metadata:
         labels:
+          prometheus: sre-monitoring-operatordown
+          role: alert-rules
+        name: sre-monitoring-operatordown
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-monitoring-operatordown
+          rules:
+          - alert: ClusterMonitoringOperatorDownSRE
+            expr: '(sum(cluster_operator_up{name="monitoring"}) - absent(count(kube_pod_labels{label_app_kubernetes_io_component="prometheus",namespace!~"openshift-.*"})))
+              == -1
+
+              '
+            for: 10m
+            labels:
+              severity: critical
+              namespace: openshift-cluster-version
+            annotations:
+              message: The monitoring operator may be down or disabled, and the components
+                it manages may be unavailable or degraded. Cluster upgrades may not
+                complete. For more information refer to 'oc get -o yaml clusteroperator
+                monitoring'.
+          - alert: MultiplePrometheusOperatorsSRE
+            expr: 'count(label_replace(kube_pod_labels{label_app_kubernetes_io_component="prometheus",namespace!~"openshift-.*"},
+              "sre_metric", "openshift-sre", "", "(.*)")) by (namespace, sre_metric)
+              unless ignoring (namespace) count(label_replace(cluster_operator_up{name="monitoring"},
+              "sre_metric", "openshift-sre", "", "(.*)") > 0) by (sre_metric)
+
+              '
+            for: 10m
+            labels:
+              severity: info
+              namespace: openshift-monitoring
+            annotations:
+              message: There are multiple prometheus operators that are impacting
+                the cluster monitoring operator, in customer namespaces.
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
           prometheus: sre-node-unschedulable
           role: alert-rules
         name: sre-node-unschedulable
