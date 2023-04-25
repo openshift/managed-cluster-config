@@ -1,0 +1,39 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: sre-monitoring-operatordown
+    role: alert-rules
+  name: sre-monitoring-operatordown
+  namespace: openshift-monitoring
+spec:
+  groups:
+  - name: sre-monitoring-operatordown
+    rules:
+    - alert: ClusterMonitoringOperatorDownSRE
+      # Specifically for the Cluster Monitoring Operator, we want to see if the sum cluster_operator_up (which will turn to 0 when
+      # the operator is DOWN) minus the count of prometheus pods outside of the openshift-* namespaces equals -1. This means that if
+      # the cluster operator is down and there are no rogue prometheus instances this will fire.  If the monitoring operator goes
+      # down but there also is rogue prometheus instances, this would return 0 because of the `absent` and therefore will not fire.
+      expr: |
+        (sum(cluster_operator_up{name="monitoring"}) - absent(count(kube_pod_labels{label_app_kubernetes_io_component="prometheus",namespace!~"openshift-.*"}))) == -1
+      for: 10m
+      labels:
+        severity: critical
+        namespace: openshift-cluster-version
+      annotations:
+        message: The monitoring operator may be down or disabled, and the components it manages may be unavailable or degraded. Cluster upgrades may not complete. For more information refer to 'oc get -o yaml clusteroperator monitoring'.
+    - alert: MultiplePrometheusOperatorsSRE
+      # This alert will fire when there are multiple prometheus operators on the cluster unless the cluster monitoring operator is not down.
+      # We first get the labels from the pod with the namespace, adding a custom label to compare on against the count of the cluster monitoring
+      # operator pods available. If the cluster monitoring operator is up, this won't fire for just having additional prometheus instances. If
+      # the customer has multiple prometheus instances, and the cluster monitoring operator is down, this will fire.
+      expr: |
+         count(label_replace(kube_pod_labels{label_app_kubernetes_io_component="prometheus",namespace!~"openshift-.*"}, "sre_metric", "openshift-sre", "", "(.*)")) by (namespace, sre_metric) unless ignoring (namespace) count(label_replace(cluster_operator_up{name="monitoring"}, "sre_metric", "openshift-sre", "", "(.*)") > 0) by (sre_metric)
+      for: 10m
+      labels:
+        severity: info
+        namespace: openshift-monitoring
+      annotations:
+        message: "There are multiple prometheus operators that are impacting the cluster monitoring operator, in customer namespaces."
+
