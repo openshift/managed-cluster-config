@@ -19,7 +19,6 @@
                 "ec2:DescribeVpcs",
                 "ec2:DescribeInstanceTypeOfferings",
                 "elasticloadbalancing:DescribeLoadBalancers",
-                "kms:DescribeKey",
                 "iam:GetRole",
                 "route53:ListHostedZones",
                 "route53:ListResourceRecordSets",
@@ -213,7 +212,23 @@
             "Sid": "CreateGrantRestrictedResourceTag",
             "Effect": "Allow",
             "Action": [
-                "kms:CreateGrant",
+                "kms:CreateGrant"
+            ],
+            "Resource": "*",
+            "Condition": {
+                "StringEquals": {
+                    "aws:ResourceTag/red-hat": "true"
+                },
+                "Bool": {
+                  "kms:GrantIsForAWSResource": true
+                }
+            }
+        },
+        {
+            "Sid": "KMSDescirbeKey",
+            "Effect": "Allow",
+            "Action": [
+                "kms:DescribeKey",
                 "kms:GenerateDataKeyWithoutPlaintext"
             ],
             "Resource": "*",
