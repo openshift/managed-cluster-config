@@ -458,15 +458,30 @@
       "Sid": "CreateGrantRestrictedResourceTag",
       "Effect": "Allow",
       "Action": [
-          "kms:CreateGrant",
-          "kms:GenerateDataKeyWithoutPlaintext"
+          "kms:CreateGrant"
       ],
       "Resource": "*",
       "Condition": {
           "StringEquals": {
               "aws:ResourceTag/red-hat": "true"
+          },
+          "Bool": {
+              "kms:GrantIsForAWSResource": true
           }
       }
+    },
+    {
+        "Sid": "KMSGenerateDataKey",
+        "Effect": "Allow",
+        "Action": [
+            "kms:GenerateDataKeyWithoutPlaintext"
+        ],
+        "Resource": "*",
+        "Condition": {
+            "StringEquals": {
+                "aws:ResourceTag/red-hat": "true"
+            }
+        }
     },
     {
       "Sid": "CreateKeyPair",
