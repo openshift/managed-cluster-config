@@ -1,0 +1,63 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: ocpbugs-773
+  namespace: openshift-sre-pruning
+  annotations:
+    kubernetes.io/description: Mitigate https://issues.redhat.com/browse/OCPBUGS-773 by checking podman version
+spec:
+  schedule: "*/30 * * * *" # Every thirty minutes
+  concurrencyPolicy: Replace
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      ttlSecondsAfterFinished: 3600
+      template:
+        metadata:
+          name: ocpbugs-773
+          namespace: openshift-sre-pruning
+          annotations:
+            kubernetes.io/description: Mitigate https://issues.redhat.com/browse/OCPBUGS-773 by checking podman version
+        spec:
+          affinity:
+            nodeAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+              - preference:
+                  matchExpressions:
+                  - key: node-role.kubernetes.io/infra
+                    operator: Exists
+                weight: 1
+          tolerations:
+            - effect: NoSchedule
+              key: node-role.kubernetes.io/infra
+              operator: Exists
+          containers:
+          - name: ocpbugs-773
+            image: image-registry.openshift-image-registry.svc:5000/openshift/tools:latest
+            imagePullPolicy: Always
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                - ALL
+              runAsNonRoot: true
+            command:
+            - /bin/bash
+            args:
+            - -c
+            - |
+              pods=$(oc get pod -n openshift-sdn -l app=sdn -oname)
+
+              if [[ -z "${pods}" ]]; then
+                 # no SDN pods found, this is fine
+                 exit 0
+              fi
+
+              while IFS= read -r pod; do
+                echo $pod
+                oc exec -n openshift-sdn $pod -c sdn -- chroot /host podman version
+              done <<< "$pods"            
+          serviceAccountName: ocpbugs-773
+          automountServiceAccountToken: true
+          restartPolicy: Never
