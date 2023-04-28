@@ -12,7 +12,7 @@ spec:
     rules:
     - alert: RunawaySDNPreventingContainerCreationSRE
       # OSD-13103: This is an attempt to catch an issue where SDN has no memory limits and can cause pods to be stuck in ContainerCreating on
-      # worker nodes due to memory exhaustion. It should be fixed in OCPBUGS-773 or RHOCPPRIO-33
+      # worker nodes due to memory exhaustion. It should be fixed in OCPBUGS-1370 or RHOCPPRIO-33
       expr: sum(sum(kube_pod_container_status_waiting_reason{reason="ContainerCreating"}) by (pod,namespace) * on (pod,namespace) group_right kube_pod_info) by (node) > 0 and sum(container_memory_usage_bytes{namespace="openshift-sdn"} > 8000000000) by (node)
       for: 10m
       labels:
