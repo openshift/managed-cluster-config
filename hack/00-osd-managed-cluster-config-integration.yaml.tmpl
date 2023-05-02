@@ -33228,6 +33228,46 @@ objects:
       kind: PrometheusRule
       metadata:
         labels:
+          prometheus: sre-node-filedescriptor-limit
+          role: alert-rules
+        name: sre-node-filedescriptor-limit
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-controlplane-node-filedescriptor-limit
+          rules:
+          - alert: ControlPlaneNodeFileDescriptorLimitSRE
+            expr: "group by (instance) (\n  node_filefd_allocated{job=\"node-exporter\"\
+              } * 100 / node_filefd_maximum{job=\"node-exporter\"} >= 90\n)\n* on\
+              \ (instance) group_left ()group by (instance) (\n  label_replace(kube_node_role{role=~\"\
+              infra|control-plane|master\"}, \"instance\", \"$1\", \"node\", \"(.*)\"\
+              )\n)"
+            for: 15m
+            labels:
+              severity: critical
+              namespace: openshift-monitoring
+            annotations:
+              message: Kernel is predicted to exhaust file descriptors limit soon.
+        - name: sre-worker-node-filedescriptor-limit
+          rules:
+          - alert: WorkerNodeFileDescriptorLimitSRE
+            expr: "group by (instance) (\n  node_filefd_allocated{job=\"node-exporter\"\
+              } * 100 / node_filefd_maximum{job=\"node-exporter\"} >= 90\n)\n* on\
+              \ (instance) group_left ()group by(instance) (\n  label_replace(kube_node_role{role!~\"\
+              infra|control-plane|master\"}, \"instance\", \"$1\", \"node\", \"(.*)\"\
+              )\n)\nunless\ngroup by(instance) (\n  label_replace(kube_node_role{role=~\"\
+              infra|control-plane|master\"}, \"instance\", \"$1\", \"node\", \"(.*)\"\
+              )\n)"
+            for: 15m
+            labels:
+              severity: critical
+              namespace: openshift-monitoring
+            annotations:
+              message: Kernel is predicted to exhaust file descriptors limit soon.
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
           prometheus: sre-node-unschedulable
           role: alert-rules
         name: sre-node-unschedulable
