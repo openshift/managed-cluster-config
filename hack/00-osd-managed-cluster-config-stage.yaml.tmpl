@@ -23102,6 +23102,10 @@ objects:
       matchLabels:
         api.openshift.com/managed: 'true'
       matchExpressions:
+      - key: ext-hypershift.openshift.io/cluster-type
+        operator: NotIn
+        values:
+        - management-cluster
       - key: hive.openshift.io/version-major-minor
         operator: NotIn
         values:
@@ -23270,6 +23274,51 @@ objects:
           \  ignoredNamespaces:\n  - openshift-logging\n  - openshift-redhat-marketplace\n\
           \  - openshift-operators\n  - openshift-customer-monitoring\n  - openshift-cnv\n\
           \  - openshift-route-monitoring-operator\n  - openshift-user-workload-monitoring\n\
+          \  - openshift-pipelines\nextDependencyAvailabilityChecks:\n  http:\n  \
+          \  timeout: 10\n    urls:\n      - ${OCM_BASE_URL}\n"
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: managed-upgrade-operator-config-hypershift-mc
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: ext-hypershift.openshift.io/cluster-type
+        operator: In
+        values:
+        - management-cluster
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: managed-upgrade-operator-config
+        namespace: openshift-managed-upgrade-operator
+      data:
+        config.yaml: "upgradeType: OSD\nconfigManager:\n  source: OCM\n  ocmBaseUrl:\
+          \ ${OCM_BASE_URL}\n  watchInterval: 60\nmaintenance:\n  controlPlaneTime:\
+          \ 130\n  ignoredAlerts:\n    controlPlaneCriticals:\n    # ClusterOperatorDown\
+          \ - https://bugzilla.redhat.com/show_bug.cgi?id=1955300\n    - ClusterOperatorDown\n\
+          scale:\n  timeOut: 30\nupgradeWindow:\n  delayTrigger: 30\n  timeOut: 120\n\
+          nodeDrain:\n  timeOut: 45\n  expectedNodeDrainTime: 8\n  disableDrainStrategies:\
+          \ true\nhealthCheck:\n  ignoredCriticals:\n  - DNSErrors05MinSRE\n  - MetricsClientSendFailingSRE\n\
+          \  - UpgradeNodeScalingFailedSRE\n  - PruningCronjobErrorSRE\n  - PrometheusRuleFailures\n\
+          \  - CannotRetrieveUpdates\n  - FluentdNodeDown\n  # OSD-11927\n  - ClusterProxyCAExpiringSRE\n\
+          \  # https://bugzilla.redhat.com/show_bug.cgi?id=1986981\n  - PrometheusRemoteWriteBehind\n\
+          \  - KubePersistentVolumeErrors\n  - PrometheusBadConfig\n  - PrometheusRemoteStorageFailures\n\
+          \  - AlertmanagerMembersInconsistent\n  - AlertmanagerClusterFailedToSendAlerts\n\
+          \  - AlertmanagerConfigInconsistent\n  - AlertmanagerClusterDown\n  - KubeStateMetricsListErrors\n\
+          \  - KubeStateMetricsWatchErrors\n  - ThanosRuleSenderIsFailingAlerts\n\
+          \  - ThanosRuleHighRuleEvaluationFailures\n  - ThanosNoRuleEvaluations\n\
+          \  # OSD-13649\n  - etcdGRPCRequestsSlow\n  ignoredNamespaces:\n  - openshift-logging\n\
+          \  - openshift-redhat-marketplace\n  - openshift-operators\n  - openshift-customer-monitoring\n\
+          \  - openshift-cnv\n  - openshift-route-monitoring-operator\n  - openshift-user-workload-monitoring\n\
           \  - openshift-pipelines\nextDependencyAvailabilityChecks:\n  http:\n  \
           \  timeout: 10\n    urls:\n      - ${OCM_BASE_URL}\n"
 - apiVersion: hive.openshift.io/v1
