@@ -3,6 +3,17 @@ kind: IngressController
 metadata:
   name: default
   namespace: openshift-ingress-operator
+  annotations:
+    ingress.operator.openshift.io/auto-delete-load-balancer: 'true'
 spec:
   defaultCertificate:
     name: '{{hub (printf "%s-primary-cert-bundle-secret" .ManagedClusterName) hub}}'
+  endpointPublishingStrategy:
+    type: LoadBalancerService
+    loadBalancer:
+      providerParameters:
+        type: AWS
+        aws:
+          type: 'NLB'
+      dnsManagementPolicy: 'Managed'
+      scope: '{{hub- if eq (fromConfigMap "openshift-acm-policies" .ManagedClusterName "endpoint-publishing-strategy") "internal" -hub}} Internal {{hub- else -hub}} External {{hub- end -hub}}'
