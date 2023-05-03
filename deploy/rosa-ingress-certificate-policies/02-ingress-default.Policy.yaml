@@ -1,19 +1,41 @@
-apiVersion: operator.openshift.io/v1
-kind: IngressController
+# IMPORTANT PRECAUTIONS:
+# Any change to how this policy renders will effect all Hosted Control Planes
+# To change only NEW HCP's, use a reference to the HCP's ConfigMap. The ConfigMap
+#  will only have new keys when ClusterService makes a specific change, like provisioning.
+#  If you supply a default for when the key is missing, the existing HCP's will not be effected
+#  by the change.
+# Changing the policy directly, without the ConfigMap reference will apply to ALL HCP's
+#
+apiVersion: policy.open-cluster-management.io/v1
+kind: ConfigurationPolicy
 metadata:
-  name: default
-  namespace: openshift-ingress-operator
-  annotations:
-    ingress.operator.openshift.io/auto-delete-load-balancer: 'true'
+  name: rosa-ingress-controller-policies
 spec:
-  defaultCertificate:
-    name: '{{hub (printf "%s-primary-cert-bundle-secret" .ManagedClusterName) hub}}'
-  endpointPublishingStrategy:
-    type: LoadBalancerService
-    loadBalancer:
-      providerParameters:
-        type: AWS
-        aws:
-          type: 'Classic'
-      dnsManagementPolicy: 'Managed'
-      scope: '{{hub- if eq (fromConfigMap "openshift-acm-policies" .ManagedClusterName "endpoint-publishing-strategy") "internal" -hub}} Internal {{hub- else -hub}} External {{hub- end -hub}}'
+  evaluationInterval:
+      compliant: 2h
+      noncompliant: 45s
+  object-templates-raw: |
+    - complianceType: musthave
+      metadataComplianceType: musthave
+      objectDefinition:
+        apiVersion: operator.openshift.io/v1
+        kind: IngressController
+        metadata:
+          name: default
+          namespace: openshift-ingress-operator
+          annotations:
+            ingress.operator.openshift.io/auto-delete-load-balancer: 'true'
+        spec:
+          defaultCertificate:
+            name: '{{hub (printf "%s-primary-cert-bundle-secret" .ManagedClusterName) hub}}'
+          {{hub- if ne (lookup "v1" "ConfigMap" "openshift-acm-policies" .ManagedClusterName).data nil hub}}
+          endpointPublishingStrategy:
+            type: LoadBalancerService
+            loadBalancer:
+              providerParameters:
+                type: AWS
+                aws:
+                  type: '{{hub (default "Classic" (fromConfigMap "openshift-acm-policies" .ManagedClusterName "loadbalancer-aws-type")) hub}}'
+              dnsManagementPolicy: 'Managed'
+              scope: '{{hub- if eq (fromConfigMap "openshift-acm-policies" .ManagedClusterName "endpoint-publishing-strategy") "internal" -hub}} Internal {{hub- else -hub}} External {{hub- end -hub}}'
+          {{hub- end hub}}
