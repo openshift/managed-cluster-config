@@ -52,7 +52,7 @@ spec:
                                         aws:
                                             type: Classic
                                         type: AWS
-                                    scope: '{{hub- if eq (fromConfigMap "openshift-acm-policies" .ManagedClusterName "endpoint-publishing-strategy") "internal" -hub}} Internal {{hub- else -hub}} External {{hub- end -hub}}'
+                                    scope: '{{hub- if eq (lookup "v1" "ConfigMap" "openshift-acm-policies" .ManagedClusterName).data nil -hub}} External {{hub- else -hub}} {{hub- if eq (fromConfigMap "openshift-acm-policies" .ManagedClusterName "endpoint-publishing-strategy") "internal" -hub}} Internal {{hub- else -hub}} External {{hub- end -hub}} {{hub- end -hub}}'
                                 type: LoadBalancerService
                 pruneObjectBehavior: DeleteIfCreated
                 remediationAction: enforce
