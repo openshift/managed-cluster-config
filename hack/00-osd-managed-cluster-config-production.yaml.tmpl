@@ -23680,6 +23680,19 @@ objects:
           resendWait: 1
           severity: Error
           summary: Platform protections removed by non-Red Hat user
+        - activeBody: Your cluster requires you to take action. The kernel file descriptor
+            limit for a worker node is currently at or above 90% and is predicted
+            to be fully exhausted soon. This will prevent applications on the node
+            from opening and operating on files. Without action, your cluster's SLA
+            and ability to upgrade may be impacted. Please reduce the number of simultaneously-open
+            files on this node, either by adjusting application configuration or by
+            moving some applications to other nodes.
+          name: WorkerNodeFileDescriptorAtLimit
+          resendWait: 24
+          resolvedBody: Your cluster no longer has worker nodes approaching the kernel
+            file descriptor limit. No additional action on this issue is required.
+          severity: Info
+          summary: Worker node file descriptor limit nearly exhausted
     - apiVersion: ocmagent.managed.openshift.io/v1alpha1
       kind: ManagedNotification
       metadata:
@@ -33496,22 +33509,6 @@ objects:
               namespace: openshift-monitoring
             annotations:
               message: Kernel is predicted to exhaust file descriptors limit soon.
-        - name: sre-worker-node-filedescriptor-limit
-          rules:
-          - alert: WorkerNodeFileDescriptorLimitSRE
-            expr: "group by (instance) (\n  node_filefd_allocated{job=\"node-exporter\"\
-              } * 100 / node_filefd_maximum{job=\"node-exporter\"} >= 90\n)\n* on\
-              \ (instance) group_left ()group by(instance) (\n  label_replace(kube_node_role{role!~\"\
-              infra|control-plane|master\"}, \"instance\", \"$1\", \"node\", \"(.*)\"\
-              )\n)\nunless\ngroup by(instance) (\n  label_replace(kube_node_role{role=~\"\
-              infra|control-plane|master\"}, \"instance\", \"$1\", \"node\", \"(.*)\"\
-              )\n)"
-            for: 15m
-            labels:
-              severity: critical
-              namespace: openshift-monitoring
-            annotations:
-              message: Kernel is predicted to exhaust file descriptors limit soon.
     - apiVersion: monitoring.coreos.com/v1
       kind: PrometheusRule
       metadata:
@@ -34700,6 +34697,22 @@ objects:
               namespace: audit-exporter
               send_managed_notification: 'true'
               managed_notification_template: NonSystemChangeValidationWebhookConfigurations
+          - alert: WorkerNodeFileDescriptorLimitSRE
+            expr: "group by (instance) (\n  node_filefd_allocated{job=\"node-exporter\"\
+              } * 100 / node_filefd_maximum{job=\"node-exporter\"} >= 90\n)\n* on\
+              \ (instance) group_left ()group by(instance) (\n  label_replace(kube_node_role{role!~\"\
+              infra|control-plane|master\"}, \"instance\", \"$1\", \"node\", \"(.*)\"\
+              )\n)\nunless\ngroup by(instance) (\n  label_replace(kube_node_role{role=~\"\
+              infra|control-plane|master\"}, \"instance\", \"$1\", \"node\", \"(.*)\"\
+              )\n)"
+            for: 15m
+            labels:
+              severity: critical
+              namespace: openshift-monitoring
+              managed_notification_template: WorkerNodeFileDescriptorAtLimit
+              send_managed_notification: 'true'
+            annotations:
+              message: Kernel is predicted to exhaust file descriptors limit soon.
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
