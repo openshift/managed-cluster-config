@@ -52,11 +52,7 @@
         "ec2:DescribeReservedInstances",
         "ec2:DescribeRouteTables",
         "ec2:DescribeScheduledInstances",
-        "ec2:DescribeSecurityGroupReferences",
-        "ec2:DescribeSecurityGroupRules",
-        "ec2:DescribeSecurityGroups",
         "ec2:DescribeSnapshots",
-        "ec2:DescribeStaleSecurityGroups",
         "ec2:DescribeSubnets",
         "ec2:DescribeTags",
         "ec2:DescribeTransitGatewayAttachments",
@@ -124,6 +120,22 @@
         "arn:aws:s3:::managed-velero*",
         "arn:aws:s3:::*image-registry-${aws:RequestedRegion}-*"
       ]
+    },
+    {
+      "Sid": "DescribeSecurityGroups",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:DescribeSecurityGroupReferences",
+        "ec2:DescribeSecurityGroupRules",
+        "ec2:DescribeSecurityGroups",
+        "ec2:DescribeStaleSecurityGroups"
+      ],
+      "Resource": "arn:aws:ec2:*:*:security-group*/*",
+      "Condition": {
+        "StringEquals": {
+          "aws:ResourceTag/red-hat-managed": "true"
+        }
+      }
     },
     {
       "Sid": "SearchTransitGatewayRoutes",
