@@ -33,7 +33,12 @@
       ],
       "Resource": [
         "*"
-      ]
+      ],
+      "Condition": {
+        "StringEquals": {
+          "aws:ResourceTag/red-hat-managed": "true"
+        }
+      }
     },
     {
       "Sid": "DecribeIAMRoles",
@@ -78,6 +83,17 @@
         "ec2:DescribeNetworkInterfaces",
         "ec2:DescribeSubnets",
         "ec2:DescribeRouteTables"
+      ],
+      "Resource": [
+        "*"
+      ]
+    },
+    {
+      "Sid": "Cloudtrail",
+      "Effect": "Allow",
+      "Action": [
+        "cloudtrail:DescribeTrails",
+        "cloudtrail:LookupEvents"
       ],
       "Resource": [
         "*"
