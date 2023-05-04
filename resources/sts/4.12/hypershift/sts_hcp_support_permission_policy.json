@@ -9,32 +9,72 @@
         "ec2:DescribeAvailabilityZones",
         "ec2:DescribeImages",
         "ec2:DescribeRegions",
-        "ec2:DescribeSnapshots",
-        "ec2:DescribeTags",
-        "iam:GetRole",
-        "iam:ListRoles",
-        "route53:GetHostedZone",
-        "route53:GetHostedZoneCount",
-        "route53:ListHostedZones",
-        "route53:ListHostedZonesByName",
-        "route53:ListResourceRecordSets",
         "sts:DecodeAuthorizationMessage"
       ],
       "Resource": "*"
     },
     {
-      "Sid": "EC2DescribeInstances",
+      "Sid": "DescribeTags",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:DescribeTags"
+      ],
+      "Resource": [
+        "*"
+      ]
+    },
+    {
+      "Sid": "Route53",
+      "Effect": "Allow",
+      "Action": [
+        "route53:GetHostedZone",
+        "route53:GetHostedZoneCount",
+        "route53:ListHostedZones",
+        "route53:ListHostedZonesByName",
+        "route53:ListResourceRecordSets"
+      ],
+      "Resource": [
+        "*"
+      ]
+    },
+    {
+      "Sid": "DecribeIAMRoles",
+      "Effect": "Allow",
+      "Action": [
+        "iam:GetRole",
+        "iam:ListRoles"
+      ],
+      "Resource": [
+        "*"
+      ]
+    },
+    {
+      "Sid": "EC2DescribeInstance",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:DescribeInstances",
+        "ec2:DescribeInstanceStatus",
+        "ec2:DescribeReservedInstances"
+      ],
+      "Resource": [
+        "*"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "aws:ResourceTag/red-hat-managed": "true"
+        }
+      }
+    },
+    {
+      "Sid": "EC2DescribeInstanceGeneral",
       "Effect": "Allow",
       "Action": [
         "ec2:DescribeIamInstanceProfileAssociations",
-        "ec2:DescribeInstances",
-        "ec2:DescribeInstanceStatus",
         "ec2:DescribeInstanceTypeOfferings",
         "ec2:DescribeInstanceTypes",
         "ec2:DescribeScheduledInstances",
         "ec2:DescribeCapacityReservations",
-        "ec2:DescribePlacementGroups",
-        "ec2:DescribeReservedInstances"
+        "ec2:DescribePlacementGroups"
       ],
       "Resource": [
         "*"
@@ -269,7 +309,10 @@
     {
       "Sid": "DescribeSnapshotAttribute",
       "Effect": "Allow",
-      "Action": "ec2:DescribeSnapshotAttribute",
+      "Action": [
+        "ec2:DescribeSnapshotAttribute",
+        "ec2:DescribeSnapshots"
+      ],
       "Resource": "arn:aws:ec2:*:*:snapshot/*",
       "Condition": {
         "StringEquals": {
