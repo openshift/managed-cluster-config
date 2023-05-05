@@ -1,0 +1,26 @@
+apiVersion: policy.open-cluster-management.io/v1
+kind: ConfigurationPolicy
+metadata:
+  name: policy-ingress-svc
+spec:
+  evaluationInterval:
+      compliant: 2h
+      noncompliant: 45s
+  object-templates-raw: |
+    - complianceType: musthave
+      metadataComplianceType: musthave
+      objectDefinition:
+        apiVersion: v1
+        kind: Service
+        metadata:
+          name: router-default
+          namespace: openshift-ingress
+          {{hub- if ne (lookup "v1" "ConfigMap" "openshift-acm-policies" .ManagedClusterName).data nil hub}}
+          annotations:
+            service.beta.kubernetes.io/aws-load-balancer-subnets: {{hub (fromConfigMap
+              "openshift-acm-policies" .ManagedClusterName "aws-load-balancer-subnets")
+              hub}}
+          {{hub- end hub}}
+  pruneObjectBehavior: DeleteIfCreated
+  remediationAction: enforce
+  severity: low

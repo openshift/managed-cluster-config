@@ -6808,6 +6808,26 @@ objects:
             apiVersion: policy.open-cluster-management.io/v1
             kind: ConfigurationPolicy
             metadata:
+              name: policy-ingress-svc
+            spec:
+              evaluationInterval:
+                compliant: 2h
+                noncompliant: 45s
+              object-templates-raw: "- complianceType: musthave\n  metadataComplianceType:\
+                \ musthave\n  objectDefinition:\n    apiVersion: v1\n    kind: Service\n\
+                \    metadata:\n      name: router-default\n      namespace: openshift-ingress\n\
+                \      {{hub- if ne (lookup \"v1\" \"ConfigMap\" \"openshift-acm-policies\"\
+                \ .ManagedClusterName).data nil hub}}\n      annotations:\n      \
+                \  service.beta.kubernetes.io/aws-load-balancer-subnets: {{hub (fromConfigMap\n\
+                \          \"openshift-acm-policies\" .ManagedClusterName \"aws-load-balancer-subnets\"\
+                )\n          hub}}\n      {{hub- end hub}}\n"
+              pruneObjectBehavior: DeleteIfCreated
+              remediationAction: enforce
+              severity: low
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
               name: rosa-ingress-certificate-policies
             spec:
               evaluationInterval:
