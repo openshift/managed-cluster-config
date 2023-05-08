@@ -16,10 +16,12 @@ spec:
           name: router-default
           namespace: openshift-ingress
           {{hub- if ne (lookup "v1" "ConfigMap" "openshift-acm-policies" .ManagedClusterName).data nil hub}}
+          {{hub- if ne (fromConfigMap "openshift-acm-policies" .ManagedClusterName "aws-load-balancer-subnets") "" hub}}
           annotations:
             service.beta.kubernetes.io/aws-load-balancer-subnets: {{hub (fromConfigMap
               "openshift-acm-policies" .ManagedClusterName "aws-load-balancer-subnets")
               hub}}
+          {{hub- end hub}}
           {{hub- end hub}}
   pruneObjectBehavior: DeleteIfCreated
   remediationAction: enforce
