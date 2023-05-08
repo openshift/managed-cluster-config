@@ -22967,6 +22967,81 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: hs-delete-custom-cmo-config
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: ext-managed.openshift.io/hive-shard
+        operator: In
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: openshift-delete-custom-cmo-config
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: hs-delete-custom-cmo-config
+        namespace: openshift-delete-custom-cmo-config
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: hs-delete-custom-cmo-config
+      rules:
+      - apiGroups:
+        - hive.openshift.io/v1
+        resources:
+        - syncsets
+        resourceNames:
+        - ext-cluster-monitoring-operator-config
+        verbs:
+        - '*'
+    - kind: ClusterRoleBinding
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        name: hs-delete-custom-cmo-config
+      subjects:
+      - kind: ServiceAccount
+        name: hs-delete-custom-cmo-config
+        namespace: openshift-delete-custom-cmo-config
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: hs-delete-custom-cmo-config
+    - apiVersion: batch/v1
+      kind: Job
+      metadata:
+        name: hs-delete-custom-cmo-config
+        namespace: openshift-delete-custom-cmo-config
+      spec:
+        template:
+          spec:
+            containers:
+            - name: hs-delete-custom-cmo-config
+              image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+              command:
+              - bash
+              - -c
+              - "readarray -t namespaces < <(oc get cd -l ext-hypershift.openshift.io/cluster-type=management-cluster\
+                \ -A -o go-template='{{range .items}}{{.metadata.namespace}}{{\"\\\
+                n\"}}{{end}}');\nfor ns in \"${namespaces[@]}\"; do\n  oc patch syncset\
+                \ ext-cluster-monitoring-operator-config -n \"${ns}\" --type merge\
+                \ -p '{\"spec\":{\"resourceApplyMode\":\"Upsert\"}}';\n  oc delete\
+                \ syncset ext-cluster-monitoring-operator-config -n \"${ns}\";\ndone;\n"
+            serviceAccountName: hs-delete-custom-cmo-config
+            restartPolicy: Never
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: hypershift-namespace-labels
   spec:
     clusterDeploymentSelector:
