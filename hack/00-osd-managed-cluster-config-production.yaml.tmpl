@@ -6803,6 +6803,54 @@ objects:
             apiVersion: policy.open-cluster-management.io/v1
             kind: ConfigurationPolicy
             metadata:
+              name: rosa-ingress-controller-policies
+            spec:
+              evaluationInterval:
+                compliant: 2h
+                noncompliant: 45s
+              object-templates-raw: "- complianceType: musthave\n  metadataComplianceType:\
+                \ musthave\n  objectDefinition:\n    apiVersion: operator.openshift.io/v1\n\
+                \    kind: IngressController\n    metadata:\n      name: default\n\
+                \      namespace: openshift-ingress-operator\n      annotations:\n\
+                \        ingress.operator.openshift.io/auto-delete-load-balancer:\
+                \ 'true'\n    spec:\n      defaultCertificate:\n        name: '{{hub\
+                \ (printf \"%s-primary-cert-bundle-secret\" .ManagedClusterName) hub}}'\n\
+                \      {{hub- if ne (lookup \"v1\" \"ConfigMap\" \"openshift-acm-policies\"\
+                \ .ManagedClusterName).data nil hub}}\n      endpointPublishingStrategy:\n\
+                \        type: LoadBalancerService\n        loadBalancer:\n      \
+                \    providerParameters:\n            type: AWS\n            aws:\n\
+                \              type: '{{hub (default \"Classic\" (fromConfigMap \"\
+                openshift-acm-policies\" .ManagedClusterName \"loadbalancer-aws-type\"\
+                )) hub}}'\n          dnsManagementPolicy: 'Managed'\n          scope:\
+                \ '{{hub- if eq (fromConfigMap \"openshift-acm-policies\" .ManagedClusterName\
+                \ \"endpoint-publishing-strategy\") \"internal\" -hub}} Internal {{hub-\
+                \ else -hub}} External {{hub- end -hub}}'\n      {{hub- end hub}}"
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+              name: rosa-ingress-svc-policies
+            spec:
+              evaluationInterval:
+                compliant: 2h
+                noncompliant: 45s
+              object-templates-raw: "- complianceType: musthave\n  metadataComplianceType:\
+                \ musthave\n  objectDefinition:\n    apiVersion: v1\n    kind: Service\n\
+                \    metadata:\n      name: router-default\n      namespace: openshift-ingress\n\
+                \      {{hub- if ne (lookup \"v1\" \"ConfigMap\" \"openshift-acm-policies\"\
+                \ .ManagedClusterName).data nil hub}}\n      {{hub- if ne (fromConfigMap\
+                \ \"openshift-acm-policies\" .ManagedClusterName \"aws-load-balancer-subnets\"\
+                ) \"\" hub}}\n      annotations:\n        service.beta.kubernetes.io/aws-load-balancer-subnets:\
+                \ {{hub (fromConfigMap\n          \"openshift-acm-policies\" .ManagedClusterName\
+                \ \"aws-load-balancer-subnets\")\n          hub}}\n      {{hub- end\
+                \ hub}}\n      {{hub- end hub}}\n"
+              pruneObjectBehavior: DeleteIfCreated
+              remediationAction: enforce
+              severity: low
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
               name: rosa-ingress-certificate-policies
             spec:
               evaluationInterval:
@@ -6823,31 +6871,6 @@ objects:
                     name: '{{hub (printf "%s-primary-cert-bundle-secret" .ManagedClusterName)
                       hub}}'
                     namespace: openshift-ingress
-              - complianceType: musthave
-                metadataComplianceType: musthave
-                objectDefinition:
-                  apiVersion: operator.openshift.io/v1
-                  kind: IngressController
-                  metadata:
-                    annotations:
-                      ingress.operator.openshift.io/auto-delete-load-balancer: 'true'
-                    name: default
-                    namespace: openshift-ingress-operator
-                  spec:
-                    defaultCertificate:
-                      name: '{{hub (printf "%s-primary-cert-bundle-secret" .ManagedClusterName)
-                        hub}}'
-                    endpointPublishingStrategy:
-                      loadBalancer:
-                        dnsManagementPolicy: Managed
-                        providerParameters:
-                          aws:
-                            type: Classic
-                          type: AWS
-                        scope: '{{hub- if eq (fromConfigMap "openshift-acm-policies"
-                          .ManagedClusterName "endpoint-publishing-strategy") "internal"
-                          -hub}} Internal {{hub- else -hub}} External {{hub- end -hub}}'
-                      type: LoadBalancerService
               pruneObjectBehavior: DeleteIfCreated
               remediationAction: enforce
               severity: low
