@@ -20,7 +20,7 @@ spec:
                 evaluationInterval:
                     compliant: 2h
                     noncompliant: 45s
-                object-templates-raw: |-
+                object-templates-raw: |
                     - complianceType: musthave
                       metadataComplianceType: musthave
                       objectDefinition:
@@ -45,6 +45,9 @@ spec:
                               dnsManagementPolicy: 'Managed'
                               scope: '{{hub- if eq (fromConfigMap "openshift-acm-policies" .ManagedClusterName "endpoint-publishing-strategy") "internal" -hub}} Internal {{hub- else -hub}} External {{hub- end -hub}}'
                           {{hub- end hub}}
+                pruneObjectBehavior: DeleteIfCreated
+                remediationAction: enforce
+                severity: low
         - objectDefinition:
             apiVersion: policy.open-cluster-management.io/v1
             kind: ConfigurationPolicy

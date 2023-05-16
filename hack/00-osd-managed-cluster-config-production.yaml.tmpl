@@ -6824,7 +6824,10 @@ objects:
                 )) hub}}'\n          dnsManagementPolicy: 'Managed'\n          scope:\
                 \ '{{hub- if eq (fromConfigMap \"openshift-acm-policies\" .ManagedClusterName\
                 \ \"endpoint-publishing-strategy\") \"internal\" -hub}} Internal {{hub-\
-                \ else -hub}} External {{hub- end -hub}}'\n      {{hub- end hub}}"
+                \ else -hub}} External {{hub- end -hub}}'\n      {{hub- end hub}}\n"
+              pruneObjectBehavior: DeleteIfCreated
+              remediationAction: enforce
+              severity: low
         - objectDefinition:
             apiVersion: policy.open-cluster-management.io/v1
             kind: ConfigurationPolicy
