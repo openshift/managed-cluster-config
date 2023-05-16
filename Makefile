@@ -37,7 +37,7 @@ OC := $(CONTAINER_ENGINE) run $(CONTAINER_RUN_FLAGS) quay.io/openshift/origin-cl
 endif
 
 .PHONY: default
-default: generate-oauth-templates generate-rosa-brand-logo generate-hive-templates enforce-backplane-rules
+default: generate-oauth-templates generate-rosa-brand-logo generate-hive-templates
 
 .PHONY: generate-oauth-templates
 generate-oauth-templates:
