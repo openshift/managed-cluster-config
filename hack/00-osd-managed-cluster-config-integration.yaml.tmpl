@@ -7281,6 +7281,202 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: backplane-cee-hypershift-management-cluster
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: ext-hypershift.openshift.io/cluster-type
+        operator: In
+        values:
+        - management-cluster
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-cee-management-cluster-cluster
+      rules:
+      - apiGroups:
+        - work.open-cluster-management.io
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - cluster.open-cluster-management.io
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - operator.open-cluster-management.io
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - policy.open-cluster-management.io
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - hypershift.openshift.io
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - cluster.x-k8s.io
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - infrastructure.cluster.x-k8s.io
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+    - apiVersion: managed.openshift.io/v1alpha1
+      kind: SubjectPermission
+      metadata:
+        name: backplane-cee-management-cluster
+        namespace: openshift-rbac-permissions
+      spec:
+        clusterPermissions:
+        - backplane-cee-management-cluster-cluster
+        - view
+        permissions:
+        - clusterRoleName: dedicated-readers
+          namespacesAllowedRegex: (^hypershift.*|^uhc.*|^ocm.*|^klusterlet.*|^open-cluster-management.*)
+        subjectKind: Group
+        subjectName: system:serviceaccounts:openshift-backplane-cee
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: backplane-cee-hypershift-service-cluster
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: ext-hypershift.openshift.io/cluster-type
+        operator: In
+        values:
+        - service-cluster
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-cee-service-cluster-cluster
+      rules:
+      - apiGroups:
+        - work.open-cluster-management.io
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - addon.open-cluster-management.io
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - agent.open-cluster-management.io
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - cluster.open-cluster-management.io
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - operator.open-cluster-management.io
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - policy.open-cluster-management.io
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - policy.open-cluster-management.io
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+    - apiVersion: managed.openshift.io/v1alpha1
+      kind: SubjectPermission
+      metadata:
+        name: backplane-cee-service-cluster
+        namespace: openshift-rbac-permissions
+      spec:
+        clusterPermissions:
+        - backplane-cee-service-cluster-cluster
+        - view
+        permissions:
+        - clusterRoleName: dedicated-readers
+          namespacesAllowedRegex: (^hypershift.*|^uhc.*|^ocm.*|^klusterlet.*|^open-cluster-management.*)
+        subjectKind: Group
+        subjectName: system:serviceaccounts:openshift-backplane-cee
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: backplane-csa
   spec:
     clusterDeploymentSelector:
