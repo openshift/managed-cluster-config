@@ -23255,6 +23255,43 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: hypershift-obo-nodeselector-tolerations
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: ext-hypershift.openshift.io/cluster-type
+        operator: In
+        values:
+        - management-cluster
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    patches:
+    - apiVersion: monitoring.rhobs/v1
+      kind: Prometheus
+      name: hypershift-monitoring-stack
+      namespace: openshift-observability-operator
+      applyMode: Sync
+      patch: '{"spec":{"nodeSelector":{"node-role.kubernetes.io/obo":""}}}'
+      patchType: merge
+    - apiVersion: monitoring.rhobs/v1
+      applyMode: Sync
+      kind: Prometheus
+      name: hypershift-monitoring-stack
+      namespace: openshift-observability-operator
+      patch: '{"spec":{"tolerations":[{"effect":"NoSchedule","key":"obo","value":"true"}]}}'
+      patchType: merge
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: hypershift-validating-webhook-patching
   spec:
     clusterDeploymentSelector:
