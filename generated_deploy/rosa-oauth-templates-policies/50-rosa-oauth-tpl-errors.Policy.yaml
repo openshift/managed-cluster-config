@@ -29,8 +29,7 @@ spec:
                         kind: Secret
                         metadata:
                             creationTimestamp: null
-                            name: rosa-oauth-tpl-errors
-                            namespace: openshift-config
+                            name: oauth-openshift-default-error-template
                 pruneObjectBehavior: DeleteIfCreated
                 remediationAction: enforce
                 severity: low
@@ -41,9 +40,12 @@ metadata:
     name: pr-rosa-oauth-tpl-errors
     namespace: openshift-rosa-oauth-tpl-policies
 spec:
+    clusterConditions:
+    - status: "True"
+      type: ManagedClusterConditionAvailable
     clusterSelector:
         matchExpressions:
-            - key: hypershift.open-cluster-management.io/hosted-cluster
+            - key: hypershift.open-cluster-management.io/management-cluster
               operator: In
               values:
                 - "true"
