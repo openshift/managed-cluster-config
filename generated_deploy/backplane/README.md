@@ -10,3 +10,8 @@ This directory is focused around managing roles for backplane users based on the
 | lpsre | RBAC for SRE Layered Products team (Combining of CS and MT SRE teams) |
 | srep  | RBAC for SRE Platform team  |
 | mkrts | RBAC for RTS team |
+
+## Guidelines
+
+See [Backplane Guidelines](../../docs/backplane/guideline.md)
+
