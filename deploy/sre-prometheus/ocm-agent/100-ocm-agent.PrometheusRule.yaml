@@ -65,3 +65,31 @@ spec:
         send_managed_notification: "true"
       annotations:
         message: "Kernel is predicted to exhaust file descriptors limit soon."
+    - alert: WorkerNodeFilesystemAlmostOutOfSpaceSRE
+      # This is the same as the upstream alert, but groups by instance id (which is which node is affected)
+      # and then only fires on the worker nodes. The `unless` portion is because when getting the node-role
+      # metric it splits on the roles, so infra,worker then gives two results, one with just the infra role
+      # and one with just the worker role.  So we get just the infra/controlplane nodes and then exclude
+      # them from the worker node result, which gives us just the customer worker nodes.
+      annotations:
+        description: Filesystem on {{ $labels.device }} at {{ $labels.instance }}
+          has only {{ printf "%.2f" $value }}% available space left.
+        runbook_url: https://github.com/openshift/runbooks/blob/master/alerts/cluster-monitoring-operator/NodeFilesystemAlmostOutOfSpace.md
+        summary: Filesystem has less than 3% space left.
+      expr: |-
+        (
+          node_filesystem_avail_bytes{job="node-exporter",fstype!="",mountpoint!=""} / node_filesystem_size_bytes{job="node-exporter",fstype!="",mountpoint!=""} * 100 < 3
+        and
+          node_filesystem_readonly{job="node-exporter",fstype!="",mountpoint!=""} == 0
+        )
+        * on (instance) group_left () (
+          label_replace(kube_node_role{role!~"infra|control-plane|master"}, "instance", "$1", "node", "(.*)")
+        )
+        unless
+        (
+          label_replace(kube_node_role{role=~"infra|control-plane|master"}, "instance", "$1", "node", "(.*)")
+        )
+      for: 30m
+      labels:
+        severity: critical
+        namespace: openshift-monitoring
