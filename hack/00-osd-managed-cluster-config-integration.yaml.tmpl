@@ -36825,16 +36825,6 @@ objects:
         groups:
         - name: sre-managed-notification-alerts
           rules:
-          - alert: MultipleIngressControllersDetectedNotificationSRE
-            expr: sum(max_over_time(splunkforwarder_audit_filter_exposed_splunk_event_total{alert="UserCreatedIngressControllerDetected"}[5m])
-              or vector(0)) - sum(max_over_time(splunkforwarder_audit_filter_exposed_splunk_event_total{alert="UserCreatedIngressControllerDetected"}[5m]
-              offset 5m) or vector(0)) > 0
-            for: 30m
-            labels:
-              severity: Info
-              namespace: openshift-logging
-              send_managed_notification: 'true'
-              managed_notification_template: MultipleIngressControllersDetected
           - alert: LoggingVolumeFillingUpNotificationSRE
             expr: count(ALERTS{alertname="KubePersistentVolumeFillingUp", alertstate="firing",
               namespace="openshift-logging"}) >= 1
@@ -36878,6 +36868,47 @@ objects:
               send_managed_notification: 'true'
             annotations:
               message: Kernel is predicted to exhaust file descriptors limit soon.
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: sre-prometheus-ocm-agent-legacy-ingress
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: ext-managed.openshift.io/legacy-ingress-support
+        operator: NotIn
+        values:
+        - 'false'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
+          prometheus: sre-managed-notification-alerts
+          role: alert-rules
+        name: sre-ingresscontroller-managed-notification-alerts
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-managed-notification-alerts
+          rules:
+          - alert: MultipleIngressControllersDetectedNotificationSRE
+            expr: sum(max_over_time(splunkforwarder_audit_filter_exposed_splunk_event_total{alert="UserCreatedIngressControllerDetected"}[5m])
+              or vector(0)) - sum(max_over_time(splunkforwarder_audit_filter_exposed_splunk_event_total{alert="UserCreatedIngressControllerDetected"}[5m]
+              offset 5m) or vector(0)) > 0
+            for: 30m
+            labels:
+              severity: Info
+              namespace: openshift-monitoring
+              send_managed_notification: 'true'
+              managed_notification_template: MultipleIngressControllersDetected
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
