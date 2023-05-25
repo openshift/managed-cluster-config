@@ -28,6 +28,141 @@ spec:
                         kind: Namespace
                         metadata:
                             name: openshift-backplane-tam
+                    - complianceType: mustonlyhave
+                      metadataComplianceType: musthave
+                      objectDefinition:
+                        apiVersion: rbac.authorization.k8s.io/v1
+                        kind: ClusterRole
+                        metadata:
+                            name: backplane-tam-readers-cluster
+                        rules:
+                            - apiGroups:
+                                - machineconfiguration.openshift.io
+                              resources:
+                                - '*'
+                              verbs:
+                                - get
+                                - list
+                                - watch
+                            - apiGroups:
+                                - machine.openshift.io
+                              resources:
+                                - '*'
+                              verbs:
+                                - get
+                                - list
+                                - watch
+                            - apiGroups:
+                                - apiserver.openshift.io
+                              resources:
+                                - apirequestcounts
+                              verbs:
+                                - get
+                                - list
+                                - watch
+                    - complianceType: mustonlyhave
+                      metadataComplianceType: musthave
+                      objectDefinition:
+                        apiVersion: rbac.authorization.k8s.io/v1
+                        kind: Role
+                        metadata:
+                            name: backplane-tam
+                            namespace: openshift-monitoring
+                        rules:
+                            - apiGroups:
+                                - ""
+                              resources:
+                                - pods/portforward
+                              verbs:
+                                - create
+                    - complianceType: mustonlyhave
+                      metadataComplianceType: musthave
+                      objectDefinition:
+                        apiVersion: rbac.authorization.k8s.io/v1
+                        kind: RoleBinding
+                        metadata:
+                            name: backplane-tam
+                            namespace: openshift-monitoring
+                        roleRef:
+                            apiGroup: rbac.authorization.k8s.io
+                            kind: Role
+                            name: backplane-tam
+                        subjects:
+                            - apiGroup: rbac.authorization.k8s.io
+                              kind: Group
+                              name: system:serviceaccounts:openshift-backplane-tam
+                    - complianceType: mustonlyhave
+                      metadataComplianceType: musthave
+                      objectDefinition:
+                        apiVersion: rbac.authorization.k8s.io/v1
+                        kind: Role
+                        metadata:
+                            name: backplane-tam-mustgather
+                            namespace: openshift-must-gather-operator
+                        rules:
+                            - apiGroups:
+                                - ""
+                              resources:
+                                - secrets
+                              verbs:
+                                - create
+                            - apiGroups:
+                                - managed.openshift.io
+                              resources:
+                                - mustgathers
+                              verbs:
+                                - create
+                                - delete
+                    - complianceType: mustonlyhave
+                      metadataComplianceType: musthave
+                      objectDefinition:
+                        apiVersion: rbac.authorization.k8s.io/v1
+                        kind: RoleBinding
+                        metadata:
+                            name: backplane-tam-mustgather
+                            namespace: openshift-must-gather-operator
+                        roleRef:
+                            apiGroup: rbac.authorization.k8s.io
+                            kind: Role
+                            name: backplane-tam-mustgather
+                        subjects:
+                            - apiGroup: rbac.authorization.k8s.io
+                              kind: Group
+                              name: system:serviceaccounts:openshift-backplane-tam
+                    - complianceType: mustonlyhave
+                      metadataComplianceType: musthave
+                      objectDefinition:
+                        apiVersion: rbac.authorization.k8s.io/v1
+                        kind: Role
+                        metadata:
+                            name: backplane-tam-pcap-collector
+                            namespace: openshift-backplane-managed-scripts
+                        rules:
+                            - apiGroups:
+                                - ""
+                              resourceNames:
+                                - pcap-collector-creds
+                              resources:
+                                - secrets
+                              verbs:
+                                - create
+                                - delete
+                    - complianceType: mustonlyhave
+                      metadataComplianceType: musthave
+                      objectDefinition:
+                        apiVersion: rbac.authorization.k8s.io/v1
+                        kind: RoleBinding
+                        metadata:
+                            name: backplane-tam-mustgather
+                            namespace: openshift-backplane-managed-scripts
+                        roleRef:
+                            apiGroup: rbac.authorization.k8s.io
+                            kind: Role
+                            name: backplane-tam-pcap-collector
+                        subjects:
+                            - apiGroup: rbac.authorization.k8s.io
+                              kind: Group
+                              name: system:serviceaccounts:openshift-backplane-tam
                 pruneObjectBehavior: DeleteIfCreated
                 remediationAction: enforce
                 severity: low
