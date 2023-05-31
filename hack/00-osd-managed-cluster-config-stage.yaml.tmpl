@@ -25744,6 +25744,14 @@ objects:
             file descriptor limit. No additional action on this issue is required.
           severity: Info
           summary: Worker node file descriptor limit nearly exhausted
+        - activeBody: Red Hat has detected that your cluster is running multiple versions
+            of EFS CSI driver. This configuration is not safe to use as this might
+            lead to the EFS Operator not working as expected. Please use the officially
+            supported version of EFS operator as described in https://access.redhat.com/solutions/4591701.
+          name: MultipleEFSCSIDrivers
+          resendWait: 72
+          severity: Error
+          summary: Multiple EFS CSI drivers detected
     - apiVersion: ocmagent.managed.openshift.io/v1alpha1
       kind: ManagedNotification
       metadata:
@@ -35536,29 +35544,6 @@ objects:
       kind: PrometheusRule
       metadata:
         labels:
-          prometheus: aws-efs-alerts
-          role: alert-rules
-        name: aws-efs-alerts
-        namespace: openshift-monitoring
-      spec:
-        groups:
-        - name: aws-efs-alerts
-          rules:
-          - alert: MultipleVersionsOfEFSCSIDriverInstalled
-            expr: count(kube_pod_info{namespace="openshift-operators", pod=~"efs-csi-node-.*"})
-              > 0 and count(kube_pod_info{namespace="openshift-cluster-csi-drivers",
-              pod=~"aws-efs-csi-driver-operator-.*"}) > 0
-            labels:
-              severity: critical
-              namespace: openshift-monitoring
-              source: https://issues.redhat.com/browse/OSD-16223
-              link: https://github.com/openshift/ops-sop/blob/master/v4/alerts/MultipleVersionsOfEFSCSIDriverInstalled.md
-            annotations:
-              message: Multiple versions of EFS CSI Driver installed
-    - apiVersion: monitoring.coreos.com/v1
-      kind: PrometheusRule
-      metadata:
-        labels:
           prometheus: sre-node-filedescriptor-limit
           role: alert-rules
         name: sre-node-filedescriptor-limit
@@ -36631,6 +36616,31 @@ objects:
         api.openshift.com/managed: 'true'
     resourceApplyMode: Sync
     resources:
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
+          prometheus: aws-efs-alerts
+          role: alert-rules
+        name: aws-efs-alerts
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: aws-efs-alerts
+          rules:
+          - alert: MultipleVersionsOfEFSCSIDriverInstalled
+            expr: count(kube_pod_info{namespace="openshift-operators", pod=~"efs-csi-node-.*"})
+              > 0 and count(kube_pod_info{namespace="openshift-cluster-csi-drivers",
+              pod=~"aws-efs-csi-driver-operator-.*"}) > 0
+            labels:
+              severity: critical
+              namespace: openshift-monitoring
+              send_managed_notification: 'true'
+              managed_notification_template: MultipleEFSCSIDrivers
+              source: https://issues.redhat.com/browse/OSD-16223
+              link: https://github.com/openshift/ops-sop/blob/master/v4/alerts/MultipleVersionsOfEFSCSIDriverInstalled.md
+            annotations:
+              message: Multiple versions of EFS CSI Driver installed
     - apiVersion: monitoring.coreos.com/v1
       kind: PrometheusRule
       metadata:
