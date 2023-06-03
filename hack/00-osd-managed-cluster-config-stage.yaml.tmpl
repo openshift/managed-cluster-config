@@ -25486,11 +25486,12 @@ objects:
                   - /bin/bash
                   args:
                   - -c
-                  - "pods=$(oc get pod -n openshift-sdn -l app=sdn -oname)\n\nif [[\
-                    \ -z \"${pods}\" ]]; then\n   # no SDN pods found, this is fine\n\
-                    \   exit 0\nfi\n\nwhile IFS= read -r pod; do\n  echo $pod\n  oc\
-                    \ exec -n openshift-sdn $pod -c sdn -- chroot /host podman version\n\
-                    done <<< \"$pods\"            \n"
+                  - "pods=$(oc get pod -n openshift-cluster-node-tuning-operator -l\
+                    \ openshift-app=tuned -oname)\n\nif [[ -z \"${pods}\" ]]; then\n\
+                    \   # no tuned pods found, this is fine\n   exit 0\nfi\n\nwhile\
+                    \ IFS= read -r pod; do\n  echo $pod\n  oc exec -n openshift-cluster-node-tuning-operator\
+                    \ $pod -c tuned -- chroot /host podman version\ndone <<< \"$pods\"\
+                    \            \n"
                 serviceAccountName: ocpbugs-773
                 automountServiceAccountToken: true
                 restartPolicy: Never
@@ -25582,11 +25583,12 @@ objects:
                   - /bin/bash
                   args:
                   - -c
-                  - "pods=$(oc get pod -n openshift-sdn -l app=sdn -oname)\n\nif [[\
-                    \ -z \"${pods}\" ]]; then\n   # no SDN pods found, this is fine\n\
-                    \   exit 0\nfi\n\nwhile IFS= read -r pod; do\n  echo $pod\n  oc\
-                    \ exec -n openshift-sdn $pod -c sdn -- chroot /host podman version\n\
-                    done <<< \"$pods\"            \n"
+                  - "pods=$(oc get pod -n openshift-cluster-node-tuning-operator -l\
+                    \ openshift-app=tuned -oname)\n\nif [[ -z \"${pods}\" ]]; then\n\
+                    \   # no tuned pods found, this is fine\n   exit 0\nfi\n\nwhile\
+                    \ IFS= read -r pod; do\n  echo $pod\n  oc exec -n openshift-cluster-node-tuning-operator\
+                    \ $pod -c tuned -- chroot /host podman version\ndone <<< \"$pods\"\
+                    \            \n"
                 serviceAccountName: ocpbugs-773
                 automountServiceAccountToken: true
                 restartPolicy: Never
