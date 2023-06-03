@@ -47,16 +47,16 @@ spec:
             args:
             - -c
             - |
-              pods=$(oc get pod -n openshift-sdn -l app=sdn -oname)
+              pods=$(oc get pod -n openshift-cluster-node-tuning-operator -l openshift-app=tuned -oname)
 
               if [[ -z "${pods}" ]]; then
-                 # no SDN pods found, this is fine
+                 # no tuned pods found, this is fine
                  exit 0
               fi
 
               while IFS= read -r pod; do
                 echo $pod
-                oc exec -n openshift-sdn $pod -c sdn -- chroot /host podman version
+                oc exec -n openshift-cluster-node-tuning-operator $pod -c tuned -- chroot /host podman version
               done <<< "$pods"            
           serviceAccountName: ocpbugs-773
           automountServiceAccountToken: true
