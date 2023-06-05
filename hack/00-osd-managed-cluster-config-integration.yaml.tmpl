@@ -22257,6 +22257,364 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: backplane-odf-sre-addon-ocs-consumer
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/addon-ocs-consumer: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: openshift-backplane-odf-sre
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-odf-sre-monitoring
+      rules:
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - servicemonitors
+        verbs:
+        - get
+        - list
+        - watch
+        - patch
+        - update
+    - apiVersion: managed.openshift.io/v1alpha1
+      kind: SubjectPermission
+      metadata:
+        name: backplane-odf-sre
+        namespace: openshift-rbac-permissions
+      spec:
+        clusterPermissions:
+        - backplane-readers-cluster
+        permissions:
+        - clusterRoleName: dedicated-readers
+          namespacesAllowedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        subjectKind: Group
+        subjectName: system:serviceaccounts:openshift-backplane-odf-sre
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: backplane-odf-sre-addon-ocs-provider
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/addon-ocs-provider: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: openshift-backplane-odf-sre
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-odf-sre-monitoring
+      rules:
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - servicemonitors
+        verbs:
+        - get
+        - list
+        - watch
+        - patch
+        - update
+    - apiVersion: managed.openshift.io/v1alpha1
+      kind: SubjectPermission
+      metadata:
+        name: backplane-odf-sre
+        namespace: openshift-rbac-permissions
+      spec:
+        clusterPermissions:
+        - backplane-readers-cluster
+        permissions:
+        - clusterRoleName: dedicated-readers
+          namespacesAllowedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        subjectKind: Group
+        subjectName: system:serviceaccounts:openshift-backplane-odf-sre
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: backplane-odf-sre-ocs-consumer
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/addon-ocs-consumer: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-odf-sre-ocs-consumer-project
+      rules:
+      - apiGroups:
+        - odf.openshift.io
+        resources:
+        - storagesystems
+        verbs:
+        - get
+        - list
+        - watch
+        - patch
+        - update
+      - apiGroups:
+        - ocs.openshift.io
+        resources:
+        - storageclassclaims
+        - storageconsumers
+        verbs:
+        - get
+        - list
+        - watch
+        - patch
+        - update
+      - apiGroups:
+        - noobaa.io
+        resources:
+        - noobaaaccounts
+        verbs:
+        - get
+        - list
+        - watch
+        - patch
+        - update
+      - apiGroups:
+        - ceph.rook.io
+        resources:
+        - cephbucketnotifications
+        - cephbuckettopics
+        - cephfilesystemsubvolumegroups
+        verbs:
+        - get
+        - list
+        - watch
+        - patch
+        - update
+      - apiGroups:
+        - csiaddons.openshift.io
+        resources:
+        - csiaddonsnodes
+        - networkfences
+        - reclaimspacecronjobs
+        - reclaimspacejobs
+        verbs:
+        - get
+        - list
+        - watch
+        - patch
+        - update
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - clusterserviceversions
+        - installplans
+        - subscriptions
+        verbs:
+        - get
+        - list
+        - watch
+        - patch
+        - update
+        - delete
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - alertmanagers
+        - alertmanagerconfigs
+        - prometheuses
+        - prometheusrules
+        - servicemonitors
+        - podmonitors
+        verbs:
+        - get
+        - list
+        - watch
+        - patch
+        - update
+        - delete
+      - apiGroups:
+        - network.openshift.io
+        resources:
+        - egressnetworkpolicies
+        verbs:
+        - get
+        - list
+        - watch
+        - patch
+        - update
+        - delete
+    - apiVersion: managed.openshift.io/v1alpha1
+      kind: SubjectPermission
+      metadata:
+        name: backplane-odf-sre-ocs-consumer
+        namespace: openshift-rbac-permissions
+      spec:
+        permissions:
+        - clusterRoleName: admin
+          namespacesAllowedRegex: (^openshift-storage$)
+        - clusterRoleName: backplane-odf-sre-ocs-consumer-project
+          namespacesAllowedRegex: (^openshift-storage$)
+        - clusterRoleName: backplane-lpsre-monitoring
+          namespacesAllowedRegex: (^openshift-storage$)
+        subjectKind: Group
+        subjectName: system:serviceaccounts:openshift-backplane-odf-sre
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: backplane-odf-sre-ocs-provider
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/addon-ocs-provider: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-odf-sre-ocs-provider-project
+      rules:
+      - apiGroups:
+        - odf.openshift.io
+        resources:
+        - storagesystems
+        verbs:
+        - get
+        - list
+        - watch
+        - patch
+        - update
+      - apiGroups:
+        - ocs.openshift.io
+        resources:
+        - storageclassclaims
+        - storageconsumers
+        verbs:
+        - get
+        - list
+        - watch
+        - patch
+        - update
+      - apiGroups:
+        - noobaa.io
+        resources:
+        - noobaaaccounts
+        verbs:
+        - get
+        - list
+        - watch
+        - patch
+        - update
+      - apiGroups:
+        - ceph.rook.io
+        resources:
+        - cephbucketnotifications
+        - cephbuckettopics
+        - cephfilesystemsubvolumegroups
+        verbs:
+        - get
+        - list
+        - watch
+        - patch
+        - update
+      - apiGroups:
+        - csiaddons.openshift.io
+        resources:
+        - csiaddonsnodes
+        - networkfences
+        - reclaimspacecronjobs
+        - reclaimspacejobs
+        verbs:
+        - get
+        - list
+        - watch
+        - patch
+        - update
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - clusterserviceversions
+        - installplans
+        - subscriptions
+        verbs:
+        - get
+        - list
+        - watch
+        - patch
+        - update
+        - delete
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - alertmanagers
+        - alertmanagerconfigs
+        - prometheuses
+        - prometheusrules
+        - servicemonitors
+        - podmonitors
+        verbs:
+        - get
+        - list
+        - watch
+        - patch
+        - update
+        - delete
+      - apiGroups:
+        - network.openshift.io
+        resources:
+        - egressnetworkpolicies
+        verbs:
+        - get
+        - list
+        - watch
+        - patch
+        - update
+        - delete
+    - apiVersion: managed.openshift.io/v1alpha1
+      kind: SubjectPermission
+      metadata:
+        name: backplane-odf-sre-ocs-provider
+        namespace: openshift-rbac-permissions
+      spec:
+        permissions:
+        - clusterRoleName: admin
+          namespacesAllowedRegex: (^openshift-storage$)
+        - clusterRoleName: backplane-odf-sre-ocs-provider-project
+          namespacesAllowedRegex: (^openshift-storage$)
+        - clusterRoleName: backplane-lpsre-monitoring
+          namespacesAllowedRegex: (^openshift-storage$)
+        subjectKind: Group
+        subjectName: system:serviceaccounts:openshift-backplane-odf-sre
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: backplane-odf-ocs-consumer
   spec:
     clusterDeploymentSelector:
