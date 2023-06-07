@@ -1,0 +1,22 @@
+apiVersion: avo.openshift.io/v1alpha2
+kind: VpcEndpoint
+metadata:
+  name: goalert
+  namespace: openshift-monitoring
+spec:
+  serviceName: com.amazonaws.vpce.us-gov-west-1.vpce-svc-01ebb2274785ec573
+  securityGroup:
+    ingressRules:
+      - fromPort: 443
+        toPort: 443
+        protocol: tcp
+  vpc:
+    autoDiscoverSubnets: true
+  customDns:
+    route53PrivateHostedZone:
+      autoDiscoverPrivateHostedZone: false
+      domainName: appsrefrs01ugw1.p1.openshiftusgov.com
+      record:
+        hostname: goalert.goalert-stg
+        externalNameService:
+          name: goalert-vpce-svc
