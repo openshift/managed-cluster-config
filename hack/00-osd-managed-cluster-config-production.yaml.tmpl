@@ -26637,6 +26637,114 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: osd-avo-resources-fedramp-vpc-endpoints-stage-us-gov-east-1
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/fedramp
+        operator: In
+        values:
+        - 'true'
+      - key: hive.openshift.io/cluster-region
+        operator: In
+        values:
+        - us-gov-east-1
+      - key: api.openshift.com/private-link
+        operator: In
+        values:
+        - 'true'
+      - key: api.openshift.com/environment
+        operator: In
+        values:
+        - staging
+        - integration
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: avo.openshift.io/v1alpha2
+      kind: VpcEndpoint
+      metadata:
+        name: goalert
+        namespace: openshift-monitoring
+      spec:
+        serviceName: com.amazonaws.vpce.us-gov-east-1.vpce-svc-08697430f7854deba
+        securityGroup:
+          ingressRules:
+          - fromPort: 443
+            toPort: 443
+            protocol: tcp
+        vpc:
+          autoDiscoverSubnets: true
+        customDns:
+          route53PrivateHostedZone:
+            autoDiscoverPrivateHostedZone: false
+            domainName: appsrefrs01ugw1.p1.openshiftusgov.com
+            record:
+              hostname: goalert.goalert-stg
+              externalNameService:
+                name: goalert-vpce-svc
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-avo-resources-fedramp-vpc-endpoints-stage-us-gov-west-1
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/fedramp
+        operator: In
+        values:
+        - 'true'
+      - key: hive.openshift.io/cluster-region
+        operator: In
+        values:
+        - us-gov-west-1
+      - key: api.openshift.com/private-link
+        operator: In
+        values:
+        - 'true'
+      - key: api.openshift.com/environment
+        operator: In
+        values:
+        - staging
+        - integration
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: avo.openshift.io/v1alpha2
+      kind: VpcEndpoint
+      metadata:
+        name: goalert
+        namespace: openshift-monitoring
+      spec:
+        serviceName: com.amazonaws.vpce.us-gov-west-1.vpce-svc-01ebb2274785ec573
+        securityGroup:
+          ingressRules:
+          - fromPort: 443
+            toPort: 443
+            protocol: tcp
+        vpc:
+          autoDiscoverSubnets: true
+        customDns:
+          route53PrivateHostedZone:
+            autoDiscoverPrivateHostedZone: false
+            domainName: appsrefrs01ugw1.p1.openshiftusgov.com
+            record:
+              hostname: goalert.goalert-stg
+              externalNameService:
+                name: goalert-vpce-svc
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: osd-avo-resources-fedramp-vpc-endpoints-us-gov-east-1
   spec:
     clusterDeploymentSelector:
