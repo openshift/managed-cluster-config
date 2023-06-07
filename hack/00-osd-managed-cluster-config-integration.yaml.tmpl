@@ -25152,6 +25152,39 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: ocm-agent-operator-managedfleetnotifications
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: ocmagent.managed.openshift.io/v1alpha1
+      kind: ManagedFleetNotification
+      metadata:
+        name: audit-webhook-error-putting-minimized-cloudwatch-log
+        namespace: openshift-ocm-agent-operator
+      spec:
+        fleetNotification:
+        - summary: Audit-events could not be delivered to your CloudWatch.
+          notificationMessage: 'An audit-event send to your CloudWatch failed delivery,
+            due to the event being too large. The reduced event failed delivery as
+            well. Please verify your CloudWatch configuration for this cluster: https://access.redhat.com/solutions/7002219.'
+          name: audit-webhook-error-putting-minimized-cloudwatch-log
+          resendWait: 24
+          severity: Info
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: ocm-agent-operator-managednotifications
   spec:
     clusterDeploymentSelector:
