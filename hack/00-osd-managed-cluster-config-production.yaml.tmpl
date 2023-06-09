@@ -6777,7 +6777,9 @@ objects:
               evaluationInterval:
                 compliant: 2h
                 noncompliant: 45s
-              object-templates-raw: "- complianceType: musthave\n  metadataComplianceType:\
+              object-templates-raw: "{{- if eq (lookup \"operator.openshift.io/v1\"\
+                \ \"IngressController\" \"openshift-ingress-operator\" \"default\"\
+                ).metadata.name \"default\" }}\n- complianceType: musthave\n  metadataComplianceType:\
                 \ musthave\n  objectDefinition:\n    apiVersion: operator.openshift.io/v1\n\
                 \    kind: IngressController\n    metadata:\n      name: default\n\
                 \      namespace: openshift-ingress-operator\n      annotations:\n\
@@ -6787,14 +6789,12 @@ objects:
                 \      {{hub- if ne (lookup \"v1\" \"ConfigMap\" \"openshift-acm-policies\"\
                 \ .ManagedClusterName).data nil hub}}\n      endpointPublishingStrategy:\n\
                 \        type: LoadBalancerService\n        loadBalancer:\n      \
-                \    providerParameters:\n            type: AWS\n            aws:\n\
-                \              type: '{{hub (default \"Classic\" (fromConfigMap \"\
-                openshift-acm-policies\" .ManagedClusterName \"loadbalancer-aws-type\"\
-                )) hub}}'\n          dnsManagementPolicy: 'Managed'\n          scope:\
-                \ '{{hub- if eq (fromConfigMap \"openshift-acm-policies\" .ManagedClusterName\
-                \ \"endpoint-publishing-strategy\") \"internal\" -hub}} Internal {{hub-\
-                \ else -hub}} External {{hub- end -hub}}'\n      {{hub- end hub}}\n"
-              pruneObjectBehavior: DeleteIfCreated
+                \    dnsManagementPolicy: 'Managed'\n          scope: '{{hub- if eq\
+                \ (fromConfigMap \"openshift-acm-policies\" .ManagedClusterName \"\
+                endpoint-publishing-strategy\") \"internal\" -hub}} Internal {{hub-\
+                \ else -hub}} External {{hub- end -hub}}'\n      {{hub- end hub}}\n\
+                {{- end }}\n"
+              pruneObjectBehavior: None
               remediationAction: enforce
               severity: low
         - objectDefinition:
