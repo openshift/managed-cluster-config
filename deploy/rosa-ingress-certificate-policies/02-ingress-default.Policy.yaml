@@ -15,6 +15,7 @@ spec:
       compliant: 2h
       noncompliant: 45s
   object-templates-raw: |
+    {{- if eq (lookup "operator.openshift.io/v1" "IngressController" "openshift-ingress-operator" "default").metadata.name "default" }}
     - complianceType: musthave
       metadataComplianceType: musthave
       objectDefinition:
@@ -32,13 +33,10 @@ spec:
           endpointPublishingStrategy:
             type: LoadBalancerService
             loadBalancer:
-              providerParameters:
-                type: AWS
-                aws:
-                  type: '{{hub (default "Classic" (fromConfigMap "openshift-acm-policies" .ManagedClusterName "loadbalancer-aws-type")) hub}}'
               dnsManagementPolicy: 'Managed'
               scope: '{{hub- if eq (fromConfigMap "openshift-acm-policies" .ManagedClusterName "endpoint-publishing-strategy") "internal" -hub}} Internal {{hub- else -hub}} External {{hub- end -hub}}'
           {{hub- end hub}}
-  pruneObjectBehavior: DeleteIfCreated
+    {{- end }}
+  pruneObjectBehavior: None
   remediationAction: enforce
   severity: low
