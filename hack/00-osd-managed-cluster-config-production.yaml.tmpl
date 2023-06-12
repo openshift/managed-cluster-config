@@ -25264,7 +25264,7 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: kubelet-config-version-major-minor
+    name: kubelet-config
   spec:
     clusterDeploymentSelector:
       matchLabels:
@@ -25281,6 +25281,10 @@ objects:
         - '4.6'
         - '4.7'
         - '4.8'
+      - key: ext-managed.openshift.io/disable-debugging-handlers
+        operator: NotIn
+        values:
+        - 'true'
     resourceApplyMode: Upsert
     resources:
     - apiVersion: machineconfiguration.openshift.io/v1
@@ -25300,16 +25304,27 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: kubelet-config-legal-entity-id
+    name: kubelet-config-post-4.9-disable-debugging-handlers
   spec:
     clusterDeploymentSelector:
       matchLabels:
         api.openshift.com/managed: 'true'
       matchExpressions:
-      - key: api.openshift.com/legal-entity-id
+      - key: hive.openshift.io/version-major-minor
+        operator: NotIn
+        values:
+        - '4.1'
+        - '4.2'
+        - '4.3'
+        - '4.4'
+        - '4.5'
+        - '4.6'
+        - '4.7'
+        - '4.8'
+      - key: ext-managed.openshift.io/disable-debugging-handlers
         operator: In
         values:
-        - ${{DPTP_LEGAL_ENTITY_ID}}
+        - 'true'
     resourceApplyMode: Upsert
     resources:
     - apiVersion: machineconfiguration.openshift.io/v1
@@ -25317,6 +25332,8 @@ objects:
       metadata:
         name: custom-kubelet
       spec:
+        kubeletConfig:
+          enableDebuggingHandlers: false
         machineConfigPoolSelector:
           matchExpressions:
           - key: machineconfiguration.openshift.io/mco-built-in
@@ -25346,10 +25363,6 @@ objects:
         - '4.6'
         - '4.7'
         - '4.8'
-      - key: api.openshift.com/legal-entity-id
-        operator: NotIn
-        values:
-        - ${{DPTP_LEGAL_ENTITY_ID}}
     resourceApplyMode: Upsert
     patches:
     - kind: MachineConfigPool
