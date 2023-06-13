@@ -1,0 +1,15 @@
+apiVersion: managed.openshift.io/v1alpha1
+kind: SubjectPermission
+metadata:
+  name: backplane-hybridsre-hcp
+  namespace: openshift-rbac-permissions
+spec:
+  clusterPermissions:
+  - backplane-readers-cluster
+  permissions:
+  - clusterRoleName: hypershift-readers
+    namespacesAllowedRegex: "(^hypershift$|^ocm-.*)"
+  - clusterRoleName: dedicated-readers
+    namespacesAllowedRegex: "(^hypershift$|^ocm-.*)"
+  subjectKind: Group
+  subjectName: system:serviceaccounts:openshift-backplane-hybridsre-hcp
