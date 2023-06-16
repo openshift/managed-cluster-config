@@ -32,6 +32,9 @@ endif
 ifndef ENFORCE_BACKPLANE_RULES
 $(error ENFORCE_BACKPLANE_RULES is not set; check project.mk file)
 endif
+ifndef GEN_CMO_CONFIG
+$(error GEN_CMO_CONFIG is not set; check project.mk file)
+endif
 
 
 CONTAINER_ENGINE?=$(shell command -v docker 2>/dev/null || command -v podman 2>/dev/null)
@@ -72,6 +75,7 @@ generate-hive-templates: generate-oauth-templates
 		${GEN_POLICY_CONFIG_SP};\
 		${GEN_POLICY};\
 		${GEN_TEMPLATE}; \
+		${GEN_CMO_CONFIG}; \
 	fi
 
 .PHONY: enforce-backplane-rules
