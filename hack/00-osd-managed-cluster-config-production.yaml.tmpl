@@ -24643,6 +24643,10 @@ objects:
         operator: NotIn
         values:
         - 'true'
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
     resourceApplyMode: Sync
     resources:
     - apiVersion: v1
@@ -29889,6 +29893,64 @@ objects:
                     .openshift\\.io/backplane-expiry-duration}');\n      if [[ $(expr\
                     \ $((now-creation)) \\> ${expiryMins:=720} \\* 60) == 1 ]]; then\n\
                     \        oc delete sa $sa -n $ns\n      fi\n    done;\ndone;\n"
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-fedramp-cluster-monitoring-config
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/version-major-minor
+        operator: NotIn
+        values:
+        - '4.5'
+      - key: ext-managed.openshift.io/uwm-disabled
+        operator: NotIn
+        values:
+        - 'true'
+      - key: api.openshift.com/fedramp
+        operator: In
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: cluster-monitoring-config
+        namespace: openshift-monitoring
+      data:
+        config.yaml: "enableUserWorkload: true\nprometheusK8s:\n# If the location\
+          \ of this config changes,\n# make sure to adjust https://github.com/openshift/ops-sop/blob/master/v4/howto/observability/o11m_mst_killswitch.md\n\
+          # so that killswitch instructions point to the right file!\n  nodeSelector:\n\
+          \    node-role.kubernetes.io/infra: \"\"\n  tolerations:\n    - effect:\
+          \ NoSchedule\n      key: node-role.kubernetes.io/infra\n      operator:\
+          \ Exists\n  retention: 11d\n  retentionSize: 90GB\n  volumeClaimTemplate:\n\
+          \    metadata:\n      name: prometheus-data\n    spec:\n      resources:\n\
+          \        requests:\n          storage: 100Gi\nalertmanagerMain:\n  nodeSelector:\n\
+          \    node-role.kubernetes.io/infra: \"\"\n  tolerations:\n    - effect:\
+          \ NoSchedule\n      key: node-role.kubernetes.io/infra\n      operator:\
+          \ Exists\n  volumeClaimTemplate:\n    metadata:\n      name: alertmanager-data\n\
+          \    spec:\n      resources:\n        requests:\n          storage: 10Gi\n\
+          prometheusOperator:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
+          \ \"\"\n  tolerations:\n    - effect: NoSchedule\n      key: node-role.kubernetes.io/infra\n\
+          \      operator: Exists\ngrafana:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
+          \ \"\"\n  tolerations:\n    - effect: NoSchedule\n      key: node-role.kubernetes.io/infra\n\
+          \      operator: Exists\nk8sPrometheusAdapter:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
+          \ \"\"\n  tolerations:\n    - effect: NoSchedule\n      key: node-role.kubernetes.io/infra\n\
+          \      operator: Exists\nkubeStateMetrics:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
+          \ \"\"\n  tolerations:\n    - effect: NoSchedule\n      key: node-role.kubernetes.io/infra\n\
+          \      operator: Exists\nopenshiftStateMetrics:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
+          \ \"\"\n  tolerations:\n    - effect: NoSchedule\n      key: node-role.kubernetes.io/infra\n\
+          \      operator: Exists\nthanosQuerier:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
+          \ \"\"\n  tolerations:\n    - effect: NoSchedule\n      key: node-role.kubernetes.io/infra\n\
+          \      operator: Exists\n"
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
