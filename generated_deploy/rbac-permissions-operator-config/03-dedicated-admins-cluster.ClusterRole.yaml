@@ -1,0 +1,53 @@
+aggregationRule:
+  clusterRoleSelectors:
+  # aggregate all "cluster" scope rbac from SRE to dedicated-admins-cluster
+  - matchExpressions:
+    - key: managed.openshift.io/aggregate-to-dedicated-admins
+      operator: In
+      values:
+        - "cluster"
+  # aggregate all customer installed operator rbac from OLM to dedicated-admins-cluster (4.3.12+)
+  - matchExpressions:
+    - key: olm.owner.kind
+      operator: In
+      values:
+      - OperatorGroup
+    # exclude specific operator groups by name (aka owner)
+    - key: olm.owner
+      operator: NotIn
+      values:
+      # platform operator groups
+      - openshift-cluster-monitoring
+      - olm-operators
+      # OSD operator groups
+      - cloud-ingress-operator
+      - rbac-permissions-operator
+      - splunk-forwarder-operator-og
+      # Layred Product operator groups
+      - redhat-layered-product-og
+      # RHMI operator groups (legacy)
+      - addon-rhmi-og
+      - addon-rhmi-internal-og
+      - rhmi-registry-og
+      # MTSRE AddonOperator operator group
+      - addon-operator-og
+    # exclude specific namespaces too, just in case
+    - key: olm.owner.namespace
+      operator: NotIn
+      values:
+      # platform namespaces
+      - openshift-monitoring
+      - openshift-operator-lifecycle-manager
+      # OSD namespaces
+      - openshift-cloud-ingress-operator
+      - openshift-rbac-permissions
+      - openshift-splunk-forwarder-operator
+      - openshift-managed-upgrade-operator
+      - openshift-velero
+      - openshift-ocm-agent-operator
+      # MTSRE AddonOperator namespace
+      - openshift-addon-operator
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: dedicated-admins-cluster

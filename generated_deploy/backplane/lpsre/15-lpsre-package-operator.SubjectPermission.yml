@@ -1,0 +1,17 @@
+apiVersion: managed.openshift.io/v1alpha1
+kind: SubjectPermission
+metadata:
+  name: backplane-lpsre-package-operator
+  namespace: openshift-rbac-permissions
+spec:
+  clusterPermissions:
+  # Some Package Operator APIs are cluster scoped,
+  # so access must be granted on the whole cluster.
+  - backplane-lpsre-package-operator-cluster
+  permissions:
+  - clusterRoleName: admin
+    namespacesAllowedRegex: '(^openshift-package-operator$)'
+  - clusterRoleName: backplane-lpsre-package-operator-project
+    namespacesAllowedRegex: '(^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)'
+  subjectKind: Group
+  subjectName: system:serviceaccounts:openshift-backplane-lpsre

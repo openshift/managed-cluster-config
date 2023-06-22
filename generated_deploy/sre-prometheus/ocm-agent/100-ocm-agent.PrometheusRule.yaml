@@ -1,0 +1,75 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: sre-managed-notification-alerts
+    role: alert-rules 
+  name: sre-managed-notification-alerts
+  namespace: openshift-monitoring
+spec:
+  groups:
+  - name: sre-managed-notification-alerts
+    rules:
+    - alert: MultipleIngressControllersDetectedNotificationSRE
+      expr: sum(max_over_time(splunkforwarder_audit_filter_exposed_splunk_event_total{alert="UserCreatedIngressControllerDetected"}[5m]) or vector(0)) - sum(max_over_time(splunkforwarder_audit_filter_exposed_splunk_event_total{alert="UserCreatedIngressControllerDetected"}[5m] offset 5m) or vector(0)) > 0
+      for: 30m
+      labels:
+        severity: Info
+        namespace: openshift-logging
+        send_managed_notification: "true"
+        managed_notification_template: "MultipleIngressControllersDetected"
+    - alert: LoggingVolumeFillingUpNotificationSRE
+    # KubePersistentVolumeFillingUp alert firing in openshift-logging Namespace.
+      expr: count(ALERTS{alertname="KubePersistentVolumeFillingUp", alertstate="firing", namespace="openshift-logging"}) >= 1
+      for: 30m
+      labels:
+        severity: Info
+        namespace: openshift-logging
+        send_managed_notification: "true"
+        managed_notification_template: "LoggingVolumeFillingUp"
+    - alert: MultipleDefaultStorageClassesNotificationSRE
+    # MultipleDefaultStorageClasses alert firing in openshift-logging Namespace.
+      expr: count(ALERTS{alertname="MultipleDefaultStorageClasses", alertstate="firing", namespace="openshift-cluster-storage-operator"}) >= 1
+      for: 30m
+      labels:
+        severity: Info
+        namespace: openshift-cluster-storage-operator
+        send_managed_notification: "true"
+        managed_notification_template: "MultipleDefaultStorageClasses"
+    - alert: NonSystemChangeValidatingWebhookConfigurationsNotificationSRE
+    # splunkforwarder_audit_filter_exposed_splunk_event_total is a counter that starts at 1. 
+    # We cannot use increase(), as there is no increase from 0 to 1. 
+    # See https://github.com/prometheus/prometheus/issues/1673
+    # Therefore, we use the difference between two 5 minute timeslots (and fill up with 0 in case there is no metric)
+    # to check if the value increased
+      expr: sum(max_over_time(splunkforwarder_audit_filter_exposed_splunk_event_total{alert="NonSystemChangeValidationWebhookConfiguration"}[5m]) or vector(0)) - sum(max_over_time(splunkforwarder_audit_filter_exposed_splunk_event_total{alert="NonSystemChangeValidationWebhookConfiguration"}[5m] offset 5m) or vector(0)) > 0
+      labels:
+        severity: Info
+        namespace: audit-exporter
+        send_managed_notification: "true"
+        managed_notification_template: "NonSystemChangeValidationWebhookConfigurations"
+    - alert: WorkerNodeFileDescriptorLimitSRE
+      # This is the same as the upstream alert, but groups by instance id (which is which node is affected)
+      # and then only fires on the worker nodes. The `unless` portion is because when getting the node-role
+      # metric it splits on the roles, so infra,worker then gives two results, one with just the infra role
+      # and one with just the worker role.  So we get just the infra/controlplane nodes and then exclude
+      # them from the worker node result, which gives us just the customer worker nodes.
+      expr: |-
+        group by (instance) (
+          node_filefd_allocated{job="node-exporter"} * 100 / node_filefd_maximum{job="node-exporter"} >= 90
+        )
+        * on (instance) group_left ()group by(instance) (
+          label_replace(kube_node_role{role!~"infra|control-plane|master"}, "instance", "$1", "node", "(.*)")
+        )
+        unless
+        group by(instance) (
+          label_replace(kube_node_role{role=~"infra|control-plane|master"}, "instance", "$1", "node", "(.*)")
+        )
+      for: 15m
+      labels:
+        severity: critical
+        namespace: openshift-monitoring
+        managed_notification_template: WorkerNodeFileDescriptorAtLimit
+        send_managed_notification: "true"
+      annotations:
+        message: "Kernel is predicted to exhaust file descriptors limit soon."

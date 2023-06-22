@@ -1,0 +1,15 @@
+apiVersion: managed.openshift.io/v1alpha1
+kind: SubjectPermission
+metadata:
+  name: backplane-odf-sre-ocs-consumer
+  namespace: openshift-rbac-permissions
+spec:
+  permissions:
+  - clusterRoleName: admin
+    namespacesAllowedRegex: (^openshift-storage$)
+  - clusterRoleName: backplane-odf-sre-ocs-consumer-project
+    namespacesAllowedRegex: (^openshift-storage$)
+  - clusterRoleName: backplane-lpsre-monitoring
+    namespacesAllowedRegex: (^openshift-storage$)
+  subjectKind: Group
+  subjectName: system:serviceaccounts:openshift-backplane-odf-sre

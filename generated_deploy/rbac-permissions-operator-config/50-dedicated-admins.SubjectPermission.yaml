@@ -1,0 +1,19 @@
+apiVersion: managed.openshift.io/v1alpha1
+kind: SubjectPermission
+metadata:
+  name: dedicated-admins
+  namespace: openshift-rbac-permissions
+spec:
+  subjectKind: Group
+  subjectName: dedicated-admins
+  clusterPermissions:
+    - dedicated-admins-cluster
+  permissions:
+    - 
+      clusterRoleName: dedicated-admins-project
+      namespacesAllowedRegex: ".*"
+      namespacesDeniedRegex: "(^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)"
+    -
+      clusterRoleName: admin 
+      namespacesAllowedRegex: ".*" 
+      namespacesDeniedRegex: "(^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)"

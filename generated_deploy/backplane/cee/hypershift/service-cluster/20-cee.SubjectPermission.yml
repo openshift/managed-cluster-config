@@ -1,0 +1,14 @@
+apiVersion: managed.openshift.io/v1alpha1
+kind: SubjectPermission
+metadata:
+  name: backplane-cee-service-cluster
+  namespace: openshift-rbac-permissions
+spec:
+  clusterPermissions:
+  - backplane-cee-service-cluster-cluster
+  - view
+  permissions:
+  - clusterRoleName: dedicated-readers
+    namespacesAllowedRegex: "(^hypershift.*|^uhc.*|^ocm.*|^klusterlet.*|^open-cluster-management.*)"
+  subjectKind: Group
+  subjectName: system:serviceaccounts:openshift-backplane-cee
