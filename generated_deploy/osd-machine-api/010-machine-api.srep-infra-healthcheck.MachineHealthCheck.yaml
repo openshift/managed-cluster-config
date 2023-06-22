@@ -1,0 +1,22 @@
+apiVersion: machine.openshift.io/v1beta1
+kind: MachineHealthCheck
+metadata:
+  name: srep-infra-healthcheck
+  namespace: openshift-machine-api
+spec:
+  selector:
+    matchExpressions:
+    - key: machine.openshift.io/cluster-api-machine-role
+      operator: In
+      values:
+      - "infra"
+    - key: machine.openshift.io/cluster-api-machineset
+      operator: Exists
+  unhealthyConditions:
+  - type:    "Ready"
+    timeout: "480s"
+    status: "False"
+  - type:    "Ready"
+    timeout: "480s"
+    status: "Unknown"
+  maxUnhealthy: 2

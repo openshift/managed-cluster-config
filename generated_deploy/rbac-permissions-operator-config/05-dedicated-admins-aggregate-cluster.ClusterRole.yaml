@@ -1,0 +1,337 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    managed.openshift.io/aggregate-to-dedicated-admins: "cluster"
+  name: dedicated-admins-aggregate-cluster
+rules:
+- apiGroups:
+  - rbac.authorization.k8s.io
+  attributeRestrictions: null
+  resources:
+  - clusterroles
+  - clusterrolebindings
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  - oauth.openshift.io
+  attributeRestrictions: null
+  resources:
+  - oauthclientauthorizations
+  verbs:
+  - delete
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  - authorization.openshift.io
+  attributeRestrictions: null
+  resources:
+  - resourceaccessreviews
+  - subjectaccessreviews
+  verbs:
+  - create
+- apiGroups:
+  - authorization.k8s.io
+  attributeRestrictions: null
+  resources:
+  - subjectaccessreviews
+  - selfsubjectaccessreviews
+  verbs:
+  - create
+- apiGroups:
+  - ""
+  - project.openshift.io
+  attributeRestrictions: null
+  resources:
+  - projectrequests
+  verbs:
+  - create
+- apiGroups:
+  - ""
+  - security.openshift.io
+  attributeRestrictions: null
+  resources:
+  - securitycontextconstraints
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  - network.openshift.io
+  attributeRestrictions: null
+  resources:
+  - netnamespaces
+  verbs:
+  - get
+  - list
+  - update
+### BEGIN - customer can access openshift haproxy router metrics
+- apiGroups:
+  - route.openshift.io
+  resources:
+  - routers/metrics
+  verbs:
+  - get
+### END - customer can access openshift haproxy router metrics
+### BEGIN - customer can use monitoring web applications
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  verbs:
+  - get
+  - list
+  - update
+  - patch
+### END - customer can use monitoring web applications
+### BEGIN - customer can see project status (nice UX from use monitoring web applications)
+- apiGroups:
+  - build.openshift.io
+  resources:
+  - builds
+  - buildconfigs
+  verbs:
+  - list
+- apiGroups:
+  - apps
+  resources:
+  - daemonsets
+  - deployments
+  - replicasets
+  - statefulsets
+  verbs:
+  - list
+- apiGroups:
+  - apps.openshift.io
+  resources:
+  - deploymentconfigs
+  verbs:
+  - list
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - replicationcontrollers
+  - services
+  verbs:
+  - list
+  - get
+  - watch
+- apiGroups:
+  - project.openshift.io
+  resources:
+  - projects
+  verbs:
+  - get
+- apiGroups:
+  - route.openshift.io
+  resources:
+  - routes
+  verbs:
+  - list
+  - get # https://jira.coreos.com/browse/SREP-1945
+### END - customer can see project status (nice UX from use monitoring web applications)
+### BEGIN - customer can create verify tokens and access
+- apiGroups:
+  - authentication.k8s.io
+  resources:
+  - tokenreviews
+  verbs:
+  - create
+- apiGroups:
+  - authorization.k8s.io
+  resources:
+  - subjectaccessreviews
+  verbs:
+  - create
+### END - customer can create verify tokens and access
+### BEGIN - customer can view OperatorHub in console
+- apiGroups:
+  - operators.coreos.com
+  - packages.operators.coreos.com
+  resources:
+  - "*"
+  verbs:
+  - list
+  - get
+  - watch
+- apiGroups:
+  - '*' # using package.opeartors.coreos.com does not work
+  resources:
+  - packagemanifests
+  verbs:
+  - list
+### END - customer can view OperatorHub in console
+### START - customer can managed CRs for curated operators
+- apiGroups:
+# AMQ Certificate Manager Operator
+  - certificates.certmanager.k8s.io
+  - issuers.certmanager.k8s.io
+  - clusterissuers.certmanager.k8s.io
+  - orders.certmanager.k8s.io
+  - challenges.certmanager.k8s.io
+# Anchore Engine Operator
+  - anchoreengines.anchore.com
+# AtlasMap Operator
+  - atlasmaps.atlasmap.io
+# Camel K Operator
+  - builds.camel.apache.org
+  - camelcatalogs.camel.apache.org
+  - integrations.camel.apache.org
+  - integrationcontexts.camel.apache.org
+  - integrationplatforms.camel.apache.org
+# Couchbase Operator
+  - couchbaseclusters.couchbase.com
+# Open Liberty Operator
+  - openliberties.openliberty.io
+# Opsmx Spinnaker Operator
+  - opsmxspinnakeroperators.charts.helm.k8s.io
+# Seldon Operator
+  - seldondeployments.machinelearning.seldon.io
+# Spinnaker Operator
+  - spinnakeroperators.charts.helm.k8s.io
+# Twistlock Console Operator
+  - twistlockconsoles.charts.helm.k8s.io
+# Openshift Pipelines Operator
+  - tekton.dev
+  resources:
+  - '*'
+  verbs:
+  - '*'
+### END
+### START - Update groups
+- apiGroups:
+  - user.openshift.io
+  resources:
+  - groups
+  - identities
+  - users
+  verbs:
+  - get
+  - list
+  - update
+  - patch
+  - create
+  - delete
+### END
+### Start - allow manage UserIdentityMappings
+# https://issues.redhat.com/browse/OSD-5078
+- apiGroups:
+  - user.openshift.io
+  resources:
+  - useridentitymappings
+  verbs:
+  - "*"
+### END
+### START - DNS Forwarder
+- apiGroups:
+  - operator.openshift.io
+  resources:
+  - dnses
+  resourceNames:
+  - default
+  verbs:
+  - get
+  - list
+  - patch
+  - update
+  - watch
+### END
+### START - Read permissions of imagestreams
+- apiGroups:
+  - ""
+  - image.openshift.io
+  attributeRestrictions: null
+  resources:
+  - images
+  - imagestreamtags
+  verbs:
+  - get
+  - list
+  - watch
+### END
+### Start - anyuid and nonroot SSCs
+# https://issues.redhat.com/browse/OSD-3655
+- apiGroups:
+  - security.openshift.io
+  resourceNames:
+  - "anyuid"
+  - "nonroot"
+  resources:
+  - securitycontextconstraints
+  verbs:
+  - use
+### END
+### Start - manage project.config.openshift.io CR
+# https://issues.redhat.com/browse/OSD-5566
+- apiGroups:
+  - config.openshift.io
+  resources:
+  - projects
+  verbs:
+  - get
+  - list
+  - patch
+  - update
+  - watch
+### END
+### Start - allow viewing of machines, machinesets,
+# https://issues.redhat.com/browse/OSD-5663
+- apiGroups:
+  - machine.openshift.io
+  resources:
+  - machines
+  - machinesets
+  verbs:
+  - get
+  - list
+  - watch
+### END
+### Start - allow crud for dedicated-admins on clusterresourcequotas
+# https://issues.redhat.com/browse/OSD-6180
+- apiGroups:
+  - quota.openshift.io
+  resources:
+  - clusterresourcequotas
+  verbs:
+  - "*"
+### END
+### Start - Allow dedicated admins to view api request counts
+- apiGroups:
+  - apiserver.openshift.io
+  resources:
+  - apirequestcounts
+  verbs:
+  - get
+  - list
+  - watch
+### END
+### Start - allow dedicated admin to create consoleplugin resource and enable/disable console plugin in the cluster
+# https://issues.redhat.com/browse/OSD-13617
+- apiGroups:
+  - console.openshift.io
+  resources:
+  - consoleplugins
+  verbs:
+  - create
+  - delete
+  - patch
+  - update
+- apiGroups:
+  - operator.openshift.io
+  resources:
+  - consoles
+  verbs:
+  - patch
+  - update
+### END

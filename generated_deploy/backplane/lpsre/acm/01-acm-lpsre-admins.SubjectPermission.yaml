@@ -1,0 +1,13 @@
+apiVersion: managed.openshift.io/v1alpha1
+kind: SubjectPermission
+metadata:
+  name: backplane-lpsre-acm-admins-project
+  namespace: openshift-rbac-permissions
+spec:
+  permissions:
+  - clusterRoleName: view
+    namespacesAllowedRegex: (^redhat-open-cluster-management$|^open-cluster-management-agent$|^open-cluster-management-agent-addon$|^open-cluster-management-global-set$|^open-cluster-management-hub$)
+  - clusterRoleName: backplane-lpsre-acm-admins-project
+    namespacesAllowedRegex: (^redhat-open-cluster-management$|^open-cluster-management-agent$|^open-cluster-management-agent-addon$|^open-cluster-management-global-set$|^open-cluster-management-hub$)
+  subjectKind: Group
+  subjectName: system:serviceaccounts:openshift-backplane-lpsre

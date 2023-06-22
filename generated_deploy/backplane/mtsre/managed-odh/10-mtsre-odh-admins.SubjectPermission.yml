@@ -1,0 +1,15 @@
+apiVersion: managed.openshift.io/v1alpha1
+kind: SubjectPermission
+metadata:
+  name: backplane-mtsre-managed-odh-admins
+  namespace: openshift-rbac-permissions
+spec:
+  permissions:
+  - clusterRoleName: admin
+    namespacesAllowedRegex: (^rhods-notebooks$|^redhat-ods-applications$|^redhat-ods-monitoring$|^redhat-ods-operator$)
+  - clusterRoleName: system:openshift:cloud-credential-operator:cluster-reader
+    namespacesAllowedRegex: (^rhods-notebooks$|^redhat-ods-applications$|^redhat-ods-monitoring$|^redhat-ods-operator$)
+  - clusterRoleName: backplane-mtsre-monitoring
+    namespacesAllowedRegex: (^redhat-ods-monitoring$)
+  subjectKind: Group
+  subjectName: system:serviceaccounts:openshift-backplane-mtsre

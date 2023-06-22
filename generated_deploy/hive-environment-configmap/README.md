@@ -1,0 +1,1 @@
+The sub-directories here have no functional use within OSD.  They exist to verify functionality of the `config.yaml` when configured with `deploymentMode: "Direct"`.

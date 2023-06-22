@@ -1,0 +1,78 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: backplane-srep-management-cluster-project
+rules:
+- apiGroups:
+  - policy.open-cluster-management.io
+  resources:
+  - policies
+  - configurationpolicies
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - hypershift.openshift.io
+  resources:
+  - awsendpointservices
+  - hostedclusters
+  - hostedcontrolplanes
+  - nodepools
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - cluster.x-k8s.io
+  resources:
+  - clusterclasses
+  - clusters
+  - machinedeployments
+  - machinehealthchecks
+  - machinepools
+  - machines
+  - machinesets
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - infrastructure.cluster.x-k8s.io
+  resources:
+  - awsclustercontrolleridentities
+  - awsclusterroleidentities
+  - awsclusters
+  - awsclusterstaticidentities
+  - awsclustertemplates
+  - awsfargateprofiles
+  - awsmachinepools
+  - awsmachines
+  - awsmachinetemplates
+  - awsmanagedmachinepools
+  - azureclusteridentities
+  - azureclusters
+  - azuremachines
+  - azuremachinetemplates
+  - ibmpowervsclusters
+  - ibmpowervsimages
+  - ibmpowervsmachines
+  - ibmpowervsmachinetemplates
+  - ibmvpcclusters
+  - ibmvpcmachines
+  - ibmvpcmachinetemplates
+  - kubevirtclusters
+  - kubevirtmachines
+  - kubevirtmachinetemplates
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - package-operator.run
+  resources:
+  - '*'
+  verbs:
+  - get
+  - list
+  - watch

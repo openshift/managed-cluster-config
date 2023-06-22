@@ -1,0 +1,21 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: rhoam-sre-cluster-admins
+    role: alert-rules
+  name: rhoam-sre-cluster-admins
+  namespace: openshift-monitoring
+spec:
+  groups:
+  - name: rhoam-sre-cluster-admins
+    rules:
+    - alert: ElevatingClusterAdminRHOAMSRE
+      expr: openshift_group_user_account{group="rhoam-sre-cluster-admins"} == 1
+      for: 130m
+      labels:
+        severity: warning
+        namespace: redhat-rhoam
+      annotations:
+        message: RHOAM SRE "{{ $labels.user }}"
+          elevated to cluster-admin({{ $labels.group }}) more than 2 hours.
