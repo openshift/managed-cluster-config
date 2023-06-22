@@ -6,10 +6,6 @@ label selectors:
 
 Applies only to ROSA HCP Management Clusters.
 
-## backplane-readers-cluster: `cluster`
-
-TODO: needed an "entry-level" cluster-wide role. This one looks promising, though might be too permissive.
-
 ## dedicated-readers: `(^hypershift$|^ocm-.*)`
 
 HCP team needs read/list/watch access to a standard "base" set of k8s objects within their namespaces.
