@@ -60,7 +60,6 @@ def generate_policy_config(directory):
     #create a temporary path to stores the subset of manifests that will generate policies with
     path = os.path.join(temp_directory, "configs")
     os.makedirs(path)
-
     #walk through the files in the directory, if the file's kind is SubjectPermission, call generate_sp. If it's any other kind, call generate_regular
     for entry in os.scandir(directory):
         if not entry.is_file():
@@ -90,6 +89,8 @@ def generate_policy_config(directory):
 
 
 def non_sp_config(directory, temp_directory, policy_name, path):
+    cluster_selectors = {'hypershift.open-cluster-management.io/hosted-cluster': 'true'}
+    namespace_selectors = {}
     shutil.copy(policy_generator_config, temp_directory)
     with open(policy_generator_config,'r') as input_file:
         policy_template = yaml.safe_load(input_file)
@@ -103,6 +104,10 @@ def non_sp_config(directory, temp_directory, policy_name, path):
                 policy_template['policyDefaults']['complianceType'] = config['policy']['complianceType'].lower()
             if 'metadataComplianceType' in config['policy'].keys() and config['policy']['metadataComplianceType'] != '' :
                 policy_template['policyDefaults']['metadataComplianceType'] = config['policy']['metadataComplianceType'].lower()
+            if 'clusterSelectors' in config['policy'].keys() and config['policy']['clusterSelectors'] != '':
+                        cluster_selectors = config['policy']['clusterSelectors']
+            if 'namespaceSelector' in config['policy'].keys() and config['policy']['namespaceSelector'] != '':
+                        namespace_selectors = config['policy']['namespaceSelector']
 
     for p in policy_template['policies']:
         p['name'] = policy_name

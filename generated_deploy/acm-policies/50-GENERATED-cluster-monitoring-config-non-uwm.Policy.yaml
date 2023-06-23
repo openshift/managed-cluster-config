@@ -1,0 +1,147 @@
+---
+apiVersion: policy.open-cluster-management.io/v1
+kind: Policy
+metadata:
+    annotations:
+        policy.open-cluster-management.io/categories: CM Configuration Management
+        policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+        policy.open-cluster-management.io/standards: NIST SP 800-53
+    name: cluster-monitoring-config-non-uwm
+    namespace: openshift-acm-policies
+spec:
+    disabled: false
+    policy-templates:
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+                name: cluster-monitoring-config-non-uwm
+            spec:
+                evaluationInterval:
+                    compliant: 2h
+                    noncompliant: 45s
+                object-templates:
+                    - complianceType: mustonlyhave
+                      metadataComplianceType: musthave
+                      objectDefinition:
+                        apiVersion: v1
+                        data:
+                            config.yaml: |
+                                prometheusK8s:
+                                  nodeSelector:
+                                    node-role.kubernetes.io/infra: ""
+                                  tolerations:
+                                    - effect: NoSchedule
+                                      key: node-role.kubernetes.io/infra
+                                      operator: Exists
+                                  retention: 11d
+                                  retentionSize: 90GB
+                                  volumeClaimTemplate:
+                                    metadata:
+                                      name: prometheus-data
+                                    spec:
+                                      resources:
+                                        requests:
+                                          storage: 100Gi
+                                alertmanagerMain:
+                                  nodeSelector:
+                                    node-role.kubernetes.io/infra: ""
+                                  tolerations:
+                                    - effect: NoSchedule
+                                      key: node-role.kubernetes.io/infra
+                                      operator: Exists
+                                  volumeClaimTemplate:
+                                    metadata:
+                                      name: alertmanager-data
+                                    spec:
+                                      resources:
+                                        requests:
+                                          storage: 10Gi
+                                telemeterClient:
+                                  nodeSelector:
+                                    node-role.kubernetes.io/infra: ""
+                                  tolerations:
+                                    - effect: NoSchedule
+                                      key: node-role.kubernetes.io/infra
+                                      operator: Exists
+                                  telemeterServerURL: ${TELEMETER_SERVER_URL}
+                                prometheusOperator:
+                                  nodeSelector:
+                                    node-role.kubernetes.io/infra: ""
+                                  tolerations:
+                                    - effect: NoSchedule
+                                      key: node-role.kubernetes.io/infra
+                                      operator: Exists
+                                grafana:
+                                  nodeSelector:
+                                    node-role.kubernetes.io/infra: ""
+                                  tolerations:
+                                    - effect: NoSchedule
+                                      key: node-role.kubernetes.io/infra
+                                      operator: Exists
+                                k8sPrometheusAdapter:
+                                  nodeSelector:
+                                    node-role.kubernetes.io/infra: ""
+                                  tolerations:
+                                    - effect: NoSchedule
+                                      key: node-role.kubernetes.io/infra
+                                      operator: Exists
+                                kubeStateMetrics:
+                                  nodeSelector:
+                                    node-role.kubernetes.io/infra: ""
+                                  tolerations:
+                                    - effect: NoSchedule
+                                      key: node-role.kubernetes.io/infra
+                                      operator: Exists
+                                openshiftStateMetrics:
+                                  nodeSelector:
+                                    node-role.kubernetes.io/infra: ""
+                                  tolerations:
+                                    - effect: NoSchedule
+                                      key: node-role.kubernetes.io/infra
+                                      operator: Exists
+                                thanosQuerier:
+                                  nodeSelector:
+                                    node-role.kubernetes.io/infra: ""
+                                  tolerations:
+                                    - effect: NoSchedule
+                                      key: node-role.kubernetes.io/infra
+                                      operator: Exists
+                        kind: ConfigMap
+                        metadata:
+                            name: cluster-monitoring-config
+                            namespace: openshift-monitoring
+                pruneObjectBehavior: DeleteIfCreated
+                remediationAction: enforce
+                severity: low
+---
+apiVersion: apps.open-cluster-management.io/v1
+kind: PlacementRule
+metadata:
+    name: placement-cluster-monitoring-config-non-uwm
+    namespace: openshift-acm-policies
+spec:
+    clusterSelector:
+        matchExpressions:
+            - key: ext-managed.openshift.io/uwm-disabled
+              operator: In
+              values:
+                - "true"
+            - key: hypershift.open-cluster-management.io/hosted-cluster
+              operator: In
+              values:
+                - "true"
+---
+apiVersion: policy.open-cluster-management.io/v1
+kind: PlacementBinding
+metadata:
+    name: binding-cluster-monitoring-config-non-uwm
+    namespace: openshift-acm-policies
+placementRef:
+    apiGroup: apps.open-cluster-management.io
+    kind: PlacementRule
+    name: placement-cluster-monitoring-config-non-uwm
+subjects:
+    - apiGroup: policy.open-cluster-management.io
+      kind: Policy
+      name: cluster-monitoring-config-non-uwm
