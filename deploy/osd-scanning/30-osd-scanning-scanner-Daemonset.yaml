@@ -22,7 +22,9 @@ spec:
           value: "false"
         - name: CLAM_SECRETS_FILE
           value: "/secrets/clam_update_config.json"
-        image: quay.io/app-sre/clamsig-puller@sha256:a6c7ae89852cf7b5d0ad4b540954f1337f6e289d775cb7a78b78858fe1aecbf2
+        - name: OPENSSL_FORCE_FIPS_MODE
+          value: "1"
+        image: quay.io/app-sre/clamsig-puller@sha256:d62ffc60e426a6820bf9ad1fd5775be70c6137e8ae1eb89a6d30053b6e4e4b6d
         name: clamsig-puller
         resources:
           limits:
@@ -39,7 +41,9 @@ spec:
       - env:
         - name: OO_PAUSE_ON_START
           value: "false"
-        image: quay.io/app-sre/clamd@sha256:196ebe61263f2cfe0c33b6b01f7a1097c687d92f6ac5904a40682ce530670028
+        - name: OPENSSL_FORCE_FIPS_MODE
+          value: "1"
+        image: quay.io/app-sre/clamd@sha256:779c1a15b321963754840d695ac726112e9ee524705d097d296737612d36407c
         name: clamd
         resources:
           limits:
@@ -61,7 +65,9 @@ spec:
           value: "false"
         - name: CHROOT_PATH
           value: /host
-        image: quay.io/app-sre/container-info@sha256:ef2586f44fbb55672506c8bc84087db2c471eba853c1eccc6353df7e1a1f0a96
+        - name: OPENSSL_FORCE_FIPS_MODE
+          value: "1"
+        image: quay.io/app-sre/container-info@sha256:4e71325051cc6a7fe52bb6e52fa852f8747e1bac1e588faa0aff737b22fb03e2
         name: info
         resources:
           limits:
@@ -103,7 +109,9 @@ spec:
           value: /clam/clamd.sock
         - name: INFO_SOCKET
           value: '@rpc.sock'
-        image: quay.io/app-sre/watcher@sha256:e27740590fe388c5ec934c3752e3433f1fa27ce57d8d5093d47e42c29dd442c3
+        - name: OPENSSL_FORCE_FIPS_MODE
+          value: "1"
+        image: quay.io/app-sre/watcher@sha256:ad45fcb27c0d0d681bf6fc9fee0a035b192cf2e377a9d78f42a8fdb4bc1667d5
         name: watcher
         resources:
           limits:
@@ -155,7 +163,9 @@ spec:
           value: openshift-scanning
         - name: HOST_SCAN_DIRS
           value: /host
-        image: quay.io/app-sre/watcher@sha256:e27740590fe388c5ec934c3752e3433f1fa27ce57d8d5093d47e42c29dd442c3
+        - name: OPENSSL_FORCE_FIPS_MODE
+          value: "1"
+        image: quay.io/app-sre/watcher@sha256:ad45fcb27c0d0d681bf6fc9fee0a035b192cf2e377a9d78f42a8fdb4bc1667d5
         name: scheduler
         resources:
           limits:
@@ -187,7 +197,9 @@ spec:
           value: "false"
         - name: CLAM_SECRETS_FILE
           value: "/secrets/clam_update_config.json"
-        image: quay.io/app-sre/clamsig-puller@sha256:a6c7ae89852cf7b5d0ad4b540954f1337f6e289d775cb7a78b78858fe1aecbf2
+        - name: OPENSSL_FORCE_FIPS_MODE
+          value: "1"
+        image: quay.io/app-sre/clamsig-puller@sha256:d62ffc60e426a6820bf9ad1fd5775be70c6137e8ae1eb89a6d30053b6e4e4b6d
         name: init-clamsig-puller
         resources:
           limits:

@@ -42,7 +42,9 @@ spec:
           value: /certs/tls.crt
         - name: TLS_KEY_FILE
           value: /certs/tls.key
-        image: quay.io/app-sre/pod-logger@sha256:eaf2d7c1e22992e9fc27d057e7e772c5c5378339ead80be4146b8f26d443d5cf
+        - name: OPENSSL_FORCE_FIPS_MODE
+          value: "1"
+        image: quay.io/app-sre/pod-logger@sha256:d6101e90a303992210ed575ed0a3162d3a150649e31f552ab47b4a4cb83d346a
         name: logger
         ports:
         - containerPort: 8443
@@ -65,7 +67,9 @@ spec:
           value: "false"
         - name: SOCK
           value: "@rpc.pod.sock"
-        image: quay.io/app-sre/log-printer@sha256:839969476024b05435bdbbbb86d2e6964203b5f38bc985e17242e2abbcbedf92
+        - name: OPENSSL_FORCE_FIPS_MODE
+          value: "1"
+        image: quay.io/app-sre/log-printer@sha256:8a8870ce5f6e1c14f115c970a5e9db35e8946cc6746604e27cc20dbaff270ff6
         name: pod-printer
         resources:
           limits:
@@ -79,7 +83,9 @@ spec:
           value: "false"
         - name: SOCK
           value: "@rpc.scan.sock"
-        image: quay.io/app-sre/log-printer@sha256:839969476024b05435bdbbbb86d2e6964203b5f38bc985e17242e2abbcbedf92
+        - name: OPENSSL_FORCE_FIPS_MODE
+          value: "1"
+        image: quay.io/app-sre/log-printer@sha256:8a8870ce5f6e1c14f115c970a5e9db35e8946cc6746604e27cc20dbaff270ff6
         name: scan-printer
         resources:
           limits:
