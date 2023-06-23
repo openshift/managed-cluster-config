@@ -1,20 +1,18 @@
 # managed-cluster-config repository
 
 This repo contains static configuration specific to a "managed" OpenShift Dedicated (OSD) cluster.
-
 ## How to use this repo
-
+https://issues.redhat.com/browse/SDE-2786 has change the repo slightly: /deploy holds the sources of truth, and /generated_deploy holds the configurations that will be applied by Hive.
 To add a new SelectorSyncSet, add your yaml manifest to the `deploy` dir, then run the `make` command.
 
 Alternatively you can enable GitHub Actions on your fork and `make` will be ran automatically. Additionally,
 the action will create a new commit with the generated files.
 
 To add an ACM (Governance) Policy
-- If the manifest of the object you want to convert to policy already exists in `deploy` : go to `script/generate-policy-config.py` and add the directory you want to convert in the directory array.
-- If the manifest of the object does not exist; add your manifests; then add the directory of your manifest into the array in `script/generate-policy-config.py`.
-- If the manifest is SubjectPermission, add the directory of the manifest into the array in `script/generate-subjectpermissions-policy-template.py` then run `make` as usual
+- If the manifest of the object you want to convert to policy already exists in `deploy` : in the object config.yaml, add a field `policy: `destination: "acm-policies"` (example: https://github.com/openshift/managed-cluster-config/blob/master/deploy/backplane/cee/config.yaml) 
+- If the manifest of the object does not exist: add your manifests with a config.yaml file. If you only want this object to be deployed as Policy, see example:  https://github.com/openshift/managed-cluster-config/blob/master/deploy/hs-mgmt-route-monitor-operator/config.yaml
 
-`make` will look for the `policy-generator-config.yaml` files, runs it with the PolicyGenerator binary and save the output to `deploy/acm-policies` directory. `make` will then automatically
+`make` will look for `config.yaml` files, runs it with the PolicyGenerator binary and save the output to `generated_deploy/acm-policies` directory. `make` will then automatically
 add the policy as a new SelectorySyncSet.
 
 # Building
@@ -25,7 +23,7 @@ add the policy as a new SelectorySyncSet.
 
 # Configuration
 
-All resources in `deploy/` are bundled into a template that is used by config management to apply to target "hive" clusters.  The configuration for this supports two options for deployment.  They can be deployed in the template so they are:
+All resources in `generated_deploy/` are bundled into a template that is used by config management to apply to target "hive" clusters.  The configuration for this supports two options for deployment.  They can be deployed in the template so they are:
 
 1. deployed directly to the "hive" cluster
 2. deployed to the "hive" cluster inside a SelectorSyncSet
