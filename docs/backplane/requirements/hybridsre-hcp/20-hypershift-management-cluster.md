@@ -6,11 +6,9 @@ label selectors:
 
 Applies only to ROSA HCP Management Clusters.
 
-## dedicated-readers: `(^hypershift$|^ocm-.*)`
+## view: `(^hypershift$|^ocm-.*)`
 
-HCP team needs read/list/watch access to a standard "base" set of k8s objects within their namespaces.
-
-`dedicated-readers` was chosen as it provides access to objects like pods, configmaps, services, etc.
+HCP team needs read/list/watch access to core k8s and ocp objects within their namespaces and the guidelines point ot the `view` role as the default.
 
 ## hypershift-readers: `(^hypershift$|^ocm-.*)`
 
