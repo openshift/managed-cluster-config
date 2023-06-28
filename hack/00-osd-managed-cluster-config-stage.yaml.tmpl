@@ -36119,30 +36119,6 @@ objects:
       kind: PrometheusRule
       metadata:
         labels:
-          prometheus: sre-ebs-iops-burstbalance
-          role: alert-rules
-        name: sre-ebs-iops-burstbalance
-        namespace: openshift-monitoring
-      spec:
-        groups:
-        - name: sre-ebs-iops-burstbalance
-          rules:
-          - alert: EbsVolumeBurstBalanceLT40PctSRE
-            expr: avg(ebs_iops_credits) < 40
-            for: 60m
-            labels:
-              severity: warning
-              namespace: openshift-monitoring
-          - alert: EbsVolumeBurstBalanceLT20PctSRE
-            expr: avg(ebs_iops_credits) < 20
-            for: 60m
-            labels:
-              severity: critical
-              namespace: openshift-monitoring
-    - apiVersion: monitoring.coreos.com/v1
-      kind: PrometheusRule
-      metadata:
-        labels:
           prometheus: sre-alerts-stuck-volumes
           role: alert-rules
         name: sre-alerts-stuck-volumes
@@ -36172,6 +36148,54 @@ objects:
           - alert: EbsVolumeStuckDetaching10MinSRE
             expr: ebs_volume_state{ebs_volume_state="detaching"} > 0
             for: 10m
+            labels:
+              severity: critical
+              namespace: openshift-monitoring
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: sre-prometheus-aws-ebs
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        hive.openshift.io/cluster-platform: aws
+      matchExpressions:
+      - key: api.openshift.com/sts
+        operator: NotIn
+        values:
+        - 'true'
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
+          prometheus: sre-ebs-iops-burstbalance
+          role: alert-rules
+        name: sre-ebs-iops-burstbalance
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-ebs-iops-burstbalance
+          rules:
+          - alert: EbsVolumeBurstBalanceLT40PctSRE
+            expr: avg(ebs_iops_credits) < 40
+            for: 60m
+            labels:
+              severity: warning
+              namespace: openshift-monitoring
+          - alert: EbsVolumeBurstBalanceLT20PctSRE
+            expr: avg(ebs_iops_credits) < 20
+            for: 60m
             labels:
               severity: critical
               namespace: openshift-monitoring
