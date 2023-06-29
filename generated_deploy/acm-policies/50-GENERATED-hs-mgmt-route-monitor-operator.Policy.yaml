@@ -20,6 +20,9 @@ spec:
                 evaluationInterval:
                     compliant: 2h
                     noncompliant: 45s
+                namespaceSelector:
+                    matchLabels:
+                        hypershift.openshift.io/hosted-control-plane: "true"
                 object-templates:
                     - complianceType: mustonlyhave
                       metadataComplianceType: musthave
@@ -56,7 +59,7 @@ metadata:
 spec:
     clusterSelector:
         matchExpressions:
-            - key: hypershift.open-cluster-management.io/hosted-cluster
+            - key: hypershift.open-cluster-management.io/management-cluster
               operator: In
               values:
                 - "true"

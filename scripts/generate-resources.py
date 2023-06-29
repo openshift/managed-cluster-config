@@ -50,7 +50,8 @@ def get_yaml(filename):
 
 
 def generate_policy_config(directory):
-    cluster_selectors = {'hypershift.open-cluster-management.io/hosted-cluster': 'true'}
+    cluster_selector = {'hypershift.open-cluster-management.io/hosted-cluster': 'true'}
+    namespace_selector = ''
     file_paths_sp = []
     namespace_selectors = {}
     #extract the directory name
@@ -69,16 +70,15 @@ def generate_policy_config(directory):
         if entry.name == config_filename:
             with open(entry.path) as config_file:
                 config = yaml.safe_load(config_file)
-                if config['deploymentMode'] == 'Policy':
-                    if 'clusterSelectors' in config:
-                        cluster_selectors = config['clusterSelectors']
-                    if 'namespaceSelector' in config:
-                        namespace_selectors = config['namespaceSelector']
+                if 'clusterSelectors' in config['policy']:
+                    cluster_selector = config['policy']['clusterSelectors']
+                if 'namespaceSelector' in config['policy']:
+                    namespace_selector = config['policy']['namespaceSelector']
         if (entry.name.endswith('.yml') or entry.name.endswith('.yaml') and not(entry.name == config_filename)):
             if 'SubjectPermission' not in entry.name:
-                #if the yaml is not SubjectPermission, copy the files over to the /tmp directory 
+                #if the yaml is not SubjectPermission, copy the files over to the /tmp directory
                 shutil.copy( os.path.join(directory, entry.name), path)
-                non_sp_config(directory, temp_directory, policy_name, path)
+                non_sp_config(directory, temp_directory, policy_name, path, cluster_selector, namespace_selector)
             else:
                 temp_directory_sp = os.path.join("/tmp", policy_name + "-subjectpermissions")
                 configs_directory = os.path.join(temp_directory_sp, "configs")
@@ -89,7 +89,7 @@ def generate_policy_config(directory):
                 sp_config(file_paths_sp, temp_directory_sp, policy_name, configs_directory)
 
 
-def non_sp_config(directory, temp_directory, policy_name, path):
+def non_sp_config(directory, temp_directory, policy_name, path, cluster_selector, namespace_selector):
     shutil.copy(policy_generator_config, temp_directory)
     with open(policy_generator_config,'r') as input_file:
         policy_template = yaml.safe_load(input_file)
@@ -108,9 +108,9 @@ def non_sp_config(directory, temp_directory, policy_name, path):
         p['name'] = policy_name
         for m in p['manifests']:
             m['path'] = path
-    policy_template['policyDefaults']['placement']['clusterSelectors'] = cluster_selectors
-    if not len(namespace_selectors) == 0:
-        policy_template['policyDefaults']['namespaceSelector'] = namespace_selectors
+    policy_template['policyDefaults']['placement']['clusterSelectors'] = cluster_selector
+    if not len(namespace_selector) == 0:
+        policy_template['policyDefaults']['namespaceSelector'] = namespace_selector
     with open(os.path.join(temp_directory, "policy-generator-config.yaml"),'w+') as output_file:
         yaml.dump(policy_template, output_file)
 
@@ -222,20 +222,14 @@ if __name__ == '__main__':
             #read config.yaml
             config = get_yaml(path_config)
 
-        deploymentMode = "SelectorSyncSet"
         if "deploymentMode" in config:
             deploymentMode = config["deploymentMode"]
+            if deploymentMode == "SelectorSyncSet" or deploymentMode == "Direct":
+                #if deploymentMode has SSS, copy that dir to /generated_deploy
+                add_resource_to_deploy(dirpath)
 
-        if deploymentMode == "SelectorSyncSet" or deploymentMode == "Direct":
-            #if deploymentMode has SSS, copy that dir to /generated_deploy
-            add_resource_to_deploy(dirpath)
-            if "policy" in config:
-                if "policy" in config:
-                    generate_policy_config(dirpath)
-
-        if deploymentMode == "Policy":
-            #if deploymentMode is Policy, generate the policy then safe to /generated_deploy/acm_policies
-                generate_policy_config(dirpath)
+        if "policy" in config:
+            generate_policy_config(dirpath)
 
 
     generate_policy()
