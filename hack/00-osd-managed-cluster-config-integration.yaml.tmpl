@@ -7249,71 +7249,6 @@ objects:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
           policy.open-cluster-management.io/standards: NIST SP 800-53
-        name: rosa-oauth-templates
-        namespace: openshift-acm-policies
-      spec:
-        disabled: false
-        policy-templates:
-        - objectDefinition:
-            apiVersion: policy.open-cluster-management.io/v1
-            kind: ConfigurationPolicy
-            metadata:
-              name: rosa-oauth-templates
-            spec:
-              evaluationInterval:
-                compliant: 2h
-                noncompliant: 45s
-              object-templates:
-              - complianceType: musthave
-                metadataComplianceType: musthave
-                objectDefinition:
-                  apiVersion: config.openshift.io/v1
-                  kind: OAuth
-                  metadata:
-                    name: cluster
-                  spec:
-                    templates:
-                      error:
-                        name: rosa-oauth-templates-errors
-                      login:
-                        name: rosa-oauth-templates-login
-                      providerSelection:
-                        name: rosa-oauth-templates-providers
-              pruneObjectBehavior: DeleteIfCreated
-              remediationAction: enforce
-              severity: low
-    - apiVersion: apps.open-cluster-management.io/v1
-      kind: PlacementRule
-      metadata:
-        name: placement-rosa-oauth-templates
-        namespace: openshift-acm-policies
-      spec:
-        clusterSelector:
-          matchExpressions:
-          - key: hypershift.open-cluster-management.io/hosted-cluster
-            operator: In
-            values:
-            - 'true'
-    - apiVersion: policy.open-cluster-management.io/v1
-      kind: PlacementBinding
-      metadata:
-        name: binding-rosa-oauth-templates
-        namespace: openshift-acm-policies
-      placementRef:
-        apiGroup: apps.open-cluster-management.io
-        kind: PlacementRule
-        name: placement-rosa-oauth-templates
-      subjects:
-      - apiGroup: policy.open-cluster-management.io
-        kind: Policy
-        name: rosa-oauth-templates
-    - apiVersion: policy.open-cluster-management.io/v1
-      kind: Policy
-      metadata:
-        annotations:
-          policy.open-cluster-management.io/categories: CM Configuration Management
-          policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
-          policy.open-cluster-management.io/standards: NIST SP 800-53
         name: hosted-uwm
         namespace: openshift-acm-policies
       spec:
@@ -34715,8 +34650,7 @@ objects:
                   kind: Secret
                   metadata:
                     creationTimestamp: null
-                    name: rosa-oauth-tpl-errors
-                    namespace: openshift-config
+                    name: oauth-openshift-default-error-template
               pruneObjectBehavior: DeleteIfCreated
               remediationAction: enforce
               severity: low
@@ -34726,9 +34660,12 @@ objects:
         name: pr-rosa-oauth-tpl-errors
         namespace: openshift-rosa-oauth-tpl-policies
       spec:
+        clusterConditions:
+        - status: 'True'
+          type: ManagedClusterConditionAvailable
         clusterSelector:
           matchExpressions:
-          - key: hypershift.open-cluster-management.io/hosted-cluster
+          - key: hypershift.open-cluster-management.io/management-cluster
             operator: In
             values:
             - 'true'
@@ -34775,8 +34712,7 @@ objects:
                   kind: Secret
                   metadata:
                     creationTimestamp: null
-                    name: rosa-oauth-tpl-login
-                    namespace: openshift-config
+                    name: oauth-openshift-default-login-template
               pruneObjectBehavior: DeleteIfCreated
               remediationAction: enforce
               severity: low
@@ -34786,9 +34722,12 @@ objects:
         name: pr-rosa-oauth-tpl-login
         namespace: openshift-rosa-oauth-tpl-policies
       spec:
+        clusterConditions:
+        - status: 'True'
+          type: ManagedClusterConditionAvailable
         clusterSelector:
           matchExpressions:
-          - key: hypershift.open-cluster-management.io/hosted-cluster
+          - key: hypershift.open-cluster-management.io/management-cluster
             operator: In
             values:
             - 'true'
@@ -34835,8 +34774,7 @@ objects:
                   kind: Secret
                   metadata:
                     creationTimestamp: null
-                    name: rosa-oauth-tpl-providers
-                    namespace: openshift-config
+                    name: oauth-openshift-default-provider-selection-template
               pruneObjectBehavior: DeleteIfCreated
               remediationAction: enforce
               severity: low
@@ -34846,9 +34784,12 @@ objects:
         name: pr-rosa-oauth-tpl-providers
         namespace: openshift-rosa-oauth-tpl-policies
       spec:
+        clusterConditions:
+        - status: 'True'
+          type: ManagedClusterConditionAvailable
         clusterSelector:
           matchExpressions:
-          - key: hypershift.open-cluster-management.io/hosted-cluster
+          - key: hypershift.open-cluster-management.io/management-cluster
             operator: In
             values:
             - 'true'
