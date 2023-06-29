@@ -1,0 +1,107 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: sre-operator-reinstall-sa
+  namespace: openshift-observability-operator
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: sre-operator-reinstall-role
+  namespace: openshift-observability-operator
+rules:
+- apiGroups:
+  - "operators.coreos.com"
+  resources:
+  - clusterserviceversions
+  - subscriptions
+  - installplans
+  verbs:
+  - list
+  - get
+  - delete
+  - create
+- apiGroups:
+  - "batch"
+  resources:
+  - cronjobs
+  verbs:
+  - list
+  - get
+  - delete
+- apiGroups:
+  - ""
+  resources:
+  - serviceaccounts
+  verbs:
+  - list
+  - get
+  - delete
+- apiGroups:
+  - "rbac.authorization.k8s.io"
+  resources:
+  - roles
+  - rolebindings
+  verbs:
+  - list
+  - get
+  - delete
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: sre-operator-reinstall-rb
+  namespace: openshift-observability-operator
+roleRef:
+  kind: Role
+  name: sre-operator-reinstall-role
+  apiGroup: rbac.authorization.k8s.io
+  namespace: openshift-observability-operator
+subjects:
+- kind: ServiceAccount
+  name: sre-operator-reinstall-sa
+  namespace: openshift-observability-operator
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: sre-operator-reinstall
+  namespace: openshift-observability-operator
+spec:
+  ttlSecondsAfterFinished: 100
+  failedJobsHistoryLimit: 1
+  successfulJobsHistoryLimit: 3
+  concurrencyPolicy: Replace
+  schedule: "*/30 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: sre-operator-reinstall-sa
+          restartPolicy: Never
+          containers:
+          - name: operator-reinstaller
+            image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+            imagePullPolicy: Always
+            command:
+            - sh
+            - -c
+            - |
+              #!/bin/bash
+              set -euxo pipefail
+              NAMESPACE=openshift-observability-operator
+              COUNT_CSV=$(oc -n "$NAMESPACE" get clusterserviceversions.operators.coreos.com -l operators.coreos.com/observability-operator.openshift-observability-operator="" -o name | wc -l) || true
+              if [[ $COUNT_CSV -ge 2 ]]; then
+                oc -n "$NAMESPACE" get clusterserviceversions.operators.coreos.com -l operators.coreos.com/observability-operator.openshift-observability-operator="" -o name | xargs oc delete -n "$NAMESPACE"
+                oc -n "$NAMESPACE" get installplan.operators.coreos.com -l operators.coreos.com/observability-operator.openshift-observability-operator="" -o name | xargs oc delete -n "$NAMESPACE"
+                touch /tmp/sub.yaml
+                oc -n "$NAMESPACE" get subscriptions.operators.coreos.com observability-operator -o yaml > /tmp/sub.yaml
+                oc -n "$NAMESPACE" delete -f /tmp/sub.yaml
+                oc -n "$NAMESPACE" apply -f /tmp/sub.yaml
+              fi
+              oc -n "$NAMESPACE" delete cronjob sre-operator-reinstall || true
+              oc -n "$NAMESPACE" delete role sre-operator-reinstall-role || true
+              oc -n "$NAMESPACE" delete rolebinding sre-operator-reinstall-rb || true
+              oc -n "$NAMESPACE" delete serviceaccount sre-operator-reinstall-sa || true
+              exit 0
