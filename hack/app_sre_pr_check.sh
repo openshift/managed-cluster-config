@@ -2,9 +2,10 @@
 
 set -exv
 
-trap "rm -f sorted-before*.yaml.tmpl sorted-after*.yaml.tmpl" EXIT
+trap "rm -rf sorted-before*.yaml.tmpl sorted-after*.yaml.tmpl generated_deploy" EXIT
 
 # all custom alerts must have a namespace label
+echo "As a shot term workaround for OSD-XXXX, generated_deploy is cleared by the job when finishing. If you're running locally, please run `make` afterwards to regenerate the files"
 MISSING_NS="false"
 for F in $(find ./deploy/sre-prometheus -type f -iname '*prometheusrule.yaml')
 do
