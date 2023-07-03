@@ -33,9 +33,12 @@ do
 done
 
 # remove all generated acm policies files in order to determine if they have changed
-rm -f deploy/acm-policies/50-GENERATED-*.yaml
+rm -rf generated_deploy
 
 make
+
+cat scripts/generate-resources.py 
+git status 
 
 for environment in integration stage production;
 do
@@ -66,6 +69,7 @@ if [ "$UNCOMMITTED_CHANGES" != "0" ];
 then
   echo "ERROR: uncommitted changes indicate generating content resulted in some file changes:"
   git status --porcelain  | grep -v -e ".*sorted.*tmpl" -e "...hack.*"
+  git diff
   echo "ERROR: run 'make' and commit changes before attempting PR check again"
   exit 1
 fi
