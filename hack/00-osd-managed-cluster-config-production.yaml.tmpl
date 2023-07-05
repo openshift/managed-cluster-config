@@ -3312,6 +3312,94 @@ objects:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
           policy.open-cluster-management.io/standards: NIST SP 800-53
+        name: hosted-uwm
+        namespace: openshift-acm-policies
+      spec:
+        disabled: false
+        policy-templates:
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+              name: hosted-uwm
+            spec:
+              evaluationInterval:
+                compliant: 2h
+                noncompliant: 45s
+              object-templates:
+              - complianceType: mustonlyhave
+                metadataComplianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: Role
+                  metadata:
+                    name: dedicated-admins-hostedcluster-uwm
+                    namespace: openshift-monitoring
+                  rules:
+                  - apiGroups:
+                    - ''
+                    resourceNames:
+                    - cluster-monitoring-config
+                    resources:
+                    - configmap
+                    verbs:
+                    - '*'
+                  - apiGroups:
+                    - ''
+                    resources:
+                    - configmap
+                    verbs:
+                    - create
+              - complianceType: mustonlyhave
+                metadataComplianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: RoleBinding
+                  metadata:
+                    name: dedicated-admins-hostedcluster-uwm
+                    namespace: openshift-monitoring
+                  roleRef:
+                    apiGroup: rbac.authorization.k8s.io
+                    kind: Role
+                    name: dedicated-admins-hostedcluster-uwm
+                  subjects:
+                  - kind: Group
+                    name: dedicated-admins
+              pruneObjectBehavior: DeleteIfCreated
+              remediationAction: enforce
+              severity: low
+    - apiVersion: apps.open-cluster-management.io/v1
+      kind: PlacementRule
+      metadata:
+        name: placement-hosted-uwm
+        namespace: openshift-acm-policies
+      spec:
+        clusterSelector:
+          matchExpressions:
+          - key: hypershift.open-cluster-management.io/hosted-cluster
+            operator: In
+            values:
+            - 'true'
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: PlacementBinding
+      metadata:
+        name: binding-hosted-uwm
+        namespace: openshift-acm-policies
+      placementRef:
+        apiGroup: apps.open-cluster-management.io
+        kind: PlacementRule
+        name: placement-hosted-uwm
+      subjects:
+      - apiGroup: policy.open-cluster-management.io
+        kind: Policy
+        name: hosted-uwm
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: Policy
+      metadata:
+        annotations:
+          policy.open-cluster-management.io/categories: CM Configuration Management
+          policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/standards: NIST SP 800-53
         name: hs-hosted-route-monitor-operator
         namespace: openshift-acm-policies
       spec:
@@ -7242,157 +7330,6 @@ objects:
       - apiGroup: policy.open-cluster-management.io
         kind: Policy
         name: rosa-ingress-certificate-policies
-    - apiVersion: policy.open-cluster-management.io/v1
-      kind: Policy
-      metadata:
-        annotations:
-          policy.open-cluster-management.io/categories: CM Configuration Management
-          policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
-          policy.open-cluster-management.io/standards: NIST SP 800-53
-        name: rosa-oauth-templates
-        namespace: openshift-acm-policies
-      spec:
-        disabled: false
-        policy-templates:
-        - objectDefinition:
-            apiVersion: policy.open-cluster-management.io/v1
-            kind: ConfigurationPolicy
-            metadata:
-              name: rosa-oauth-templates
-            spec:
-              evaluationInterval:
-                compliant: 2h
-                noncompliant: 45s
-              object-templates:
-              - complianceType: musthave
-                metadataComplianceType: musthave
-                objectDefinition:
-                  apiVersion: config.openshift.io/v1
-                  kind: OAuth
-                  metadata:
-                    name: cluster
-                  spec:
-                    templates:
-                      error:
-                        name: rosa-oauth-templates-errors
-                      login:
-                        name: rosa-oauth-templates-login
-                      providerSelection:
-                        name: rosa-oauth-templates-providers
-              pruneObjectBehavior: DeleteIfCreated
-              remediationAction: enforce
-              severity: low
-    - apiVersion: apps.open-cluster-management.io/v1
-      kind: PlacementRule
-      metadata:
-        name: placement-rosa-oauth-templates
-        namespace: openshift-acm-policies
-      spec:
-        clusterSelector:
-          matchExpressions:
-          - key: hypershift.open-cluster-management.io/hosted-cluster
-            operator: In
-            values:
-            - 'true'
-    - apiVersion: policy.open-cluster-management.io/v1
-      kind: PlacementBinding
-      metadata:
-        name: binding-rosa-oauth-templates
-        namespace: openshift-acm-policies
-      placementRef:
-        apiGroup: apps.open-cluster-management.io
-        kind: PlacementRule
-        name: placement-rosa-oauth-templates
-      subjects:
-      - apiGroup: policy.open-cluster-management.io
-        kind: Policy
-        name: rosa-oauth-templates
-    - apiVersion: policy.open-cluster-management.io/v1
-      kind: Policy
-      metadata:
-        annotations:
-          policy.open-cluster-management.io/categories: CM Configuration Management
-          policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
-          policy.open-cluster-management.io/standards: NIST SP 800-53
-        name: hosted-uwm
-        namespace: openshift-acm-policies
-      spec:
-        disabled: false
-        policy-templates:
-        - objectDefinition:
-            apiVersion: policy.open-cluster-management.io/v1
-            kind: ConfigurationPolicy
-            metadata:
-              name: hosted-uwm
-            spec:
-              evaluationInterval:
-                compliant: 2h
-                noncompliant: 45s
-              object-templates:
-              - complianceType: musthave
-                objectDefinition:
-                  apiVersion: rbac.authorization.k8s.io/v1
-                  kind: Role
-                  metadata:
-                    name: dedicated-admins-hostedcluster-uwm
-                    namespace: openshift-monitoring
-                  rules:
-                  - apiGroups:
-                    - ''
-                    resourceNames:
-                    - cluster-monitoring-config
-                    resources:
-                    - configmap
-                    verbs:
-                    - '*'
-                  - apiGroups:
-                    - ''
-                    resources:
-                    - configmap
-                    verbs:
-                    - create
-              - complianceType: musthave
-                objectDefinition:
-                  apiVersion: rbac.authorization.k8s.io/v1
-                  kind: RoleBinding
-                  metadata:
-                    name: dedicated-admins-hostedcluster-uwm
-                    namespace: openshift-monitoring
-                  roleRef:
-                    apiGroup: rbac.authorization.k8s.io
-                    kind: Role
-                    name: dedicated-admins-hostedcluster-uwm
-                  subjects:
-                  - kind: Group
-                    name: dedicated-admins
-              pruneObjectBehavior: DeleteIfCreated
-              remediationAction: enforce
-              severity: low
-    - apiVersion: apps.open-cluster-management.io/v1
-      kind: PlacementRule
-      metadata:
-        name: placement-hosted-uwm
-        namespace: openshift-acm-policies
-      spec:
-        clusterSelector:
-          matchExpressions:
-          - key: hypershift.open-cluster-management.io/hosted-cluster
-            operator: In
-            values:
-            - 'true'
-    - apiVersion: policy.open-cluster-management.io/v1
-      kind: PlacementBinding
-      metadata:
-        name: binding-hosted-uwm
-        namespace: openshift-acm-policies
-      placementRef:
-        apiGroup: apps.open-cluster-management.io
-        kind: PlacementRule
-        name: placement-hosted-uwm
-      subjects:
-      - apiGroup: policy.open-cluster-management.io
-        kind: Policy
-        name: hosted-uwm
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -23244,6 +23181,116 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: backplane-sdcicd
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/environment
+        operator: NotIn
+        values:
+        - production
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: openshift-backplane-sdcicd
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-sdcicd-readers-cluster
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - namespaces
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - catalogsources
+        - clusterserviceversions
+        - installplans
+        - subscriptions
+        - operatorconditions
+        - operatorgroups
+        - operators
+        verbs:
+        - get
+        - list
+        - watch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-sdcicd-readers-cluster
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - namespaces
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - catalogsources
+        - clusterserviceversions
+        - installplans
+        - subscriptions
+        - operatorconditions
+        - operatorgroups
+        - operators
+        verbs:
+        - get
+        - list
+        - watch
+    - apiVersion: managed.openshift.io/v1alpha1
+      kind: SubjectPermission
+      metadata:
+        name: backplane-sdcicd
+        namespace: openshift-rbac-permissions
+      spec:
+        clusterPermissions:
+        - backplane-sdcicd-readers-cluster
+        - backplane-readers-cluster
+        permissions:
+        - clusterRoleName: backplane-sdcicd-admins-project
+          namespacesAllowedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: dedicated-readers
+          namespacesAllowedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        subjectKind: Group
+        subjectName: system:serviceaccounts:openshift-backplane-sdcicd
+    - apiVersion: managed.openshift.io/v1alpha1
+      kind: SubjectPermission
+      metadata:
+        name: backplane-sdcicd
+        namespace: openshift-rbac-permissions
+      spec:
+        clusterPermissions:
+        - backplane-sdcicd-readers-cluster
+        - backplane-readers-cluster
+        permissions:
+        - clusterRoleName: dedicated-readers
+          namespacesAllowedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        subjectKind: Group
+        subjectName: system:serviceaccounts:openshift-backplane-sdcicd
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: backplane-srep
   spec:
     clusterDeploymentSelector:
@@ -26504,6 +26551,131 @@ objects:
                 serviceAccountName: ocpbugs-773
                 automountServiceAccountToken: true
                 restartPolicy: Never
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: ohss-23921-reinstall-obo
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.10'
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: sre-operator-reinstall-sa
+        namespace: openshift-observability-operator
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: sre-operator-reinstall-role
+        namespace: openshift-observability-operator
+      rules:
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - clusterserviceversions
+        - subscriptions
+        - installplans
+        verbs:
+        - list
+        - get
+        - delete
+        - create
+      - apiGroups:
+        - batch
+        resources:
+        - cronjobs
+        verbs:
+        - list
+        - get
+        - delete
+      - apiGroups:
+        - ''
+        resources:
+        - serviceaccounts
+        verbs:
+        - list
+        - get
+        - delete
+      - apiGroups:
+        - rbac.authorization.k8s.io
+        resources:
+        - roles
+        - rolebindings
+        verbs:
+        - list
+        - get
+        - delete
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: sre-operator-reinstall-rb
+        namespace: openshift-observability-operator
+      roleRef:
+        kind: Role
+        name: sre-operator-reinstall-role
+        apiGroup: rbac.authorization.k8s.io
+        namespace: openshift-observability-operator
+      subjects:
+      - kind: ServiceAccount
+        name: sre-operator-reinstall-sa
+        namespace: openshift-observability-operator
+    - apiVersion: batch/v1beta1
+      kind: CronJob
+      metadata:
+        name: sre-operator-reinstall
+        namespace: openshift-observability-operator
+      spec:
+        ttlSecondsAfterFinished: 100
+        failedJobsHistoryLimit: 1
+        successfulJobsHistoryLimit: 3
+        concurrencyPolicy: Replace
+        schedule: '*/30 * * * *'
+        jobTemplate:
+          spec:
+            template:
+              spec:
+                serviceAccountName: sre-operator-reinstall-sa
+                restartPolicy: Never
+                containers:
+                - name: operator-reinstaller
+                  image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+                  imagePullPolicy: Always
+                  command:
+                  - sh
+                  - -c
+                  - "#!/bin/bash\nset -euxo pipefail\nNAMESPACE=openshift-observability-operator\n\
+                    COUNT_CSV=$(oc -n \"$NAMESPACE\" get clusterserviceversions.operators.coreos.com\
+                    \ -l operators.coreos.com/observability-operator.openshift-observability-operator=\"\
+                    \" -o name | wc -l) || true\nif [[ $COUNT_CSV -ge 2 ]]; then\n\
+                    \  oc -n \"$NAMESPACE\" get clusterserviceversions.operators.coreos.com\
+                    \ -l operators.coreos.com/observability-operator.openshift-observability-operator=\"\
+                    \" -o name | xargs oc delete -n \"$NAMESPACE\"\n  oc -n \"$NAMESPACE\"\
+                    \ get installplan.operators.coreos.com -l operators.coreos.com/observability-operator.openshift-observability-operator=\"\
+                    \" -o name | xargs oc delete -n \"$NAMESPACE\"\n  touch /tmp/sub.yaml\n\
+                    \  oc -n \"$NAMESPACE\" get subscriptions.operators.coreos.com\
+                    \ observability-operator -o yaml > /tmp/sub.yaml\n  oc -n \"$NAMESPACE\"\
+                    \ delete -f /tmp/sub.yaml\n  oc -n \"$NAMESPACE\" apply -f /tmp/sub.yaml\n\
+                    fi\noc -n \"$NAMESPACE\" delete cronjob sre-operator-reinstall\
+                    \ || true\noc -n \"$NAMESPACE\" delete role sre-operator-reinstall-role\
+                    \ || true\noc -n \"$NAMESPACE\" delete rolebinding sre-operator-reinstall-rb\
+                    \ || true\noc -n \"$NAMESPACE\" delete serviceaccount sre-operator-reinstall-sa\
+                    \ || true\nexit 0\n"
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -34715,8 +34887,7 @@ objects:
                   kind: Secret
                   metadata:
                     creationTimestamp: null
-                    name: rosa-oauth-tpl-errors
-                    namespace: openshift-config
+                    name: oauth-openshift-default-error-template
               pruneObjectBehavior: DeleteIfCreated
               remediationAction: enforce
               severity: low
@@ -34726,9 +34897,12 @@ objects:
         name: pr-rosa-oauth-tpl-errors
         namespace: openshift-rosa-oauth-tpl-policies
       spec:
+        clusterConditions:
+        - status: 'True'
+          type: ManagedClusterConditionAvailable
         clusterSelector:
           matchExpressions:
-          - key: hypershift.open-cluster-management.io/hosted-cluster
+          - key: hypershift.open-cluster-management.io/management-cluster
             operator: In
             values:
             - 'true'
@@ -34775,8 +34949,7 @@ objects:
                   kind: Secret
                   metadata:
                     creationTimestamp: null
-                    name: rosa-oauth-tpl-login
-                    namespace: openshift-config
+                    name: oauth-openshift-default-login-template
               pruneObjectBehavior: DeleteIfCreated
               remediationAction: enforce
               severity: low
@@ -34786,9 +34959,12 @@ objects:
         name: pr-rosa-oauth-tpl-login
         namespace: openshift-rosa-oauth-tpl-policies
       spec:
+        clusterConditions:
+        - status: 'True'
+          type: ManagedClusterConditionAvailable
         clusterSelector:
           matchExpressions:
-          - key: hypershift.open-cluster-management.io/hosted-cluster
+          - key: hypershift.open-cluster-management.io/management-cluster
             operator: In
             values:
             - 'true'
@@ -34835,8 +35011,7 @@ objects:
                   kind: Secret
                   metadata:
                     creationTimestamp: null
-                    name: rosa-oauth-tpl-providers
-                    namespace: openshift-config
+                    name: oauth-openshift-default-provider-selection-template
               pruneObjectBehavior: DeleteIfCreated
               remediationAction: enforce
               severity: low
@@ -34846,9 +35021,12 @@ objects:
         name: pr-rosa-oauth-tpl-providers
         namespace: openshift-rosa-oauth-tpl-policies
       spec:
+        clusterConditions:
+        - status: 'True'
+          type: ManagedClusterConditionAvailable
         clusterSelector:
           matchExpressions:
-          - key: hypershift.open-cluster-management.io/hosted-cluster
+          - key: hypershift.open-cluster-management.io/management-cluster
             operator: In
             values:
             - 'true'
@@ -36119,30 +36297,6 @@ objects:
       kind: PrometheusRule
       metadata:
         labels:
-          prometheus: sre-ebs-iops-burstbalance
-          role: alert-rules
-        name: sre-ebs-iops-burstbalance
-        namespace: openshift-monitoring
-      spec:
-        groups:
-        - name: sre-ebs-iops-burstbalance
-          rules:
-          - alert: EbsVolumeBurstBalanceLT40PctSRE
-            expr: avg(ebs_iops_credits) < 40
-            for: 60m
-            labels:
-              severity: warning
-              namespace: openshift-monitoring
-          - alert: EbsVolumeBurstBalanceLT20PctSRE
-            expr: avg(ebs_iops_credits) < 20
-            for: 60m
-            labels:
-              severity: critical
-              namespace: openshift-monitoring
-    - apiVersion: monitoring.coreos.com/v1
-      kind: PrometheusRule
-      metadata:
-        labels:
           prometheus: sre-alerts-stuck-volumes
           role: alert-rules
         name: sre-alerts-stuck-volumes
@@ -36172,6 +36326,54 @@ objects:
           - alert: EbsVolumeStuckDetaching10MinSRE
             expr: ebs_volume_state{ebs_volume_state="detaching"} > 0
             for: 10m
+            labels:
+              severity: critical
+              namespace: openshift-monitoring
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: sre-prometheus-aws-ebs-iops-burstbalance
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        hive.openshift.io/cluster-platform: aws
+      matchExpressions:
+      - key: api.openshift.com/sts
+        operator: NotIn
+        values:
+        - 'true'
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
+          prometheus: sre-ebs-iops-burstbalance
+          role: alert-rules
+        name: sre-ebs-iops-burstbalance
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-ebs-iops-burstbalance
+          rules:
+          - alert: EbsVolumeBurstBalanceLT40PctSRE
+            expr: avg(ebs_iops_credits) < 40
+            for: 60m
+            labels:
+              severity: warning
+              namespace: openshift-monitoring
+          - alert: EbsVolumeBurstBalanceLT20PctSRE
+            expr: avg(ebs_iops_credits) < 20
+            for: 60m
             labels:
               severity: critical
               namespace: openshift-monitoring
@@ -36825,16 +37027,6 @@ objects:
         groups:
         - name: sre-managed-notification-alerts
           rules:
-          - alert: MultipleIngressControllersDetectedNotificationSRE
-            expr: sum(max_over_time(splunkforwarder_audit_filter_exposed_splunk_event_total{alert="UserCreatedIngressControllerDetected"}[5m])
-              or vector(0)) - sum(max_over_time(splunkforwarder_audit_filter_exposed_splunk_event_total{alert="UserCreatedIngressControllerDetected"}[5m]
-              offset 5m) or vector(0)) > 0
-            for: 30m
-            labels:
-              severity: Info
-              namespace: openshift-logging
-              send_managed_notification: 'true'
-              managed_notification_template: MultipleIngressControllersDetected
           - alert: LoggingVolumeFillingUpNotificationSRE
             expr: count(ALERTS{alertname="KubePersistentVolumeFillingUp", alertstate="firing",
               namespace="openshift-logging"}) >= 1
@@ -36878,6 +37070,47 @@ objects:
               send_managed_notification: 'true'
             annotations:
               message: Kernel is predicted to exhaust file descriptors limit soon.
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: sre-prometheus-ocm-agent-legacy-ingress
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: ext-managed.openshift.io/legacy-ingress-support
+        operator: NotIn
+        values:
+        - 'false'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
+          prometheus: sre-managed-notification-alerts
+          role: alert-rules
+        name: sre-ingresscontroller-managed-notification-alerts
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-managed-notification-alerts
+          rules:
+          - alert: MultipleIngressControllersDetectedNotificationSRE
+            expr: sum(max_over_time(splunkforwarder_audit_filter_exposed_splunk_event_total{alert="UserCreatedIngressControllerDetected"}[5m])
+              or vector(0)) - sum(max_over_time(splunkforwarder_audit_filter_exposed_splunk_event_total{alert="UserCreatedIngressControllerDetected"}[5m]
+              offset 5m) or vector(0)) > 0
+            for: 30m
+            labels:
+              severity: Info
+              namespace: openshift-monitoring
+              send_managed_notification: 'true'
+              managed_notification_template: MultipleIngressControllersDetected
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:

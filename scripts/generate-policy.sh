@@ -3,6 +3,7 @@
 DIRECTORY="/tmp/*/"
 FILENAME="policy-generator-config.yaml"
 ROOT_DIR=$PWD
+mkdir -p $ROOT_DIR/generated_deploy/acm-policies
 for dir in $DIRECTORY; do
     echo $dir
     cd $dir

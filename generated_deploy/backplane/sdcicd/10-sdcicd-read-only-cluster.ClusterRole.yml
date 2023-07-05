@@ -1,0 +1,29 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: backplane-sdcicd-readers-cluster
+rules:
+# SDCICD can read namespaces
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  verbs:
+  - get
+  - list
+  - watch
+# SDCICD can read CSR objects
+- apiGroups:
+  - operators.coreos.com
+  resources:
+  - catalogsources
+  - clusterserviceversions
+  - installplans
+  - subscriptions
+  - operatorconditions
+  - operatorgroups
+  - operators
+  verbs:
+  - get
+  - list
+  - watch
