@@ -195,7 +195,20 @@ def add_resource_to_deploy(directory):
     #copy the files to generated_deploy
     dir = re.sub('deploy/', '', directory)
     new_directory = os.path.join("./generated_deploy", dir)
-    shutil.copytree(directory, new_directory, dirs_exist_ok=True)
+
+    if not os.path.isdir(new_directory) :
+        os.makedirs(new_directory, mode=0o755, exist_ok=False)
+        stdir = os.stat(directory)
+        os.chown(new_directory, stdir.st_uid, stdir.st_gid)
+
+    for file in os.listdir(directory) :
+        src_file = directory + "/" + file
+        dest_file = new_directory + "/" + file
+        if os.path.isfile(src_file) :
+            if os.path.isfile(dest_file) :
+                os.remove(dest_file)
+            shutil.copy2(src_file, dest_file)
+
     return
 
 
