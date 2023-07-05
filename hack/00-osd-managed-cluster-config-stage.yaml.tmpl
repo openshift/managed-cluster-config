@@ -25833,6 +25833,15 @@ objects:
           resendWait: 72
           severity: Error
           summary: Multiple EFS CSI drivers detected
+        - activeBody: Your cluster requires you to take action. The file system usage
+            for a worker node is currently at or above 90% and is predicted to be
+            fully exhausted soon. Without action, this could impact the usability
+            of this node. Please reduce the amount of space used on this mountpoint,
+            either by adjusting application configuration or by moving some applications
+            to other nodes.
+          name: WorkerNodeFilesystemSpaceFillingUp
+          resendWait: 24
+          summary: Worker node is predicted to run out of inodes in 4 hours
     - apiVersion: ocmagent.managed.openshift.io/v1alpha1
       kind: ManagedNotification
       metadata:
@@ -35797,6 +35806,26 @@ objects:
               namespace: openshift-monitoring
             annotations:
               message: Kernel is predicted to exhaust file descriptors limit soon.
+        - name: sre-controlplane-node-filesystem-space-filling-upstream
+          rules:
+          - alert: ControlPlaneNodeFilesystemSpaceFillingUp
+            expr: "(node_filesystem_files_free{fstype!=\"\",job=\"node-exporter\"\
+              } / node_filesystem_files{fstype!=\"\",job=\"node-exporter\"} * 100\
+              \ < 20 and predict_linear(node_filesystem_files_free{fstype!=\"\",job=\"\
+              node-exporter\"}[6h], 4 * 60 * 60) < 0 and node_filesystem_readonly{fstype!=\"\
+              \",job=\"node-exporter\"} == 0)\n* on (instance) group_left ()group\
+              \ by (instance) (\n  label_replace(kube_node_role{role=~\"infra|control-plane|master\"\
+              }, \"instance\", \"$1\", \"node\", \"(.*)\")\n)"
+            for: 1h
+            labels:
+              severity: critical
+              namespace: openshift-monitoring
+            annotations:
+              message: Filesystem on {{ $labels.device }} at {{ $labels.instance }}
+                has only {{ printf "%.2f" $value }}% available inodes left and is
+                filling up fast.
+              summary: Filesystem is predicted to run out of inodes within the next
+                4 hours.
     - apiVersion: monitoring.coreos.com/v1
       kind: PrometheusRule
       metadata:
@@ -37070,6 +37099,25 @@ objects:
               send_managed_notification: 'true'
             annotations:
               message: Kernel is predicted to exhaust file descriptors limit soon.
+          - alert: WorkerNodeFilesystemSpaceFillingUp
+            expr: "(node_filesystem_files_free{fstype!=\"\",job=\"node-exporter\"\
+              } / node_filesystem_files{fstype!=\"\",job=\"node-exporter\"} * 100\
+              \ < 20 and predict_linear(node_filesystem_files_free{fstype!=\"\",job=\"\
+              node-exporter\"}[6h], 4 * 60 * 60) < 0 and node_filesystem_readonly{fstype!=\"\
+              \",job=\"node-exporter\"} == 0)\n* on (instance) group_left ()group\
+              \ by(instance) (\n  label_replace(kube_node_role{role!~\"infra|control-plane|master\"\
+              }, \"instance\", \"$1\", \"node\", \"(.*)\")\n)\nunless\ngroup by(instance)\
+              \ (\n  label_replace(kube_node_role{role=~\"infra|control-plane|master\"\
+              }, \"instance\", \"$1\", \"node\", \"(.*)\")\n)"
+            for: 1h
+            labels:
+              severity: critical
+              namespace: openshift-monitoring
+              managed_notification_template: WorkerNodeFilesystemSpaceFillingUp
+              send_managed_notification: 'true'
+            annotations:
+              message: Filesystem is predicted to run out of inodes within the next
+                4 hours.
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
