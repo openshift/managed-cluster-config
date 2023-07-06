@@ -25833,6 +25833,16 @@ objects:
           resendWait: 72
           severity: Error
           summary: Multiple EFS CSI drivers detected
+        - activeBody: Your cluster requires you to take action. The free space on
+            a worker node filesystem is below 3%. This issue can cause any or all
+            of the applications scheduled to that node to experience anything from
+            degraded performance to becoming fully inoperable.
+          name: WorkerNodeFileSystemOutOfSpace
+          resendWait: 24
+          resolvedBody: Worker node file system on your cluster is no longer running
+            out of free space.
+          severity: Info
+          summary: Worker node file system almost out of space
     - apiVersion: ocmagent.managed.openshift.io/v1alpha1
       kind: ManagedNotification
       metadata:
@@ -36149,6 +36159,34 @@ objects:
       kind: PrometheusRule
       metadata:
         labels:
+          prometheus: sre-node-filedescriptor-limit
+          role: alert-rules
+        name: sre-node-filedescriptor-limit
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-controlplane-node-almostoutofspace
+          rules:
+          - alert: ControlPlaneNodeFilesystemAlmostOutOfSpaceSRE
+            annotations:
+              description: Filesystem on {{ $labels.device }} at {{ $labels.instance
+                }} has only {{ printf "%.2f" $value }}% available space left.
+              runbook_url: https://github.com/openshift/runbooks/blob/master/alerts/cluster-monitoring-operator/NodeFilesystemAlmostOutOfSpace.md
+              summary: Filesystem has less than 3% space left.
+            expr: "(\n  node_filesystem_avail_bytes{job=\"node-exporter\",fstype!=\"\
+              \",mountpoint!=\"\"} / node_filesystem_size_bytes{job=\"node-exporter\"\
+              ,fstype!=\"\",mountpoint!=\"\"} * 100 < 3\nand\n  node_filesystem_readonly{job=\"\
+              node-exporter\",fstype!=\"\",mountpoint!=\"\"} == 0\n)\n* on (instance)\
+              \ group_left () (\n  label_replace(kube_node_role{role=~\"infra|control-plane|master\"\
+              }, \"instance\", \"$1\", \"node\", \"(.*)\")\n)"
+            for: 30m
+            labels:
+              severity: critical
+              namespace: openshift-monitoring
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
           prometheus: sre-pruning
           role: alert-rules
         name: sre-pruning
@@ -37070,6 +37108,24 @@ objects:
               send_managed_notification: 'true'
             annotations:
               message: Kernel is predicted to exhaust file descriptors limit soon.
+          - alert: WorkerNodeFilesystemAlmostOutOfSpaceSRE
+            annotations:
+              description: Filesystem on {{ $labels.device }} at {{ $labels.instance
+                }} has only {{ printf "%.2f" $value }}% available space left.
+              runbook_url: https://github.com/openshift/runbooks/blob/master/alerts/cluster-monitoring-operator/NodeFilesystemAlmostOutOfSpace.md
+              summary: Filesystem has less than 3% space left.
+            expr: "(\n  node_filesystem_avail_bytes{job=\"node-exporter\",fstype!=\"\
+              \",mountpoint!=\"\"} / node_filesystem_size_bytes{job=\"node-exporter\"\
+              ,fstype!=\"\",mountpoint!=\"\"} * 100 < 3\nand\n  node_filesystem_readonly{job=\"\
+              node-exporter\",fstype!=\"\",mountpoint!=\"\"} == 0\n)\n* on (instance)\
+              \ group_left () (\n  label_replace(kube_node_role{role!~\"infra|control-plane|master\"\
+              }, \"instance\", \"$1\", \"node\", \"(.*)\")\n)\nunless\n(\n  label_replace(kube_node_role{role=~\"\
+              infra|control-plane|master\"}, \"instance\", \"$1\", \"node\", \"(.*)\"\
+              )\n)"
+            for: 30m
+            labels:
+              severity: critical
+              namespace: openshift-monitoring
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
