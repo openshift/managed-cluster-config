@@ -25242,6 +25242,36 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: hypershift-sre-metric-set
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: ext-hypershift.openshift.io/cluster-type
+        operator: In
+        values:
+        - management-cluster
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: sre-metric-set
+        namespace: hypershift
+      data:
+        config: "kubeAPIServer:\n  - action:       \"keep\"\n    regex:        \"\
+          apiserver_request_total.*|apiserver_request_duration_seconds_count.*|apiserver_request_duration_seconds_bucket;(1|5|\\\
+          \\+Inf)\"\n    sourceLabels: [\"__name__\", \"le\"]\nopenshiftAPIServer:\n\
+          \  - action:       \"keep\"\n    regex:        \"apiserver_request_total.*|apiserver_request_duration_seconds_count.*|apiserver_request_duration_seconds_bucket;(1|5|\\\
+          \\+Inf)\"\n    sourceLabels: [\"__name__\", \"le\"]\n"
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: insights-integration
   spec:
     clusterDeploymentSelector:
