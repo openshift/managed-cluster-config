@@ -1,3 +1,0 @@
-This was originally created as a part of "osd-project-request-template'.  But with HyperShift the patch was not working in ACM Policy, [OSD-15883](https://issues.redhat.com/browse/OSD-15883).  Digging a bit, it was found there is a label created now on namespaces and this patching is not necessary, [OSD-15886](https://issues.redhat.com/browse/OSD-15886).  Therefore, the patch was moved to a sub-directory without a `config.yaml` so a new SSS is created for non-hypershift OSD/ROSA and the patch is then excluded from ACM policy generation for hypreshift.
-
-Downside: adds one more SSS to every hive shard
