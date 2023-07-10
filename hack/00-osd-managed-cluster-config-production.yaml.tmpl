@@ -35674,11 +35674,11 @@ objects:
           - expr: count(cluster:nodes_roles{label_node_role_kubernetes_io!~"(master|infra)"})
             record: sre:node_workers:count
           - expr: ( avg(sre:node_roles:memory_total_bytes{label_node_role_kubernetes_io="master"})
-              < 16*1024*1024*1024 AND sre:node_workers:count > 25 AND sre:node_workers:count
+              < 32*1024*1024*1024 AND sre:node_workers:count > 25 AND sre:node_workers:count
               <= 100 ) OR ( avg(sre:node_roles:memory_total_bytes{label_node_role_kubernetes_io="master"})
-              < 32*1024*1024*1024 AND sre:node_workers:count > 100 AND sre:node_workers:count
+              < 64*1024*1024*1024 AND sre:node_workers:count > 100 AND sre:node_workers:count
               <= 250 ) OR ( avg(sre:node_roles:memory_total_bytes{label_node_role_kubernetes_io="master"})
-              < 64*1024*1024*1024 AND sre:node_workers:count > 250 )
+              < 128*1024*1024*1024 AND sre:node_workers:count > 250 )
             record: sre:node_masters:need_resize
           - expr: ( ( avg(sre:node_roles:memory_total_bytes{label_node_role_kubernetes_io="infra"})
               < 16*1024*1024*1024 OR avg(sre:node_roles:node_num_cpu{label_node_role_kubernetes_io="infra"})
