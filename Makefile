@@ -62,3 +62,11 @@ generate-hive-templates: generate-oauth-templates
 		${GEN_POLICY_CONFIG};\
 		${GEN_TEMPLATE}; \
 	fi
+
+.PHONY: enforce-backplane-rules
+enforce-backplane-rules:
+	if [ -z ${IN_CONTAINER} ]; then \
+		$(CONTAINER_ENGINE) run $(CONTAINER_RUN_FLAGS) registry.access.redhat.com/ubi8/python-39 /bin/bash -xc "cd `pwd -P`; pip install --disable-pip-version-check oyaml; ${ENFORCE_BACKPLANE_RULES}"; \
+	else \
+		${ENFORCE_BACKPLANE_RULES};\
+	fi
