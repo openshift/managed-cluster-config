@@ -44,7 +44,7 @@ A persona must have access only to systems on which support can actively be prov
 | Platform SRE (SREP) | SRE in SD primarily responsible for Managed OpenShift Platform |
 | Layered Products SRE (LPSRE) | SRE in SD primarily responsible for Layered Products (formerly MT-SRE and CS-SRE) |
 | Application SRE (AppSRE) | SRE in SD primarily responsible for Red Hat internal and external SaaS offerings |
-| Hybrid SRE | Engineering teams are SRE for their products in conjunction with other SD SRE teams. Teams that are the initial focus include HyperShift, ACS, and ODS. |
+| Hybrid SRE | Engineering teams are SRE for their products in conjunction with other SD SRE teams. |
 
 ## Privilege Escalation
 
