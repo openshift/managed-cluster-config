@@ -17,7 +17,7 @@ In summary...
 
 ## Directory Structure
 * root directory is `docs/backplane/requirements/`
-* every persona has a unique sub-directory, i.e. `docs/backplane/requirements/srep` for Layered Product SRE
+* every persona has a unique sub-directory, i.e. `docs/backplane/requirements/srep` for SRE Platform
 * implementation of in-cluster authorization in this repository is in `deploy/backplane/<persona>`, i.e. `deploy/backplane/srep`.
 * `OWNERS` files in `docs/backplane/requirements/<persona>` must match `deploy/backplane/<persona>` (PR check enforces this)
 * there is no strict naming convention within the requirements directories, create files as it makes sense
