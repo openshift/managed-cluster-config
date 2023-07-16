@@ -11,8 +11,8 @@ spec:
   - name: sre-dns-alerts
     rules:
     - alert: DNSErrors10MinSRE
-      # If the amount of DNS failures increases by 3 over the span of 10 minutes
-      expr: increase(dns_failure_failure_total[10m]) >= 3
+      # Alerts if we had any DNS failures in a 3 minutes interval three times in a row
+      expr: increase(dns_failure_failure_total[3m]) >= 1
       for: 10m
       labels:
         severity: critical
