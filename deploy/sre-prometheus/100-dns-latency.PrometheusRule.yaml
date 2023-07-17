@@ -11,9 +11,9 @@ spec:
   - name: sre-dns-alerts
     rules:
     - alert: DNSErrors10MinSRE
-      # Alerts if we had any DNS failures in a 3 minutes interval three times in a row
-      expr: increase(dns_failure_failure_total[3m]) >= 1
-      for: 10m
+      # Alerts if we had DNS failures in multiple 4 minute windows for 15 minutes.
+      expr: increase(dns_failure_failure_total[4m]) >= 1
+      for: 15m
       labels:
         severity: critical
         namespace: openshift-monitoring
