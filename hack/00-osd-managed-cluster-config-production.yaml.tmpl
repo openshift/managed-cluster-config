@@ -2302,21 +2302,38 @@ objects:
                     resources:
                     - projects
                     verbs:
-                    - '*'
+                    - create
+                    - get
+                    - list
+                    - patch
+                    - update
+                    - watch
                   - apiGroups:
                     - project.openshift.io
                     resources:
                     - projects
                     - projectrequests
                     verbs:
-                    - '*'
+                    - create
+                    - get
+                    - list
+                    - patch
+                    - update
+                    - watch
+                    - delete
                   - apiGroups:
                     - ''
                     resources:
                     - namespaces
                     - namespaces/finalize
                     verbs:
-                    - '*'
+                    - create
+                    - get
+                    - list
+                    - patch
+                    - update
+                    - watch
+                    - delete
                   - apiGroups:
                     - certificates.k8s.io
                     resources:
@@ -7365,6 +7382,7 @@ objects:
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^redhat-openshift-connectors.*$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-addon-connectors
 - apiVersion: hive.openshift.io/v1
@@ -7610,6 +7628,7 @@ objects:
         permissions:
         - clusterRoleName: dedicated-readers
           namespacesAllowedRegex: (^hypershift.*|^uhc.*|^ocm.*|^klusterlet.*|^open-cluster-management.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-cee
 - apiVersion: hive.openshift.io/v1
@@ -7708,6 +7727,7 @@ objects:
         permissions:
         - clusterRoleName: dedicated-readers
           namespacesAllowedRegex: (^hypershift.*|^uhc.*|^ocm.*|^klusterlet.*|^open-cluster-management.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-cee
 - apiVersion: hive.openshift.io/v1
@@ -8925,8 +8945,10 @@ objects:
         permissions:
         - clusterRoleName: backplane-cssre-mkafka-project
           namespacesAllowedRegex: (^redhat-managed-kafka-.*|^redhat-kas-fleetshard-.*|^managed-application-services-observability|^kafka-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         - clusterRoleName: view
           namespacesAllowedRegex: (^redhat-managed-kafka-.*|^redhat-kas-fleetshard-.*|^managed-application-services-observability|^kafka-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-cssre
 - apiVersion: hive.openshift.io/v1
@@ -9004,8 +9026,10 @@ objects:
         permissions:
         - clusterRoleName: backplane-cssre-mkafka-project
           namespacesAllowedRegex: (^redhat-managed-kafka-.*|^redhat-kas-fleetshard-.*|^managed-application-services-observability|^kafka-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         - clusterRoleName: view
           namespacesAllowedRegex: (^redhat-managed-kafka-.*|^redhat-kas-fleetshard-.*|^managed-application-services-observability|^kafka-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-cssre
 - apiVersion: hive.openshift.io/v1
@@ -9083,8 +9107,10 @@ objects:
         permissions:
         - clusterRoleName: backplane-cssre-mkafka-project
           namespacesAllowedRegex: (^redhat-managed-kafka-.*|^redhat-kas-fleetshard-.*|^managed-application-services-observability|^kafka-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         - clusterRoleName: view
           namespacesAllowedRegex: (^redhat-managed-kafka-.*|^redhat-kas-fleetshard-.*|^managed-application-services-observability|^kafka-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-cssre
 - apiVersion: hive.openshift.io/v1
@@ -9162,8 +9188,10 @@ objects:
         permissions:
         - clusterRoleName: backplane-cssre-mkafka-project
           namespacesAllowedRegex: (^redhat-managed-kafka-.*|^redhat-kas-fleetshard-.*|^managed-application-services-observability|^kafka-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         - clusterRoleName: view
           namespacesAllowedRegex: (^redhat-managed-kafka-.*|^redhat-kas-fleetshard-.*|^managed-application-services-observability|^kafka-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-cssre
 - apiVersion: hive.openshift.io/v1
@@ -9201,7 +9229,12 @@ objects:
         - clusterresourcequotas/status
         - clusterresourcequotas
         verbs:
-        - '*'
+        - create
+        - get
+        - list
+        - patch
+        - update
+        - watch
       - apiGroups:
         - apiextensions.k8s.io
         - admin-enmasse.io
@@ -9291,11 +9324,15 @@ objects:
       - apiGroups:
         - ''
         resources:
-        - secrets
         - configmaps
         - persistentvolumeclaims
         verbs:
-        - '*'
+        - create
+        - get
+        - list
+        - patch
+        - update
+        - watch
       - apiGroups:
         - operators.coreos.com
         resources:
@@ -9345,8 +9382,10 @@ objects:
         permissions:
         - clusterRoleName: backplane-rhmi-cssre-admins-project
           namespacesAllowedRegex: ^redhat-.*$
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         - clusterRoleName: view
           namespacesAllowedRegex: ^redhat-.*$
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-cssre
 - apiVersion: hive.openshift.io/v1
@@ -9384,7 +9423,12 @@ objects:
         - clusterresourcequotas/status
         - clusterresourcequotas
         verbs:
-        - '*'
+        - create
+        - get
+        - list
+        - patch
+        - update
+        - watch
       - apiGroups:
         - apiextensions.k8s.io
         - admin-enmasse.io
@@ -9474,11 +9518,15 @@ objects:
       - apiGroups:
         - ''
         resources:
-        - secrets
         - configmaps
         - persistentvolumeclaims
         verbs:
-        - '*'
+        - create
+        - get
+        - list
+        - patch
+        - update
+        - watch
       - apiGroups:
         - operators.coreos.com
         resources:
@@ -9528,8 +9576,10 @@ objects:
         permissions:
         - clusterRoleName: backplane-rhmi-cssre-admins-project
           namespacesAllowedRegex: ^redhat-.*$
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         - clusterRoleName: view
           namespacesAllowedRegex: ^redhat-.*$
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-cssre
 - apiVersion: hive.openshift.io/v1
@@ -9577,7 +9627,12 @@ objects:
         resources:
         - projects
         verbs:
-        - '*'
+        - create
+        - get
+        - list
+        - patch
+        - update
+        - watch
       - apiGroups:
         - ''
         resources:
@@ -9680,11 +9735,15 @@ objects:
       - apiGroups:
         - ''
         resources:
-        - secrets
         - configmaps
         - persistentvolumeclaims
         verbs:
-        - '*'
+        - create
+        - get
+        - list
+        - patch
+        - update
+        - watch
       - apiGroups:
         - operators.coreos.com
         resources:
@@ -9740,8 +9799,10 @@ objects:
         permissions:
         - clusterRoleName: backplane-rhoam-cssre-admins-project
           namespacesAllowedRegex: (^redhat-rhoami?$|^redhat-rhoami?-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         - clusterRoleName: view
           namespacesAllowedRegex: (^redhat-rhoami?$|^redhat-rhoami?-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-cssre
 - apiVersion: hive.openshift.io/v1
@@ -9789,7 +9850,12 @@ objects:
         resources:
         - projects
         verbs:
-        - '*'
+        - create
+        - get
+        - list
+        - patch
+        - update
+        - watch
       - apiGroups:
         - ''
         resources:
@@ -9892,11 +9958,15 @@ objects:
       - apiGroups:
         - ''
         resources:
-        - secrets
         - configmaps
         - persistentvolumeclaims
         verbs:
-        - '*'
+        - create
+        - get
+        - list
+        - patch
+        - update
+        - watch
       - apiGroups:
         - operators.coreos.com
         resources:
@@ -9952,8 +10022,10 @@ objects:
         permissions:
         - clusterRoleName: backplane-rhoam-cssre-admins-project
           namespacesAllowedRegex: (^redhat-rhoami?$|^redhat-rhoami?-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         - clusterRoleName: view
           namespacesAllowedRegex: (^redhat-rhoami?$|^redhat-rhoami?-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-cssre
 - apiVersion: hive.openshift.io/v1
@@ -10026,11 +10098,15 @@ objects:
       - apiGroups:
         - ''
         resources:
-        - secrets
         - configmaps
         - persistentvolumeclaims
         verbs:
-        - '*'
+        - create
+        - get
+        - list
+        - patch
+        - update
+        - watch
       - apiGroups:
         - operators.coreos.com
         resources:
@@ -10080,6 +10156,7 @@ objects:
         permissions:
         - clusterRoleName: backplane-cssre-rhoc-admins-project
           namespacesAllowedRegex: (^redhat-openshift-connectors$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-cssre
 - apiVersion: hive.openshift.io/v1
@@ -10204,7 +10281,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-admin
+        name: backplane-lpsre-addon-operator-cluster
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -10220,7 +10297,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-olm-admin
+        name: backplane-lpsre-addon-operator-olm-project
       rules:
       - apiGroups:
         - operators.coreos.com
@@ -10246,7 +10323,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-monitoring
+        name: backplane-lpsre-monitoring-project
       rules:
       - apiGroups:
         - monitoring.coreos.com
@@ -10320,8 +10397,10 @@ objects:
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-package-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         - clusterRoleName: backplane-lpsre-package-operator-project
           namespacesAllowedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: managed.openshift.io/v1alpha1
@@ -10331,15 +10410,18 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-lpsre-addon-operator-admin
+        - backplane-lpsre-addon-operator-cluster
         - backplane-readers-cluster
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-monitoring-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-addon-operator-olm-admin
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-addon-operator-olm-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: rbac.authorization.k8s.io/v1
@@ -10451,7 +10533,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-admin
+        name: backplane-lpsre-addon-operator-cluster
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -10467,7 +10549,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-olm-admin
+        name: backplane-lpsre-addon-operator-olm-project
       rules:
       - apiGroups:
         - operators.coreos.com
@@ -10493,7 +10575,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-monitoring
+        name: backplane-lpsre-monitoring-project
       rules:
       - apiGroups:
         - monitoring.coreos.com
@@ -10567,8 +10649,10 @@ objects:
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-package-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         - clusterRoleName: backplane-lpsre-package-operator-project
           namespacesAllowedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: managed.openshift.io/v1alpha1
@@ -10578,15 +10662,18 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-lpsre-addon-operator-admin
+        - backplane-lpsre-addon-operator-cluster
         - backplane-readers-cluster
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-monitoring-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-addon-operator-olm-admin
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-addon-operator-olm-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: rbac.authorization.k8s.io/v1
@@ -10698,7 +10785,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-admin
+        name: backplane-lpsre-addon-operator-cluster
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -10714,7 +10801,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-olm-admin
+        name: backplane-lpsre-addon-operator-olm-project
       rules:
       - apiGroups:
         - operators.coreos.com
@@ -10740,7 +10827,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-monitoring
+        name: backplane-lpsre-monitoring-project
       rules:
       - apiGroups:
         - monitoring.coreos.com
@@ -10814,8 +10901,10 @@ objects:
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-package-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         - clusterRoleName: backplane-lpsre-package-operator-project
           namespacesAllowedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: managed.openshift.io/v1alpha1
@@ -10825,15 +10914,18 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-lpsre-addon-operator-admin
+        - backplane-lpsre-addon-operator-cluster
         - backplane-readers-cluster
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-monitoring-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-addon-operator-olm-admin
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-addon-operator-olm-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: rbac.authorization.k8s.io/v1
@@ -10945,7 +11037,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-admin
+        name: backplane-lpsre-addon-operator-cluster
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -10961,7 +11053,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-olm-admin
+        name: backplane-lpsre-addon-operator-olm-project
       rules:
       - apiGroups:
         - operators.coreos.com
@@ -10987,7 +11079,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-monitoring
+        name: backplane-lpsre-monitoring-project
       rules:
       - apiGroups:
         - monitoring.coreos.com
@@ -11061,8 +11153,10 @@ objects:
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-package-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         - clusterRoleName: backplane-lpsre-package-operator-project
           namespacesAllowedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: managed.openshift.io/v1alpha1
@@ -11072,15 +11166,18 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-lpsre-addon-operator-admin
+        - backplane-lpsre-addon-operator-cluster
         - backplane-readers-cluster
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-monitoring-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-addon-operator-olm-admin
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-addon-operator-olm-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: rbac.authorization.k8s.io/v1
@@ -11192,7 +11289,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-admin
+        name: backplane-lpsre-addon-operator-cluster
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -11208,7 +11305,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-olm-admin
+        name: backplane-lpsre-addon-operator-olm-project
       rules:
       - apiGroups:
         - operators.coreos.com
@@ -11234,7 +11331,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-monitoring
+        name: backplane-lpsre-monitoring-project
       rules:
       - apiGroups:
         - monitoring.coreos.com
@@ -11308,8 +11405,10 @@ objects:
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-package-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         - clusterRoleName: backplane-lpsre-package-operator-project
           namespacesAllowedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: managed.openshift.io/v1alpha1
@@ -11319,15 +11418,18 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-lpsre-addon-operator-admin
+        - backplane-lpsre-addon-operator-cluster
         - backplane-readers-cluster
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-monitoring-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-addon-operator-olm-admin
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-addon-operator-olm-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: rbac.authorization.k8s.io/v1
@@ -11439,7 +11541,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-admin
+        name: backplane-lpsre-addon-operator-cluster
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -11455,7 +11557,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-olm-admin
+        name: backplane-lpsre-addon-operator-olm-project
       rules:
       - apiGroups:
         - operators.coreos.com
@@ -11481,7 +11583,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-monitoring
+        name: backplane-lpsre-monitoring-project
       rules:
       - apiGroups:
         - monitoring.coreos.com
@@ -11555,8 +11657,10 @@ objects:
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-package-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         - clusterRoleName: backplane-lpsre-package-operator-project
           namespacesAllowedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: managed.openshift.io/v1alpha1
@@ -11566,15 +11670,18 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-lpsre-addon-operator-admin
+        - backplane-lpsre-addon-operator-cluster
         - backplane-readers-cluster
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-monitoring-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-addon-operator-olm-admin
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-addon-operator-olm-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: rbac.authorization.k8s.io/v1
@@ -11686,7 +11793,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-admin
+        name: backplane-lpsre-addon-operator-cluster
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -11702,7 +11809,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-olm-admin
+        name: backplane-lpsre-addon-operator-olm-project
       rules:
       - apiGroups:
         - operators.coreos.com
@@ -11728,7 +11835,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-monitoring
+        name: backplane-lpsre-monitoring-project
       rules:
       - apiGroups:
         - monitoring.coreos.com
@@ -11802,8 +11909,10 @@ objects:
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-package-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         - clusterRoleName: backplane-lpsre-package-operator-project
           namespacesAllowedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: managed.openshift.io/v1alpha1
@@ -11813,15 +11922,18 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-lpsre-addon-operator-admin
+        - backplane-lpsre-addon-operator-cluster
         - backplane-readers-cluster
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-monitoring-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-addon-operator-olm-admin
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-addon-operator-olm-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: rbac.authorization.k8s.io/v1
@@ -11933,7 +12045,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-admin
+        name: backplane-lpsre-addon-operator-cluster
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -11949,7 +12061,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-olm-admin
+        name: backplane-lpsre-addon-operator-olm-project
       rules:
       - apiGroups:
         - operators.coreos.com
@@ -11975,7 +12087,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-monitoring
+        name: backplane-lpsre-monitoring-project
       rules:
       - apiGroups:
         - monitoring.coreos.com
@@ -12049,8 +12161,10 @@ objects:
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-package-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         - clusterRoleName: backplane-lpsre-package-operator-project
           namespacesAllowedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: managed.openshift.io/v1alpha1
@@ -12060,15 +12174,18 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-lpsre-addon-operator-admin
+        - backplane-lpsre-addon-operator-cluster
         - backplane-readers-cluster
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-monitoring-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-addon-operator-olm-admin
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-addon-operator-olm-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: rbac.authorization.k8s.io/v1
@@ -12180,7 +12297,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-admin
+        name: backplane-lpsre-addon-operator-cluster
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -12196,7 +12313,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-olm-admin
+        name: backplane-lpsre-addon-operator-olm-project
       rules:
       - apiGroups:
         - operators.coreos.com
@@ -12222,7 +12339,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-monitoring
+        name: backplane-lpsre-monitoring-project
       rules:
       - apiGroups:
         - monitoring.coreos.com
@@ -12296,8 +12413,10 @@ objects:
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-package-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         - clusterRoleName: backplane-lpsre-package-operator-project
           namespacesAllowedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: managed.openshift.io/v1alpha1
@@ -12307,15 +12426,18 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-lpsre-addon-operator-admin
+        - backplane-lpsre-addon-operator-cluster
         - backplane-readers-cluster
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-monitoring-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-addon-operator-olm-admin
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-addon-operator-olm-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: rbac.authorization.k8s.io/v1
@@ -12427,7 +12549,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-admin
+        name: backplane-lpsre-addon-operator-cluster
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -12443,7 +12565,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-olm-admin
+        name: backplane-lpsre-addon-operator-olm-project
       rules:
       - apiGroups:
         - operators.coreos.com
@@ -12469,7 +12591,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-monitoring
+        name: backplane-lpsre-monitoring-project
       rules:
       - apiGroups:
         - monitoring.coreos.com
@@ -12543,8 +12665,10 @@ objects:
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-package-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         - clusterRoleName: backplane-lpsre-package-operator-project
           namespacesAllowedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: managed.openshift.io/v1alpha1
@@ -12554,15 +12678,18 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-lpsre-addon-operator-admin
+        - backplane-lpsre-addon-operator-cluster
         - backplane-readers-cluster
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-monitoring-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-addon-operator-olm-admin
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-addon-operator-olm-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: rbac.authorization.k8s.io/v1
@@ -12674,7 +12801,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-admin
+        name: backplane-lpsre-addon-operator-cluster
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -12690,7 +12817,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-olm-admin
+        name: backplane-lpsre-addon-operator-olm-project
       rules:
       - apiGroups:
         - operators.coreos.com
@@ -12716,7 +12843,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-monitoring
+        name: backplane-lpsre-monitoring-project
       rules:
       - apiGroups:
         - monitoring.coreos.com
@@ -12790,8 +12917,10 @@ objects:
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-package-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         - clusterRoleName: backplane-lpsre-package-operator-project
           namespacesAllowedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: managed.openshift.io/v1alpha1
@@ -12801,15 +12930,18 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-lpsre-addon-operator-admin
+        - backplane-lpsre-addon-operator-cluster
         - backplane-readers-cluster
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-monitoring-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-addon-operator-olm-admin
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-addon-operator-olm-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: rbac.authorization.k8s.io/v1
@@ -12921,7 +13053,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-admin
+        name: backplane-lpsre-addon-operator-cluster
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -12937,7 +13069,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-olm-admin
+        name: backplane-lpsre-addon-operator-olm-project
       rules:
       - apiGroups:
         - operators.coreos.com
@@ -12963,7 +13095,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-monitoring
+        name: backplane-lpsre-monitoring-project
       rules:
       - apiGroups:
         - monitoring.coreos.com
@@ -13037,8 +13169,10 @@ objects:
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-package-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         - clusterRoleName: backplane-lpsre-package-operator-project
           namespacesAllowedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: managed.openshift.io/v1alpha1
@@ -13048,15 +13182,18 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-lpsre-addon-operator-admin
+        - backplane-lpsre-addon-operator-cluster
         - backplane-readers-cluster
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-monitoring-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-addon-operator-olm-admin
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-addon-operator-olm-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: rbac.authorization.k8s.io/v1
@@ -13168,7 +13305,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-admin
+        name: backplane-lpsre-addon-operator-cluster
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -13184,7 +13321,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-olm-admin
+        name: backplane-lpsre-addon-operator-olm-project
       rules:
       - apiGroups:
         - operators.coreos.com
@@ -13210,7 +13347,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-monitoring
+        name: backplane-lpsre-monitoring-project
       rules:
       - apiGroups:
         - monitoring.coreos.com
@@ -13284,8 +13421,10 @@ objects:
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-package-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         - clusterRoleName: backplane-lpsre-package-operator-project
           namespacesAllowedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: managed.openshift.io/v1alpha1
@@ -13295,15 +13434,18 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-lpsre-addon-operator-admin
+        - backplane-lpsre-addon-operator-cluster
         - backplane-readers-cluster
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-monitoring-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-addon-operator-olm-admin
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-addon-operator-olm-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: rbac.authorization.k8s.io/v1
@@ -13415,7 +13557,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-admin
+        name: backplane-lpsre-addon-operator-cluster
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -13431,7 +13573,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-olm-admin
+        name: backplane-lpsre-addon-operator-olm-project
       rules:
       - apiGroups:
         - operators.coreos.com
@@ -13457,7 +13599,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-monitoring
+        name: backplane-lpsre-monitoring-project
       rules:
       - apiGroups:
         - monitoring.coreos.com
@@ -13531,8 +13673,10 @@ objects:
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-package-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         - clusterRoleName: backplane-lpsre-package-operator-project
           namespacesAllowedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: managed.openshift.io/v1alpha1
@@ -13542,15 +13686,18 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-lpsre-addon-operator-admin
+        - backplane-lpsre-addon-operator-cluster
         - backplane-readers-cluster
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-monitoring-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-addon-operator-olm-admin
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-addon-operator-olm-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: rbac.authorization.k8s.io/v1
@@ -13662,7 +13809,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-admin
+        name: backplane-lpsre-addon-operator-cluster
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -13678,7 +13825,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-olm-admin
+        name: backplane-lpsre-addon-operator-olm-project
       rules:
       - apiGroups:
         - operators.coreos.com
@@ -13704,7 +13851,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-monitoring
+        name: backplane-lpsre-monitoring-project
       rules:
       - apiGroups:
         - monitoring.coreos.com
@@ -13778,8 +13925,10 @@ objects:
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-package-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         - clusterRoleName: backplane-lpsre-package-operator-project
           namespacesAllowedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: managed.openshift.io/v1alpha1
@@ -13789,15 +13938,18 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-lpsre-addon-operator-admin
+        - backplane-lpsre-addon-operator-cluster
         - backplane-readers-cluster
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-monitoring-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-addon-operator-olm-admin
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-addon-operator-olm-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: rbac.authorization.k8s.io/v1
@@ -13909,7 +14061,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-admin
+        name: backplane-lpsre-addon-operator-cluster
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -13925,7 +14077,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-olm-admin
+        name: backplane-lpsre-addon-operator-olm-project
       rules:
       - apiGroups:
         - operators.coreos.com
@@ -13951,7 +14103,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-monitoring
+        name: backplane-lpsre-monitoring-project
       rules:
       - apiGroups:
         - monitoring.coreos.com
@@ -14025,8 +14177,10 @@ objects:
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-package-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         - clusterRoleName: backplane-lpsre-package-operator-project
           namespacesAllowedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: managed.openshift.io/v1alpha1
@@ -14036,15 +14190,18 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-lpsre-addon-operator-admin
+        - backplane-lpsre-addon-operator-cluster
         - backplane-readers-cluster
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-monitoring-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-addon-operator-olm-admin
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-addon-operator-olm-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: rbac.authorization.k8s.io/v1
@@ -14156,7 +14313,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-admin
+        name: backplane-lpsre-addon-operator-cluster
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -14172,7 +14329,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-olm-admin
+        name: backplane-lpsre-addon-operator-olm-project
       rules:
       - apiGroups:
         - operators.coreos.com
@@ -14198,7 +14355,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-monitoring
+        name: backplane-lpsre-monitoring-project
       rules:
       - apiGroups:
         - monitoring.coreos.com
@@ -14272,8 +14429,10 @@ objects:
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-package-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         - clusterRoleName: backplane-lpsre-package-operator-project
           namespacesAllowedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: managed.openshift.io/v1alpha1
@@ -14283,15 +14442,18 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-lpsre-addon-operator-admin
+        - backplane-lpsre-addon-operator-cluster
         - backplane-readers-cluster
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-monitoring-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-addon-operator-olm-admin
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-addon-operator-olm-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: rbac.authorization.k8s.io/v1
@@ -14403,7 +14565,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-admin
+        name: backplane-lpsre-addon-operator-cluster
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -14419,7 +14581,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-olm-admin
+        name: backplane-lpsre-addon-operator-olm-project
       rules:
       - apiGroups:
         - operators.coreos.com
@@ -14445,7 +14607,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-monitoring
+        name: backplane-lpsre-monitoring-project
       rules:
       - apiGroups:
         - monitoring.coreos.com
@@ -14519,8 +14681,10 @@ objects:
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-package-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         - clusterRoleName: backplane-lpsre-package-operator-project
           namespacesAllowedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: managed.openshift.io/v1alpha1
@@ -14530,15 +14694,18 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-lpsre-addon-operator-admin
+        - backplane-lpsre-addon-operator-cluster
         - backplane-readers-cluster
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-monitoring-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-addon-operator-olm-admin
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-addon-operator-olm-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: rbac.authorization.k8s.io/v1
@@ -14650,7 +14817,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-admin
+        name: backplane-lpsre-addon-operator-cluster
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -14666,7 +14833,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-olm-admin
+        name: backplane-lpsre-addon-operator-olm-project
       rules:
       - apiGroups:
         - operators.coreos.com
@@ -14692,7 +14859,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-monitoring
+        name: backplane-lpsre-monitoring-project
       rules:
       - apiGroups:
         - monitoring.coreos.com
@@ -14766,8 +14933,10 @@ objects:
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-package-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         - clusterRoleName: backplane-lpsre-package-operator-project
           namespacesAllowedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: managed.openshift.io/v1alpha1
@@ -14777,15 +14946,18 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-lpsre-addon-operator-admin
+        - backplane-lpsre-addon-operator-cluster
         - backplane-readers-cluster
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-monitoring-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-addon-operator-olm-admin
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-addon-operator-olm-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: rbac.authorization.k8s.io/v1
@@ -14897,7 +15069,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-admin
+        name: backplane-lpsre-addon-operator-cluster
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -14913,7 +15085,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-olm-admin
+        name: backplane-lpsre-addon-operator-olm-project
       rules:
       - apiGroups:
         - operators.coreos.com
@@ -14939,7 +15111,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-monitoring
+        name: backplane-lpsre-monitoring-project
       rules:
       - apiGroups:
         - monitoring.coreos.com
@@ -15013,8 +15185,10 @@ objects:
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-package-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         - clusterRoleName: backplane-lpsre-package-operator-project
           namespacesAllowedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: managed.openshift.io/v1alpha1
@@ -15024,15 +15198,18 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-lpsre-addon-operator-admin
+        - backplane-lpsre-addon-operator-cluster
         - backplane-readers-cluster
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-monitoring-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-addon-operator-olm-admin
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-addon-operator-olm-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: rbac.authorization.k8s.io/v1
@@ -15144,7 +15321,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-admin
+        name: backplane-lpsre-addon-operator-cluster
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -15160,7 +15337,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-olm-admin
+        name: backplane-lpsre-addon-operator-olm-project
       rules:
       - apiGroups:
         - operators.coreos.com
@@ -15186,7 +15363,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-monitoring
+        name: backplane-lpsre-monitoring-project
       rules:
       - apiGroups:
         - monitoring.coreos.com
@@ -15260,8 +15437,10 @@ objects:
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-package-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         - clusterRoleName: backplane-lpsre-package-operator-project
           namespacesAllowedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: managed.openshift.io/v1alpha1
@@ -15271,15 +15450,18 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-lpsre-addon-operator-admin
+        - backplane-lpsre-addon-operator-cluster
         - backplane-readers-cluster
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-monitoring-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-addon-operator-olm-admin
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-addon-operator-olm-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: rbac.authorization.k8s.io/v1
@@ -15391,7 +15573,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-admin
+        name: backplane-lpsre-addon-operator-cluster
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -15407,7 +15589,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-olm-admin
+        name: backplane-lpsre-addon-operator-olm-project
       rules:
       - apiGroups:
         - operators.coreos.com
@@ -15433,7 +15615,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-monitoring
+        name: backplane-lpsre-monitoring-project
       rules:
       - apiGroups:
         - monitoring.coreos.com
@@ -15507,8 +15689,10 @@ objects:
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-package-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         - clusterRoleName: backplane-lpsre-package-operator-project
           namespacesAllowedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: managed.openshift.io/v1alpha1
@@ -15518,15 +15702,18 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-lpsre-addon-operator-admin
+        - backplane-lpsre-addon-operator-cluster
         - backplane-readers-cluster
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-monitoring-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-addon-operator-olm-admin
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-addon-operator-olm-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: rbac.authorization.k8s.io/v1
@@ -15638,7 +15825,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-admin
+        name: backplane-lpsre-addon-operator-cluster
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -15654,7 +15841,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-olm-admin
+        name: backplane-lpsre-addon-operator-olm-project
       rules:
       - apiGroups:
         - operators.coreos.com
@@ -15680,7 +15867,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-monitoring
+        name: backplane-lpsre-monitoring-project
       rules:
       - apiGroups:
         - monitoring.coreos.com
@@ -15754,8 +15941,10 @@ objects:
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-package-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         - clusterRoleName: backplane-lpsre-package-operator-project
           namespacesAllowedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: managed.openshift.io/v1alpha1
@@ -15765,15 +15954,18 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-lpsre-addon-operator-admin
+        - backplane-lpsre-addon-operator-cluster
         - backplane-readers-cluster
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-monitoring-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-addon-operator-olm-admin
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-addon-operator-olm-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: rbac.authorization.k8s.io/v1
@@ -15885,7 +16077,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-admin
+        name: backplane-lpsre-addon-operator-cluster
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -15901,7 +16093,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-olm-admin
+        name: backplane-lpsre-addon-operator-olm-project
       rules:
       - apiGroups:
         - operators.coreos.com
@@ -15927,7 +16119,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-monitoring
+        name: backplane-lpsre-monitoring-project
       rules:
       - apiGroups:
         - monitoring.coreos.com
@@ -16001,8 +16193,10 @@ objects:
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-package-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         - clusterRoleName: backplane-lpsre-package-operator-project
           namespacesAllowedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: managed.openshift.io/v1alpha1
@@ -16012,15 +16206,18 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-lpsre-addon-operator-admin
+        - backplane-lpsre-addon-operator-cluster
         - backplane-readers-cluster
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-monitoring-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-addon-operator-olm-admin
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-addon-operator-olm-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: rbac.authorization.k8s.io/v1
@@ -16132,7 +16329,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-admin
+        name: backplane-lpsre-addon-operator-cluster
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -16148,7 +16345,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-olm-admin
+        name: backplane-lpsre-addon-operator-olm-project
       rules:
       - apiGroups:
         - operators.coreos.com
@@ -16174,7 +16371,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-monitoring
+        name: backplane-lpsre-monitoring-project
       rules:
       - apiGroups:
         - monitoring.coreos.com
@@ -16248,8 +16445,10 @@ objects:
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-package-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         - clusterRoleName: backplane-lpsre-package-operator-project
           namespacesAllowedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: managed.openshift.io/v1alpha1
@@ -16259,15 +16458,18 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-lpsre-addon-operator-admin
+        - backplane-lpsre-addon-operator-cluster
         - backplane-readers-cluster
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-monitoring-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-addon-operator-olm-admin
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-addon-operator-olm-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: rbac.authorization.k8s.io/v1
@@ -16379,7 +16581,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-admin
+        name: backplane-lpsre-addon-operator-cluster
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -16395,7 +16597,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-olm-admin
+        name: backplane-lpsre-addon-operator-olm-project
       rules:
       - apiGroups:
         - operators.coreos.com
@@ -16421,7 +16623,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-monitoring
+        name: backplane-lpsre-monitoring-project
       rules:
       - apiGroups:
         - monitoring.coreos.com
@@ -16495,8 +16697,10 @@ objects:
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-package-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         - clusterRoleName: backplane-lpsre-package-operator-project
           namespacesAllowedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: managed.openshift.io/v1alpha1
@@ -16506,15 +16710,18 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-lpsre-addon-operator-admin
+        - backplane-lpsre-addon-operator-cluster
         - backplane-readers-cluster
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-monitoring-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-addon-operator-olm-admin
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-addon-operator-olm-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: rbac.authorization.k8s.io/v1
@@ -16626,7 +16833,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-admin
+        name: backplane-lpsre-addon-operator-cluster
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -16642,7 +16849,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-olm-admin
+        name: backplane-lpsre-addon-operator-olm-project
       rules:
       - apiGroups:
         - operators.coreos.com
@@ -16668,7 +16875,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-monitoring
+        name: backplane-lpsre-monitoring-project
       rules:
       - apiGroups:
         - monitoring.coreos.com
@@ -16742,8 +16949,10 @@ objects:
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-package-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         - clusterRoleName: backplane-lpsre-package-operator-project
           namespacesAllowedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: managed.openshift.io/v1alpha1
@@ -16753,15 +16962,18 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-lpsre-addon-operator-admin
+        - backplane-lpsre-addon-operator-cluster
         - backplane-readers-cluster
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-monitoring-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-addon-operator-olm-admin
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-addon-operator-olm-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: rbac.authorization.k8s.io/v1
@@ -16873,7 +17085,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-admin
+        name: backplane-lpsre-addon-operator-cluster
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -16889,7 +17101,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-olm-admin
+        name: backplane-lpsre-addon-operator-olm-project
       rules:
       - apiGroups:
         - operators.coreos.com
@@ -16915,7 +17127,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-monitoring
+        name: backplane-lpsre-monitoring-project
       rules:
       - apiGroups:
         - monitoring.coreos.com
@@ -16989,8 +17201,10 @@ objects:
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-package-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         - clusterRoleName: backplane-lpsre-package-operator-project
           namespacesAllowedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: managed.openshift.io/v1alpha1
@@ -17000,15 +17214,18 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-lpsre-addon-operator-admin
+        - backplane-lpsre-addon-operator-cluster
         - backplane-readers-cluster
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-monitoring-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-addon-operator-olm-admin
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-addon-operator-olm-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: rbac.authorization.k8s.io/v1
@@ -17120,7 +17337,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-admin
+        name: backplane-lpsre-addon-operator-cluster
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -17136,7 +17353,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-olm-admin
+        name: backplane-lpsre-addon-operator-olm-project
       rules:
       - apiGroups:
         - operators.coreos.com
@@ -17162,7 +17379,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-monitoring
+        name: backplane-lpsre-monitoring-project
       rules:
       - apiGroups:
         - monitoring.coreos.com
@@ -17236,8 +17453,10 @@ objects:
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-package-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         - clusterRoleName: backplane-lpsre-package-operator-project
           namespacesAllowedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: managed.openshift.io/v1alpha1
@@ -17247,15 +17466,18 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-lpsre-addon-operator-admin
+        - backplane-lpsre-addon-operator-cluster
         - backplane-readers-cluster
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-monitoring-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-addon-operator-olm-admin
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-addon-operator-olm-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: rbac.authorization.k8s.io/v1
@@ -17367,7 +17589,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-admin
+        name: backplane-lpsre-addon-operator-cluster
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -17383,7 +17605,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-olm-admin
+        name: backplane-lpsre-addon-operator-olm-project
       rules:
       - apiGroups:
         - operators.coreos.com
@@ -17409,7 +17631,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-monitoring
+        name: backplane-lpsre-monitoring-project
       rules:
       - apiGroups:
         - monitoring.coreos.com
@@ -17483,8 +17705,10 @@ objects:
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-package-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         - clusterRoleName: backplane-lpsre-package-operator-project
           namespacesAllowedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: managed.openshift.io/v1alpha1
@@ -17494,15 +17718,18 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-lpsre-addon-operator-admin
+        - backplane-lpsre-addon-operator-cluster
         - backplane-readers-cluster
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-monitoring-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-addon-operator-olm-admin
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-addon-operator-olm-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: rbac.authorization.k8s.io/v1
@@ -17614,7 +17841,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-admin
+        name: backplane-lpsre-addon-operator-cluster
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -17630,7 +17857,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-olm-admin
+        name: backplane-lpsre-addon-operator-olm-project
       rules:
       - apiGroups:
         - operators.coreos.com
@@ -17656,7 +17883,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-monitoring
+        name: backplane-lpsre-monitoring-project
       rules:
       - apiGroups:
         - monitoring.coreos.com
@@ -17730,8 +17957,10 @@ objects:
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-package-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         - clusterRoleName: backplane-lpsre-package-operator-project
           namespacesAllowedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: managed.openshift.io/v1alpha1
@@ -17741,15 +17970,18 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-lpsre-addon-operator-admin
+        - backplane-lpsre-addon-operator-cluster
         - backplane-readers-cluster
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-monitoring-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-addon-operator-olm-admin
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-addon-operator-olm-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: rbac.authorization.k8s.io/v1
@@ -17861,7 +18093,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-admin
+        name: backplane-lpsre-addon-operator-cluster
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -17877,7 +18109,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-addon-operator-olm-admin
+        name: backplane-lpsre-addon-operator-olm-project
       rules:
       - apiGroups:
         - operators.coreos.com
@@ -17903,7 +18135,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-lpsre-monitoring
+        name: backplane-lpsre-monitoring-project
       rules:
       - apiGroups:
         - monitoring.coreos.com
@@ -17977,8 +18209,10 @@ objects:
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-package-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         - clusterRoleName: backplane-lpsre-package-operator-project
           namespacesAllowedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: managed.openshift.io/v1alpha1
@@ -17988,15 +18222,18 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-lpsre-addon-operator-admin
+        - backplane-lpsre-addon-operator-cluster
         - backplane-readers-cluster
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-monitoring-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-lpsre-addon-operator-olm-admin
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-addon-operator-olm-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: rbac.authorization.k8s.io/v1
@@ -18074,8 +18311,10 @@ objects:
         permissions:
         - clusterRoleName: view
           namespacesAllowedRegex: (^redhat-open-cluster-management$|^open-cluster-management-agent$|^open-cluster-management-agent-addon$|^open-cluster-management-global-set$|^open-cluster-management-hub$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         - clusterRoleName: backplane-lpsre-acm-admins-project
           namespacesAllowedRegex: (^redhat-open-cluster-management$|^open-cluster-management-agent$|^open-cluster-management-agent-addon$|^open-cluster-management-global-set$|^open-cluster-management-hub$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: rbac.authorization.k8s.io/v1
@@ -18128,8 +18367,10 @@ objects:
         permissions:
         - clusterRoleName: view
           namespacesAllowedRegex: (^redhat-acs-fleetshard$|^rhacs-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         - clusterRoleName: backplane-lpsre-acm-admins-project
           namespacesAllowedRegex: (^redhat-acs-fleetshard$|^rhacs-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
     - apiVersion: rbac.authorization.k8s.io/v1
@@ -18179,6 +18420,7 @@ objects:
         permissions:
         - clusterRoleName: view
           namespacesAllowedRegex: (^redhat-cert-manager-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
 - apiVersion: hive.openshift.io/v1
@@ -18212,7 +18454,18 @@ objects:
       - apiGroups:
         - package-operator.run
         resources:
-        - '*'
+        - clusterobjectdeployments
+        - clusterobjectsetphases
+        - clusterobjectsets
+        - clusterobjectslices
+        - clusterobjecttemplates
+        - clusterpackages
+        - objectdeployments
+        - objectsetphases
+        - objectsets
+        - objectslices
+        - objecttemplates
+        - packages
         verbs:
         - get
         - list
@@ -18232,6 +18485,7 @@ objects:
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-package-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
 - apiVersion: hive.openshift.io/v1
@@ -18258,10 +18512,13 @@ objects:
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^rhods-notebooks$|^redhat-ods-applications$|^redhat-ods-monitoring$|^redhat-ods-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         - clusterRoleName: system:openshift:cloud-credential-operator:cluster-reader
           namespacesAllowedRegex: (^rhods-notebooks$|^redhat-ods-applications$|^redhat-ods-monitoring$|^redhat-ods-operator$)
-        - clusterRoleName: backplane-lpsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-monitoring-project
           namespacesAllowedRegex: (^redhat-ods-monitoring$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
 - apiVersion: hive.openshift.io/v1
@@ -18282,7 +18539,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-ocs-consumer-cr-admins
+        name: backplane-ocs-consumer-cr-project
       rules:
       - apiGroups:
         - odf.openshift.io
@@ -18389,10 +18646,13 @@ objects:
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-storage$)
-        - clusterRoleName: backplane-ocs-consumer-cr-admins
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-ocs-consumer-cr-project
           namespacesAllowedRegex: (^openshift-storage$)
-        - clusterRoleName: backplane-lpsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-monitoring-project
           namespacesAllowedRegex: (^openshift-storage$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
 - apiVersion: hive.openshift.io/v1
@@ -18419,8 +18679,10 @@ objects:
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-storage$)
-        - clusterRoleName: backplane-lpsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-monitoring-project
           namespacesAllowedRegex: (^openshift-storage$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
 - apiVersion: hive.openshift.io/v1
@@ -18441,7 +18703,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-ocs-provider-cr-admins
+        name: backplane-ocs-provider-cr-project
       rules:
       - apiGroups:
         - odf.openshift.io
@@ -18548,10 +18810,13 @@ objects:
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-storage$)
-        - clusterRoleName: backplane-ocs-provider-cr-admins
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-ocs-provider-cr-project
           namespacesAllowedRegex: (^openshift-storage$)
-        - clusterRoleName: backplane-lpsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-monitoring-project
           namespacesAllowedRegex: (^openshift-storage$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
 - apiVersion: hive.openshift.io/v1
@@ -18629,8 +18894,10 @@ objects:
         permissions:
         - clusterRoleName: backplane-lpsre-mkafka-project
           namespacesAllowedRegex: (^redhat-managed-kafka-.*|^redhat-kas-fleetshard-.*|^managed-application-services-observability|^kafka-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         - clusterRoleName: view
           namespacesAllowedRegex: (^redhat-managed-kafka-.*|^redhat-kas-fleetshard-.*|^managed-application-services-observability|^kafka-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
 - apiVersion: hive.openshift.io/v1
@@ -18708,8 +18975,10 @@ objects:
         permissions:
         - clusterRoleName: backplane-lpsre-mkafka-project
           namespacesAllowedRegex: (^redhat-managed-kafka-.*|^redhat-kas-fleetshard-.*|^managed-application-services-observability|^kafka-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         - clusterRoleName: view
           namespacesAllowedRegex: (^redhat-managed-kafka-.*|^redhat-kas-fleetshard-.*|^managed-application-services-observability|^kafka-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
 - apiVersion: hive.openshift.io/v1
@@ -18787,8 +19056,10 @@ objects:
         permissions:
         - clusterRoleName: backplane-lpsre-mkafka-project
           namespacesAllowedRegex: (^redhat-managed-kafka-.*|^redhat-kas-fleetshard-.*|^managed-application-services-observability|^kafka-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         - clusterRoleName: view
           namespacesAllowedRegex: (^redhat-managed-kafka-.*|^redhat-kas-fleetshard-.*|^managed-application-services-observability|^kafka-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
 - apiVersion: hive.openshift.io/v1
@@ -18866,8 +19137,10 @@ objects:
         permissions:
         - clusterRoleName: backplane-lpsre-mkafka-project
           namespacesAllowedRegex: (^redhat-managed-kafka-.*|^redhat-kas-fleetshard-.*|^managed-application-services-observability|^kafka-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         - clusterRoleName: view
           namespacesAllowedRegex: (^redhat-managed-kafka-.*|^redhat-kas-fleetshard-.*|^managed-application-services-observability|^kafka-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
 - apiVersion: hive.openshift.io/v1
@@ -18894,8 +19167,10 @@ objects:
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^redhat-reference-addon$)
-        - clusterRoleName: backplane-lpsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-monitoring-project
           namespacesAllowedRegex: (^openshift-storage$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
 - apiVersion: hive.openshift.io/v1
@@ -18933,7 +19208,12 @@ objects:
         - clusterresourcequotas/status
         - clusterresourcequotas
         verbs:
-        - '*'
+        - create
+        - get
+        - list
+        - patch
+        - update
+        - watch
       - apiGroups:
         - apiextensions.k8s.io
         - admin-enmasse.io
@@ -19023,11 +19303,15 @@ objects:
       - apiGroups:
         - ''
         resources:
-        - secrets
         - configmaps
         - persistentvolumeclaims
         verbs:
-        - '*'
+        - create
+        - get
+        - list
+        - patch
+        - update
+        - watch
       - apiGroups:
         - operators.coreos.com
         resources:
@@ -19077,8 +19361,10 @@ objects:
         permissions:
         - clusterRoleName: backplane-rhmi-lpsre-admins-project
           namespacesAllowedRegex: ^redhat-.*$
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         - clusterRoleName: view
           namespacesAllowedRegex: ^redhat-.*$
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
 - apiVersion: hive.openshift.io/v1
@@ -19116,7 +19402,12 @@ objects:
         - clusterresourcequotas/status
         - clusterresourcequotas
         verbs:
-        - '*'
+        - create
+        - get
+        - list
+        - patch
+        - update
+        - watch
       - apiGroups:
         - apiextensions.k8s.io
         - admin-enmasse.io
@@ -19206,11 +19497,15 @@ objects:
       - apiGroups:
         - ''
         resources:
-        - secrets
         - configmaps
         - persistentvolumeclaims
         verbs:
-        - '*'
+        - create
+        - get
+        - list
+        - patch
+        - update
+        - watch
       - apiGroups:
         - operators.coreos.com
         resources:
@@ -19260,8 +19555,10 @@ objects:
         permissions:
         - clusterRoleName: backplane-rhmi-lpsre-admins-project
           namespacesAllowedRegex: ^redhat-.*$
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         - clusterRoleName: view
           namespacesAllowedRegex: ^redhat-.*$
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
 - apiVersion: hive.openshift.io/v1
@@ -19309,7 +19606,12 @@ objects:
         resources:
         - projects
         verbs:
-        - '*'
+        - create
+        - get
+        - list
+        - patch
+        - update
+        - watch
       - apiGroups:
         - ''
         resources:
@@ -19412,11 +19714,15 @@ objects:
       - apiGroups:
         - ''
         resources:
-        - secrets
         - configmaps
         - persistentvolumeclaims
         verbs:
-        - '*'
+        - create
+        - get
+        - list
+        - patch
+        - update
+        - watch
       - apiGroups:
         - operators.coreos.com
         resources:
@@ -19491,8 +19797,10 @@ objects:
         permissions:
         - clusterRoleName: backplane-rhoam-lpsre-admins-project
           namespacesAllowedRegex: (^redhat-rhoami?$|^redhat-rhoami?-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         - clusterRoleName: view
           namespacesAllowedRegex: (^redhat-rhoami?$|^redhat-rhoami?-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
 - apiVersion: hive.openshift.io/v1
@@ -19540,7 +19848,12 @@ objects:
         resources:
         - projects
         verbs:
-        - '*'
+        - create
+        - get
+        - list
+        - patch
+        - update
+        - watch
       - apiGroups:
         - ''
         resources:
@@ -19643,11 +19956,15 @@ objects:
       - apiGroups:
         - ''
         resources:
-        - secrets
         - configmaps
         - persistentvolumeclaims
         verbs:
-        - '*'
+        - create
+        - get
+        - list
+        - patch
+        - update
+        - watch
       - apiGroups:
         - operators.coreos.com
         resources:
@@ -19722,8 +20039,10 @@ objects:
         permissions:
         - clusterRoleName: backplane-rhoam-lpsre-admins-project
           namespacesAllowedRegex: (^redhat-rhoami?$|^redhat-rhoami?-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         - clusterRoleName: view
           namespacesAllowedRegex: (^redhat-rhoami?$|^redhat-rhoami?-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
 - apiVersion: hive.openshift.io/v1
@@ -19799,7 +20118,12 @@ objects:
         - configmaps
         - persistentvolumeclaims
         verbs:
-        - '*'
+        - create
+        - get
+        - list
+        - patch
+        - update
+        - watch
       - apiGroups:
         - operators.coreos.com
         resources:
@@ -19849,6 +20173,7 @@ objects:
         permissions:
         - clusterRoleName: backplane-lpsre-rhoc-admins-project
           namespacesAllowedRegex: (^redhat-openshift-connectors$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
 - apiVersion: hive.openshift.io/v1
@@ -19888,7 +20213,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mcg-osd-cr-admins
+        name: backplane-mcg-osd-cr-project
       rules:
       - apiGroups:
         - mcg.openshift.io
@@ -19920,8 +20245,10 @@ objects:
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^redhat-data-federation$)
-        - clusterRoleName: backplane-mcg-osd-cr-admins
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mcg-osd-cr-project
           namespacesAllowedRegex: (^redhat-data-federation$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-mcg
 - apiVersion: hive.openshift.io/v1
@@ -20068,7 +20395,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-addon-operator-admin
+        name: backplane-mtsre-addon-operator-cluster
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -20086,7 +20413,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-addon-operator-olm-admin
+        name: backplane-mtsre-addon-operator-olm-project
       rules:
       - apiGroups:
         - operators.coreos.com
@@ -20112,7 +20439,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-monitoring
+        name: backplane-mtsre-monitoring-project
       rules:
       - apiGroups:
         - monitoring.coreos.com
@@ -20142,15 +20469,18 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-mtsre-addon-operator-admin
+        - backplane-mtsre-addon-operator-cluster
         - backplane-readers-cluster
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-mtsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mtsre-monitoring-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-mtsre-addon-operator-olm-admin
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mtsre-addon-operator-olm-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-mtsre
 - apiVersion: hive.openshift.io/v1
@@ -20175,7 +20505,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-addon-operator-admin
+        name: backplane-mtsre-addon-operator-cluster
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -20193,7 +20523,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-addon-operator-olm-admin
+        name: backplane-mtsre-addon-operator-olm-project
       rules:
       - apiGroups:
         - operators.coreos.com
@@ -20219,7 +20549,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-monitoring
+        name: backplane-mtsre-monitoring-project
       rules:
       - apiGroups:
         - monitoring.coreos.com
@@ -20249,15 +20579,18 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-mtsre-addon-operator-admin
+        - backplane-mtsre-addon-operator-cluster
         - backplane-readers-cluster
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-mtsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mtsre-monitoring-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-mtsre-addon-operator-olm-admin
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mtsre-addon-operator-olm-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-mtsre
 - apiVersion: hive.openshift.io/v1
@@ -20282,7 +20615,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-addon-operator-admin
+        name: backplane-mtsre-addon-operator-cluster
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -20300,7 +20633,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-addon-operator-olm-admin
+        name: backplane-mtsre-addon-operator-olm-project
       rules:
       - apiGroups:
         - operators.coreos.com
@@ -20326,7 +20659,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-monitoring
+        name: backplane-mtsre-monitoring-project
       rules:
       - apiGroups:
         - monitoring.coreos.com
@@ -20356,15 +20689,18 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-mtsre-addon-operator-admin
+        - backplane-mtsre-addon-operator-cluster
         - backplane-readers-cluster
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-mtsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mtsre-monitoring-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-mtsre-addon-operator-olm-admin
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mtsre-addon-operator-olm-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-mtsre
 - apiVersion: hive.openshift.io/v1
@@ -20389,7 +20725,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-addon-operator-admin
+        name: backplane-mtsre-addon-operator-cluster
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -20407,7 +20743,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-addon-operator-olm-admin
+        name: backplane-mtsre-addon-operator-olm-project
       rules:
       - apiGroups:
         - operators.coreos.com
@@ -20433,7 +20769,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-monitoring
+        name: backplane-mtsre-monitoring-project
       rules:
       - apiGroups:
         - monitoring.coreos.com
@@ -20463,15 +20799,18 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-mtsre-addon-operator-admin
+        - backplane-mtsre-addon-operator-cluster
         - backplane-readers-cluster
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-mtsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mtsre-monitoring-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-mtsre-addon-operator-olm-admin
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mtsre-addon-operator-olm-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-mtsre
 - apiVersion: hive.openshift.io/v1
@@ -20496,7 +20835,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-addon-operator-admin
+        name: backplane-mtsre-addon-operator-cluster
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -20514,7 +20853,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-addon-operator-olm-admin
+        name: backplane-mtsre-addon-operator-olm-project
       rules:
       - apiGroups:
         - operators.coreos.com
@@ -20540,7 +20879,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-monitoring
+        name: backplane-mtsre-monitoring-project
       rules:
       - apiGroups:
         - monitoring.coreos.com
@@ -20570,15 +20909,18 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-mtsre-addon-operator-admin
+        - backplane-mtsre-addon-operator-cluster
         - backplane-readers-cluster
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-mtsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mtsre-monitoring-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-mtsre-addon-operator-olm-admin
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mtsre-addon-operator-olm-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-mtsre
 - apiVersion: hive.openshift.io/v1
@@ -20603,7 +20945,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-addon-operator-admin
+        name: backplane-mtsre-addon-operator-cluster
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -20621,7 +20963,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-addon-operator-olm-admin
+        name: backplane-mtsre-addon-operator-olm-project
       rules:
       - apiGroups:
         - operators.coreos.com
@@ -20647,7 +20989,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-monitoring
+        name: backplane-mtsre-monitoring-project
       rules:
       - apiGroups:
         - monitoring.coreos.com
@@ -20677,15 +21019,18 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-mtsre-addon-operator-admin
+        - backplane-mtsre-addon-operator-cluster
         - backplane-readers-cluster
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-mtsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mtsre-monitoring-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-mtsre-addon-operator-olm-admin
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mtsre-addon-operator-olm-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-mtsre
 - apiVersion: hive.openshift.io/v1
@@ -20710,7 +21055,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-addon-operator-admin
+        name: backplane-mtsre-addon-operator-cluster
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -20728,7 +21073,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-addon-operator-olm-admin
+        name: backplane-mtsre-addon-operator-olm-project
       rules:
       - apiGroups:
         - operators.coreos.com
@@ -20754,7 +21099,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-monitoring
+        name: backplane-mtsre-monitoring-project
       rules:
       - apiGroups:
         - monitoring.coreos.com
@@ -20784,15 +21129,18 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-mtsre-addon-operator-admin
+        - backplane-mtsre-addon-operator-cluster
         - backplane-readers-cluster
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-mtsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mtsre-monitoring-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-mtsre-addon-operator-olm-admin
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mtsre-addon-operator-olm-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-mtsre
 - apiVersion: hive.openshift.io/v1
@@ -20817,7 +21165,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-addon-operator-admin
+        name: backplane-mtsre-addon-operator-cluster
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -20835,7 +21183,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-addon-operator-olm-admin
+        name: backplane-mtsre-addon-operator-olm-project
       rules:
       - apiGroups:
         - operators.coreos.com
@@ -20861,7 +21209,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-monitoring
+        name: backplane-mtsre-monitoring-project
       rules:
       - apiGroups:
         - monitoring.coreos.com
@@ -20891,15 +21239,18 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-mtsre-addon-operator-admin
+        - backplane-mtsre-addon-operator-cluster
         - backplane-readers-cluster
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-mtsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mtsre-monitoring-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-mtsre-addon-operator-olm-admin
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mtsre-addon-operator-olm-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-mtsre
 - apiVersion: hive.openshift.io/v1
@@ -20924,7 +21275,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-addon-operator-admin
+        name: backplane-mtsre-addon-operator-cluster
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -20942,7 +21293,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-addon-operator-olm-admin
+        name: backplane-mtsre-addon-operator-olm-project
       rules:
       - apiGroups:
         - operators.coreos.com
@@ -20968,7 +21319,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-monitoring
+        name: backplane-mtsre-monitoring-project
       rules:
       - apiGroups:
         - monitoring.coreos.com
@@ -20998,15 +21349,18 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-mtsre-addon-operator-admin
+        - backplane-mtsre-addon-operator-cluster
         - backplane-readers-cluster
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-mtsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mtsre-monitoring-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-mtsre-addon-operator-olm-admin
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mtsre-addon-operator-olm-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-mtsre
 - apiVersion: hive.openshift.io/v1
@@ -21031,7 +21385,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-addon-operator-admin
+        name: backplane-mtsre-addon-operator-cluster
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -21049,7 +21403,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-addon-operator-olm-admin
+        name: backplane-mtsre-addon-operator-olm-project
       rules:
       - apiGroups:
         - operators.coreos.com
@@ -21075,7 +21429,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-monitoring
+        name: backplane-mtsre-monitoring-project
       rules:
       - apiGroups:
         - monitoring.coreos.com
@@ -21105,15 +21459,18 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-mtsre-addon-operator-admin
+        - backplane-mtsre-addon-operator-cluster
         - backplane-readers-cluster
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-mtsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mtsre-monitoring-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-mtsre-addon-operator-olm-admin
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mtsre-addon-operator-olm-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-mtsre
 - apiVersion: hive.openshift.io/v1
@@ -21138,7 +21495,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-addon-operator-admin
+        name: backplane-mtsre-addon-operator-cluster
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -21156,7 +21513,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-addon-operator-olm-admin
+        name: backplane-mtsre-addon-operator-olm-project
       rules:
       - apiGroups:
         - operators.coreos.com
@@ -21182,7 +21539,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-monitoring
+        name: backplane-mtsre-monitoring-project
       rules:
       - apiGroups:
         - monitoring.coreos.com
@@ -21212,15 +21569,18 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-mtsre-addon-operator-admin
+        - backplane-mtsre-addon-operator-cluster
         - backplane-readers-cluster
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-mtsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mtsre-monitoring-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-mtsre-addon-operator-olm-admin
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mtsre-addon-operator-olm-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-mtsre
 - apiVersion: hive.openshift.io/v1
@@ -21245,7 +21605,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-addon-operator-admin
+        name: backplane-mtsre-addon-operator-cluster
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -21263,7 +21623,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-addon-operator-olm-admin
+        name: backplane-mtsre-addon-operator-olm-project
       rules:
       - apiGroups:
         - operators.coreos.com
@@ -21289,7 +21649,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-monitoring
+        name: backplane-mtsre-monitoring-project
       rules:
       - apiGroups:
         - monitoring.coreos.com
@@ -21319,15 +21679,18 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-mtsre-addon-operator-admin
+        - backplane-mtsre-addon-operator-cluster
         - backplane-readers-cluster
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-mtsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mtsre-monitoring-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-mtsre-addon-operator-olm-admin
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mtsre-addon-operator-olm-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-mtsre
 - apiVersion: hive.openshift.io/v1
@@ -21352,7 +21715,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-addon-operator-admin
+        name: backplane-mtsre-addon-operator-cluster
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -21370,7 +21733,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-addon-operator-olm-admin
+        name: backplane-mtsre-addon-operator-olm-project
       rules:
       - apiGroups:
         - operators.coreos.com
@@ -21396,7 +21759,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-monitoring
+        name: backplane-mtsre-monitoring-project
       rules:
       - apiGroups:
         - monitoring.coreos.com
@@ -21426,15 +21789,18 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-mtsre-addon-operator-admin
+        - backplane-mtsre-addon-operator-cluster
         - backplane-readers-cluster
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-mtsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mtsre-monitoring-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-mtsre-addon-operator-olm-admin
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mtsre-addon-operator-olm-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-mtsre
 - apiVersion: hive.openshift.io/v1
@@ -21459,7 +21825,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-addon-operator-admin
+        name: backplane-mtsre-addon-operator-cluster
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -21477,7 +21843,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-addon-operator-olm-admin
+        name: backplane-mtsre-addon-operator-olm-project
       rules:
       - apiGroups:
         - operators.coreos.com
@@ -21503,7 +21869,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-monitoring
+        name: backplane-mtsre-monitoring-project
       rules:
       - apiGroups:
         - monitoring.coreos.com
@@ -21533,15 +21899,18 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-mtsre-addon-operator-admin
+        - backplane-mtsre-addon-operator-cluster
         - backplane-readers-cluster
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-mtsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mtsre-monitoring-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-mtsre-addon-operator-olm-admin
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mtsre-addon-operator-olm-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-mtsre
 - apiVersion: hive.openshift.io/v1
@@ -21566,7 +21935,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-addon-operator-admin
+        name: backplane-mtsre-addon-operator-cluster
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -21584,7 +21953,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-addon-operator-olm-admin
+        name: backplane-mtsre-addon-operator-olm-project
       rules:
       - apiGroups:
         - operators.coreos.com
@@ -21610,7 +21979,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-monitoring
+        name: backplane-mtsre-monitoring-project
       rules:
       - apiGroups:
         - monitoring.coreos.com
@@ -21640,15 +22009,18 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-mtsre-addon-operator-admin
+        - backplane-mtsre-addon-operator-cluster
         - backplane-readers-cluster
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-mtsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mtsre-monitoring-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-mtsre-addon-operator-olm-admin
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mtsre-addon-operator-olm-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-mtsre
 - apiVersion: hive.openshift.io/v1
@@ -21673,7 +22045,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-addon-operator-admin
+        name: backplane-mtsre-addon-operator-cluster
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -21691,7 +22063,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-addon-operator-olm-admin
+        name: backplane-mtsre-addon-operator-olm-project
       rules:
       - apiGroups:
         - operators.coreos.com
@@ -21717,7 +22089,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-monitoring
+        name: backplane-mtsre-monitoring-project
       rules:
       - apiGroups:
         - monitoring.coreos.com
@@ -21747,15 +22119,18 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-mtsre-addon-operator-admin
+        - backplane-mtsre-addon-operator-cluster
         - backplane-readers-cluster
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-mtsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mtsre-monitoring-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-mtsre-addon-operator-olm-admin
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mtsre-addon-operator-olm-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-mtsre
 - apiVersion: hive.openshift.io/v1
@@ -21780,7 +22155,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-addon-operator-admin
+        name: backplane-mtsre-addon-operator-cluster
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -21798,7 +22173,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-addon-operator-olm-admin
+        name: backplane-mtsre-addon-operator-olm-project
       rules:
       - apiGroups:
         - operators.coreos.com
@@ -21824,7 +22199,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-monitoring
+        name: backplane-mtsre-monitoring-project
       rules:
       - apiGroups:
         - monitoring.coreos.com
@@ -21854,15 +22229,18 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-mtsre-addon-operator-admin
+        - backplane-mtsre-addon-operator-cluster
         - backplane-readers-cluster
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-mtsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mtsre-monitoring-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-mtsre-addon-operator-olm-admin
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mtsre-addon-operator-olm-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-mtsre
 - apiVersion: hive.openshift.io/v1
@@ -21887,7 +22265,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-addon-operator-admin
+        name: backplane-mtsre-addon-operator-cluster
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -21905,7 +22283,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-addon-operator-olm-admin
+        name: backplane-mtsre-addon-operator-olm-project
       rules:
       - apiGroups:
         - operators.coreos.com
@@ -21931,7 +22309,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-monitoring
+        name: backplane-mtsre-monitoring-project
       rules:
       - apiGroups:
         - monitoring.coreos.com
@@ -21961,15 +22339,18 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-mtsre-addon-operator-admin
+        - backplane-mtsre-addon-operator-cluster
         - backplane-readers-cluster
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-mtsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mtsre-monitoring-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-mtsre-addon-operator-olm-admin
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mtsre-addon-operator-olm-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-mtsre
 - apiVersion: hive.openshift.io/v1
@@ -21994,7 +22375,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-addon-operator-admin
+        name: backplane-mtsre-addon-operator-cluster
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -22012,7 +22393,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-addon-operator-olm-admin
+        name: backplane-mtsre-addon-operator-olm-project
       rules:
       - apiGroups:
         - operators.coreos.com
@@ -22038,7 +22419,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-monitoring
+        name: backplane-mtsre-monitoring-project
       rules:
       - apiGroups:
         - monitoring.coreos.com
@@ -22068,15 +22449,18 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-mtsre-addon-operator-admin
+        - backplane-mtsre-addon-operator-cluster
         - backplane-readers-cluster
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-mtsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mtsre-monitoring-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-mtsre-addon-operator-olm-admin
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mtsre-addon-operator-olm-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-mtsre
 - apiVersion: hive.openshift.io/v1
@@ -22101,7 +22485,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-addon-operator-admin
+        name: backplane-mtsre-addon-operator-cluster
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -22119,7 +22503,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-addon-operator-olm-admin
+        name: backplane-mtsre-addon-operator-olm-project
       rules:
       - apiGroups:
         - operators.coreos.com
@@ -22145,7 +22529,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-monitoring
+        name: backplane-mtsre-monitoring-project
       rules:
       - apiGroups:
         - monitoring.coreos.com
@@ -22175,15 +22559,18 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-mtsre-addon-operator-admin
+        - backplane-mtsre-addon-operator-cluster
         - backplane-readers-cluster
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-mtsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mtsre-monitoring-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-mtsre-addon-operator-olm-admin
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mtsre-addon-operator-olm-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-mtsre
 - apiVersion: hive.openshift.io/v1
@@ -22208,7 +22595,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-addon-operator-admin
+        name: backplane-mtsre-addon-operator-cluster
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -22226,7 +22613,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-addon-operator-olm-admin
+        name: backplane-mtsre-addon-operator-olm-project
       rules:
       - apiGroups:
         - operators.coreos.com
@@ -22252,7 +22639,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-monitoring
+        name: backplane-mtsre-monitoring-project
       rules:
       - apiGroups:
         - monitoring.coreos.com
@@ -22282,15 +22669,18 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-mtsre-addon-operator-admin
+        - backplane-mtsre-addon-operator-cluster
         - backplane-readers-cluster
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-mtsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mtsre-monitoring-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-mtsre-addon-operator-olm-admin
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mtsre-addon-operator-olm-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-mtsre
 - apiVersion: hive.openshift.io/v1
@@ -22315,7 +22705,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-addon-operator-admin
+        name: backplane-mtsre-addon-operator-cluster
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -22333,7 +22723,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-addon-operator-olm-admin
+        name: backplane-mtsre-addon-operator-olm-project
       rules:
       - apiGroups:
         - operators.coreos.com
@@ -22359,7 +22749,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-monitoring
+        name: backplane-mtsre-monitoring-project
       rules:
       - apiGroups:
         - monitoring.coreos.com
@@ -22389,15 +22779,18 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-mtsre-addon-operator-admin
+        - backplane-mtsre-addon-operator-cluster
         - backplane-readers-cluster
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-mtsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mtsre-monitoring-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-mtsre-addon-operator-olm-admin
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mtsre-addon-operator-olm-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-mtsre
 - apiVersion: hive.openshift.io/v1
@@ -22422,7 +22815,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-addon-operator-admin
+        name: backplane-mtsre-addon-operator-cluster
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -22440,7 +22833,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-addon-operator-olm-admin
+        name: backplane-mtsre-addon-operator-olm-project
       rules:
       - apiGroups:
         - operators.coreos.com
@@ -22466,7 +22859,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-monitoring
+        name: backplane-mtsre-monitoring-project
       rules:
       - apiGroups:
         - monitoring.coreos.com
@@ -22496,15 +22889,18 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-mtsre-addon-operator-admin
+        - backplane-mtsre-addon-operator-cluster
         - backplane-readers-cluster
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-mtsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mtsre-monitoring-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-mtsre-addon-operator-olm-admin
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mtsre-addon-operator-olm-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-mtsre
 - apiVersion: hive.openshift.io/v1
@@ -22529,7 +22925,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-addon-operator-admin
+        name: backplane-mtsre-addon-operator-cluster
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -22547,7 +22943,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-addon-operator-olm-admin
+        name: backplane-mtsre-addon-operator-olm-project
       rules:
       - apiGroups:
         - operators.coreos.com
@@ -22573,7 +22969,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-monitoring
+        name: backplane-mtsre-monitoring-project
       rules:
       - apiGroups:
         - monitoring.coreos.com
@@ -22603,15 +22999,18 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-mtsre-addon-operator-admin
+        - backplane-mtsre-addon-operator-cluster
         - backplane-readers-cluster
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-mtsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mtsre-monitoring-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-mtsre-addon-operator-olm-admin
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mtsre-addon-operator-olm-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-mtsre
 - apiVersion: hive.openshift.io/v1
@@ -22636,7 +23035,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-addon-operator-admin
+        name: backplane-mtsre-addon-operator-cluster
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -22654,7 +23053,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-addon-operator-olm-admin
+        name: backplane-mtsre-addon-operator-olm-project
       rules:
       - apiGroups:
         - operators.coreos.com
@@ -22680,7 +23079,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-monitoring
+        name: backplane-mtsre-monitoring-project
       rules:
       - apiGroups:
         - monitoring.coreos.com
@@ -22710,15 +23109,18 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-mtsre-addon-operator-admin
+        - backplane-mtsre-addon-operator-cluster
         - backplane-readers-cluster
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-mtsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mtsre-monitoring-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-mtsre-addon-operator-olm-admin
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mtsre-addon-operator-olm-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-mtsre
 - apiVersion: hive.openshift.io/v1
@@ -22743,7 +23145,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-addon-operator-admin
+        name: backplane-mtsre-addon-operator-cluster
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -22761,7 +23163,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-addon-operator-olm-admin
+        name: backplane-mtsre-addon-operator-olm-project
       rules:
       - apiGroups:
         - operators.coreos.com
@@ -22787,7 +23189,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-monitoring
+        name: backplane-mtsre-monitoring-project
       rules:
       - apiGroups:
         - monitoring.coreos.com
@@ -22817,15 +23219,18 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-mtsre-addon-operator-admin
+        - backplane-mtsre-addon-operator-cluster
         - backplane-readers-cluster
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-mtsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mtsre-monitoring-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-mtsre-addon-operator-olm-admin
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mtsre-addon-operator-olm-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-mtsre
 - apiVersion: hive.openshift.io/v1
@@ -22850,7 +23255,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-addon-operator-admin
+        name: backplane-mtsre-addon-operator-cluster
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -22868,7 +23273,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-addon-operator-olm-admin
+        name: backplane-mtsre-addon-operator-olm-project
       rules:
       - apiGroups:
         - operators.coreos.com
@@ -22894,7 +23299,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-monitoring
+        name: backplane-mtsre-monitoring-project
       rules:
       - apiGroups:
         - monitoring.coreos.com
@@ -22924,15 +23329,18 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-mtsre-addon-operator-admin
+        - backplane-mtsre-addon-operator-cluster
         - backplane-readers-cluster
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-mtsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mtsre-monitoring-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-mtsre-addon-operator-olm-admin
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mtsre-addon-operator-olm-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-mtsre
 - apiVersion: hive.openshift.io/v1
@@ -22957,7 +23365,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-addon-operator-admin
+        name: backplane-mtsre-addon-operator-cluster
       rules:
       - apiGroups:
         - addons.managed.openshift.io
@@ -22975,7 +23383,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-addon-operator-olm-admin
+        name: backplane-mtsre-addon-operator-olm-project
       rules:
       - apiGroups:
         - operators.coreos.com
@@ -23001,7 +23409,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-mtsre-monitoring
+        name: backplane-mtsre-monitoring-project
       rules:
       - apiGroups:
         - monitoring.coreos.com
@@ -23031,15 +23439,18 @@ objects:
         namespace: openshift-rbac-permissions
       spec:
         clusterPermissions:
-        - backplane-mtsre-addon-operator-admin
+        - backplane-mtsre-addon-operator-cluster
         - backplane-readers-cluster
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-mtsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mtsre-monitoring-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
-        - clusterRoleName: backplane-mtsre-addon-operator-olm-admin
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mtsre-addon-operator-olm-project
           namespacesAllowedRegex: (^openshift-addon-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-mtsre
 - apiVersion: hive.openshift.io/v1
@@ -23066,10 +23477,13 @@ objects:
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^rhods-notebooks$|^redhat-ods-applications$|^redhat-ods-monitoring$|^redhat-ods-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         - clusterRoleName: system:openshift:cloud-credential-operator:cluster-reader
           namespacesAllowedRegex: (^rhods-notebooks$|^redhat-ods-applications$|^redhat-ods-monitoring$|^redhat-ods-operator$)
-        - clusterRoleName: backplane-mtsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mtsre-monitoring-project
           namespacesAllowedRegex: (^redhat-ods-monitoring$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-mtsre
 - apiVersion: hive.openshift.io/v1
@@ -23090,7 +23504,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-ocs-consumer-cr-admins
+        name: backplane-ocs-consumer-cr-project
       rules:
       - apiGroups:
         - odf.openshift.io
@@ -23197,10 +23611,13 @@ objects:
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-storage$)
-        - clusterRoleName: backplane-ocs-consumer-cr-admins
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-ocs-consumer-cr-project
           namespacesAllowedRegex: (^openshift-storage$)
-        - clusterRoleName: backplane-mtsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mtsre-monitoring-project
           namespacesAllowedRegex: (^openshift-storage$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-mtsre
 - apiVersion: hive.openshift.io/v1
@@ -23227,8 +23644,10 @@ objects:
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-storage$)
-        - clusterRoleName: backplane-mtsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mtsre-monitoring-project
           namespacesAllowedRegex: (^openshift-storage$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-mtsre
 - apiVersion: hive.openshift.io/v1
@@ -23249,7 +23668,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-ocs-provider-cr-admins
+        name: backplane-ocs-provider-cr-project
       rules:
       - apiGroups:
         - odf.openshift.io
@@ -23390,10 +23809,13 @@ objects:
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-storage$)
-        - clusterRoleName: backplane-ocs-provider-cr-admins
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-ocs-provider-cr-project
           namespacesAllowedRegex: (^openshift-storage$)
-        - clusterRoleName: backplane-mtsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mtsre-monitoring-project
           namespacesAllowedRegex: (^openshift-storage$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-mtsre
 - apiVersion: hive.openshift.io/v1
@@ -23414,7 +23836,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-openshift-connectors-cr-admins
+        name: backplane-openshift-connectors-cr-project
       rules:
       - apiGroups:
         - operators.coreos.com
@@ -23439,10 +23861,13 @@ objects:
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^redhat-openshift-connectors$)
-        - clusterRoleName: backplane-openshift-connectors-cr-admins
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-openshift-connectors-cr-project
           namespacesAllowedRegex: (^redhat-openshift-connectors$)
-        - clusterRoleName: backplane-mtsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mtsre-monitoring-project
           namespacesAllowedRegex: (^redhat-openshift-connectors$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-mtsre
 - apiVersion: hive.openshift.io/v1
@@ -23469,8 +23894,10 @@ objects:
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^redhat-reference-addon$)
-        - clusterRoleName: backplane-mtsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-mtsre-monitoring-project
           namespacesAllowedRegex: (^openshift-storage$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-mtsre
 - apiVersion: hive.openshift.io/v1
@@ -23516,6 +23943,7 @@ objects:
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^redhat-nvidia-gpu-addon$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-addon-nvidia-gpu
 - apiVersion: hive.openshift.io/v1
@@ -23575,21 +24003,6 @@ objects:
       kind: Namespace
       metadata:
         name: openshift-backplane-odf-sre
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: backplane-odf-sre-monitoring
-      rules:
-      - apiGroups:
-        - monitoring.coreos.com
-        resources:
-        - servicemonitors
-        verbs:
-        - get
-        - list
-        - watch
-        - patch
-        - update
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -23623,21 +24036,6 @@ objects:
       kind: Namespace
       metadata:
         name: openshift-backplane-odf-sre
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        name: backplane-odf-sre-monitoring
-      rules:
-      - apiGroups:
-        - monitoring.coreos.com
-        resources:
-        - servicemonitors
-        verbs:
-        - get
-        - list
-        - watch
-        - patch
-        - update
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -23777,10 +24175,13 @@ objects:
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-storage$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         - clusterRoleName: backplane-odf-sre-ocs-consumer-project
           namespacesAllowedRegex: (^openshift-storage$)
-        - clusterRoleName: backplane-lpsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-monitoring-project
           namespacesAllowedRegex: (^openshift-storage$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-odf-sre
 - apiVersion: hive.openshift.io/v1
@@ -23908,10 +24309,13 @@ objects:
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-storage$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         - clusterRoleName: backplane-odf-sre-ocs-provider-project
           namespacesAllowedRegex: (^openshift-storage$)
-        - clusterRoleName: backplane-lpsre-monitoring
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-monitoring-project
           namespacesAllowedRegex: (^openshift-storage$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-odf-sre
 - apiVersion: hive.openshift.io/v1
@@ -23938,8 +24342,10 @@ objects:
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-storage$)
-        - clusterRoleName: backplane-ocs-consumer-cr-admins
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-ocs-consumer-cr-project
           namespacesAllowedRegex: (^openshift-storage$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-odf
 - apiVersion: hive.openshift.io/v1
@@ -23966,8 +24372,10 @@ objects:
         permissions:
         - clusterRoleName: admin
           namespacesAllowedRegex: (^openshift-storage$)
-        - clusterRoleName: backplane-ocs-provider-cr-admins
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-ocs-provider-cr-project
           namespacesAllowedRegex: (^openshift-storage$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-odf
 - apiVersion: hive.openshift.io/v1
@@ -24120,21 +24528,38 @@ objects:
         resources:
         - projects
         verbs:
-        - '*'
+        - create
+        - get
+        - list
+        - patch
+        - update
+        - watch
       - apiGroups:
         - project.openshift.io
         resources:
         - projects
         - projectrequests
         verbs:
-        - '*'
+        - create
+        - get
+        - list
+        - patch
+        - update
+        - watch
+        - delete
       - apiGroups:
         - ''
         resources:
         - namespaces
         - namespaces/finalize
         verbs:
-        - '*'
+        - create
+        - get
+        - list
+        - patch
+        - update
+        - watch
+        - delete
       - apiGroups:
         - certificates.k8s.io
         resources:
@@ -24524,8 +24949,10 @@ objects:
         permissions:
         - clusterRoleName: backplane-srep-hive-project
           namespacesAllowedRegex: (^uhc-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         - clusterRoleName: dedicated-readers
           namespacesAllowedRegex: (^hive$|^backplane$|^uhc-.*|^.*-operator$)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-srep
 - apiVersion: hive.openshift.io/v1
@@ -24694,10 +25121,13 @@ objects:
         permissions:
         - clusterRoleName: backplane-srep-management-cluster-project
           namespacesAllowedRegex: (^uhc.*|^ocm.*|^klusterlet.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         - clusterRoleName: dedicated-readers
           namespacesAllowedRegex: (^hypershift.*|^uhc.*|^ocm.*|^klusterlet.*|^open-cluster-management.*)
-        - clusterRoleName: backplane-srep
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-srep-admins-project
           namespacesAllowedRegex: (^hypershift.*|^uhc.*|^ocm.*|^klusterlet.*|^open-cluster-management.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-srep
 - apiVersion: hive.openshift.io/v1
@@ -24726,7 +25156,7 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
-        name: backplane-srep-service-cluster-project
+        name: backplane-srep-service-cluster-cluster
       rules:
       - apiGroups:
         - work.open-cluster-management.io
@@ -24858,10 +25288,13 @@ objects:
         permissions:
         - clusterRoleName: backplane-srep-service-cluster-project
           namespacesAllowedRegex: (^uhc.*|^ocm.*|^klusterlet.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         - clusterRoleName: dedicated-readers
           namespacesAllowedRegex: (^hypershift.*|^uhc.*|^ocm.*|^klusterlet.*|^open-cluster-management.*)
-        - clusterRoleName: backplane-srep
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-srep-admins-project
           namespacesAllowedRegex: (^hypershift.*|^uhc.*|^ocm.*|^klusterlet.*|^open-cluster-management.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-srep
 - apiVersion: hive.openshift.io/v1

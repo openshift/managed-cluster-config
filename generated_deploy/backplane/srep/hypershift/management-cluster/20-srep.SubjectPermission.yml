@@ -1,0 +1,22 @@
+apiVersion: managed.openshift.io/v1alpha1
+kind: SubjectPermission
+metadata:
+  name: backplane-srep-management-cluster
+  namespace: openshift-rbac-permissions
+spec:
+  clusterPermissions:
+  - backplane-srep-management-cluster-cluster
+  # permit get at global scope https://issues.redhat.com/browse/OSD-15997
+  - view
+  permissions:
+  - clusterRoleName: backplane-srep-management-cluster-project
+    namespacesAllowedRegex: "(^uhc.*|^ocm.*|^klusterlet.*)"
+    namespacesDeniedRegex: openshift-backplane-cluster-admin
+  - clusterRoleName: dedicated-readers
+    namespacesAllowedRegex: "(^hypershift.*|^uhc.*|^ocm.*|^klusterlet.*|^open-cluster-management.*)"
+    namespacesDeniedRegex: openshift-backplane-cluster-admin
+  - clusterRoleName: backplane-srep # apply standard srep access to hcp namespaces https://issues.redhat.com/browse/OSD-15997
+    namespacesAllowedRegex: "(^hypershift.*|^uhc.*|^ocm.*|^klusterlet.*|^open-cluster-management.*)"
+    namespacesDeniedRegex: openshift-backplane-cluster-admin
+  subjectKind: Group
+  subjectName: system:serviceaccounts:openshift-backplane-srep
