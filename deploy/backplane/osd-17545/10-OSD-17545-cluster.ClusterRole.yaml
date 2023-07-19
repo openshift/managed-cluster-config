@@ -1,0 +1,18 @@
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: osd-17545-cluster
+  namespace: openshift-sre-pruning
+  annotations:
+    kubernetes.io/description: Mitigate https://issues.redhat.com/browse/OSD-17545
+rules:
+- apiGroups:
+  - "rbac.authorization.k8s.io"
+  resources:
+  - clusterrolebindings
+  - rolebindings
+  verbs:
+  - get
+  - list
+  - delete

@@ -1,0 +1,60 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: osd-17545
+  namespace: openshift-sre-pruning
+  annotations:
+    kubernetes.io/description: Mitigate https://issues.redhat.com/browse/OSD-17545
+spec:
+  failedJobsHistoryLimit: 3
+  successfulJobsHistoryLimit: 3
+  schedule: "*/30 * * * *" # Every thirty minutes
+  concurrencyPolicy: Replace
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      ttlSecondsAfterFinished: 3600
+      template:
+        metadata:
+          name: osd-17545
+          namespace: openshift-sre-pruning
+          annotations:
+            kubernetes.io/description: Mitigate https://issues.redhat.com/browse/OSD-17545
+        spec:
+          affinity:
+            nodeAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+              - preference:
+                  matchExpressions:
+                  - key: node-role.kubernetes.io/infra
+                    operator: Exists
+                weight: 1
+          tolerations:
+            - effect: NoSchedule
+              key: node-role.kubernetes.io/infra
+              operator: Exists
+          containers:
+          - name: osd-17545
+            image: image-registry.openshift-image-registry.svc:5000/openshift/tools:latest
+            imagePullPolicy: Always
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                - ALL
+              runAsNonRoot: true
+            command:
+            - /bin/bash
+            args:
+            - -c
+            - |
+              # cleanup rolebindings
+              oc get rolebindings -A | grep -e backplane-lpsre-monitoring-system:serviceaccounts:openshift-backplane-lpsre -e backplane-ocs-consumer-cr-admins-system:serviceaccounts:openshift-backplane-lpsre -e backplane-lpsre-monitoring-system:serviceaccounts:openshift-backplane-lpsre -e backplane-lpsre-monitoring-system:serviceaccounts:openshift-backplane-lpsre -e backplane-ocs-provider-cr-admins-system:serviceaccounts:openshift-backplane-lpsre -e backplane-lpsre-addon-operator-olm-admin-system:serviceaccounts:openshift-backplane-lpsre -e backplane-mcg-osd-cr-admins-system:serviceaccounts:openshift-backplane-mcg -e backplane-mtsre-monitoring-system:serviceaccounts:openshift-backplane-mtsre -e backplane-ocs-consumer-cr-admins-system:serviceaccounts:openshift-backplane-mtsre -e backplane-ocs-provider-cr-admins-system:serviceaccounts:openshift-backplane-mtsre -e backplane-openshift-connectors-cr-admins-system:serviceaccounts:openshift-backplane-mtsre -e backplane-mtsre-addon-operator-olm-admin-system:serviceaccounts:openshift-backplane-mtsre -e backplane-ocs-consumer-cr-admins-system:serviceaccounts:openshift-backplane-odf -e backplane-ocs-provider-cr-admins-system:serviceaccounts:openshift-backplane-odf -e backplane-lpsre-monitoring-system:serviceaccounts:openshift-backplane-odf-sre -e backplane-srep-system:serviceaccounts:openshift-backplane-srep | awk '{print "oc -n " $1 " delete rolebinding " $2}' | sh
+
+              # cleanup clusterrolebindings
+              oc delete clusterrolebinding backplane-lpsre-addon-operator-admin-system:serviceaccounts:openshift-backplane-lpsre backplane-mtsre-addon-operator-admin-system:serviceaccounts:openshift-backplane-mtsre || true
+
+          serviceAccountName: osd-17545
+          automountServiceAccountToken: true
+          restartPolicy: Never
