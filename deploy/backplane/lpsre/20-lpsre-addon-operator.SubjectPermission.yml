@@ -5,14 +5,17 @@ metadata:
   namespace: openshift-rbac-permissions
 spec:
   clusterPermissions:
-  - backplane-lpsre-addon-operator-admin
+  - backplane-lpsre-addon-operator-cluster
   - backplane-readers-cluster
   permissions:
   - clusterRoleName: admin
     namespacesAllowedRegex: (^openshift-addon-operator$)
-  - clusterRoleName: backplane-lpsre-monitoring
+    namespacesDeniedRegex: openshift-backplane-cluster-admin
+  - clusterRoleName: backplane-lpsre-monitoring-project
     namespacesAllowedRegex: (^openshift-addon-operator$)
-  - clusterRoleName: backplane-lpsre-addon-operator-olm-admin
+    namespacesDeniedRegex: openshift-backplane-cluster-admin
+  - clusterRoleName: backplane-lpsre-addon-operator-olm-project
     namespacesAllowedRegex: (^openshift-addon-operator$)
+    namespacesDeniedRegex: openshift-backplane-cluster-admin
   subjectKind: Group
   subjectName: system:serviceaccounts:openshift-backplane-lpsre

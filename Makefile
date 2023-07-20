@@ -20,8 +20,17 @@ endif
 ifndef GEN_TEMPLATE
 $(error GEN_TEMPLATE is not set; check project.mk file)
 endif
+ifndef GEN_POLICY
+$(error GEN_POLICY is not set; check project.mk file)
+endif
 ifndef GEN_POLICY_CONFIG
 $(error GEN_POLICY_CONFIG is not set; check project.mk file)
+endif
+ifndef GEN_POLICY_CONFIG_SP
+$(error GEN_POLICY_CONFIG_SP is not set; check project.mk file)
+endif
+ifndef ENFORCE_BACKPLANE_RULES
+$(error ENFORCE_BACKPLANE_RULES is not set; check project.mk file)
 endif
 
 
@@ -37,7 +46,7 @@ OC := $(CONTAINER_ENGINE) run $(CONTAINER_RUN_FLAGS) quay.io/openshift/origin-cl
 endif
 
 .PHONY: default
-default: generate-oauth-templates generate-rosa-brand-logo generate-hive-templates
+default: enforce-backplane-rules generate-oauth-templates generate-rosa-brand-logo generate-hive-templates
 
 .PHONY: generate-oauth-templates
 generate-oauth-templates:
@@ -56,9 +65,19 @@ generate-rosa-brand-logo:
 .PHONY: generate-hive-templates
 generate-hive-templates: generate-oauth-templates
 	if [ -z ${IN_CONTAINER} ]; then \
-		$(CONTAINER_ENGINE) run $(CONTAINER_RUN_FLAGS) registry.access.redhat.com/ubi8/python-39 /bin/bash -xc "cd `pwd -P`; pip install --disable-pip-version-check oyaml; curl -sSL https://github.com/open-cluster-management-io/policy-generator-plugin/releases/download/v1.9.1/linux-amd64-PolicyGenerator --output /opt/app-root/bin/PolicyGenerator; chmod +x /opt/app-root/bin/PolicyGenerator; ${GEN_POLICY_CONFIG}";\
+		$(CONTAINER_ENGINE) run $(CONTAINER_RUN_FLAGS) registry.access.redhat.com/ubi8/python-39 /bin/bash -xc "cd `pwd -P`; pip install --disable-pip-version-check oyaml; curl -sSL https://github.com/open-cluster-management-io/policy-generator-plugin/releases/download/v1.9.1/linux-amd64-PolicyGenerator --output /opt/app-root/bin/PolicyGenerator; chmod +x /opt/app-root/bin/PolicyGenerator; ${GEN_POLICY_CONFIG}; ${GEN_POLICY_CONFIG_SP}; ${GEN_POLICY}";\
 		$(CONTAINER_ENGINE) run $(CONTAINER_RUN_FLAGS) registry.access.redhat.com/ubi8/python-39 /bin/bash -xc "cd `pwd -P`; pip install --disable-pip-version-check oyaml; ${GEN_TEMPLATE}"; \
 	else \
 		${GEN_POLICY_CONFIG};\
+		${GEN_POLICY_CONFIG_SP};\
+		${GEN_POLICY};\
 		${GEN_TEMPLATE}; \
+	fi
+
+.PHONY: enforce-backplane-rules
+enforce-backplane-rules:
+	if [ -z ${IN_CONTAINER} ]; then \
+		$(CONTAINER_ENGINE) run $(CONTAINER_RUN_FLAGS) registry.access.redhat.com/ubi8/python-39 /bin/bash -xc "cd `pwd -P`; pip install --disable-pip-version-check oyaml; ${ENFORCE_BACKPLANE_RULES}"; \
+	else \
+		${ENFORCE_BACKPLANE_RULES};\
 	fi

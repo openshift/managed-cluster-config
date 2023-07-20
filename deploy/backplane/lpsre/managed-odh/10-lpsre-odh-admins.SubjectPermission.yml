@@ -7,9 +7,12 @@ spec:
   permissions:
   - clusterRoleName: admin
     namespacesAllowedRegex: (^rhods-notebooks$|^redhat-ods-applications$|^redhat-ods-monitoring$|^redhat-ods-operator$)
+    namespacesDeniedRegex: openshift-backplane-cluster-admin
   - clusterRoleName: system:openshift:cloud-credential-operator:cluster-reader
     namespacesAllowedRegex: (^rhods-notebooks$|^redhat-ods-applications$|^redhat-ods-monitoring$|^redhat-ods-operator$)
-  - clusterRoleName: backplane-lpsre-monitoring
+    namespacesDeniedRegex: openshift-backplane-cluster-admin
+  - clusterRoleName: backplane-lpsre-monitoring-project
     namespacesAllowedRegex: (^redhat-ods-monitoring$)
+    namespacesDeniedRegex: openshift-backplane-cluster-admin
   subjectKind: Group
   subjectName: system:serviceaccounts:openshift-backplane-lpsre
