@@ -6,13 +6,18 @@ metadata:
 rules:
 # can create cred secret for mustgathers
 # Enables https://github.com/openshift/managed-scripts/blob/main/scripts/CEE/pcap-collector/metadata.yaml, which requires users to be able to create/get/delete the pcap-collector-creds secret in the managed scripts ns
-- verbs:
-    - "create"
-    - "delete"
-  apiGroups:
-    - ""
-  resources:
-    - "secrets"
+- apiGroups:
+  - ""
   resourceNames:
-    - "pcap-collector-creds"
+  - pcap-collector-creds
+  resources:
+  - secrets
+  verbs:
+  - delete
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - create
 ### END
