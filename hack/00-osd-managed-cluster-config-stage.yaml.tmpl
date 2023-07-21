@@ -3494,6 +3494,21 @@ objects:
                 metadataComplianceType: musthave
                 objectDefinition:
                   apiVersion: monitoring.openshift.io/v1alpha1
+                  kind: ClusterUrlMonitor
+                  metadata:
+                    name: api
+                    namespace: openshift-route-monitor-operator
+                  spec:
+                    port: '443'
+                    prefix: https://api.
+                    skipPrometheusRule: true
+                    slo:
+                      targetAvailabilityPercent: '99.0'
+                    suffix: /livez
+              - complianceType: mustonlyhave
+                metadataComplianceType: musthave
+                objectDefinition:
+                  apiVersion: monitoring.openshift.io/v1alpha1
                   kind: RouteMonitor
                   metadata:
                     annotations: null
