@@ -19,6 +19,10 @@ def dump_configmap(configmap_path, enableUserWorkload):
     with open(input_file_path,'r') as input_file:
         config = yaml.safe_load(input_file)
         config["enableUserWorkload"] = enableUserWorkload
+        if not enableUserWorkload and "prometheusK8s" in config and "remoteWrite" in config["prometheusK8s"]:
+           # not remoteWrite when UWM is disabled
+           del config["prometheusK8s"]["remoteWrite"]
+           
         cmo_config = {
             "apiVersion": "v1",
             "kind": "ConfigMap",
