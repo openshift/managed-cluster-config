@@ -26346,6 +26346,61 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: cluster-monitoring-config-non-uwm-fedramp
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: cluster-monitoring-config
+        namespace: openshift-monitoring
+      data:
+        config.yaml: "enableUserWorkload: false\nprometheusK8s:\n  remoteWrite:\n\
+          \  - url: http://token-refresher.openshift-monitoring.svc.cluster.local\n\
+          \    remoteTimeout: 30s\n    writeRelabelConfigs:\n    - sourceLabels:\n\
+          \      - __name__\n      action: keep\n      regex: (addon_operator_addons_count|addon_operator_addon_health_info|addon_operator_ocm_api_requests_durations|addon_operator_ocm_api_requests_durations_sum|addon_operator_ocm_api_requests_durations_count|addon_operator_paused|cluster_admin_enabled|limited_support_enabled|identity_provider|ingress_canary_route_reachable|ocm_agent_service_log_sent_total|sre:slo:probe_success_api|sre:slo:probe_success_console|sre:slo:upgradeoperator_upgrade_result|sre:slo:imageregistry_http_requests_total|sre:slo:oauth_server_requests_total|sre:sla:outage_5_minutes|sre:slo:apiserver_28d_slo|sre:slo:console_28d_slo|sre:error_budget_burn:apiserver_28d_slo|sre:error_budget_burn:console_28d_slo)\n\
+          \    queueConfig:\n      capacity: 2500\n      maxShards: 1000\n      minShards:\
+          \ 1\n      maxSamplesPerSend: 500\n      batchSendDeadline: 60s\n      minBackoff:\
+          \ 30ms\n      maxBackoff: 5s\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
+          \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
+          \    operator: Exists\n  retention: 11d\n  retentionSize: 90GB\n  volumeClaimTemplate:\n\
+          \    metadata:\n      name: prometheus-data\n    spec:\n      resources:\n\
+          \        requests:\n          storage: 100Gi\nalertmanagerMain:\n  nodeSelector:\n\
+          \    node-role.kubernetes.io/infra: ''\n  tolerations:\n  - effect: NoSchedule\n\
+          \    key: node-role.kubernetes.io/infra\n    operator: Exists\n  volumeClaimTemplate:\n\
+          \    metadata:\n      name: alertmanager-data\n    spec:\n      resources:\n\
+          \        requests:\n          storage: 10Gi\ntelemeterClient:\n  nodeSelector:\n\
+          \    node-role.kubernetes.io/infra: ''\n  tolerations:\n  - effect: NoSchedule\n\
+          \    key: node-role.kubernetes.io/infra\n    operator: Exists\n  telemeterServerURL:\
+          \ ${TELEMETER_SERVER_URL}\nprometheusOperator:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
+          \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
+          \    operator: Exists\ngrafana:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
+          \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
+          \    operator: Exists\nk8sPrometheusAdapter:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
+          \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
+          \    operator: Exists\nkubeStateMetrics:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
+          \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
+          \    operator: Exists\nopenshiftStateMetrics:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
+          \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
+          \    operator: Exists\nthanosQuerier:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
+          \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
+          \    operator: Exists\n"
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: crio-config
   spec:
     clusterDeploymentSelector:
