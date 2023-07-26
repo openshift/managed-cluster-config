@@ -38,7 +38,7 @@ endif
 
 
 CONTAINER_ENGINE?=$(shell command -v docker 2>/dev/null || command -v podman 2>/dev/null)
-CONTAINER_RUN_FLAGS=--user : --rm -v `pwd -P`:`pwd -P`:z -w=`pwd` --platform linux/amd64
+CONTAINER_RUN_FLAGS=--user : --rm -v `pwd -P`:`pwd -P` -w=`pwd` --platform linux/amd64
 
 ifeq ($(CONTAINER_ENGINE),)
 # Running already in a container

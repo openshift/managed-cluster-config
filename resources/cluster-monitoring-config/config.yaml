@@ -4,21 +4,21 @@ prometheusK8s:
 # If the location of this config changes,
 # make sure to adjust https://github.com/openshift/ops-sop/blob/master/v4/howto/observability/o11m_mst_killswitch.md
 # so that killswitch instructions point to the right file!
-  remoteWrite:
-    - url: http://token-refresher.openshift-monitoring.svc.cluster.local
-      remoteTimeout: 30s
-      writeRelabelConfigs:
-      - sourceLabels: [__name__]
-        action: keep
-        regex: '(addon_operator_addons_count|addon_operator_addon_health_info|addon_operator_ocm_api_requests_durations|addon_operator_ocm_api_requests_durations_sum|addon_operator_ocm_api_requests_durations_count|addon_operator_paused|cluster_admin_enabled|limited_support_enabled|identity_provider|ingress_canary_route_reachable|ocm_agent_service_log_sent_total|sre:slo:probe_success_api|sre:slo:probe_success_console|sre:slo:upgradeoperator_upgrade_result|sre:slo:imageregistry_http_requests_total|sre:slo:oauth_server_requests_total|sre:sla:outage_5_minutes|sre:slo:apiserver_28d_slo|sre:slo:console_28d_slo|sre:error_budget_burn:apiserver_28d_slo|sre:error_budget_burn:console_28d_slo)'
-      queueConfig:
-        capacity: 2500
-        maxShards: 1000
-        minShards: 1
-        maxSamplesPerSend: 500
-        batchSendDeadline: 60s
-        minBackoff: 30ms
-        maxBackoff: 5s
+  # remoteWrite:
+  #   - url: http://token-refresher.openshift-monitoring.svc.cluster.local
+  #     remoteTimeout: 30s
+  #     writeRelabelConfigs:
+  #     - sourceLabels: [__name__]
+  #       action: keep
+  #       regex: '(addon_operator_addons_count|addon_operator_addon_health_info|addon_operator_ocm_api_requests_durations|addon_operator_ocm_api_requests_durations_sum|addon_operator_ocm_api_requests_durations_count|addon_operator_paused|cluster_admin_enabled|limited_support_enabled|identity_provider|ingress_canary_route_reachable|ocm_agent_service_log_sent_total|sre:slo:probe_success_api|sre:slo:probe_success_console|sre:slo:upgradeoperator_upgrade_result|sre:slo:imageregistry_http_requests_total|sre:slo:oauth_server_requests_total|sre:sla:outage_5_minutes|sre:slo:apiserver_28d_slo|sre:slo:console_28d_slo|sre:error_budget_burn:apiserver_28d_slo|sre:error_budget_burn:console_28d_slo)'
+  #     queueConfig:
+  #       capacity: 2500
+  #       maxShards: 1000
+  #       minShards: 1
+  #       maxSamplesPerSend: 500
+  #       batchSendDeadline: 60s
+  #       minBackoff: 30ms
+  #       maxBackoff: 5s
   nodeSelector:
     node-role.kubernetes.io/infra: ""
   tolerations:

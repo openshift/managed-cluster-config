@@ -20,6 +20,9 @@ def dump_configmap(configmap_path, enableUserWorkload):
     with open(input_file_path,'r') as input_file:
         config = yaml.safe_load(input_file)
         config["enableUserWorkload"] = enableUserWorkload
+        if remoteWrite:
+           config["enableUserWorkload"] = enableUserWorkload
+        
         cmo_config = {
             "apiVersion": "v1",
             "kind": "ConfigMap",
@@ -37,4 +40,4 @@ def dump_configmap(configmap_path, enableUserWorkload):
 
 dump_configmap(output_file_path_uwm, True)
 dump_configmap(output_file_path_non_uwm, False)
-dump_configmap(output_file_path_fr, False)
+dump_configmap(output_file_path_fr, True)
