@@ -1,0 +1,115 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: sre-infra-resizing-alerts
+    role: alert-rules
+  name: sre-infra-resizing-alerts
+  namespace: openshift-monitoring
+spec:
+  groups:
+  - name: sre-infra-resizing-recording.rules
+    rules:
+    ## Expression Explanation:
+    ## Average rate of change of CPU time spent in non-idle modes, totalled by CPU, looking back across the past 8h,
+    ## "*" applies a label replace to limit output to infra nodes
+    ## Greater than (>) is the threshold
+    ## Count of the infra nodes - 1, divided by the total infra nodes gives the max percent CPU utilization free required to handle a full node failure, as a decimal value: 0.%%
+    ## Scalar converts the percent value from a vector to allow comparison with the rate vector
+      - expr: ( 
+                avg by (instance) (
+                  sum by (cpu, instance) (
+                    rate(
+                      node_cpu_seconds_total{mode!="idle"}[8h]
+                    )
+                  )
+                )
+                *
+                on (instance) (
+                  label_replace (
+                    kube_node_role{role ="infra"}, "instance", "$1", "node", "(.*)"
+                  )
+                )
+                >
+                (
+                  scalar (
+                    (
+                      count (
+                        cluster:nodes_roles{label_node_role_kubernetes_io ="infra"}
+                      )
+                    - 1
+                  )
+                  / 
+                  count (
+                    cluster:nodes_roles{label_node_role_kubernetes_io ="infra"}
+                  )
+                )
+              )
+            )
+        record: sre:node_infra:need_resize_cpu
+      ## Expression Explanation: 
+      ## 1, minus the total amount of free memory divided by the total amount of memory for the infra node type, gives us the percent used memory as a decimal value: 0.%%
+      ## Greater than (>) is the threshold
+      ## Sum of the total memory for the infra node type, divided by the number of infra nodes, gives us the total RAM allocated to a single node
+      ## Divided by the total memory for the infra node type in the cluster, gives us the percent of memory free required to handle a full node failure, as a decimal value: 0.%%
+      - expr: ( 1 -
+                sum (
+                    node_memory_MemFree_bytes +
+                    node_memory_Buffers_bytes +
+                    node_memory_Cached_bytes
+                    AND on (instance) label_replace(
+                        kube_node_role{role="infra"}, "instance", "$1", "node", "(.+)"
+                    )
+                ) 
+                / 
+                sum (
+                    node_memory_MemTotal_bytes
+                    AND on (instance) label_replace(
+                        kube_node_role{role="infra"}, "instance", "$1", "node", "(.+)"
+                    )
+                )
+            ) 
+            > 
+            (
+                sum (
+                    node_memory_MemTotal_bytes
+                    AND on (instance) label_replace(
+                        kube_node_role{role="infra"}, "instance", "$1", "node", "(.+)"
+                    )
+                )
+                /
+                (
+                    count(
+                        cluster:nodes_roles{label_node_role_kubernetes_io ="infra"}
+                    )
+                )
+            )
+            /
+            sum (
+                node_memory_MemTotal_bytes
+                AND on (instance) label_replace(
+                    kube_node_role{role="infra"}, "instance", "$1", "node", "(.+)"
+                )
+          )
+        record: sre:node_infra:need_resize_memory
+  - name: sre-infra-resizing-alerts
+    rules:
+    ## While individual spikes in CPU usage are acceptable, even if spikes are flappy, because CPU is a renewable resource,
+    ## long term (8h) CPU consumption above the threshold indicates CPU consumption has outgrown the cluster
+      - alert: cpu-InfraNodesNeedResizingSRE
+        expr: sre:node_infra:need_resize_cpu > 0
+        for: 8h
+        labels:
+          severity: warning
+          namespace: openshift-monitoring
+        annotations:
+          message: "The cluster's infrastructure nodes have been undersized for their CPU utilization for 8 hours and should be vertically scaled to support the existing workers. See linked SOP for details."
+      ## Given memory may be allocated but unused, 24h is good enough to catch gradual outgrowing of the cluster with critical node failures alerting via other alerts
+      - alert: memory-InfraNodesNeedResizingSRE
+        expr: sre:node_infra:need_resize_memory > 0
+        for: 24h
+        labels:
+          severity: warning
+          namespace: openshift-monitoring
+        annotations:
+          message: "The cluster's infrastructure nodes have been undersized for their memory utilization for 24 hours and should be vertically scaled to support the existing workers. See linked SOP for details."
