@@ -6,6 +6,7 @@ import os
 input_file_path = os.path.join("resources", "cluster-monitoring-config", "config.yaml")
 output_file_path_non_uwm = os.path.join("deploy", "cluster-monitoring-config-non-uwm", "50-GENERATED-cluster-monitoring-config.yaml")
 output_file_path_uwm = os.path.join("deploy", "cluster-monitoring-config", "50-GENERATED-cluster-monitoring-config.yaml")
+output_file_path_fr = os.path.join("deploy", "osd-fedramp-cluster-monitoring-config", "50-GENERATED-cluster-monitoring-config.yaml")
 
 
 def str_presenter(dumper, data):
@@ -36,3 +37,4 @@ def dump_configmap(configmap_path, enableUserWorkload):
 
 dump_configmap(output_file_path_uwm, True)
 dump_configmap(output_file_path_non_uwm, False)
+dump_configmap(output_file_path_fr, False)
