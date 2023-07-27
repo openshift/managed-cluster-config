@@ -37124,6 +37124,57 @@ objects:
       kind: PrometheusRule
       metadata:
         labels:
+          prometheus: sre-infra-resizing-alerts
+          role: alert-rules
+        name: sre-infra-resizing-alerts
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-infra-resizing-recording.rules
+          rules:
+          - expr: ( avg by (instance) ( sum by (cpu, instance) ( rate( node_cpu_seconds_total{mode!="idle"}[8h]
+              ) ) ) * on (instance) ( label_replace ( kube_node_role{role ="infra"},
+              "instance", "$1", "node", "(.*)" ) ) > ( scalar ( ( count ( cluster:nodes_roles{label_node_role_kubernetes_io
+              ="infra"} ) - 1 ) / count ( cluster:nodes_roles{label_node_role_kubernetes_io
+              ="infra"} ) ) ) )
+            record: sre:node_infra:need_resize_cpu
+          - expr: ( 1 - sum ( node_memory_MemFree_bytes + node_memory_Buffers_bytes
+              + node_memory_Cached_bytes AND on (instance) label_replace( kube_node_role{role="infra"},
+              "instance", "$1", "node", "(.+)" ) ) / sum ( node_memory_MemTotal_bytes
+              AND on (instance) label_replace( kube_node_role{role="infra"}, "instance",
+              "$1", "node", "(.+)" ) ) ) > ( sum ( node_memory_MemTotal_bytes AND
+              on (instance) label_replace( kube_node_role{role="infra"}, "instance",
+              "$1", "node", "(.+)" ) ) / ( count( cluster:nodes_roles{label_node_role_kubernetes_io
+              ="infra"} ) ) ) / sum ( node_memory_MemTotal_bytes AND on (instance)
+              label_replace( kube_node_role{role="infra"}, "instance", "$1", "node",
+              "(.+)" ) )
+            record: sre:node_infra:need_resize_memory
+        - name: sre-infra-resizing-alerts
+          rules:
+          - alert: cpu-InfraNodesNeedResizingSRE
+            expr: sre:node_infra:need_resize_cpu > 0
+            for: 8h
+            labels:
+              severity: warning
+              namespace: openshift-monitoring
+            annotations:
+              message: The cluster's infrastructure nodes have been undersized for
+                their CPU utilization for 8 hours and should be vertically scaled
+                to support the existing workers. See linked SOP for details.
+          - alert: memory-InfraNodesNeedResizingSRE
+            expr: sre:node_infra:need_resize_memory > 0
+            for: 24h
+            labels:
+              severity: warning
+              namespace: openshift-monitoring
+            annotations:
+              message: The cluster's infrastructure nodes have been undersized for
+                their memory utilization for 24 hours and should be vertically scaled
+                to support the existing workers. See linked SOP for details.
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
           prometheus: sre-managed-kube-apiserver-missing-on-node
           role: alert-rules
         name: sre-managed-kube-apiserver-missing-on-node
