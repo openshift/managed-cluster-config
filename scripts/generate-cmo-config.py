@@ -6,7 +6,7 @@ import os
 input_file_path = os.path.join("resources", "cluster-monitoring-config", "config.yaml")
 output_file_path_non_uwm = os.path.join("deploy", "cluster-monitoring-config-non-uwm", "50-GENERATED-cluster-monitoring-config.yaml")
 output_file_path_uwm = os.path.join("deploy", "cluster-monitoring-config", "50-GENERATED-cluster-monitoring-config.yaml")
-
+output_file_path_fr = os.path.join("deploy", "osd-fedramp-cluster-monitoring-config", "50-GENERATED-cluster-monitoring-config.yaml")
 
 def str_presenter(dumper, data):
   if len(data.splitlines()) > 1:  # check for multiline string
@@ -15,10 +15,13 @@ def str_presenter(dumper, data):
 
 yaml.add_representer(str, str_presenter)
 
-def dump_configmap(configmap_path, enableUserWorkload):
+def dump_configmap(configmap_path, enableUserWorkload, disableremoteWrite):
     with open(input_file_path,'r') as input_file:
         config = yaml.safe_load(input_file)
         config["enableUserWorkload"] = enableUserWorkload
+        if disableremoteWrite:
+           del config['prometheusK8s']['remoteWrite']
+
         cmo_config = {
             "apiVersion": "v1",
             "kind": "ConfigMap",
@@ -33,6 +36,6 @@ def dump_configmap(configmap_path, enableUserWorkload):
         with open(configmap_path, 'w') as outfile:
             yaml.dump(cmo_config, outfile)
 
-
-dump_configmap(output_file_path_uwm, True)
-dump_configmap(output_file_path_non_uwm, False)
+dump_configmap(output_file_path_uwm, True, False)
+dump_configmap(output_file_path_non_uwm, False, False)
+dump_configmap(output_file_path_fr, True, True)
