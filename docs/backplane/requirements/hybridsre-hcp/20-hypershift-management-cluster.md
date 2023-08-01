@@ -6,15 +6,13 @@ label selectors:
 
 Applies only to ROSA HCP Management Clusters.
 
-## view: `(^hypershift$|^ocm-.*)`
+## dedicated-readers: `(^hypershift$|^ocm-.*)`
 
-HCP team needs read/list/watch access to core k8s and ocp objects within their namespaces and the guidelines point ot the `view` role as the default.
+HCP team needs read/list/watch access to core k8s and ocp objects within their namespaces.
 
-## hypershift-readers: `(^hypershift$|^ocm-.*)`
+HCP team also needs access to objects used by hypershift internally, which is provided by `hypershift-readers`, a role that's aggregated into `dedicated-readers`.
 
-HCP team needs access to objects used by hypershift internally. This role provides that access.
-
-Role itself is owned by the hypershift-operator itself and provides read/list/watch access to the following api groups:
+The hypershift role is owned by the hypershift-operator itself and provides read/list/watch access to the following api groups:
 - hypershift.openshift.io – objects like HostedCluster, HostedControlPlane, NodePool
 - cluster.x-k8s.io – objects like MachinePool, MachineSet
 - infrastructure.cluster.x-k8s.io – objects like AWSMachine, AWSCluster
