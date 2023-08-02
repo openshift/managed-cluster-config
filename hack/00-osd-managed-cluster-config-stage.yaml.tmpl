@@ -34630,6 +34630,10 @@ objects:
         operator: NotIn
         values:
         - 'true'
+      - key: api.openshift.com/private-link
+        operator: NotIn
+        values:
+        - 'true'
       - key: api.openshift.com/fedramp
         operator: NotIn
         values:
@@ -34786,6 +34790,63 @@ objects:
                     Removing owner ref from SA '$SA' in NS '$NS'\"\n    oc -n $NS\
                     \ patch serviceaccount $SA --type=json -p '[{\"op\":\"remove\"\
                     ,\"path\":\"/metadata/ownerReferences\"}]'\n  done\ndone\n"
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-serviceaccounts-nonsts-private-link
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/sts
+        operator: NotIn
+        values:
+        - 'true'
+      - key: api.openshift.com/private-link
+        operator: In
+        values:
+        - 'true'
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Upsert
+    resources:
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: managed-upgrade-operator
+        namespace: openshift-managed-upgrade-operator
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: configure-alertmanager-operator
+        namespace: openshift-monitoring
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: rbac-permissions-operator
+        namespace: openshift-rbac-permissions
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: splunk-forwarder-operator
+        namespace: openshift-splunk-forwarder-operator
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: managed-velero-operator
+        namespace: openshift-velero
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: ocm-agent-operator
+        namespace: openshift-ocm-agent-operator
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
