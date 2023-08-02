@@ -14,7 +14,7 @@ directories = [
         'backplane/cee',
         'backplane/cse',
         'backplane/csm',
-        'backplane/cssre',
+        'backplane/lpsre',
         'backplane/mobb',
         'backplane/srep',
         'backplane/tam',
