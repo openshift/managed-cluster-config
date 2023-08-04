@@ -31601,14 +31601,14 @@ objects:
         namespace: openshift-monitoring
       spec:
         groups:
-        - name: sre-infra-resizing-recording.rules
+        - name: sre-infra-resource-consumption-recording.rules
           rules:
-          - expr: ( avg by (instance) ( sum by (cpu, instance) ( rate( node_cpu_seconds_total{mode!="idle"}[8h]
+          - expr: ( avg ( avg by (instance) ( sum by (cpu, instance) ( rate( node_cpu_seconds_total{mode!="idle"}[8h]
               ) ) ) * on (instance) ( label_replace ( kube_node_role{role ="infra"},
-              "instance", "$1", "node", "(.*)" ) ) > ( scalar ( ( count ( cluster:nodes_roles{label_node_role_kubernetes_io
+              "instance", "$1", "node", "(.*)" ) ) ) > ( scalar ( ( count ( cluster:nodes_roles{label_node_role_kubernetes_io
               ="infra"} ) - 1 ) / count ( cluster:nodes_roles{label_node_role_kubernetes_io
               ="infra"} ) ) ) )
-            record: sre:node_infra:need_resize_cpu
+            record: sre:node_infra:excessive_consumption_cpu
           - expr: ( 1 - sum ( node_memory_MemFree_bytes + node_memory_Buffers_bytes
               + node_memory_Cached_bytes AND on (instance) label_replace( kube_node_role{role="infra"},
               "instance", "$1", "node", "(.+)" ) ) / sum ( node_memory_MemTotal_bytes
@@ -31619,29 +31619,29 @@ objects:
               ="infra"} ) ) ) / sum ( node_memory_MemTotal_bytes AND on (instance)
               label_replace( kube_node_role{role="infra"}, "instance", "$1", "node",
               "(.+)" ) )
-            record: sre:node_infra:need_resize_memory
+            record: sre:node_infra:excessive_consumption_memory
         - name: sre-infra-resizing-alerts
           rules:
-          - alert: cpu-InfraNodesNeedResizingSRE
-            expr: sre:node_infra:need_resize_cpu > 0
-            for: 8h
+          - alert: cpu-InfraNodesExcessiveResourceConsumptionSRE
+            expr: sre:node_infra:excessive_consumption_cpu > 0
+            for: 16h
             labels:
               severity: warning
               namespace: openshift-monitoring
             annotations:
-              message: The cluster's infrastructure nodes have been undersized for
-                their CPU utilization for 8 hours and should be vertically scaled
-                to support the existing workers. See linked SOP for details.
-          - alert: memory-InfraNodesNeedResizingSRE
-            expr: sre:node_infra:need_resize_memory > 0
+              message: The cluster's infrastructure nodes have been consuming excessive
+                CPU for 16 hours and should be vertically scaled to support the existing
+                workers. See linked SOP for details.
+          - alert: memory-InfraNodesExcessiveResourceConsumptionSRE
+            expr: sre:node_infra:excessive_consumption_memory > 0
             for: 24h
             labels:
               severity: warning
               namespace: openshift-monitoring
             annotations:
-              message: The cluster's infrastructure nodes have been undersized for
-                their memory utilization for 24 hours and should be vertically scaled
-                to support the existing workers. See linked SOP for details.
+              message: The cluster's infrastructure nodes have been consuming excessive
+                memory for 24 hours and should be vertically scaled to support the
+                existing workers. See linked SOP for details.
     - apiVersion: monitoring.coreos.com/v1
       kind: PrometheusRule
       metadata:
