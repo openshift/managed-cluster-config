@@ -26426,6 +26426,99 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: osd-legacy-ingress-feature-labeller
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        ext-managed.openshift.io/hive-shard: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: osd-legacy-ingress-feature-labeller
+      rules:
+      - apiGroups:
+        - hive.openshift.io/v1
+        resources:
+        - clusterdeployments
+        verbs:
+        - list
+        - get
+        - update
+    - kind: ClusterRoleBinding
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        name: osd-legacy-ingress-feature-labeller
+      subjects:
+      - kind: ServiceAccount
+        name: osd-legacy-ingress-feature-labeller
+        namespace: openshift-config
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: osd-legacy-ingress-feature-labeller
+    - apiVersion: batch/v1
+      kind: CronJob
+      metadata:
+        name: osd-legacy-ingress-feature-labeller
+        namespace: openshift-config
+      spec:
+        failedJobsHistoryLimit: 3
+        successfulJobsHistoryLimit: 3
+        concurrencyPolicy: Replace
+        schedule: 0 */6 * * *
+        jobTemplate:
+          spec:
+            template:
+              spec:
+                affinity:
+                  nodeAffinity:
+                    preferredDuringSchedulingIgnoredDuringExecution:
+                    - preference:
+                        matchExpressions:
+                        - key: node-role.kubernetes.io/infra
+                          operator: Exists
+                      weight: 1
+                tolerations:
+                - effect: NoSchedule
+                  key: node-role.kubernetes.io/infra
+                  operator: Exists
+                serviceAccountName: osd-legacy-ingress-feature-labeller
+                restartPolicy: Never
+                containers:
+                - name: osd-legacy-ingress-feature-labeller
+                  image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+                  imagePullPolicy: Always
+                  args:
+                  - /usr/bin/python
+                  - "#!/usr/bin/env python3\nimport os\nimport json\n\nout = os.popen('oc\
+                    \ get clusterdeployment -A -ojson').read()\ncd_json_items = json.loads(out)[\"\
+                    items\"]\n\nfor item in cd_json_items:\n    labels = item[\"metadata\"\
+                    ][\"labels\"]\n    if not labels.get(\"hive.openshift.io/version-major-minor\"\
+                    ):\n        print(\"No hive version label on cluster, exiting\"\
+                    )\n        continue\n\n    if labels.get(\"hive.openshift.io/version-major-minor\"\
+                    ) and int(labels[\"hive.openshift.io/version-major-minor\"].split(\"\
+                    .\")[1]) < 13:\n        print(\"Version less than v4.13, exiting\"\
+                    )\n        continue\n\n    if labels.get(\"ext-managed.openshift.io/legacy-ingress-support\"\
+                    ):\n        print(\"ext-managed.openshift.io/legacy-ingress-support\
+                    \ label already exists, moving to next cluster\")\n        continue\n\
+                    \    else:\n        print(\"ext-managed.openshift.io/legacy-ingress-support\
+                    \ label does not exist and cluster is v4.13 or greater. Labelling\
+                    \ as legacy-ingress: false.\")\n        namespace = item[\"metadata\"\
+                    ][\"namespace\"]\n        name = item[\"metadata\"][\"name\"]\n\
+                    \        cmd = f'oc annotate --dry-run clusterdeployment -n {namespace}\
+                    \ {name} ext-managed.openshift.io/legacy-ingress-support=\"false\"\
+                    '\n        print(f\"Running {cmd}\")\n\n        out = os.popen(cmd)\n\
+                    \        print(out.read())\n"
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: osd-limited-support
   spec:
     clusterDeploymentSelector:
@@ -28891,11 +28984,13 @@ objects:
         name: osd-delete-ownerrefs-serviceaccounts
       rules:
       - apiGroups:
-        - ''
+        - hive.openshift.io/v1
         resources:
-        - serviceaccounts
+        - clusterdeployments
         verbs:
-        - '*'
+        - list
+        - get
+        - null
     - kind: ClusterRoleBinding
       apiVersion: rbac.authorization.k8s.io/v1
       metadata:
