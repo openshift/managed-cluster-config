@@ -26434,13 +26434,18 @@ objects:
         ext-managed.openshift.io/hive-shard: 'true'
     resourceApplyMode: Sync
     resources:
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: osd-legacy-ingress-feature-labeller
+        namespace: openshift-config
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
         name: osd-legacy-ingress-feature-labeller
       rules:
       - apiGroups:
-        - hive.openshift.io/v1
+        - hive.openshift.io
         resources:
         - clusterdeployments
         verbs:
@@ -26468,7 +26473,7 @@ objects:
         failedJobsHistoryLimit: 3
         successfulJobsHistoryLimit: 3
         concurrencyPolicy: Replace
-        schedule: 0 */6 * * *
+        schedule: 0 * * * *
         jobTemplate:
           spec:
             template:
@@ -26493,9 +26498,10 @@ objects:
                   imagePullPolicy: Always
                   args:
                   - /usr/bin/python
-                  - "#!/usr/bin/env python3\nimport os\nimport json\n\nout = os.popen('oc\
-                    \ get clusterdeployment -A -ojson').read()\ncd_json_items = json.loads(out)[\"\
-                    items\"]\n\nfor item in cd_json_items:\n    labels = item[\"metadata\"\
+                  - -c
+                  - "import os\nimport json\n\nout = os.popen('oc get clusterdeployment\
+                    \ -A -ojson').read()\ncd_json_items = json.loads(out)[\"items\"\
+                    ]\n\nfor item in cd_json_items:\n    labels = item[\"metadata\"\
                     ][\"labels\"]\n    if not labels.get(\"hive.openshift.io/version-major-minor\"\
                     ):\n        print(\"No hive version label on cluster, exiting\"\
                     )\n        continue\n\n    if labels.get(\"hive.openshift.io/version-major-minor\"\
@@ -26508,9 +26514,9 @@ objects:
                     \ label does not exist and cluster is v4.13 or greater. Labelling\
                     \ as legacy-ingress: false.\")\n        namespace = item[\"metadata\"\
                     ][\"namespace\"]\n        name = item[\"metadata\"][\"name\"]\n\
-                    \        cmd = f'oc annotate --dry-run clusterdeployment -n {namespace}\
-                    \ {name} ext-managed.openshift.io/legacy-ingress-support=\"false\"\
-                    '\n        print(f\"Running {cmd}\")\n\n        out = os.popen(cmd)\n\
+                    \        cmd = f'oc label clusterdeployment -n {namespace} {name}\
+                    \ ext-managed.openshift.io/legacy-ingress-support=\"false\"'\n\
+                    \        print(f\"Running {cmd}\")\n\n        out = os.popen(cmd)\n\
                     \        print(out.read())\n"
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
@@ -28984,13 +28990,11 @@ objects:
         name: osd-delete-ownerrefs-serviceaccounts
       rules:
       - apiGroups:
-        - hive.openshift.io/v1
+        - ''
         resources:
-        - clusterdeployments
+        - serviceaccounts
         verbs:
-        - list
-        - get
-        - null
+        - '*'
     - kind: ClusterRoleBinding
       apiVersion: rbac.authorization.k8s.io/v1
       metadata:

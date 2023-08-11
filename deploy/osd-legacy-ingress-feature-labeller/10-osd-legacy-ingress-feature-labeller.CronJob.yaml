@@ -1,4 +1,3 @@
----
 apiVersion: batch/v1
 kind: CronJob
 metadata:
@@ -8,7 +7,7 @@ spec:
   failedJobsHistoryLimit: 3
   successfulJobsHistoryLimit: 3
   concurrencyPolicy: Replace
-  schedule: "0 */6 * * *"
+  schedule: "0 * * * *"
   jobTemplate:
     spec:
       template:
@@ -33,8 +32,8 @@ spec:
             imagePullPolicy: Always
             args:
             - /usr/bin/python
+            - -c
             - |
-              #!/usr/bin/env python3
               import os
               import json
 
@@ -58,7 +57,7 @@ spec:
                       print("ext-managed.openshift.io/legacy-ingress-support label does not exist and cluster is v4.13 or greater. Labelling as legacy-ingress: false.")
                       namespace = item["metadata"]["namespace"]
                       name = item["metadata"]["name"]
-                      cmd = f'oc annotate --dry-run clusterdeployment -n {namespace} {name} ext-managed.openshift.io/legacy-ingress-support="false"'
+                      cmd = f'oc label clusterdeployment -n {namespace} {name} ext-managed.openshift.io/legacy-ingress-support="false"'
                       print(f"Running {cmd}")
 
                       out = os.popen(cmd)
