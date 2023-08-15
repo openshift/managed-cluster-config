@@ -26496,7 +26496,7 @@ objects:
         verbs:
         - list
         - get
-        - update
+        - patch
     - kind: ClusterRoleBinding
       apiVersion: rbac.authorization.k8s.io/v1
       metadata:
@@ -26547,9 +26547,12 @@ objects:
                   - "import os\nimport json\n\nout = os.popen('oc get clusterdeployment\
                     \ -A -ojson').read()\ncd_json_items = json.loads(out)[\"items\"\
                     ]\n\nfor item in cd_json_items:\n    labels = item[\"metadata\"\
-                    ][\"labels\"]\n    if not labels.get(\"hive.openshift.io/version-major-minor\"\
-                    ):\n        print(\"No hive version label on cluster, exiting\"\
-                    )\n        continue\n\n    if labels.get(\"hive.openshift.io/version-major-minor\"\
+                    ][\"labels\"]\n    namespace = item[\"metadata\"][\"namespace\"\
+                    ]\n    name = item[\"metadata\"][\"name\"]\n    print(f'Cluster\
+                    \ {name} in namespace {namespace}')\n    if not labels.get(\"\
+                    hive.openshift.io/version-major-minor\"):\n        print(\"No\
+                    \ hive version label on cluster, exiting\")\n        continue\n\
+                    \n    if labels.get(\"hive.openshift.io/version-major-minor\"\
                     ) and int(labels[\"hive.openshift.io/version-major-minor\"].split(\"\
                     .\")[1]) < 13:\n        print(\"Version less than v4.13, exiting\"\
                     )\n        continue\n\n    if labels.get(\"ext-managed.openshift.io/legacy-ingress-support\"\
@@ -26557,11 +26560,9 @@ objects:
                     \ label already exists, moving to next cluster\")\n        continue\n\
                     \    else:\n        print(\"ext-managed.openshift.io/legacy-ingress-support\
                     \ label does not exist and cluster is v4.13 or greater. Labelling\
-                    \ as legacy-ingress: false.\")\n        namespace = item[\"metadata\"\
-                    ][\"namespace\"]\n        name = item[\"metadata\"][\"name\"]\n\
-                    \        cmd = f'oc label clusterdeployment -n {namespace} {name}\
-                    \ ext-managed.openshift.io/legacy-ingress-support=\"false\"'\n\
-                    \        print(f\"Running {cmd}\")\n\n        out = os.popen(cmd)\n\
+                    \ as legacy-ingress: false.\")\n        cmd = f'oc label clusterdeployment\
+                    \ -n {namespace} {name} ext-managed.openshift.io/legacy-ingress-support=\"\
+                    false\"'\n        print(f\"Running {cmd}\")\n\n        out = os.popen(cmd)\n\
                     \        print(out.read())\n"
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
