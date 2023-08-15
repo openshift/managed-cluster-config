@@ -42,6 +42,9 @@ spec:
 
               for item in cd_json_items:
                   labels = item["metadata"]["labels"]
+                  namespace = item["metadata"]["namespace"]
+                  name = item["metadata"]["name"]
+                  print(f'Cluster {name} in namespace {namespace}')
                   if not labels.get("hive.openshift.io/version-major-minor"):
                       print("No hive version label on cluster, exiting")
                       continue
@@ -55,8 +58,6 @@ spec:
                       continue
                   else:
                       print("ext-managed.openshift.io/legacy-ingress-support label does not exist and cluster is v4.13 or greater. Labelling as legacy-ingress: false.")
-                      namespace = item["metadata"]["namespace"]
-                      name = item["metadata"]["name"]
                       cmd = f'oc label clusterdeployment -n {namespace} {name} ext-managed.openshift.io/legacy-ingress-support="false"'
                       print(f"Running {cmd}")
 
