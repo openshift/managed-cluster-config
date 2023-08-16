@@ -1,0 +1,23 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: sre-ocm-agent-operator-alerts
+    role: alert-rules
+  name: sre-ocm-agent-operator-alerts
+  namespace: openshift-monitoring
+spec:
+  groups:
+  - name: sre-ocm-agent-operator-alerts
+    rules:
+    - alert: OCMAgentResponseFailureServiceLogsSRE
+      # Alert if the OCM agent response failure metric has been set for an hour average window
+      expr: avg_over_time(ocm_agent_response_failure{service="service_logs"}[60m]) == 1
+      for: 60m
+      labels:
+        severity: critical
+        namespace: openshift-monitoring
+        link: "https://github.com/openshift/ops-sop/blob/master/v4/alerts/OCMAgentResponseFailureServiceLogsSRE.md"
+
+      annotations:
+        message: OCM Agent has failed to receive a response from the service_logs service for 60 minutes.

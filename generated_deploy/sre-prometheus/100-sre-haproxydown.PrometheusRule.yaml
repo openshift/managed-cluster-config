@@ -1,0 +1,24 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: sre-ingresscontroller-alerts
+    role: alert-rules
+  name: sre-haproxydown-default
+  namespace: openshift-monitoring
+spec:
+  groups:
+  - name: sre-haproxydown-alerts
+    rules:
+    - alert: HAProxyDownSRE
+      expr: haproxy_up{job="router-internal-default"} == 0
+      for: 5m
+      labels:
+        severity: critical
+        namespace: "{{ $labels.namespace }}"
+      annotations:
+        summary: HAProxy is down
+        description: "This alert fires when metrics report that HAProxy is down."
+        message: "HAProxy metrics are reporting that HAProxy is down on pod {{ $labels.namespace }} / {{ $labels.pod }}"
+        link: "https://github.com/openshift/ops-sop/blob/master/v4/alerts/HAProxyDown.md"

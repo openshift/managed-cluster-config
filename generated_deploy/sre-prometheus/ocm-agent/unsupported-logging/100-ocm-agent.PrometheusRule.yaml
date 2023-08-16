@@ -1,0 +1,36 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: sre-managed-notification-alerts
+    role: alert-rules 
+  name: sre-elasticsearch-managed-notification-alerts
+  namespace: openshift-monitoring
+spec:
+  groups:
+  - name: sre-elasticsearch-managed-notification-alerts
+    rules:
+    - alert: ElasticsearchNodeDiskWatermarkReachedNotificationSRE
+      expr: count(ALERTS{alertname="ElasticsearchNodeDiskWatermarkReached", alertstate="firing", namespace="openshift-logging", severity="critical"}) >= 1
+      for: 30m
+      labels:
+        severity: Info
+        namespace: openshift-logging
+        send_managed_notification: "true"
+        managed_notification_template: "ElasticsearchNodeDiskWatermarkReached"
+    - alert: ElasticsearchDiskSpaceRunningLowNotificationSRE
+      expr: count(ALERTS{alertname="ElasticsearchDiskSpaceRunningLow", alertstate="firing", namespace="openshift-logging"}) >= 1
+      for: 30m
+      labels:
+        severity: Info
+        namespace: openshift-logging
+        send_managed_notification: "true"
+        managed_notification_template: "ElasticsearchDiskSpaceRunningLow"
+    - alert: ElasticsearchClusterNotHealthyNotificationSRE
+      expr: count(ALERTS{alertname="ElasticsearchClusterNotHealthy", alertstate="firing", namespace="openshift-logging", severity="critical"}) >= 1
+      for: 10m
+      labels:
+        severity: Info
+        namespace: openshift-logging
+        send_managed_notification: "true"
+        managed_notification_template: "ElasticsearchClusterNotHealthy"

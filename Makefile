@@ -20,14 +20,8 @@ endif
 ifndef GEN_TEMPLATE
 $(error GEN_TEMPLATE is not set; check project.mk file)
 endif
-ifndef GEN_POLICY
-$(error GEN_POLICY is not set; check project.mk file)
-endif
 ifndef GEN_POLICY_CONFIG
 $(error GEN_POLICY_CONFIG is not set; check project.mk file)
-endif
-ifndef GEN_POLICY_CONFIG_SP
-$(error GEN_POLICY_CONFIG_SP is not set; check project.mk file)
 endif
 ifndef ENFORCE_BACKPLANE_RULES
 $(error ENFORCE_BACKPLANE_RULES is not set; check project.mk file)
@@ -36,9 +30,11 @@ ifndef GEN_CMO_CONFIG
 $(error GEN_CMO_CONFIG is not set; check project.mk file)
 endif
 
-
 CONTAINER_ENGINE?=$(shell command -v docker 2>/dev/null || command -v podman 2>/dev/null)
 CONTAINER_RUN_FLAGS=--user : --rm -v `pwd -P`:`pwd -P`:z -w=`pwd` --platform linux/amd64
+
+CHANGE_UID?=echo \"No change of UID for generated content\"
+CHANGE_GID?=echo \"No change of GID for generated content\"
 
 ifeq ($(CONTAINER_ENGINE),)
 # Running already in a container
@@ -57,8 +53,8 @@ generate-oauth-templates:
 	# Each SSS must not be too big as well.  each sub-dir of deploy/ becomes a SSS.  therefore each of the html
 	# becomes a separate dir.  This is a k8s limitation for annotation value size.
 	for TYPE in login providers errors; do \
-		$(OC) create secret generic osd-oauth-templates-$$TYPE -n openshift-config --from-file=$$TYPE.html=source/html/osd/$$TYPE.html -o yaml > deploy/osd-oauth-templates-$$TYPE/osd-oauth-templates-$$TYPE.secret.yaml; \
-		$(OC) create secret generic rosa-oauth-templates-$$TYPE -n openshift-config --from-file=$$TYPE.html=source/html/rosa/$$TYPE.html -o yaml > deploy/rosa-oauth-templates-$$TYPE/rosa-oauth-templates-$$TYPE.secret.yaml; \
+		$(OC) create secret generic osd-oauth-templates-$$TYPE -n openshift-config --from-file=$$TYPE.html=source/html/osd/$$TYPE.html -o yaml > deploy/osd-oauth-templates-$$TYPE/50-GENERATED-osd-oauth-templates-$$TYPE.secret.yaml; \
+		$(OC) create secret generic rosa-oauth-templates-$$TYPE -n openshift-config --from-file=$$TYPE.html=source/html/rosa/$$TYPE.html -o yaml > deploy/rosa-oauth-templates-$$TYPE/50-GENERATED-rosa-oauth-templates-$$TYPE.secret.yaml; \
 	done
 
 .PHONY: generate-rosa-brand-logo
@@ -68,14 +64,12 @@ generate-rosa-brand-logo:
 .PHONY: generate-hive-templates
 generate-hive-templates: generate-oauth-templates
 	if [ -z ${IN_CONTAINER} ]; then \
-		$(CONTAINER_ENGINE) run $(CONTAINER_RUN_FLAGS) registry.access.redhat.com/ubi8/python-39 /bin/bash -xc "cd `pwd -P`; pip install --disable-pip-version-check oyaml; curl -sSL https://github.com/open-cluster-management-io/policy-generator-plugin/releases/download/v1.9.1/linux-amd64-PolicyGenerator --output /opt/app-root/bin/PolicyGenerator; chmod +x /opt/app-root/bin/PolicyGenerator; ${GEN_POLICY_CONFIG}; ${GEN_POLICY_CONFIG_SP}; ${GEN_POLICY}; ${GEN_CMO_CONFIG}";\
+		$(CONTAINER_ENGINE) run $(CONTAINER_RUN_FLAGS) registry.access.redhat.com/ubi8/python-39 /bin/bash -xc "cd `pwd -P`; pip install --disable-pip-version-check oyaml; curl -sSL https://github.com/open-cluster-management-io/policy-generator-plugin/releases/download/v1.9.1/linux-amd64-PolicyGenerator --output /opt/app-root/bin/PolicyGenerator; chmod +x /opt/app-root/bin/PolicyGenerator; ${GEN_CMO_CONFIG}; ${GEN_POLICY_CONFIG}; ${CHANGE_UID} ; ${CHANGE_GID} ";\
 		$(CONTAINER_ENGINE) run $(CONTAINER_RUN_FLAGS) registry.access.redhat.com/ubi8/python-39 /bin/bash -xc "cd `pwd -P`; pip install --disable-pip-version-check oyaml; ${GEN_TEMPLATE}"; \
 	else \
-		${GEN_POLICY_CONFIG};\
-		${GEN_POLICY_CONFIG_SP};\
-		${GEN_POLICY};\
-		${GEN_TEMPLATE}; \
 		${GEN_CMO_CONFIG}; \
+		${GEN_POLICY_CONFIG};\
+		${GEN_TEMPLATE}; \
 	fi
 
 .PHONY: enforce-backplane-rules

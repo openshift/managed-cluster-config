@@ -1,0 +1,181 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: osd-rebalance-infra-nodes
+  namespace: openshift-monitoring
+data:
+  entrypoint: |-
+    #!/bin/bash
+
+    CLUSTER_READY=$(oc get job -n openshift-monitoring osd-cluster-ready -o jsonpath='{.status.succeeded}')
+
+    if [ "$CLUSTER_READY" != "1" ]; then
+        echo "INFO: 'osd-cluster-ready' job hasn't succeeded yet, exiting..."
+        exit 0
+    fi
+
+    echo "INFO: Attempting infra node pod rebalancing..."
+
+    AZ_COUNT=$(oc get nodes -o yaml | grep -E "^\s+failure-domain.beta.kubernetes.io/zone" | sort | uniq | wc -l)
+
+    echo "INFO: Number of AZs ${AZ_COUNT}"
+
+    INFRA_NODE_COUNT=$(oc get nodes -l node-role.kubernetes.io=infra --no-headers | wc -l)
+
+    echo "INFO: Number of INFRA NODES ${INFRA_NODE_COUNT}"
+
+    REBALANCE_PODS=false
+    PENDING_PODS=false
+
+    rebalancePods() {
+        APP=$1
+        NS=$2
+        LABEL=$3
+        VOLUME_NAME=$4
+        ALL_POD_NODES=$(oc get pods -n $NS -l $LABEL=$APP -o wide --no-headers | awk '{print $7}' | sort | wc -l)
+        UNIQUE_POD_NODES=$(oc get pods -n $NS -l $LABEL=$APP -o wide --no-headers | awk '{print $7}' | sort | uniq | wc -l)
+        echo "INFO: $APP pods needing rebalance: $(( $UNIQUE_POD_NODES == $INFRA_NODE_COUNT ? 0 : ALL_POD_NODES - UNIQUE_POD_NODES ))"
+
+        LAST_POD_NODE_NAME=""
+        for POD in $( oc get pods -n $NS -l $LABEL=$APP -o jsonpath='{.items[*].metadata.name}' ) ; do
+            POD_NODE_NAME=$(oc get pod -n $NS $POD -o jsonpath='{.spec.nodeName}')
+            if [ $UNIQUE_POD_NODES -ne $INFRA_NODE_COUNT ] && [ "${POD_NODE_NAME}" == "${LAST_POD_NODE_NAME}" ]; then
+                if [ ${VOLUME_NAME} ] && [ "${AZ_COUNT}" != "1" ]; then
+                    PVC=$(oc get pod -n $NS $POD -o jsonpath='{.spec.volumes[?(@.name=="'$VOLUME_NAME'")].persistentVolumeClaim.claimName}')
+                    echo "INFO: Deleting PVC $PVC"
+                    oc delete pvc --wait=false -n $NS $PVC
+                fi
+                echo "INFO: Deleting pod $POD"
+                oc delete pod -n $NS $POD --wait=true
+                REBALANCE_PODS=true
+            fi
+            LAST_POD_NODE_NAME=$POD_NODE_NAME
+        done
+    }
+
+    checkPendingPods() {
+        APP=$1
+        NS=$2
+        LABEL=$3
+        for POD in $( oc get pods -n $NS -l $LABEL=$APP -o jsonpath='{.items[*].metadata.name}' ) ; do
+            POD_STATUS_PHASE=$(oc get pods -n $NS $POD -o jsonpath='{.status.phase}')
+            if [ "${POD_STATUS_PHASE}" == "Pending" ]; then
+                echo "INFO: Deleting pod $POD"
+                oc delete pod -n $NS $POD --wait=true
+                PENDING_PODS=true
+            fi
+        done
+    }
+
+    waitRunningPods() {
+        APP=$1
+        NS=$2
+        LABEL=$3
+        for POD in $( oc get pods -n $NS -l $LABEL=$APP -o jsonpath='{.items[*].metadata.name}' ) ; do
+            echo "INFO: Waiting for $POD to be Running..."
+            while [ ! -z "$(oc get pod -n $NS $POD -o jsonpath='{.status.phase}' 2>/dev/null)" ] && [ "$(oc get pod -n $NS $POD -o jsonpath='{.status.phase}' 2>/dev/null)" != "Running" ];
+            do
+                sleep 1
+            done
+        done
+    }
+
+    # kubeDaemonsetMisscheduled deletes pods running on infra nodes even though the daemonset doesn't tolerate
+    # the infra node taint due to a race condition on how infra nodes are created
+    kubeDaemonsetMisscheduled() {
+      NODE_TAINT="node-role.kubernetes.io=infra"
+      NS=$1
+      LABEL=$2
+
+      readarray -t nodes < <(oc get no -l "${NODE_TAINT}" -o go-template='{{range .items}}{{.metadata.name}}{{"\n"}}{{end}}');
+      for node in "${nodes[@]}"; do
+        misscheduled_pods="$(oc get po -n "${NS}" -l "${LABEL}" -o go-template="{{range .items}}{{if eq .spec.nodeName \"${node}\"}}{{.metadata.name}}{{\"\n\"}}{{end}}{{end}}")";
+        for pod in "${misscheduled_pods[@]}"; do
+          if [[ -n "${pod}" ]]; then
+            echo "Deleting misscheduled pod ${pod} running on ${node}"
+            oc delete po -n "${NS}" "${pod}"
+          fi
+        done
+      done
+    }
+
+    # infraPodsMisscheduled finds pods from openshift- namespaces which are not scheduled on infra node 
+    #    but have nodeaffinity preferredDuringSchedulingIgnoredDuringExecution for infra nodes
+    # Notes: this is done as a response to an escalation in https://issues.redhat.com/browse/OSD-13621 
+    # A long term fix will follow 
+    infraPodsMisscheduled(){
+        NODE_TAINT="node-role.kubernetes.io=infra"
+        # The 'none' at the end accounts for pods which are currently being scheduled.
+        # we do not want to reschedule them before knowing where they landed
+        # the output will look like "<node1>|<node2>|none"
+        infranodes_regexp="$(oc get no -l "${NODE_TAINT}" -o go-template='{{range .items}}{{.metadata.name}}{{"|"}}{{end}}')none"
+        
+        # the output will look something like
+        # <namespace> | <pod> | <affinity> | <node>
+        # each pod on the list needs to be rescheduled
+        misscheduled_pods=`for ns in $@; do oc -n $ns get po -o go-template='{{range .items}}{{$isjob := index .metadata.labels "job-name"}}{{$namespace := .metadata.namespace}}{{$name := .metadata.name}}{{$affinity := .spec.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution }}{{if not $isjob}}{{if $affinity}}{{- $namespace }} | {{$name}} | {{$affinity}} | {{.spec.nodeName}} {{"\n" -}} {{end}}{{end}}{{end}}';done |grep "node-role.kubernetes.io/infra" |grep -vE ${infranodes_regexp}`
+
+        if [ ! -z  "$misscheduled_pods" ]; then
+            # --ignore-not-found=true so that for STS clusters this doesn't fail when this can't find CIO or velero pods
+            while read line ; do cmd=`echo $line|awk -F'|' '{print "oc -n " $1 " delete po --ignore-not-found=true " $2}'`;echo "INFO: $cmd"; eval $cmd;done <<< "$misscheduled_pods"
+        else
+            echo "INFO: no misscheduled pods in openshift-* namespaces"
+        fi
+    }
+
+    echo "INFO: Rebalancing openshift-dns/dns-default Daemonset..."
+    kubeDaemonsetMisscheduled "openshift-dns" "dns.operator.openshift.io/daemonset-dns=default"
+
+    echo "INFO: Rebalancing prometheus pods..."
+    rebalancePods prometheus openshift-monitoring app prometheus-data
+
+    echo "INFO: Rebalancing UWM prometheus pods..."
+    rebalancePods prometheus openshift-user-workload-monitoring app prometheus-user-workload-db
+
+    echo "INFO: Rebalancing alertmanager pods..."
+    rebalancePods alertmanager openshift-monitoring app alertmanager-data
+
+    echo "INFO: Rebalancing splunk-heavy-forwarder pods..."
+    rebalancePods splunk-heavy-forwarder openshift-security name
+
+    if $REBALANCE_PODS; then
+        echo "INFO: Restarting prometheus operator..."
+        OPERATOR_POD=$( oc get pod -n openshift-monitoring -l app.kubernetes.io/name=prometheus-operator -o jsonpath='{.items[*].metadata.name}' )
+        oc delete pod -n openshift-monitoring $OPERATOR_POD --wait=true
+        sleep 10
+    fi
+
+    echo "INFO: Check pending prometheus pods..."
+    checkPendingPods prometheus openshift-monitoring app
+
+    echo "INFO: Check pending UWM prometheus pods..."
+    checkPendingPods prometheus openshift-user-workload-monitoring app
+
+    echo "INFO: Check pending alertmanager pods..."
+    checkPendingPods alertmanager openshift-monitoring app
+
+    echo "INFO: Check pending splunk-heavy-forwarder pods..."
+    checkPendingPods splunk-heavy-forwarder openshift-security name
+
+    if $PENDING_PODS; then
+        echo "INFO: Restarting prometheus operator..."
+        OPERATOR_POD=$( oc get pod -n openshift-monitoring -l app.kubernetes.io/name=prometheus-operator -o jsonpath='{.items[*].metadata.name}' )
+        oc delete pod -n openshift-monitoring $OPERATOR_POD --wait=true
+        sleep 10
+    fi
+
+    echo "INFO: Wait for running prometheus pods..."
+    waitRunningPods prometheus openshift-monitoring app
+
+    echo "INFO: Wait for running UWM prometheus pods..."
+    waitRunningPods prometheus openshift-user-workload-monitoring app
+
+    echo "INFO: Wait for running alertmanager pods..."
+    waitRunningPods alertmanager openshift-monitoring app
+
+    echo "INFO: Wait for running splunk-heavy-forwarder pods..."
+    waitRunningPods splunk-heavy-forwarder openshift-security name
+
+    echo "INFO: Rebalancing misscheduled pods from openshift- namespaces"
+    infraPodsMisscheduled  openshift-cloud-ingress-operator openshift-custom-domains-operator openshift-image-registry openshift-managed-node-metadata-operator openshift-monitoring openshift-must-gather-operator openshift-network-operator openshift-ocm-agent-operator openshift-osd-metrics openshift-rbac-permissions openshift-route-monitor-operator openshift-splunk-forwarder-operator openshift-velero

@@ -1,0 +1,21 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: sre-leader-election-master-status-alerts
+    role: alert-rules
+  name: sre-leader-election-master-status-alerts
+  namespace: openshift-monitoring
+spec:
+  groups:
+  - name: sre-leader-election-master-status-alerts
+    rules:
+    - alert: ControlPlaneLeaderElectionFailingSRE
+      expr: sum(leader_election_master_status{container=~"kube-scheduler|provisioner-kube-rbac-proxy|kube-controller-manager" }) by (container) < 1
+      for: 10m
+      labels:
+        severity: warning
+        namespace: openshift-monitoring
+      annotations:
+        message: "Control plane has failing leader election for 10 minutes and should be scaled to support cluster."
+        link: https://github.com/openshift/ops-sop/blob/master/v4/alerts/ControlPlaneLeaderElectionFailingSRE.md

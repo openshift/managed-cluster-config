@@ -1,0 +1,126 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: osd-delete-backplane-script-resources
+  namespace: openshift-backplane-managed-scripts
+spec:
+  failedJobsHistoryLimit: 5
+  successfulJobsHistoryLimit: 3
+  concurrencyPolicy: Replace
+  schedule: "42 0 * * *"
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: 86400
+      template:
+        spec:
+          affinity:
+            nodeAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+              - preference:
+                  matchExpressions:
+                  - key: node-role.kubernetes.io/infra
+                    operator: Exists
+                weight: 1
+          tolerations:
+            - effect: NoSchedule
+              key: node-role.kubernetes.io/infra
+              operator: Exists
+          restartPolicy: Never
+          serviceAccountName: osd-backplane
+          containers:
+            - name:  osd-delete-backplane-script-resources
+              imagePullPolicy: Always
+              image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+              args:
+                - /bin/bash
+                - -c
+                - |
+                  set -euxo pipefail
+
+                  # Namespace which pods run in
+                  NS="openshift-backplane-managed-scripts"
+                  # Label which all backplane script resources should have
+                  LABEL="managed.openshift.io/backplane-job-uuid"
+                  # Only delete resources created before this time, in unix epoch seconds.
+                  DEL_ONLY_BEFORE=$(($(date +%s) - 3600*24))
+
+                  ### Gather data
+                  # Format: pod_name pod_status creation_timestamp
+                  PODS=$(oc get pod -n $NS --selector $LABEL -o custom-columns=NAME:.metadata.name,PHASE:.status.phase,CT:.metadata.creationTimestamp --no-headers)
+
+                  # Format: sa_name
+                  SAS=$(oc get serviceaccount -n $NS --selector $LABEL -o custom-columns=NAME:.metadata.name --no-headers)
+
+                  # Format: role_name role_ns
+                  ROLES=$(oc get role -A --selector $LABEL -o custom-columns=NAME:.metadata.name,NS:.metadata.namespace --no-headers)
+
+                  # Format: rolebinding_name rolebinding_ns
+                  ROLEBINDINGS=$(oc get rolebinding -A --selector $LABEL -o custom-columns=NAME:.metadata.name,NS:.metadata.namespace --no-headers)
+
+                  # Format: clusterrole_name
+                  CROLES=$(oc get clusterrole --selector $LABEL -o custom-columns=NAME:.metadata.name --no-headers)
+
+                  # Format: clusterrolebinding_name
+                  CROLEBINDINGS=$(oc get clusterrolebinding --selector $LABEL -o custom-columns=NAME:.metadata.name --no-headers)
+
+                  # Pick up those resources we don't want to delete.
+                  # - Current running pods and related resources.
+                  # - pods created within THRESHOLD_PERIOD and related resouces.
+                  PODS_TO_KEEP=$(awk -v before=$DEL_ONLY_BEFORE \
+                    '{
+                    if($2 ~ /Running/){print $1}
+                    else{cmd = sprintf("date +\"%%s\" --date=%s", $3); cmd|getline unix_sec; close(cmd); if(unix_sec+0 > before+0){print $1}}
+                    }' \
+                    <<< "$PODS")
+
+                  PODS_TO_DEL=$(awk '{print $1}' <<< "$PODS")
+
+                  for pod in $PODS_TO_KEEP
+                  do
+                    PODS_TO_DEL=$({ grep -v "$pod" || test $? = 1; } <<< "$PODS_TO_DEL")
+                    SAS=$({ grep -v "$pod" || test $? = 1; } <<< "$SAS")
+                    ROLES=$({ grep -v "$pod" || test $? = 1; } <<< "$ROLES")
+                    ROLEBINDINGS=$({ grep -v "$pod" || test $? = 1; } <<< "$ROLEBINDINGS")
+                    CROLES=$({ grep -v "$pod" || test $? = 1; } <<< "$CROLES")
+                    CROLEBINDINGS=$({ grep -v "$pod" || test $? = 1; } <<< "$CROLEBINDINGS")
+                  done
+
+                  ## Delete non-running pods
+                  for pod in $PODS_TO_DEL
+                  do
+                    oc delete pod -n $NS $pod
+                  done
+
+                  ## Delete Rolebindings
+                  [[ -z "$ROLEBINDINGS" ]] || while read line
+                  do
+                    rb_name=$(echo $line | awk '{print $1}')
+                    rb_namespace=$(echo $line | awk '{print $2}')
+                    oc delete rolebindings -n $rb_namespace $rb_name
+                  done <<< "$ROLEBINDINGS"
+
+                  ## Delete ClusterRolebindings
+                  for clb in $CROLEBINDINGS
+                  do
+                    oc delete clusterrolebinding $clb
+                  done
+
+                  ## Delete Roles
+                  [[ -z "$ROLES" ]] || while read line
+                  do
+                    role_name=$(echo $line | awk '{print $1}')
+                    role_namespace=$(echo $line | awk '{print $2}')
+                    oc delete role -n $role_namespace $role_name
+                  done <<< "$ROLES"
+
+                  ## Delete Clusterroles
+                  for crole in $CROLES
+                  do
+                    oc delete clusterrole $crole
+                  done
+
+                  ## Delete SAs
+                  for sa in $SAS
+                  do
+                    oc delete serviceaccount -n $NS $sa
+                  done

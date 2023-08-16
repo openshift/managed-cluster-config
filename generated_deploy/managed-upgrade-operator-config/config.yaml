@@ -1,0 +1,14 @@
+deploymentMode: "SelectorSyncSet"
+selectorSyncSet:
+  matchExpressions:
+    - key: ext-hypershift.openshift.io/cluster-type
+      operator: NotIn
+      values: ["management-cluster"]
+    - key: hive.openshift.io/version-major-minor
+      operator: NotIn
+      values: ["4.5", "4.6", "4.7"]
+    - key: api.openshift.com/fedramp
+      operator: NotIn
+      values:
+        - "true"
+  resourceApplyMode: Upsert

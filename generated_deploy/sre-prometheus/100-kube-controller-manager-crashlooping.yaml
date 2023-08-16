@@ -1,0 +1,26 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: sre-managed-kube-controller-manager-crashlooping
+    role: alert-rules
+  name: sre-managed-kube-controller-manager-crashlooping
+  namespace: openshift-monitoring
+spec:
+  groups:
+  - name: sre-managed-kube-controller-manager-crashlooping
+    rules:
+    - alert: KubeControllerManagerCrashloopingSRE
+      # This is a stop-gap alert until OCPBUGS-10761 is investigated and fixed
+      # There has been cases where the KCM operator does not enter Down state and results in a few other issues
+      # This is an attempt to catch that before it causes more problems
+      # https://issues.redhat.com/browse/OCPBUGS-10761
+      expr: |
+        sum(kube_pod_container_status_waiting_reason{reason="CrashLoopBackOff", namespace="openshift-kube-controller-manager",pod=~"kube-controller-manager-.*",job="kube-state-metrics"}) >= 2
+      for: 60m
+      labels:
+        severity: critical
+        source: "https://issues.redhat.com/browse/OSD-15442"
+        link: "https://github.com/openshift/ops-sop/blob/master/v4/alerts/KubeControllerManagerCrashloopingSRE.md"
+      annotations:
+        message: Static pod kube-controller-manager pods have been crashlooping for 60 minutes.

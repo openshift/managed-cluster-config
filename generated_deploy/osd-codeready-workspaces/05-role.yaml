@@ -1,0 +1,41 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: dedicated-admins-openshift-codeready-workspaces
+  namespace: openshift-codeready-workspaces
+rules:
+# BEGIN copied from openshift-logging (in dedicated-admin operator)
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  - pods
+  - pods/log
+  - events
+  verbs:
+  - list
+  - get
+  - watch
+- apiGroups:
+  - operators.coreos.com
+  resources:
+  - subscriptions
+  - clusterserviceversions
+  verbs:
+  - "*"
+# END copied from openshift-logging
+# BEGIN Permissions for CRW
+- apiGroups:
+  - ""
+  resources:
+  # DO NOT grant "list" on "secrets", it will allow users to also get the yaml and then decode data
+  - configmaps
+  verbs:
+  - list
+- apiGroups:
+  - org.eclipse.che
+  resources:
+  - '*'
+  verbs:
+  - '*'
+# END Permissions for CRW

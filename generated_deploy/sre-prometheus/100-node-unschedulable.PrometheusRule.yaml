@@ -1,0 +1,20 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: sre-node-unschedulable
+    role: alert-rules
+  name: sre-node-unschedulable
+  namespace: openshift-monitoring
+spec:
+  groups:
+  - name: sre-node-unschedulable
+    rules:
+    - alert: KubeNodeUnschedulableSRE
+      expr: (kube_node_spec_unschedulable > 0 and on(node) kube_node_role{role="master"}) or (kube_node_spec_unschedulable > 0 unless ignoring(node,container,endpoint,job,namespace,service) sum(mapi_machine_set_status_replicas{name=~".*upgrade$"}) > 0)
+      for: 60m
+      labels:
+        severity: critical
+        namespace: openshift-monitoring
+      annotations:
+        message: "The node {{ $labels.node }} has been unschedulable for more than an hour."

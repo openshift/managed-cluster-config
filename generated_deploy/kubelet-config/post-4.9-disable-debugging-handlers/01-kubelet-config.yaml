@@ -1,0 +1,12 @@
+apiVersion: machineconfiguration.openshift.io/v1
+kind: KubeletConfig
+metadata:
+  name: custom-kubelet
+spec:
+  kubeletConfig:
+    enableDebuggingHandlers: false
+  machineConfigPoolSelector:
+    matchExpressions:
+    - key: machineconfiguration.openshift.io/mco-built-in
+      operator: Exists
+  autoSizingReserved: true

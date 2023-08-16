@@ -1,0 +1,20 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: backplane-impersonate-cluster-admin
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - users
+    verbs:
+      - impersonate
+    resourceNames:
+      - backplane-cluster-admin
+  # SRE can add Impersonate-Extra-Reason headers to API requests
+  - apiGroups:
+    - authentication.k8s.io
+    verbs:
+    - impersonate
+    resources:
+    - userextras/reason

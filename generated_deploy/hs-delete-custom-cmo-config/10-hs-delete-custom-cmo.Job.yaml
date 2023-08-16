@@ -1,0 +1,23 @@
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: hs-delete-custom-cmo-config
+  namespace: openshift-delete-custom-cmo-config
+spec:
+  template:
+    spec:
+      containers:
+      - name: hs-delete-custom-cmo-config
+        image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+        command:
+        - bash
+        - -c
+        - |
+          readarray -t namespaces < <(oc get cd -l ext-hypershift.openshift.io/cluster-type=management-cluster -A -o go-template='{{range .items}}{{.metadata.namespace}}{{"\n"}}{{end}}');
+          for ns in "${namespaces[@]}"; do
+            oc patch syncset ext-cluster-monitoring-operator-config -n "${ns}" --type merge -p '{"spec":{"resourceApplyMode":"Upsert"}}';
+            oc delete syncset ext-cluster-monitoring-operator-config -n "${ns}";
+          done;
+      serviceAccountName: hs-delete-custom-cmo-config
+      restartPolicy: Never

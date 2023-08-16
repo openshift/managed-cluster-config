@@ -1,0 +1,30 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: sre-router-health
+    role: alert-rules
+  name: sre-router-health
+  namespace: openshift-monitoring
+spec:  
+  groups:
+  - name: sre-router-health
+    rules:
+    - alert: RouterAvailabilityLT50PctSRE
+      expr: |
+        (sum(avg_over_time(kube_replicationcontroller_status_ready_replicas[1h])) by (replicationcontroller,namespace) 
+        /
+        on(replicationcontroller,namespace)
+        max(kube_replicationcontroller_status_replicas{namespace="default",replicationcontroller=~"router.?-.*"} >0) by (replicationcontroller,namespace)) < 0.5
+      labels:
+        severity: warning
+        namespace: openshift-monitoring
+    - alert: RouterAvailabilityLT30PctSRE
+      expr: |
+        (sum(avg_over_time(kube_replicationcontroller_status_ready_replicas[1h])) by (replicationcontroller,namespace) 
+        /
+        on(replicationcontroller,namespace)
+        max(kube_replicationcontroller_status_replicas{namespace="default",replicationcontroller=~"router.?-.*"} >0) by (replicationcontroller,namespace)) < 0.3
+      labels:
+        severity: critical
+        namespace: openshift-monitoring

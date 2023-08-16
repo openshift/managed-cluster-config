@@ -1,0 +1,20 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: sre-fr-alerts-low-disk-space
+    role: alert-rules
+  name: sre-fr-alerts-low-disk-space
+  namespace: openshift-monitoring
+spec:
+  groups:
+  - name: sre-fr-alerts-low-disk-space
+    rules:
+    - alert: FedRAMPNodeFilesystemSpaceFillingUp
+      expr: round(sum(node_filesystem_avail_bytes{job="node-exporter",fstype!="",mountpoint=~"/"} / node_filesystem_size_bytes{job="node-exporter",fstype!="",mountpoint=~"/"} *  on(instance) group_left(label_node_role_kubernetes_io) label_replace(cluster:nodes_roles{label_node_role_kubernetes_io=~"master|infra"}, "instance","$1","node", "(.+)")) by (label_node_role_kubernetes_io, instance, mountpoint) * 100 < 15)
+      for: 5m
+      labels:
+        severity: critical
+        namespace: openshift-monitoring
+      annotations:
+        message: Critical - node file system almost full on {{ $labels.label_node_role_kubernetes_io }} node, instance {{ $labels.instance }}.  {{ $labels.instance }} is only {{ $value }}% free.

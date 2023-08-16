@@ -1,0 +1,13 @@
+apiVersion: managed.openshift.io/v1alpha1
+kind: SubjectPermission
+metadata:
+  name: dedicated-admins-alert-routing-edit
+  namespace: openshift-rbac-permissions
+spec:
+  subjectKind: Group
+  subjectName: dedicated-admins
+  permissions:
+    - 
+      clusterRoleName: alert-routing-edit
+      namespacesAllowedRegex: ".*"
+      namespacesDeniedRegex: "(^kube-.*|^openshift.*|^ops-health-monitoring$|^management-infra$|^default$|^logging$|^sre-app-check$)"

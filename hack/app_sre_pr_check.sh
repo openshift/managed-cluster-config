@@ -4,6 +4,11 @@ set -exv
 
 trap "rm -f sorted-before*.yaml.tmpl sorted-after*.yaml.tmpl" EXIT
 
+export UID_OWNER=$(id -u `whoami`)
+export GID_OWNER=$(id -g `whoami`)
+
+echo "UID_OWNER: ${UID_OWNER} - GID_OWNER: ${GID_OWNER}"
+
 # all custom alerts must have a namespace label
 MISSING_NS="false"
 for F in $(find ./deploy/sre-prometheus -type f -iname '*prometheusrule.yaml')
@@ -31,8 +36,10 @@ do
     cat hack/00-osd-managed-cluster-config-${environment}.yaml.tmpl | sort > sorted-before-${environment}.yaml.tmpl
 done
 
-# remove all generated acm policies files in order to determine if they have changed
-rm -f deploy/acm-policies/50-GENERATED-*.yaml
+# remove all generated files in order to determine if they have changed
+rm -rf generated_deploy
+# remove generated files in deploy (such as CMO or oauth templates) as well to ensure they are properly recreated
+find . -name "50-GENERATED*" -exec rm {} +
 
 make
 

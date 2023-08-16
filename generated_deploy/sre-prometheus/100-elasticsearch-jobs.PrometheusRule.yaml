@@ -1,0 +1,21 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: sre-elasticsearch-jobs
+    role: alert-rules
+  name: sre-elasticsearch-jobs
+  namespace: openshift-monitoring
+spec:
+  groups:
+  - name: sre-elasticsearch-jobs
+    rules:
+    # https://issues.redhat.com/browse/OSD-5544
+    - alert: ElasticsearchJobFailedSRE
+      expr: kube_job_failed{job="kube-state-metrics",namespace="openshift-logging",job_name=~"^elasticsearch.*"} > 1
+      for: 15m
+      labels:
+        severity: warning
+        namespace: '{{ $labels.namespace }}'
+      annotations:
+        message: Elasticsearch job {{ $labels.job_name }} has failed 2 or more times in the last 15 minutes in namespace {{ $labels.namespace }}.

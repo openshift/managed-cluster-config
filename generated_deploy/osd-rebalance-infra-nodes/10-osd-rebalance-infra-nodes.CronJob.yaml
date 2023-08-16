@@ -1,0 +1,43 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: osd-rebalance-infra-nodes
+  namespace: openshift-monitoring
+spec:
+  failedJobsHistoryLimit: 3
+  successfulJobsHistoryLimit: 3
+  concurrencyPolicy: Replace
+  schedule: "*/15 * * * *"
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: 86400
+      template:
+        spec:
+          affinity:
+            nodeAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+              - preference:
+                  matchExpressions:
+                  - key: node-role.kubernetes.io/infra
+                    operator: Exists
+                weight: 1
+          tolerations:
+            - effect: NoSchedule
+              key: node-role.kubernetes.io/infra
+              operator: Exists
+          serviceAccountName: osd-rebalance-infra-nodes
+          restartPolicy: Never
+          containers:
+            - name: osd-rebalance-infra-nodes
+              image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+              command: [ "/bin/sh", "-c", "/etc/config/entrypoint" ]
+              volumeMounts:
+                - name: osd-rebalance-infra-nodes
+                  mountPath: /etc/config
+                  readOnly: true
+          volumes:
+            - name: osd-rebalance-infra-nodes
+              configMap:
+                name: osd-rebalance-infra-nodes
+                defaultMode: 0755

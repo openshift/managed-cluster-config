@@ -1,0 +1,45 @@
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: sre-operator-reinstall
+  namespace: openshift-custom-domains-operator
+spec:
+  failedJobsHistoryLimit: 1
+  successfulJobsHistoryLimit: 3
+  concurrencyPolicy: Replace
+  schedule: "*/30 * * * *"
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: 100
+      template:
+        spec:
+          serviceAccountName: sre-operator-reinstall-sa
+          restartPolicy: Never
+          containers:
+          - name: operator-reinstaller
+            image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+            imagePullPolicy: Always
+            command:
+            - sh
+            - -c
+            - |
+              #!/bin/bash
+              set -euxo pipefail
+              NAMESPACE=openshift-custom-domains-operator
+              
+              # Fix failing CDO clustersyncs by wiping out last-applied-configuration
+              if oc get -n "$NAMESPACE" subscriptions.operators.coreos.com custom-domains-operator; then
+                oc patch -n "$NAMESPACE" subscriptions.operators.coreos.com custom-domains-operator --type json --patch='[ { "op": "remove", "path": "/metadata/annotations/kubectl.kubernetes.io~1last-applied-configuration" } ]'
+              fi
+
+              # Check for the presence of CDO v0.1.201, then we know we're stuck
+              # stuck
+              CSV_FOUND=$(oc -n "$NAMESPACE" get clusterserviceversions.operators.coreos.com custom-domains-operator.v0.1.201-b9b8893 -o name --ignore-not-found) || true
+              if [[ ! -z "$CSV_FOUND" ]]; then
+                # It is present, so wipe out CDO
+                oc -n "$NAMESPACE" delete clusterserviceversions.operators.coreos.com -l operators.coreos.com/custom-domains-operator.openshift-custom-domains-operator=""
+                oc -n "$NAMESPACE" delete installplans.operators.coreos.com -l operators.coreos.com/custom-domains-operator.openshift-custom-domains-operator=""
+                oc -n "$NAMESPACE" delete subscriptions.operators.coreos.com custom-domains-operator --ignore-not-found
+              fi
+              exit 0

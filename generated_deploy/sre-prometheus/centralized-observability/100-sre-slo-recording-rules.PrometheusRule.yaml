@@ -1,0 +1,30 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: sre-slo-recording-rules
+    role: recording-rules
+  name: sre-slo-recording-rules
+  namespace: openshift-monitoring
+spec:
+  groups:
+    - name: sre-slo.rules
+      rules:
+        - expr: sre:telemetry:managed_labels * on (sre) group_left(probe_url) label_replace(probe_success{probe_url=~"^https://api.+"}, "sre", "true", "", "")
+          record: sre:slo:probe_success_api
+        - expr: sre:telemetry:managed_labels * on (sre) group_left(probe_url) label_replace(probe_success{probe_url=~"^https://console.+"}, "sre", "true", "", "")
+          record: sre:slo:probe_success_console
+        - expr: label_replace(sum by (code, method) (imageregistry_http_requests_total), "sre", "true", "", "") * on (sre) group_left(_id,provider,region,version) sre:telemetry:managed_labels
+          record: sre:slo:imageregistry_http_requests_total
+        - expr: label_replace(sum by (code, verb, subresource) (oauth_server_requests_total), "sre", "true", "", "") * on (sre) group_left(_id,provider,region,version) sre:telemetry:managed_labels
+          record: sre:slo:oauth_server_requests_total
+        - expr: sre:telemetry:managed_labels * on (sre) group_left(probe_url) label_replace(count((sum(rate(apiserver_request_total{job="apiserver", code=~"(400|5..)"}[5m]))/sum(rate(apiserver_request_total{job="apiserver", code=~"([1-5]..)"}[5m]))) == 1) or (sum(absent_over_time(apiserver_request_total{job="apiserver"}[5m]))*(count(sum(sum_over_time(sre:slo:probe_success_api{}[5m])) == 0))) or vector(0), "sre", "true", "", "")
+          record: sre:sla:outage_5_minutes
+        - expr: sre:telemetry:managed_labels * on (sre) group_left(probe_url) label_replace(((80640 - sum by(_id) (count_over_time(sre:slo:probe_success_api{}[4w])) + sum by(_id) (sum_over_time(sre:slo:probe_success_api{}[4w]))) / 80640), "sre", "true", "", "")
+          record: sre:slo:apiserver_28d_slo
+        - expr: sre:telemetry:managed_labels * on (sre) group_left(probe_url) label_replace(((80640 - sum by(_id) (count_over_time(sre:slo:probe_success_console{}[4w])) + sum by(_id) (sum_over_time(sre:slo:probe_success_console{}[4w]))) / 80640), "sre", "true", "", "")
+          record: sre:slo:console_28d_slo
+        - expr: sre:telemetry:managed_labels * on (sre) group_left(probe_url) label_replace(((sum by(_id) (count_over_time(sre:slo:probe_success_api{}[4w])) - sum by(_id) (sum_over_time(sre:slo:probe_success_api{}[4w]))) / ((1-0.9995) * 80640)), "sre", "true", "", "")
+          record: sre:error_budget_burn:apiserver_28d_slo
+        - expr: sre:telemetry:managed_labels * on (sre) group_left(probe_url) label_replace(((sum by(_id) (count_over_time(sre:slo:probe_success_console{}[4w])) - sum by(_id) (sum_over_time(sre:slo:probe_success_console{}[4w]))) / ((1-0.9995) * 80640)), "sre", "true", "", "")
+          record: sre:error_budget_burn:console_28d_slo
