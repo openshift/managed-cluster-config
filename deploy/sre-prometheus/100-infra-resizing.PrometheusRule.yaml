@@ -124,15 +124,8 @@ spec:
           severity: warning
           namespace: openshift-monitoring
         annotations:
-      ## If the CPU or Memory related "InfraNodesExcessiveResourceConsumptionSRE" alerts are firing, raise a critical ticket to SRE to scale the infra nodes up
           message: "The cluster's infrastructure nodes have been consuming excessive memory for 24 hours and may need to be vertically scaled to support the existing workers. See linked SOP for details."
-      - alert: InfraNodesNeedResizingSRE
-        expr: sre:node_infras:need_resize > 0
-        labels:
-          severity: warning
-          namespace: openshift-monitoring
-        annotations:
-          message: "The cluster's infrastructure nodes are undersized and must be vertically scaled to support the existing workers.  See linked SOP for details."
+      ## If the CPU or Memory related "InfraNodesExcessiveResourceConsumptionSRE" alerts are firing, raise a critical ticket to SRE to scale the infra nodes up
       - alert: InfraNodesNeedResizingSRE
         expr: sre:node_infras:need_resize > 0
         for: 2h
