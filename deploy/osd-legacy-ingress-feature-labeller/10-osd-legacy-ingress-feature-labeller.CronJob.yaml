@@ -49,6 +49,10 @@ spec:
                       print("No hive version label on cluster, exiting")
                       continue
 
+                  if labels.get("hive.openshift.io/cluster-platform") != "aws":
+                      print("Cluster platform not aws, skipping")
+                      continue
+
                   if labels.get("hive.openshift.io/version-major-minor") and int(labels["hive.openshift.io/version-major-minor"].split(".")[1]) < 13:
                       print("Version less than v4.13, exiting")
                       continue
