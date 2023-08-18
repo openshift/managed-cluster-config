@@ -22772,7 +22772,7 @@ objects:
         - operators.coreos.com
         resources:
         - clusterserviceversions
-        - installplan
+        - installplans
         - subscriptions
         verbs:
         - list
@@ -22843,18 +22843,21 @@ objects:
                   - sh
                   - -c
                   - "#!/bin/bash\nset -euxo pipefail\nNAMESPACE=openshift-custom-domains-operator\n\
-                    # Check for the presence of CDO v0.1.201, then we know we're stuck\n\
-                    # stuck\nCSV_FOUND=$(oc -n \"$NAMESPACE\" get clusterserviceversions.operators.coreos.com\
-                    \ custom-domains-operator.v0.1.201-b9b8893 -o name --ignore-not-found)\
-                    \ || true\nif [[ ! -z \"$CSV_FOUND\" ]]; then\n  # It is present,\
-                    \ so wipe out CDO\n  oc -n \"$NAMESPACE\" delete clusterserviceversions.operators.coreos.com\
+                    \n# Fix failing CDO clustersyncs by wiping out last-applied-configuration\n\
+                    if oc get -n \"$NAMESPACE\" subscriptions.operators.coreos.com\
+                    \ custom-domains-operator; then\n  oc patch -n \"$NAMESPACE\"\
+                    \ subscriptions.operators.coreos.com custom-domains-operator --type\
+                    \ json --patch='[ { \"op\": \"remove\", \"path\": \"/metadata/annotations/kubectl.kubernetes.io~1last-applied-configuration\"\
+                    \ } ]'\nfi\n\n# Check for the presence of CDO v0.1.201, then we\
+                    \ know we're stuck\n# stuck\nCSV_FOUND=$(oc -n \"$NAMESPACE\"\
+                    \ get clusterserviceversions.operators.coreos.com custom-domains-operator.v0.1.201-b9b8893\
+                    \ -o name --ignore-not-found) || true\nif [[ ! -z \"$CSV_FOUND\"\
+                    \ ]]; then\n  # It is present, so wipe out CDO\n  oc -n \"$NAMESPACE\"\
+                    \ delete clusterserviceversions.operators.coreos.com -l operators.coreos.com/custom-domains-operator.openshift-custom-domains-operator=\"\
+                    \"\n  oc -n \"$NAMESPACE\" delete installplans.operators.coreos.com\
                     \ -l operators.coreos.com/custom-domains-operator.openshift-custom-domains-operator=\"\
-                    \"\n  oc -n \"$NAMESPACE\" delete installplan.operators.coreos.com\
-                    \ -l operators.coreos.com/custom-domains-operator.openshift-custom-domains-operator=\"\
-                    \"\n  oc -n \"$NAMESPACE\" get subscriptions.operators.coreos.com\
-                    \ custom-domains-operator -o yaml > /tmp/sub.yaml\n  oc -n \"\
-                    $NAMESPACE\" delete -f /tmp/sub.yaml\n  oc -n \"$NAMESPACE\" apply\
-                    \ -f /tmp/sub.yaml\nfi\nexit 0\n"
+                    \"\n  oc -n \"$NAMESPACE\" delete subscriptions.operators.coreos.com\
+                    \ custom-domains-operator --ignore-not-found\nfi\nexit 0\n"
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -22897,7 +22900,7 @@ objects:
         - operators.coreos.com
         resources:
         - clusterserviceversions
-        - installplan
+        - installplans
         - subscriptions
         verbs:
         - list
@@ -22968,18 +22971,21 @@ objects:
                   - sh
                   - -c
                   - "#!/bin/bash\nset -euxo pipefail\nNAMESPACE=openshift-custom-domains-operator\n\
-                    # Check for the presence of CDO v0.1.201, then we know we're stuck\n\
-                    # stuck\nCSV_FOUND=$(oc -n \"$NAMESPACE\" get clusterserviceversions.operators.coreos.com\
-                    \ custom-domains-operator.v0.1.201-b9b8893 -o name --ignore-not-found)\
-                    \ || true\nif [[ ! -z \"$CSV_FOUND\" ]]; then\n  # It is present,\
-                    \ so wipe out CDO\n  oc -n \"$NAMESPACE\" delete clusterserviceversions.operators.coreos.com\
+                    \n# Fix failing CDO clustersyncs by wiping out last-applied-configuration\n\
+                    if oc get -n \"$NAMESPACE\" subscriptions.operators.coreos.com\
+                    \ custom-domains-operator; then\n  oc patch -n \"$NAMESPACE\"\
+                    \ subscriptions.operators.coreos.com custom-domains-operator --type\
+                    \ json --patch='[ { \"op\": \"remove\", \"path\": \"/metadata/annotations/kubectl.kubernetes.io~1last-applied-configuration\"\
+                    \ } ]'\nfi\n\n# Check for the presence of CDO v0.1.201, then we\
+                    \ know we're stuck\n# stuck\nCSV_FOUND=$(oc -n \"$NAMESPACE\"\
+                    \ get clusterserviceversions.operators.coreos.com custom-domains-operator.v0.1.201-b9b8893\
+                    \ -o name --ignore-not-found) || true\nif [[ ! -z \"$CSV_FOUND\"\
+                    \ ]]; then\n  # It is present, so wipe out CDO\n  oc -n \"$NAMESPACE\"\
+                    \ delete clusterserviceversions.operators.coreos.com -l operators.coreos.com/custom-domains-operator.openshift-custom-domains-operator=\"\
+                    \"\n  oc -n \"$NAMESPACE\" delete installplans.operators.coreos.com\
                     \ -l operators.coreos.com/custom-domains-operator.openshift-custom-domains-operator=\"\
-                    \"\n  oc -n \"$NAMESPACE\" delete installplan.operators.coreos.com\
-                    \ -l operators.coreos.com/custom-domains-operator.openshift-custom-domains-operator=\"\
-                    \"\n  oc -n \"$NAMESPACE\" get subscriptions.operators.coreos.com\
-                    \ custom-domains-operator -o yaml > /tmp/sub.yaml\n  oc -n \"\
-                    $NAMESPACE\" delete -f /tmp/sub.yaml\n  oc -n \"$NAMESPACE\" apply\
-                    \ -f /tmp/sub.yaml\nfi\nexit 0"
+                    \"\n  oc -n \"$NAMESPACE\" delete subscriptions.operators.coreos.com\
+                    \ custom-domains-operator --ignore-not-found\nfi\nexit 0\n"
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
