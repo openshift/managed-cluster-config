@@ -88,15 +88,6 @@ spec:
               )
             )
         record: sre:node_infra:excessive_consumption_memory
-      ## If either of the CPU or Memory resource consumption alerts (see below) fire, then trigger an alert for SRE
-      - expr: (
-                count(
-                  ALERTS{alertname="cpu-InfraNodesExcessiveResourceConsumptionSRE", alertstate="firing"}
-                  OR
-                  ALERTS{alertname="memory-InfraNodesExcessiveResourceConsumptionSRE", alertstate="firing"}
-                ) >= 1
-              )
-        record: sre:node_infras:need_resize
   - name: sre-infra-resizing-alerts
     rules:
     ## While individual spikes in CPU usage are acceptable, even if spikes are flappy, because CPU is a renewable resource,
@@ -108,7 +99,7 @@ spec:
           severity: warning
           namespace: openshift-monitoring
         annotations:
-          message: "The cluster's infrastructure nodes have been consuming excessive CPU for 16 hours and may need to be vertically scaled to support the existing workers. See linked SOP for details."
+          message: "The cluster's infrastructure nodes have been consuming excessive CPU for 16 hours and should be vertically scaled to support the existing workers. See linked SOP for details."
       ## Given memory may be allocated but unused, 24h is good enough to catch gradual outgrowing of the cluster with critical node failures alerting via other alerts
       - alert: memory-InfraNodesExcessiveResourceConsumptionSRE
         expr: sre:node_infra:excessive_consumption_memory > 0
@@ -117,13 +108,4 @@ spec:
           severity: warning
           namespace: openshift-monitoring
         annotations:
-          message: "The cluster's infrastructure nodes have been consuming excessive memory for 24 hours and may need to be vertically scaled to support the existing workers. See linked SOP for details."
-      ## If the CPU or Memory related "InfraNodesExcessiveResourceConsumptionSRE" alerts are firing, raise a critical ticket to SRE to scale the infra nodes up
-      - alert: InfraNodesNeedResizingSRE
-        expr: sre:node_infras:need_resize > 0
-        for: 2h
-        labels:
-          severity: critical
-          namespace: openshift-monitoring
-        annotations:
-          message: "The cluster's infrastructure nodes have been undersized for 2 hours and must be vertically scaled to support the existing workers.  See linked SOP for details."
+          message: "The cluster's infrastructure nodes have been consuming excessive memory for 24 hours and should be vertically scaled to support the existing workers. See linked SOP for details."
