@@ -31853,18 +31853,6 @@ objects:
               <= 250 ) OR ( avg(sre:node_roles:memory_total_bytes{label_node_role_kubernetes_io="master"})
               < 128*1024*1024*1024 AND sre:node_workers:count > 250 )
             record: sre:node_masters:need_resize
-          - expr: ( ( avg(sre:node_roles:memory_total_bytes{label_node_role_kubernetes_io="infra"})
-              < 16*1024*1024*1024 OR avg(sre:node_roles:node_num_cpu{label_node_role_kubernetes_io="infra"})
-              <= 4 ) AND sre:node_workers:count > 25 AND sre:node_workers:count <=
-              100 ) OR ( ( avg(sre:node_roles:memory_total_bytes{label_node_role_kubernetes_io="infra"})
-              < 32*1024*1024*1024 OR avg(sre:node_roles:node_num_cpu{label_node_role_kubernetes_io="infra"})
-              <= 8 ) AND sre:node_workers:count > 100 AND sre:node_workers:count <=
-              250 ) OR ( ( avg(sre:node_roles:memory_total_bytes{label_node_role_kubernetes_io="infra"})
-              < 128*1024*1024*1024 OR avg(sre:node_roles:node_num_cpu{label_node_role_kubernetes_io="infra"})
-              <= 16 ) AND sre:node_workers:count > 250 ) OR ( avg(sre:node_roles:memory_total_bytes{label_node_role_kubernetes_io="infra"})
-              < 128*1024*1024*1024 AND avg(sre:node_roles:node_num_cpu{label_node_role_kubernetes_io="infra"})
-              <= 32 AND sre:node_workers:count > 500 )
-            record: sre:node_infras:need_resize
         - name: sre-control-plane-resizing-alerts
           rules:
           - alert: MasterNodesNeedResizingSRE
@@ -31885,16 +31873,6 @@ objects:
               namespace: openshift-monitoring
             annotations:
               message: The cluster's master instance has been undersized for 2 hours
-                and must be vertically scaled to support the existing workers.  See
-                linked SOP for details.
-          - alert: InfraNodesNeedResizingSRE
-            expr: sre:node_infras:need_resize > 0
-            for: 2h
-            labels:
-              severity: critical
-              namespace: openshift-monitoring
-            annotations:
-              message: The cluster's infra instance has been undersized for 2 hours
                 and must be vertically scaled to support the existing workers.  See
                 linked SOP for details.
     - apiVersion: monitoring.coreos.com/v1
@@ -32020,6 +31998,10 @@ objects:
               ="infra"} ) - 1 ) / count ( cluster:nodes_roles{label_node_role_kubernetes_io
               ="infra"} ) ) )
             record: sre:node_infra:excessive_consumption_memory
+          - expr: ( count( ALERTS{alertname="cpu-InfraNodesExcessiveResourceConsumptionSRE",
+              alertstate="firing"} OR ALERTS{alertname="memory-InfraNodesExcessiveResourceConsumptionSRE",
+              alertstate="firing"} ) >= 1 )
+            record: sre:node_infras:need_resize
         - name: sre-infra-resizing-alerts
           rules:
           - alert: cpu-InfraNodesExcessiveResourceConsumptionSRE
@@ -32030,8 +32012,8 @@ objects:
               namespace: openshift-monitoring
             annotations:
               message: The cluster's infrastructure nodes have been consuming excessive
-                CPU for 16 hours and should be vertically scaled to support the existing
-                workers. See linked SOP for details.
+                CPU for 16 hours and may need to be vertically scaled to support the
+                existing workers. See linked SOP for details.
           - alert: memory-InfraNodesExcessiveResourceConsumptionSRE
             expr: sre:node_infra:excessive_consumption_memory > 0
             for: 24h
@@ -32040,8 +32022,18 @@ objects:
               namespace: openshift-monitoring
             annotations:
               message: The cluster's infrastructure nodes have been consuming excessive
-                memory for 24 hours and should be vertically scaled to support the
-                existing workers. See linked SOP for details.
+                memory for 24 hours and may need to be vertically scaled to support
+                the existing workers. See linked SOP for details.
+          - alert: InfraNodesNeedResizingSRE
+            expr: sre:node_infras:need_resize > 0
+            for: 2h
+            labels:
+              severity: critical
+              namespace: openshift-monitoring
+            annotations:
+              message: The cluster's infrastructure nodes have been undersized for
+                2 hours and must be vertically scaled to support the existing workers.  See
+                linked SOP for details.
     - apiVersion: monitoring.coreos.com/v1
       kind: PrometheusRule
       metadata:
