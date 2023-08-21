@@ -53,8 +53,8 @@ spec:
       ## Expression Explanation: 
       ## 1, minus the total amount of free memory divided by the total amount of memory for the infra node type, gives us the percent used memory as a decimal value: 0.%%
       ## Greater than (>) is the threshold
-      ## Sum of the total memory for the infra node type, divided by the number of infra nodes, gives us the total RAM allocated to a single node
-      ## Divided by the total memory for the infra node type in the cluster, gives us the percent of memory free required to handle a full node failure, as a decimal value: 0.%%
+      ## Count of the infra nodes - 1, divided by the total infra nodes gives the max percent memory utilization free required to handle a full node failure, as a decimal value: 0.%%
+      ## Scalar converts the percent value from a vector to allow comparison with the rate vector
       - expr: ( 1 -
                 sum (
                     node_memory_MemFree_bytes +
