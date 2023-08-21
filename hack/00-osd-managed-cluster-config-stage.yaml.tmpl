@@ -31994,12 +31994,9 @@ objects:
               + node_memory_Cached_bytes AND on (instance) label_replace( kube_node_role{role="infra"},
               "instance", "$1", "node", "(.+)" ) ) / sum ( node_memory_MemTotal_bytes
               AND on (instance) label_replace( kube_node_role{role="infra"}, "instance",
-              "$1", "node", "(.+)" ) ) ) > ( sum ( node_memory_MemTotal_bytes AND
-              on (instance) label_replace( kube_node_role{role="infra"}, "instance",
-              "$1", "node", "(.+)" ) ) / ( count( cluster:nodes_roles{label_node_role_kubernetes_io
-              ="infra"} ) ) ) / sum ( node_memory_MemTotal_bytes AND on (instance)
-              label_replace( kube_node_role{role="infra"}, "instance", "$1", "node",
-              "(.+)" ) )
+              "$1", "node", "(.+)" ) ) ) > ( scalar ( ( count ( cluster:nodes_roles{label_node_role_kubernetes_io
+              ="infra"} ) - 1 ) / count ( cluster:nodes_roles{label_node_role_kubernetes_io
+              ="infra"} ) ) )
             record: sre:node_infra:excessive_consumption_memory
           - expr: ( count( ALERTS{alertname="cpu-InfraNodesExcessiveResourceConsumptionSRE",
               alertstate="firing"} OR ALERTS{alertname="memory-InfraNodesExcessiveResourceConsumptionSRE",

@@ -74,26 +74,19 @@ spec:
             ) 
             > 
             (
-                sum (
-                    node_memory_MemTotal_bytes
-                    AND on (instance) label_replace(
-                        kube_node_role{role="infra"}, "instance", "$1", "node", "(.+)"
-                    )
+              scalar (
+                (
+                  count (
+                    cluster:nodes_roles{label_node_role_kubernetes_io ="infra"}
+                  )
+                  - 1
                 )
                 /
-                (
-                    count(
-                        cluster:nodes_roles{label_node_role_kubernetes_io ="infra"}
-                    )
+                count (
+                  cluster:nodes_roles{label_node_role_kubernetes_io ="infra"}
                 )
+              )
             )
-            /
-            sum (
-                node_memory_MemTotal_bytes
-                AND on (instance) label_replace(
-                    kube_node_role{role="infra"}, "instance", "$1", "node", "(.+)"
-                )
-          )
         record: sre:node_infra:excessive_consumption_memory
       ## If either of the CPU or Memory resource consumption alerts (see below) fire, then trigger an alert for SRE
       - expr: (
