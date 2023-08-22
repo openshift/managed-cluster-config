@@ -34,7 +34,7 @@ spec:
               fi
 
               # Check for the presence of CDO v0.1.205, if it's not v0.1.205, then assume we're stuck
-              if ! $(oc -n "$NAMESPACE" get clusterserviceversions.operators.coreos.com custom-domains-operator.v0.1.205-5b1688f); then
+              if ! oc -n "$NAMESPACE" get clusterserviceversions.operators.coreos.com custom-domains-operator.v0.1.205-5b1688f; then
                 # OLM Dance CDO
                 oc -n "$NAMESPACE" delete clusterserviceversions.operators.coreos.com $(oc -n "$NAMESPACE" get clusterserviceversions.operators.coreos.com -ojsonpath='{.items[?(@.spec.displayName=="custom-domains-operator")].metadata.name}') || true
                 oc -n "$NAMESPACE" delete installplans.operators.coreos.com -l operators.coreos.com/custom-domains-operator.openshift-custom-domains-operator="" --ignore-not-found
