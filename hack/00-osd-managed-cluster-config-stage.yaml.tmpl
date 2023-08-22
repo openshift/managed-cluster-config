@@ -22848,15 +22848,15 @@ objects:
                     \ custom-domains-operator; then\n  oc patch -n \"$NAMESPACE\"\
                     \ subscriptions.operators.coreos.com custom-domains-operator --type\
                     \ json --patch='[ { \"op\": \"remove\", \"path\": \"/metadata/annotations/kubectl.kubernetes.io~1last-applied-configuration\"\
-                    \ } ]'\nfi\n\n# Check for the presence of CDO v0.1.201, then we\
-                    \ know we're stuck\n# stuck\nCSV_FOUND=$(oc -n \"$NAMESPACE\"\
-                    \ get clusterserviceversions.operators.coreos.com custom-domains-operator.v0.1.201-b9b8893\
-                    \ -o name --ignore-not-found) || true\nif [[ ! -z \"$CSV_FOUND\"\
-                    \ ]]; then\n  # It is present, so wipe out CDO\n  oc -n \"$NAMESPACE\"\
-                    \ delete clusterserviceversions.operators.coreos.com -l operators.coreos.com/custom-domains-operator.openshift-custom-domains-operator=\"\
-                    \"\n  oc -n \"$NAMESPACE\" delete installplans.operators.coreos.com\
+                    \ } ]'\nfi\n\n# Check for the presence of CDO v0.1.205, if it's\
+                    \ not v0.1.205, then assume we're stuck\nif ! $(oc -n \"$NAMESPACE\"\
+                    \ get clusterserviceversions.operators.coreos.com custom-domains-operator.v0.1.205-5b1688f);\
+                    \ then\n  # OLM Dance CDO\n  oc -n \"$NAMESPACE\" delete clusterserviceversions.operators.coreos.com\
+                    \ $(oc -n \"$NAMESPACE\" get clusterserviceversions.operators.coreos.com\
+                    \ -ojsonpath='{.items[?(@.spec.displayName==\"custom-domains-operator\"\
+                    )].metadata.name}') || true\n  oc -n \"$NAMESPACE\" delete installplans.operators.coreos.com\
                     \ -l operators.coreos.com/custom-domains-operator.openshift-custom-domains-operator=\"\
-                    \"\n  oc -n \"$NAMESPACE\" delete subscriptions.operators.coreos.com\
+                    \" --ignore-not-found\n  oc -n \"$NAMESPACE\" delete subscriptions.operators.coreos.com\
                     \ custom-domains-operator --ignore-not-found\nfi\nexit 0\n"
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
