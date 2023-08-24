@@ -22764,14 +22764,14 @@ objects:
                   - -c
                   - "#!/bin/bash\nset -euxo pipefail\nNAMESPACE=openshift-custom-domains-operator\n\
                     \n# Fix failing CDO clustersyncs by wiping out last-applied-configuration\n\
-                    # Ensure we only attempt to patch if the annotation exists\nANNOTATIONS_EXIST=X$(oc\
-                    \ get subscriptions.operators.coreos.com custom-domains-operator\
-                    \ -n openshift-custom-domains-operator -o json | jq 'any(.metadata;\
-                    \ .Key == \"annotations\")')\nif [ \"$ANNOTATIONS_EXIST\" != \"\
-                    Xfalse\" ]; then\n  if oc get -n \"$NAMESPACE\" subscriptions.operators.coreos.com\
-                    \ custom-domains-operator; then\n    oc patch -n \"$NAMESPACE\"\
-                    \ subscriptions.operators.coreos.com custom-domains-operator --type\
-                    \ json --patch='[ { \"op\": \"remove\", \"path\": \"/metadata/annotations/kubectl.kubernetes.io~1last-applied-configuration\"\
+                    # Ensure we only attempt to patch if the annotation exists\nif\
+                    \ oc get -n openshift-custom-domains-operator subscriptions.operators.coreos.com\
+                    \ custom-domains-operator; then\n  if [[ $(oc get -n openshift-custom-domains-operator\
+                    \ subscriptions.operators.coreos.com custom-domains-operator -o\
+                    \ custom-columns=ANNOTATIONS:.metadata.annotations --no-headers)\
+                    \ != \"<none>\" ]]; then\n       oc patch -n \"$NAMESPACE\" subscriptions.operators.coreos.com\
+                    \ custom-domains-operator --type json --patch='[ { \"op\": \"\
+                    remove\", \"path\": \"/metadata/annotations/kubectl.kubernetes.io~1last-applied-configuration\"\
                     \ } ]'\n  fi\nfi\n\n# Check for the presence of CDO v0.1.205 and\
                     \ do nothing, if any other version is found clean up OLM resources\n\
                     # Hive will sync these back\nif ! oc -n \"$NAMESPACE\" get clusterserviceversions.operators.coreos.com\
