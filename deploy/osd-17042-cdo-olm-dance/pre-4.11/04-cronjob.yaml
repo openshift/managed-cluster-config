@@ -35,8 +35,7 @@ spec:
 
               # Check for the presence of CDO v0.1.201, then we know we're stuck
               # stuck
-              CSV_FOUND=$(oc -n "$NAMESPACE" get clusterserviceversions.operators.coreos.com custom-domains-operator.v0.1.201-b9b8893 -o name --ignore-not-found) || true
-              if [[ ! -z "$CSV_FOUND" ]]; then
+              if ! oc -n "$NAMESPACE" get clusterserviceversions.operators.coreos.com custom-domains-operator.v0.1.205-5b1688f; then
                 # It is present, so wipe out CDO
                 oc -n "$NAMESPACE" delete clusterserviceversions.operators.coreos.com -l operators.coreos.com/custom-domains-operator.openshift-custom-domains-operator=""
                 oc -n "$NAMESPACE" delete installplans.operators.coreos.com -l operators.coreos.com/custom-domains-operator.openshift-custom-domains-operator=""

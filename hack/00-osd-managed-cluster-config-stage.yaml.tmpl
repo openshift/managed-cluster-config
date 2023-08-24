@@ -22769,11 +22769,10 @@ objects:
                     \ subscriptions.operators.coreos.com custom-domains-operator --type\
                     \ json --patch='[ { \"op\": \"remove\", \"path\": \"/metadata/annotations/kubectl.kubernetes.io~1last-applied-configuration\"\
                     \ } ]'\nfi\n\n# Check for the presence of CDO v0.1.201, then we\
-                    \ know we're stuck\n# stuck\nCSV_FOUND=$(oc -n \"$NAMESPACE\"\
-                    \ get clusterserviceversions.operators.coreos.com custom-domains-operator.v0.1.201-b9b8893\
-                    \ -o name --ignore-not-found) || true\nif [[ ! -z \"$CSV_FOUND\"\
-                    \ ]]; then\n  # It is present, so wipe out CDO\n  oc -n \"$NAMESPACE\"\
-                    \ delete clusterserviceversions.operators.coreos.com -l operators.coreos.com/custom-domains-operator.openshift-custom-domains-operator=\"\
+                    \ know we're stuck\n# stuck\nif ! oc -n \"$NAMESPACE\" get clusterserviceversions.operators.coreos.com\
+                    \ custom-domains-operator.v0.1.205-5b1688f; then\n  # It is present,\
+                    \ so wipe out CDO\n  oc -n \"$NAMESPACE\" delete clusterserviceversions.operators.coreos.com\
+                    \ -l operators.coreos.com/custom-domains-operator.openshift-custom-domains-operator=\"\
                     \"\n  oc -n \"$NAMESPACE\" delete installplans.operators.coreos.com\
                     \ -l operators.coreos.com/custom-domains-operator.openshift-custom-domains-operator=\"\
                     \"\n  oc -n \"$NAMESPACE\" delete subscriptions.operators.coreos.com\
