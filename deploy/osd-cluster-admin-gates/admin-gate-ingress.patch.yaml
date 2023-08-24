@@ -1,0 +1,8 @@
+apiVersion: v1
+applyMode: AlwaysApply
+kind: ConfigMap
+name: admin-gates
+namespace: openshift-config-managed
+# patch registry to deploy on infras: https://docs.openshift.com/container-platform/4.2/machine_management/creating-infrastructure-machinesets.html#infrastructure-moving-registry_creating-infrastructure-machinesets
+patch: '{"data":{"ack-4.12-ingress-changes-in-4.13": "In version 4.13 of OSD/ROSA, we are changing how we manage Ingress Controllers. If you are using additonal ingresses, or Custom Domains, your cluster may be affected. See https://access.redhat.com/node/7028653 for further details."}}'
+patchType: merge

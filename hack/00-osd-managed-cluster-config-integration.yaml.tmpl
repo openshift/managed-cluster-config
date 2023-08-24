@@ -24677,11 +24677,16 @@ objects:
         operator: In
         values:
         - '4.13'
+      - key: api.openshift.com/gate-ingress
+        operator: In
+        values:
+        - '4.13'
     resourceApplyMode: Upsert
     resources:
     - apiVersion: v1
       data:
         ack-4.12-kube-1.26-api-removals-in-4.13: 'true'
+        ack-4.12-ingress-changes-in-4.13: 'true'
       kind: ConfigMap
       metadata:
         name: admin-acks
@@ -24908,6 +24913,35 @@ objects:
       - apiGroup: rbac.authorization.k8s.io
         kind: Group
         name: cluster-admins
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-cluster-admin-gates
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.12'
+    resourceApplyMode: Upsert
+    patches:
+    - apiVersion: v1
+      applyMode: AlwaysApply
+      kind: ConfigMap
+      name: admin-gates
+      namespace: openshift-config-managed
+      patch: '{"data":{"ack-4.12-ingress-changes-in-4.13": "In version 4.13 of OSD/ROSA,
+        we are changing how we manage Ingress Controllers. If you are using additonal
+        ingresses, or Custom Domains, your cluster may be affected. See https://access.redhat.com/node/7028653
+        for further details."}}'
+      patchType: merge
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
