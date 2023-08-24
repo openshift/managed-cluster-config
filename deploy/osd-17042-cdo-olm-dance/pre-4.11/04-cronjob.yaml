@@ -27,17 +27,21 @@ spec:
               #!/bin/bash
               set -euxo pipefail
               NAMESPACE=openshift-custom-domains-operator
-              
+
               # Fix failing CDO clustersyncs by wiping out last-applied-configuration
-              if oc get -n "$NAMESPACE" subscriptions.operators.coreos.com custom-domains-operator; then
-                oc patch -n "$NAMESPACE" subscriptions.operators.coreos.com custom-domains-operator --type json --patch='[ { "op": "remove", "path": "/metadata/annotations/kubectl.kubernetes.io~1last-applied-configuration" } ]'
+              # Ensure we only attempt to patch if the annotation exists
+              ANNOTATIONS_EXIST=X$(oc get subscriptions.operators.coreos.com custom-domains-operator -n openshift-custom-domains-operator -o json | jq 'any(.metadata; .Key == "annotations")')
+              if [ "$ANNOTATIONS_EXIST" != "Xfalse" ]; then
+                if oc get -n "$NAMESPACE" subscriptions.operators.coreos.com custom-domains-operator; then
+                  oc patch -n "$NAMESPACE" subscriptions.operators.coreos.com custom-domains-operator --type json --patch='[ { "op": "remove", "path": "/metadata/annotations/kubectl.kubernetes.io~1last-applied-configuration" } ]'
+                fi
               fi
 
-              # Check for the presence of CDO v0.1.201, then we know we're stuck
-              # stuck
+              # Check for the presence of CDO v0.1.205 and do nothing, if any other version is found clean up OLM resources
+              # Hive will sync these back
               if ! oc -n "$NAMESPACE" get clusterserviceversions.operators.coreos.com custom-domains-operator.v0.1.205-5b1688f; then
                 # It is present, so wipe out CDO
-                oc -n "$NAMESPACE" delete clusterserviceversions.operators.coreos.com -l operators.coreos.com/custom-domains-operator.openshift-custom-domains-operator=""
+                oc -n "$NAMESPACE" delete clusterserviceversions.operators.coreos.com $(oc -n "$NAMESPACE" get clusterserviceversions.operators.coreos.com -ojsonpath='{.items[?(@.spec.displayName=="custom-domains-operator")].metadata.name}') || true
                 oc -n "$NAMESPACE" delete installplans.operators.coreos.com -l operators.coreos.com/custom-domains-operator.openshift-custom-domains-operator=""
                 oc -n "$NAMESPACE" delete subscriptions.operators.coreos.com custom-domains-operator --ignore-not-found
               fi
