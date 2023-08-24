@@ -33140,6 +33140,53 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: sre-prometheus-management-cluster
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: ext-hypershift.openshift.io/cluster-type
+        operator: In
+        values:
+        - management-cluster
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
+          prometheus: sre-machine-out-of-compliance
+          role: alert-rules
+        name: sre-machine-out-of-compliance
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-machine-out-of-compliance
+          rules:
+          - alert: MachineOutOfComplianceSRE
+            expr: 'mapi_machine_created_timestamp_seconds > 2419200
+
+              '
+            for: 60m
+            labels:
+              severity: warning
+              node: '{{ $labels.node }}'
+              source: https://issues.redhat.com/browse/OSD-17905
+              link: https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/MachineOutOfCompliance.md
+            annotations:
+              message: A machine on a management cluster is older than 28 days.
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: sre-prometheus-ocm-agent
   spec:
     clusterDeploymentSelector:
