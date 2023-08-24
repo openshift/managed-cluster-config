@@ -27,11 +27,11 @@ spec:
               #!/bin/bash
               set -euxo pipefail
               NAMESPACE=openshift-custom-domains-operator
-              
+
               # Fix failing CDO clustersyncs by wiping out last-applied-configuration
               # Ensure we only attempt to patch if the annotation exists
               ANNOTATIONS_EXIST=X$(oc get subscriptions.operators.coreos.com custom-domains-operator -n openshift-custom-domains-operator -o json | jq 'any(.metadata; .Key == "annotations")')
-              if [ "ANNOTATIONS_EXIST" != "Xfalse" ];
+              if [ "$ANNOTATIONS_EXIST" != "Xfalse" ]; then
                 if oc get -n "$NAMESPACE" subscriptions.operators.coreos.com custom-domains-operator; then
                   oc patch -n "$NAMESPACE" subscriptions.operators.coreos.com custom-domains-operator --type json --patch='[ { "op": "remove", "path": "/metadata/annotations/kubectl.kubernetes.io~1last-applied-configuration" } ]'
                 fi
