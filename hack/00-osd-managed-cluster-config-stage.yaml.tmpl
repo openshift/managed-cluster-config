@@ -26609,16 +26609,14 @@ objects:
                     \ {name} in namespace {namespace}')\n    if not labels.get(\"\
                     hive.openshift.io/version-major-minor\"):\n        print(\"No\
                     \ hive version label on cluster, exiting\")\n        continue\n\
-                    \n    if labels.get(\"hive.openshift.io/cluster-platform\") !=\
-                    \ \"aws\":\n        print(\"Cluster platform not aws, skipping\"\
-                    )\n        continue\n\n    if labels.get(\"hive.openshift.io/version-major-minor\"\
+                    \n    if labels.get(\"hive.openshift.io/version-major-minor\"\
                     ) and int(labels[\"hive.openshift.io/version-major-minor\"].split(\"\
-                    .\")[1]) < 13:\n        print(\"Version less than v4.13, exiting\"\
+                    .\")[1]) < 14:\n        print(\"Version less than v4.14, exiting\"\
                     )\n        continue\n\n    if labels.get(\"ext-managed.openshift.io/legacy-ingress-support\"\
                     ):\n        print(\"ext-managed.openshift.io/legacy-ingress-support\
                     \ label already exists, moving to next cluster\")\n        continue\n\
                     \    else:\n        print(\"ext-managed.openshift.io/legacy-ingress-support\
-                    \ label does not exist and cluster is v4.13 or greater. Labelling\
+                    \ label does not exist and cluster is v4.14 or greater. Labelling\
                     \ as legacy-ingress: false.\")\n        cmd = f'oc label clusterdeployment\
                     \ -n {namespace} {name} ext-managed.openshift.io/legacy-ingress-support=\"\
                     false\"'\n        print(f\"Running {cmd}\")\n\n        out = os.popen(cmd)\n\

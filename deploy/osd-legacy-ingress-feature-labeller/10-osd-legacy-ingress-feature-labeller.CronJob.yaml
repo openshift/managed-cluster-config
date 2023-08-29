@@ -49,19 +49,15 @@ spec:
                       print("No hive version label on cluster, exiting")
                       continue
 
-                  if labels.get("hive.openshift.io/cluster-platform") != "aws":
-                      print("Cluster platform not aws, skipping")
-                      continue
-
-                  if labels.get("hive.openshift.io/version-major-minor") and int(labels["hive.openshift.io/version-major-minor"].split(".")[1]) < 13:
-                      print("Version less than v4.13, exiting")
+                  if labels.get("hive.openshift.io/version-major-minor") and int(labels["hive.openshift.io/version-major-minor"].split(".")[1]) < 14:
+                      print("Version less than v4.14, exiting")
                       continue
 
                   if labels.get("ext-managed.openshift.io/legacy-ingress-support"):
                       print("ext-managed.openshift.io/legacy-ingress-support label already exists, moving to next cluster")
                       continue
                   else:
-                      print("ext-managed.openshift.io/legacy-ingress-support label does not exist and cluster is v4.13 or greater. Labelling as legacy-ingress: false.")
+                      print("ext-managed.openshift.io/legacy-ingress-support label does not exist and cluster is v4.14 or greater. Labelling as legacy-ingress: false.")
                       cmd = f'oc label clusterdeployment -n {namespace} {name} ext-managed.openshift.io/legacy-ingress-support="false"'
                       print(f"Running {cmd}")
 
