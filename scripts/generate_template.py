@@ -165,6 +165,11 @@ if __name__ == '__main__':
                 # legacy, get rid of this!
                 if sss_name.startswith("UPSERT-"):
                     sss_name = sss_name[7:]
+            
+            # Using isupper() to check for any element to be uppercase
+            if any(ele.isupper() for ele in sss_name):
+                print("The selectorsyncset name should be lowercase. Found selectorsyncset with name " + sss_name)
+                sys.exit(1)
 
             # If no matchLabelsApplyMode, process as nornmal
             if "matchLabelsApplyMode" in config["selectorSyncSet"] and config["selectorSyncSet"]["matchLabelsApplyMode"] == "OR":
