@@ -2,7 +2,7 @@
 
 set -exv
 
-trap "rm -f sorted-before*.yaml.tmpl sorted-after*.yaml.tmpl" EXIT
+trap "rm -rf sorted-before*.yaml.tmpl sorted-after*.yaml.tmpl generated_deploy" EXIT
 
 export UID_OWNER=$(id -u `whoami`)
 export GID_OWNER=$(id -g `whoami`)
@@ -36,9 +36,9 @@ do
     cat hack/00-osd-managed-cluster-config-${environment}.yaml.tmpl | sort > sorted-before-${environment}.yaml.tmpl
 done
 
-# remove all generated files in order to determine if they have changed
+# remove all generated files in generated_deploy in order to determine if they have changed
 rm -rf generated_deploy
-# remove generated files in deploy (such as CMO or oauth templates) as well to ensure they are properly recreated
+# remove generated files (such as CMO or oauth templatesi in deploy) as well to ensure they are properly recreated
 find . -name "50-GENERATED*" -exec rm {} +
 
 make
