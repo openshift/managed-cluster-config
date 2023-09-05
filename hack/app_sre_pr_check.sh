@@ -2,7 +2,7 @@
 
 set -exv
 
-trap "rm -rf sorted-before*.yaml.tmpl sorted-after*.yaml.tmpl generated_deploy" EXIT
+trap "rm -rf sorted-before*.yaml.tmpl sorted-after*.yaml.tmpl" EXIT
 
 export UID_OWNER=$(id -u `whoami`)
 export GID_OWNER=$(id -g `whoami`)
