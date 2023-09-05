@@ -31457,29 +31457,30 @@ objects:
               < 64*1024*1024*1024 AND sre:node_workers:count > 100 AND sre:node_workers:count
               <= 250 ) OR ( avg(sre:node_roles:memory_total_bytes{label_node_role_kubernetes_io="master"})
               < 128*1024*1024*1024 AND sre:node_workers:count > 250 )
-            record: sre:node_masters:need_resize
+            record: sre:node_control_plane:need_resize
         - name: sre-control-plane-resizing-alerts
           rules:
-          - alert: MasterNodesNeedResizingSRE
-            expr: sre:node_masters:need_resize > 0
+          - alert: ControlPlaneNodesNeedResizingSRE
+            expr: sre:node_control_plane:need_resize > 0
             for: 15m
             labels:
               severity: warning
               namespace: openshift-monitoring
             annotations:
-              message: The cluster's master instance has been undersized for 15 minutes
-                and should be vertically scaled to support the existing workers.  See
-                linked SOP for details.  Critical alert will be raised at 2 hours.
-          - alert: MasterNodesNeedResizingSRE
-            expr: sre:node_masters:need_resize > 0
+              message: The cluster's control plane nodes have been undersized for
+                15 minutes and should be vertically scaled to support the existing
+                workers. See linked SOP for details. Critical alert will be raised
+                at 2 hours.
+          - alert: ControlPlaneNodesNeedResizingSRE
+            expr: sre:node_control_plane:need_resize > 0
             for: 2h
             labels:
               severity: critical
               namespace: openshift-monitoring
             annotations:
-              message: The cluster's master instance has been undersized for 2 hours
-                and must be vertically scaled to support the existing workers.  See
-                linked SOP for details.
+              message: The cluster's control plane nodes have been undersized for
+                2 hours and must be vertically scaled to support the existing workers.
+                See linked SOP for details.
     - apiVersion: monitoring.coreos.com/v1
       kind: PrometheusRule
       metadata:
