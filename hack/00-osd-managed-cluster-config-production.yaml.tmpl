@@ -22565,6 +22565,150 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: odf-prom-restart-addon-ocs-consumer
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/addon-ocs-consumer: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - kind: ServiceAccount
+      apiVersion: v1
+      metadata:
+        name: prometheus-restarter
+        namespace: openshift-storage
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: prometheus-restarter-role
+        namespace: openshift-storage
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - delete
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: prometheus-restarter-rolebinding
+        namespace: openshift-storage
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: prometheus-restarter-role
+      subjects:
+      - kind: ServiceAccount
+        name: prometheus-restarter
+        namespace: openshift-storage
+    - apiVersion: batch/v1
+      kind: CronJob
+      metadata:
+        name: prometheus-restart
+        namespace: openshift-storage
+      spec:
+        concurrencyPolicy: Forbid
+        schedule: 5 */8 * * *
+        jobTemplate:
+          spec:
+            backoffLimit: 2
+            activeDeadlineSeconds: 600
+            template:
+              spec:
+                serviceAccountName: prometheus-restarter
+                restartPolicy: Never
+                containers:
+                - name: odf-delete-prom
+                  image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+                  imagePullPolicy: Always
+                  args:
+                  - /bin/bash
+                  - -c
+                  - 'oc delete pod prometheus-managed-ocs-prometheus-0 -n openshift-storage
+                    --ignore-not-found
+
+                    '
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: odf-prom-restart-addon-ocs-provider
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/addon-ocs-provider: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - kind: ServiceAccount
+      apiVersion: v1
+      metadata:
+        name: prometheus-restarter
+        namespace: openshift-storage
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: prometheus-restarter-role
+        namespace: openshift-storage
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - delete
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: prometheus-restarter-rolebinding
+        namespace: openshift-storage
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: prometheus-restarter-role
+      subjects:
+      - kind: ServiceAccount
+        name: prometheus-restarter
+        namespace: openshift-storage
+    - apiVersion: batch/v1
+      kind: CronJob
+      metadata:
+        name: prometheus-restart
+        namespace: openshift-storage
+      spec:
+        concurrencyPolicy: Forbid
+        schedule: 5 */8 * * *
+        jobTemplate:
+          spec:
+            backoffLimit: 2
+            activeDeadlineSeconds: 600
+            template:
+              spec:
+                serviceAccountName: prometheus-restarter
+                restartPolicy: Never
+                containers:
+                - name: odf-delete-prom
+                  image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+                  imagePullPolicy: Always
+                  args:
+                  - /bin/bash
+                  - -c
+                  - 'oc delete pod prometheus-managed-ocs-prometheus-0 -n openshift-storage
+                    --ignore-not-found
+
+                    '
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: osd-14634-disable-cpms
   spec:
     clusterDeploymentSelector:

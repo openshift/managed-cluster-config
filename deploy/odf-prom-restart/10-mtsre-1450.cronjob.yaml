@@ -16,11 +16,11 @@ spec:
           serviceAccountName: prometheus-restarter
           restartPolicy: Never
           containers:
-            - name: openshift-cli
-              image: quay.io/openshift-pipeline/openshift-cli
-              command:
-                - 'oc'
-                - 'delete'
-                - 'pod'
-                - 'prometheus-managed-ocs-prometheus-0'
-
+          - name: odf-delete-prom
+            image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+            imagePullPolicy: Always
+            args:
+            - /bin/bash
+            - -c
+            - |
+              oc delete pod prometheus-managed-ocs-prometheus-0 -n openshift-storage --ignore-not-found
