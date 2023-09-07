@@ -12,7 +12,6 @@ spec:
     rules:
     - alert: MultipleIngressControllersDetectedNotificationSRE
       expr: sum(max_over_time(splunkforwarder_audit_filter_exposed_splunk_event_total{alert="UserCreatedIngressControllerDetected"}[5m]) or vector(0)) - sum(max_over_time(splunkforwarder_audit_filter_exposed_splunk_event_total{alert="UserCreatedIngressControllerDetected"}[5m] offset 5m) or vector(0)) > 0
-      for: 30m
       labels:
         severity: Info
         namespace: openshift-monitoring
