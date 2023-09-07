@@ -1,0 +1,26 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: prometheus-restart
+  namespace: openshift-storage 
+spec:
+  concurrencyPolicy: Forbid
+  schedule: "5 */8 * * *"
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      activeDeadlineSeconds: 600
+      template:
+        spec:
+          serviceAccountName: prometheus-restarter
+          restartPolicy: Never
+          containers:
+            - name: openshift-cli
+              image: quay.io/openshift-pipeline/openshift-cli
+              command:
+                - 'oc'
+                - 'delete'
+                - 'pod'
+                - 'prometheus-managed-ocs-prometheus-0'
+
