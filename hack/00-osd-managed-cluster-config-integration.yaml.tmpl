@@ -21321,10 +21321,6 @@ objects:
         - '4.6'
         - '4.7'
         - '4.8'
-      - key: ext-managed.openshift.io/disable-debugging-handlers
-        operator: NotIn
-        values:
-        - 'true'
     resourceApplyMode: Upsert
     resources:
     - apiVersion: machineconfiguration.openshift.io/v1
@@ -21344,7 +21340,7 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: kubelet-config-post-4.9-disable-debugging-handlers
+    name: kubelet-config-disable-debugging-handlers-masters
   spec:
     clusterDeploymentSelector:
       matchLabels:
@@ -21361,7 +21357,7 @@ objects:
         - '4.6'
         - '4.7'
         - '4.8'
-      - key: ext-managed.openshift.io/disable-debugging-handlers
+      - key: ext-managed.openshift.io/disable-debugging-handlers-masters
         operator: In
         values:
         - 'true'
@@ -21370,15 +21366,55 @@ objects:
     - apiVersion: machineconfiguration.openshift.io/v1
       kind: KubeletConfig
       metadata:
-        name: custom-kubelet
+        name: disable-debugging-handlers-masters
       spec:
         kubeletConfig:
           enableDebuggingHandlers: false
         machineConfigPoolSelector:
           matchExpressions:
-          - key: machineconfiguration.openshift.io/mco-built-in
+          - key: pools.operator.machineconfiguration.openshift.io/master
             operator: Exists
-        autoSizingReserved: true
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: kubelet-config-disable-debugging-handlers-workers
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/version-major-minor
+        operator: NotIn
+        values:
+        - '4.1'
+        - '4.2'
+        - '4.3'
+        - '4.4'
+        - '4.5'
+        - '4.6'
+        - '4.7'
+        - '4.8'
+      - key: ext-managed.openshift.io/disable-debugging-handlers-workers
+        operator: In
+        values:
+        - 'true'
+    resourceApplyMode: Upsert
+    resources:
+    - apiVersion: machineconfiguration.openshift.io/v1
+      kind: KubeletConfig
+      metadata:
+        name: disable-debugging-handlers-workers
+      spec:
+        kubeletConfig:
+          enableDebuggingHandlers: false
+        machineConfigPoolSelector:
+          matchExpressions:
+          - key: pools.operator.machineconfiguration.openshift.io/worker
+            operator: Exists
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
