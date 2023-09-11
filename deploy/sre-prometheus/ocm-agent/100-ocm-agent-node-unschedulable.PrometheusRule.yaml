@@ -1,0 +1,32 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: sre-node-unschedulable
+    role: alert-rules
+  name: sre-node-unschedulable
+  namespace: openshift-monitoring
+spec:
+  groups:
+  - name: sre-node-unschedulable
+    rules:
+    - alert: KubeNodeUnschedulableNotificationSRE
+      expr: customer_pod_preventing_drain > 0
+      for: 60m
+      labels:
+        severity: Warning
+        namespace: openshift-monitoring
+        managed_notification_template: "KubeNodeUnschedulableCustomerPodPreventingDrain"
+        send_managed_notification: "true"
+      annotations:
+        message: "The node {{ $labels.node }} has been unschedulable for more than an hour."
+    - alert: KubeNodeUnschedulableNotificationSRE
+      expr: customer_pdb_preventing_drain > 0
+      for: 60m
+      labels:
+        severity: Warning
+        namespace: openshift-monitoring
+        managed_notification_template: "KubeNodeUnschedulableCustomerPDBPreventingDrain"
+        send_managed_notification: "true"
+      annotations:
+        message: "The node {{ $labels.node }} has been unschedulable for more than an hour."
