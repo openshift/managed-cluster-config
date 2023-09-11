@@ -10,8 +10,28 @@ spec:
   groups:
   - name: sre-node-unschedulable
     rules:
+    - alert: KubeNodeUnschedulableNotificationSRE
+      expr: customer_pod_preventing_drain > 0
+      for: 60m
+      labels:
+        severity: Warning
+        namespace: openshift-monitoring
+        managed_notification_template: "KubeNodeUnschedulableCustomerPodPreventingDrain"
+        send_managed_notification: "true"
+      annotations:
+        message: "The node {{ $labels.node }} has been unschedulable for more than an hour."
+    - alert: KubeNodeUnschedulableNotificationSRE
+      expr: customer_pdb_preventing_drain > 0
+      for: 60m
+      labels:
+        severity: Warning
+        namespace: openshift-monitoring
+        managed_notification_template: "KubeNodeUnschedulableCustomerPDBPreventingDrain"
+        send_managed_notification: "true"
+      annotations:
+        message: "The node {{ $labels.node }} has been unschedulable for more than an hour."
     - alert: KubeNodeUnschedulableSRE
-      expr: (kube_node_spec_unschedulable > 0 and on(node) kube_node_role{role="master"}) or (kube_node_spec_unschedulable > 0 unless ignoring(node,container,endpoint,job,namespace,service) sum(mapi_machine_set_status_replicas{name=~".*upgrade$"}) > 0)
+      expr: ((kube_node_spec_unschedulable > 0 and on(node) kube_node_role{role="master"}) or (kube_node_spec_unschedulable > 0 unless ignoring(node,container,endpoint,job,namespace,service) sum(mapi_machine_set_status_replicas{name=~".*upgrade$"}) > 0)) and not (customer_pod_preventing_drain > 0 or customer_pdb_preventing_drain > 0)
       for: 60m
       labels:
         severity: critical

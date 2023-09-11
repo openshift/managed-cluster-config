@@ -58,3 +58,15 @@ spec:
       resendWait: 24
       severity: Info
       summary: Worker node is predicted to run out of inodes in 4 hours
+    - activeBody: |-
+        Your cluster is attempting to drain worker nodes but there are workloads preventing the drain. The affected nodes can be found by reviewing the customer_pod_preventing_drain metric. Please re-schedule the impacted pod(s) so that the node can drain.
+      name: KubeNodeUnschedulableCustomerPodPreventingDrain
+      resendWait: 24
+      severity: Warning
+      summary: "Action required: Pod(s) preventing Node Drain"
+    - activeBody: |-
+        Your cluster is attempting to drain nodes but there is a pod disruption budget set that is preventing the drain. The affected nodes can be found by reviewing the customer_pdb_preventing_drain metric. Please re-schedule this pod so that the nodes can drain. For more information on pod disruption budgets please see https://docs.openshift.com/container-platform/latest/nodes/pods/nodes-pods-configuring.html#nodes-pods-configuring-pod-distruption-about_nodes-pods-configuring.
+      name: KubeNodeUnschedulableCustomerPDBPreventingDrain
+      resendWait: 24
+      severity: Warning
+      summary: "Action required: Pod Disruption Budget preventing Node Drain"

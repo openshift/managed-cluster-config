@@ -21874,6 +21874,23 @@ objects:
           resendWait: 24
           severity: Info
           summary: Worker node is predicted to run out of inodes in 4 hours
+        - activeBody: Your cluster is attempting to drain worker nodes but there are
+            workloads preventing the drain. The affected nodes can be found by reviewing
+            the customer_pod_preventing_drain metric. Please re-schedule the impacted
+            pod(s) so that the node can drain.
+          name: KubeNodeUnschedulableCustomerPodPreventingDrain
+          resendWait: 24
+          severity: Warning
+          summary: 'Action required: Pod(s) preventing Node Drain'
+        - activeBody: Your cluster is attempting to drain nodes but there is a pod
+            disruption budget set that is preventing the drain. The affected nodes
+            can be found by reviewing the customer_pdb_preventing_drain metric. Please
+            re-schedule this pod so that the nodes can drain. For more information
+            on pod disruption budgets please see https://docs.openshift.com/container-platform/latest/nodes/pods/nodes-pods-configuring.html#nodes-pods-configuring-pod-distruption-about_nodes-pods-configuring.
+          name: KubeNodeUnschedulableCustomerPDBPreventingDrain
+          resendWait: 24
+          severity: Warning
+          summary: 'Action required: Pod Disruption Budget preventing Node Drain'
     - apiVersion: ocmagent.managed.openshift.io/v1alpha1
       kind: ManagedNotification
       metadata:
@@ -32001,10 +32018,34 @@ objects:
         groups:
         - name: sre-node-unschedulable
           rules:
+          - alert: KubeNodeUnschedulableNotificationSRE
+            expr: customer_pod_preventing_drain > 0
+            for: 60m
+            labels:
+              severity: Warning
+              namespace: openshift-monitoring
+              managed_notification_template: KubeNodeUnschedulableCustomerPodPreventingDrain
+              send_managed_notification: 'true'
+            annotations:
+              message: The node {{ $labels.node }} has been unschedulable for more
+                than an hour.
+          - alert: KubeNodeUnschedulableNotificationSRE
+            expr: customer_pdb_preventing_drain > 0
+            for: 60m
+            labels:
+              severity: Warning
+              namespace: openshift-monitoring
+              managed_notification_template: KubeNodeUnschedulableCustomerPDBPreventingDrain
+              send_managed_notification: 'true'
+            annotations:
+              message: The node {{ $labels.node }} has been unschedulable for more
+                than an hour.
           - alert: KubeNodeUnschedulableSRE
-            expr: (kube_node_spec_unschedulable > 0 and on(node) kube_node_role{role="master"})
+            expr: ((kube_node_spec_unschedulable > 0 and on(node) kube_node_role{role="master"})
               or (kube_node_spec_unschedulable > 0 unless ignoring(node,container,endpoint,job,namespace,service)
-              sum(mapi_machine_set_status_replicas{name=~".*upgrade$"}) > 0)
+              sum(mapi_machine_set_status_replicas{name=~".*upgrade$"}) > 0)) and
+              not (customer_pod_preventing_drain > 0 or customer_pdb_preventing_drain
+              > 0)
             for: 60m
             labels:
               severity: critical
