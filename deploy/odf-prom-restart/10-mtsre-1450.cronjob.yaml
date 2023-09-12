@@ -1,0 +1,26 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: prometheus-restart
+  namespace: openshift-storage 
+spec:
+  concurrencyPolicy: Forbid
+  schedule: "5 */8 * * *"
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      activeDeadlineSeconds: 600
+      template:
+        spec:
+          serviceAccountName: prometheus-restarter
+          restartPolicy: Never
+          containers:
+          - name: odf-delete-prom
+            image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+            imagePullPolicy: Always
+            args:
+            - /bin/bash
+            - -c
+            - |
+              oc delete pod prometheus-managed-ocs-prometheus-0 -n openshift-storage --ignore-not-found
