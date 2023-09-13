@@ -1,0 +1,41 @@
+apiVersion: ocmagent.managed.openshift.io/v1alpha1
+kind: ManagedNotification
+metadata:
+  name: sre-node-condition-managed-notification
+  namespace: openshift-ocm-agent-operator
+spec:
+  notifications:
+    # available conditions: https://kubernetes.io/docs/reference/node/node-status/#condition 
+    # TODO convert to single notification when OCM Agent supports templatized messages: https://issues.redhat.com//browse/OSD-14130
+    - name: NodeConditionDiskPressureNotification
+      severity: Warning
+      summary: "Worker node is experiencing DiskPressure"
+      activeBody: |-
+        DiskPressure condition is true for at least one worker.
+      resolvedBody: |-
+        DiskPressure condition is resolved.
+      resendWait: 6
+    - name: NodeConditionMemoryPressureNotification
+      severity: Warning
+      summary: "Worker node is experiencing MemoryPressure"
+      activeBody: |-
+        MemoryPressure condition is true for at least one worker.
+      resolvedBody: |-
+        MemoryPressure condition is resolved.
+      resendWait: 6
+    - name: NodeConditionPIDPressureNotification
+      severity: Warning
+      summary: "Worker node is experiencing PIDPressure"
+      activeBody: |-
+        PIDPressure condition is true for at least one worker.
+      resolvedBody: |-
+        PIDPressure condition is resolved.
+      resendWait: 6
+    - name: NodeConditionNetworkUnavailableNotification
+      severity: Warning
+      summary: "Worker node is experiencing NetworkUnavailable"
+      activeBody: |-
+        NetworkUnavailable condition is true for at least one worker.
+      resolvedBody: |-
+        NetworkUnavailable condition is resolved.
+      resendWait: 6
