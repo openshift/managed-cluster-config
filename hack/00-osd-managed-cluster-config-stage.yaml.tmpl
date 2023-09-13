@@ -21877,6 +21877,20 @@ objects:
     - apiVersion: ocmagent.managed.openshift.io/v1alpha1
       kind: ManagedNotification
       metadata:
+        name: sre-managed-notifications
+        namespace: openshift-ocm-agent-operator
+      spec:
+        notifications:
+        - activeBody: The pod disruption budget is below the minimum disruptions allowed
+            level and is not satisfied. The number of current healthy pods is less
+            than the desired healthy pods. For more information, please refer to https://github.com/openshift/runbooks/blob/master/alerts/cluster-kube-controller-manager-operator/PodDisruptionBudgetLimit.md
+          name: PodDisruptionBudgetLimit
+          resendWait: 24
+          severity: Warning
+          summary: The pod disruption budget registers insufficient amount of pods.
+    - apiVersion: ocmagent.managed.openshift.io/v1alpha1
+      kind: ManagedNotification
+      metadata:
         name: sre-proxy-managed-notifications
         namespace: openshift-ocm-agent-operator
       spec:
@@ -33381,6 +33395,29 @@ objects:
             annotations:
               message: Filesystem is predicted to run out of inodes within the next
                 4 hours.
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
+          prometheus: sre-pdb-managed-notification-alerts
+          role: alert-rules
+        name: sre-pdb-managed-notification-alerts
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-pdb-managed-notification-alerts
+          rules:
+          - alert: PodDisruptionBudgetLimit
+            expr: 'max by (namespace, poddisruptionbudget) (kube_poddisruptionbudget_status_current_healthy
+              < kube_poddisruptionbudget_status_desired_healthy)
+
+              '
+            for: 15m
+            labels:
+              severity: Warning
+              managed_notification_template: PodDisruptionBudgetLimit
+              send_managed_notification: 'true'
+              source: https://issues.redhat.com/browse/OSD-14158
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:

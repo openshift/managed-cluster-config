@@ -1,0 +1,22 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: sre-pdb-managed-notification-alerts
+    role: alert-rules 
+  name: sre-pdb-managed-notification-alerts
+  namespace: openshift-monitoring
+spec:
+  groups:
+  - name: sre-pdb-managed-notification-alerts
+    rules:
+    # https://github.com/openshift/cluster-kube-controller-manager-operator/blob/3041547f5fe3227501532028e5a6993f139f6f63/manifests/0000_90_kube-controller-manager-operator_05_alerts.yaml#L35-L44
+    - alert: PodDisruptionBudgetLimit
+      expr: |
+        max by (namespace, poddisruptionbudget) (kube_poddisruptionbudget_status_current_healthy < kube_poddisruptionbudget_status_desired_healthy)
+      for: 15m
+      labels:
+        severity: Warning
+        managed_notification_template: "PodDisruptionBudgetLimit"
+        send_managed_notification: "true"
+        source: "https://issues.redhat.com/browse/OSD-14158"

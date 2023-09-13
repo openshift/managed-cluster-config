@@ -1,0 +1,13 @@
+apiVersion: ocmagent.managed.openshift.io/v1alpha1
+kind: ManagedNotification
+metadata:
+  name: sre-managed-notifications
+  namespace: openshift-ocm-agent-operator
+spec:
+  notifications:
+    - activeBody: |-
+        The pod disruption budget is below the minimum disruptions allowed level and is not satisfied. The number of current healthy pods is less than the desired healthy pods. For more information, please refer to https://github.com/openshift/runbooks/blob/master/alerts/cluster-kube-controller-manager-operator/PodDisruptionBudgetLimit.md
+      name: PodDisruptionBudgetLimit
+      resendWait: 24
+      severity: Warning
+      summary: "The pod disruption budget registers insufficient amount of pods."
