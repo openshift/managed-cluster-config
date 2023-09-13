@@ -13,8 +13,80 @@ spec:
     rules:
       - expr: label_replace(cluster:nodes_roles, "instance", "$1", "node", "(.*)") * on(instance) group_left node_memory_MemTotal_bytes
         record: sre:node_roles:memory_total_bytes
-      - expr: label_replace(cluster:nodes_roles, "instance", "$1", "node", "(.*)") * on(instance) group_left instance:node_num_cpu:sum
-        record: sre:node_roles:node_num_cpu
+      ## Expression Explanation:
+      ## Average of value of
+      ## the Average (per node) rate of change of CPU time spent in non-idle modes, totalled by CPU, looking back across the past 8h,
+      ## "*" applies a label replace to limit output to control plane nodes
+      ## Greater than (>) the threshold which is (n-1)/n where n is the number of control plane nodes, evaluating to 2/3 in most circumstances.
+      - expr: ( 
+                avg (
+                  avg by (instance) (
+                    sum by (cpu, instance) (
+                      rate(
+                        node_cpu_seconds_total{mode!="idle"}[8h]
+                      )
+                    )
+                  )
+                  *
+                  on (instance) (
+                    label_replace (
+                      kube_node_role{role ="master"}, "instance", "$1", "node", "(.*)"
+                    )
+                  )
+                )
+                >
+                (
+                  scalar (
+                    (
+                      count (
+                        cluster:nodes_roles{label_node_role_kubernetes_io ="master"}
+                      )
+                      - 1
+                    )
+                    /
+                    count (
+                      cluster:nodes_roles{label_node_role_kubernetes_io ="master"}
+                    )
+                  )
+                )
+              )
+        record: sre:node_control_plane:excessive_consumption_cpu
+      ## Expression Explanation: 
+      ## 1, minus the total amount of free memory divided by the total amount of memory for the infra node type, gives us the percent used memory as a decimal value: 0.%%
+      ## Greater than (>) the threshold which is (n-1)/n where n is the number of control plane nodes, evaluating to 2/3 in most circumstances.
+      - expr: ( 1 -
+                sum (
+                    node_memory_MemFree_bytes +
+                    node_memory_Buffers_bytes +
+                    node_memory_Cached_bytes
+                    AND on (instance) label_replace(
+                        kube_node_role{role="master"}, "instance", "$1", "node", "(.+)"
+                    )
+                ) 
+                / 
+                sum (
+                    node_memory_MemTotal_bytes
+                    AND on (instance) label_replace(
+                        kube_node_role{role="master"}, "instance", "$1", "node", "(.+)"
+                    )
+                )
+            ) 
+            > 
+            (
+              scalar (
+                (
+                  count (
+                    cluster:nodes_roles{label_node_role_kubernetes_io ="master"}
+                  )
+                  - 1
+                )
+                /
+                count (
+                  cluster:nodes_roles{label_node_role_kubernetes_io ="master"}
+                )
+              )
+            )
+        record: sre:node_control_plane:excessive_consumption_memory
       - expr: count(cluster:nodes_roles{label_node_role_kubernetes_io!~"(master|infra)"})
         record: sre:node_workers:count
       # control plane has less than 32GB RAM, worker count > 25, and worker count <= 100
@@ -41,7 +113,7 @@ spec:
     rules:
         # This used to be called MasterNodesNeedResizingSRE
       - alert: ControlPlaneNodesNeedResizingSRE
-        expr: sre:node_control_plane:need_resize > 0
+        expr: (sre:node_control_plane:excessive_consumption_memory > 0) or (sre:node_control_plane:excessive_consumption_cpu > 0)
         for: 15m
         labels:
           severity: warning

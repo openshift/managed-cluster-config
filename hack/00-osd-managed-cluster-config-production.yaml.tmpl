@@ -31495,9 +31495,20 @@ objects:
           - expr: label_replace(cluster:nodes_roles, "instance", "$1", "node", "(.*)")
               * on(instance) group_left node_memory_MemTotal_bytes
             record: sre:node_roles:memory_total_bytes
-          - expr: label_replace(cluster:nodes_roles, "instance", "$1", "node", "(.*)")
-              * on(instance) group_left instance:node_num_cpu:sum
-            record: sre:node_roles:node_num_cpu
+          - expr: ( avg ( avg by (instance) ( sum by (cpu, instance) ( rate( node_cpu_seconds_total{mode!="idle"}[8h]
+              ) ) ) * on (instance) ( label_replace ( kube_node_role{role ="master"},
+              "instance", "$1", "node", "(.*)" ) ) ) > ( scalar ( ( count ( cluster:nodes_roles{label_node_role_kubernetes_io
+              ="master"} ) - 1 ) / count ( cluster:nodes_roles{label_node_role_kubernetes_io
+              ="master"} ) ) ) )
+            record: sre:node_control_plane:excessive_consumption_cpu
+          - expr: ( 1 - sum ( node_memory_MemFree_bytes + node_memory_Buffers_bytes
+              + node_memory_Cached_bytes AND on (instance) label_replace( kube_node_role{role="master"},
+              "instance", "$1", "node", "(.+)" ) ) / sum ( node_memory_MemTotal_bytes
+              AND on (instance) label_replace( kube_node_role{role="master"}, "instance",
+              "$1", "node", "(.+)" ) ) ) > ( scalar ( ( count ( cluster:nodes_roles{label_node_role_kubernetes_io
+              ="master"} ) - 1 ) / count ( cluster:nodes_roles{label_node_role_kubernetes_io
+              ="master"} ) ) )
+            record: sre:node_control_plane:excessive_consumption_memory
           - expr: count(cluster:nodes_roles{label_node_role_kubernetes_io!~"(master|infra)"})
             record: sre:node_workers:count
           - expr: ( avg(sre:node_roles:memory_total_bytes{label_node_role_kubernetes_io="master"})
@@ -31510,7 +31521,8 @@ objects:
         - name: sre-control-plane-resizing-alerts
           rules:
           - alert: ControlPlaneNodesNeedResizingSRE
-            expr: sre:node_control_plane:need_resize > 0
+            expr: (sre:node_control_plane:excessive_consumption_memory > 0) or (sre:node_control_plane:excessive_consumption_cpu
+              > 0)
             for: 15m
             labels:
               severity: warning
