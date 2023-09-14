@@ -21949,6 +21949,88 @@ objects:
             time of your cluster's Control Plane upgrade. Red Hat SRE has been notified
             of the situation
           resendWait: 72
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: ocm-agent-operator-managednotifications-node-condition
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/environment
+        operator: In
+        values:
+        - integration
+        - staging
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
+          prometheus: sre-node-condition-managed-notification-alerts
+          role: alert-rules
+        name: sre-node-condition-managed-notification-alerts
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-node-condition-managed-notification-alerts.record
+          rules:
+          - expr: label_replace ( clamp(mapi_machine_created_timestamp_seconds, 0,
+              1) * on (node) group_right(name) kube_node_status_condition{status!="false"}>0,
+              "machineset", "$1", "name", "^(.*)-[^-]*$" )
+            record: sre:node:condition
+        - name: sre-node-condition-managed-notification-alerts.alert
+          rules:
+          - alert: NodeConditionDiskPressureNotificationSRE
+            expr: count by (machineset, condition, status) ( count by(node) (cluster:cpu_core_node_labels{label_node_role_kubernetes_io_infra="",label_node_role_kubernetes_io_master=""})
+              * on (node) group_left(condition, machineset, status) sre:node:condition{condition="DiskPressure"}
+              ) > 0
+            for: 5m
+            labels:
+              severity: Info
+              namespace: openshift-node
+              send_managed_notification: 'true'
+              managed_notification_template: NodeConditionDiskPressureNotification
+          - alert: NodeConditionMemoryPressureNotificationSRE
+            expr: count by (machineset, condition, status) ( count by(node) (cluster:cpu_core_node_labels{label_node_role_kubernetes_io_infra="",label_node_role_kubernetes_io_master=""})
+              * on (node) group_left(condition, machineset, status) sre:node:condition{condition="MemoryPressure"}
+              ) > 0
+            for: 5m
+            labels:
+              severity: Info
+              namespace: openshift-node
+              send_managed_notification: 'true'
+              managed_notification_template: NodeConditionMemoryPressureNotification
+          - alert: NodeConditionPIDPressureNotificationSRE
+            expr: count by (machineset, condition, status) ( count by(node) (cluster:cpu_core_node_labels{label_node_role_kubernetes_io_infra="",label_node_role_kubernetes_io_master=""})
+              * on (node) group_left(condition, machineset, status) sre:node:condition{condition="PIDPressure"}
+              ) > 0
+            for: 5m
+            labels:
+              severity: Info
+              namespace: openshift-node
+              send_managed_notification: 'true'
+              managed_notification_template: NodeConditionPIDPressureNotification
+          - alert: NodeConditionNetworkUnavailableNotificationSRE
+            expr: count by (machineset, condition, status) ( count by(node) (cluster:cpu_core_node_labels{label_node_role_kubernetes_io_infra="",label_node_role_kubernetes_io_master=""})
+              * on (node) group_left(condition, machineset, status) sre:node:condition{condition="NetworkUnavailable"}
+              ) > 0
+            for: 5m
+            labels:
+              severity: Info
+              namespace: openshift-node
+              send_managed_notification: 'true'
+              managed_notification_template: NodeConditionNetworkUnavailableNotification
     - apiVersion: ocmagent.managed.openshift.io/v1alpha1
       kind: ManagedNotification
       metadata:
@@ -21958,24 +22040,28 @@ objects:
         notifications:
         - name: NodeConditionDiskPressureNotification
           severity: Warning
-          summary: Worker nodes experiencing DiskPressure
-          activeBody: At least one worker Node is experiencing DiskPressure.
-          resendWait: 72
+          summary: Worker node is experiencing DiskPressure
+          activeBody: DiskPressure condition is true for at least one worker.
+          resolvedBody: DiskPressure condition is resolved.
+          resendWait: 6
         - name: NodeConditionMemoryPressureNotification
           severity: Warning
-          summary: Worker nodes experiencing MemoryPressure
-          activeBody: At least one worker Node is experiencing MemoryPressure.
-          resendWait: 72
+          summary: Worker node is experiencing MemoryPressure
+          activeBody: MemoryPressure condition is true for at least one worker.
+          resolvedBody: MemoryPressure condition is resolved.
+          resendWait: 6
         - name: NodeConditionPIDPressureNotification
           severity: Warning
-          summary: Worker nodes experiencing PIDPressure
-          activeBody: At least one worker Node is experiencing PIDPressure.
-          resendWait: 72
+          summary: Worker node is experiencing PIDPressure
+          activeBody: PIDPressure condition is true for at least one worker.
+          resolvedBody: PIDPressure condition is resolved.
+          resendWait: 6
         - name: NodeConditionNetworkUnavailableNotification
           severity: Warning
-          summary: Worker nodes experiencing NetworkUnavailable
-          activeBody: At least one worker Node is experiencing NetworkUnavailable.
-          resendWait: 72
+          summary: Worker node is experiencing NetworkUnavailable
+          activeBody: NetworkUnavailable condition is true for at least one worker.
+          resolvedBody: NetworkUnavailable condition is resolved.
+          resendWait: 6
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -33236,64 +33322,6 @@ objects:
               link: https://github.com/openshift/ops-sop/blob/master/v4/alerts/MultipleVersionsOfEFSCSIDriverInstalled.md
             annotations:
               message: Multiple versions of EFS CSI Driver installed
-    - apiVersion: monitoring.coreos.com/v1
-      kind: PrometheusRule
-      metadata:
-        labels:
-          prometheus: sre-node-condition-managed-notification-alerts
-          role: alert-rules
-        name: sre-node-condition-managed-notification-alerts
-        namespace: openshift-monitoring
-      spec:
-        groups:
-        - name: sre-node-condition-managed-notification-alerts.record
-          rules:
-          - expr: label_replace ( clamp(mapi_machine_created_timestamp_seconds, 0,
-              1) * on (node) group_right(name) kube_node_status_condition{status!="false"}>0,
-              "machineset", "$1", "name", "^(.*)-[^-]*$" )
-            record: sre:node:condition
-        - name: sre-node-condition-managed-notification-alerts.alert
-          rules:
-          - alert: NodeConditionDiskPressureNotificationSRE
-            expr: count by (machineset, condition, status) ( count by(node) (cluster:cpu_core_node_labels{label_node_role_kubernetes_io_infra="",label_node_role_kubernetes_io_master=""})
-              * on (node) group_left(condition, machineset, status) sre:node:condition{condition="DiskPressure"}
-              ) > 0
-            for: 5m
-            labels:
-              severity: Info
-              namespace: openshift-node
-              send_managed_notification: 'true'
-              managed_notification_template: NodeConditionDiskPressureNotification
-          - alert: NodeConditionMemoryPressureNotificationSRE
-            expr: count by (machineset, condition, status) ( count by(node) (cluster:cpu_core_node_labels{label_node_role_kubernetes_io_infra="",label_node_role_kubernetes_io_master=""})
-              * on (node) group_left(condition, machineset, status) sre:node:condition{condition="MemoryPressure"}
-              ) > 0
-            for: 5m
-            labels:
-              severity: Info
-              namespace: openshift-node
-              send_managed_notification: 'true'
-              managed_notification_template: NodeConditionMemoryPressureNotification
-          - alert: NodeConditionPIDPressureNotificationSRE
-            expr: count by (machineset, condition, status) ( count by(node) (cluster:cpu_core_node_labels{label_node_role_kubernetes_io_infra="",label_node_role_kubernetes_io_master=""})
-              * on (node) group_left(condition, machineset, status) sre:node:condition{condition="PIDPressure"}
-              ) > 0
-            for: 5m
-            labels:
-              severity: Info
-              namespace: openshift-node
-              send_managed_notification: 'true'
-              managed_notification_template: NodeConditionPIDPressureNotification
-          - alert: NodeConditionNetworkUnavailableNotificationSRE
-            expr: count by (machineset, condition, status) ( count by(node) (cluster:cpu_core_node_labels{label_node_role_kubernetes_io_infra="",label_node_role_kubernetes_io_master=""})
-              * on (node) group_left(condition, machineset, status) sre:node:condition{condition="NetworkUnavailable"}
-              ) > 0
-            for: 5m
-            labels:
-              severity: Info
-              namespace: openshift-node
-              send_managed_notification: 'true'
-              managed_notification_template: NodeConditionNetworkUnavailableNotification
     - apiVersion: monitoring.coreos.com/v1
       kind: PrometheusRule
       metadata:
