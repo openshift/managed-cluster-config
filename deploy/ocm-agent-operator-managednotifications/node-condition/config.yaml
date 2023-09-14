@@ -1,0 +1,14 @@
+deploymentMode: "SelectorSyncSet"
+selectorSyncSet:
+  resourceApplyMode: Sync
+  matchExpressions:
+  - key: api.openshift.com/environment
+    operator: In
+    values:
+      - "integration"
+      - "staging"
+  - key: api.openshift.com/fedramp
+    operator: NotIn
+    values:
+      - "true"
+# when this is moved to production, the PrometheusRule should go in deploy/sre-prometheus/ocm-agent
