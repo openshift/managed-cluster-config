@@ -32490,6 +32490,16 @@ objects:
             annotations:
               message: OCM Agent has failed to receive a response from the service_logs
                 service for 60 minutes.
+          - alert: OCMAgentOperatorPullSecretInvalidSRE
+            expr: ocm_agent_operator_pull_secret_invalid > 0
+            for: 15m
+            labels:
+              severity: low
+              namespace: openshift-monitoring
+              link: https://github.com/openshift/ops-sop/blob/master/v4/alerts/OCMAgentResponseFailureServiceLogsSRE.md#verify-cluster-pull-secrets
+            annotations:
+              message: OCM Agent Operator cannot retrieve or parse the cluster's `cloud.openshift.com`
+                pull secret.
     - apiVersion: monitoring.coreos.com/v1
       kind: PrometheusRule
       metadata:
