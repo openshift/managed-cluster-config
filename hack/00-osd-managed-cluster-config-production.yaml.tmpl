@@ -21860,6 +21860,25 @@ objects:
     - apiVersion: ocmagent.managed.openshift.io/v1alpha1
       kind: ManagedNotification
       metadata:
+        name: sre-co-down-managed-notifications
+        namespace: openshift-ocm-agent-operator
+      spec:
+        notifications:
+        - activeBody: Your cluster requires you to take action. Your cluster's worker
+            nodes do not have enough resources to run the cluster's User Workload
+            Monitoring monitoring stack. As a result, its operation may be impaired.
+            Please ensure that your workloads have CPU and Memory limits set to avoid
+            overcommitting the worker nodes, and consider either reducing application
+            load or increasing worker nodes. For more information on managing resource
+            consumption, please see https://docs.openshift.com/container-platform/latest/nodes/clusters/nodes-cluster-limit-ranges.html.
+          name: ClusterOperatorDownMonitoringUpdatingPrometheusUserWorkloadFailed
+          resendWait: 24
+          severity: Warning
+          summary: 'Action required: User Workload Monitoring impacted by cluster
+            resource limits'
+    - apiVersion: ocmagent.managed.openshift.io/v1alpha1
+      kind: ManagedNotification
+      metadata:
         name: sre-managed-notifications
         namespace: openshift-ocm-agent-operator
       spec:
@@ -33644,6 +33663,30 @@ objects:
               link: https://github.com/openshift/ops-sop/blob/master/v4/alerts/MultipleVersionsOfEFSCSIDriverInstalled.md
             annotations:
               message: Multiple versions of EFS CSI Driver installed
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
+          prometheus: sre-proxy-managed-notification-alerts
+          role: alert-rules
+        name: sre-co-down-managed-notification-alerts
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-co-down-managed-notification-alerts
+          rules:
+          - alert: ClusterOperatorDownNotificationSRE
+            expr: max by (namespace, name, reason) (cluster_operator_up{job="cluster-version-operator",name="monitoring",reason="UpdatingPrometheusUserWorkloadFailed"}
+              == 0)
+            for: 10m
+            labels:
+              severity: Warning
+              namespace: openshift-monitoring
+              managed_notification_template: ClusterOperatorDownMonitoringUpdatingPrometheusUserWorkloadFailed
+              send_managed_notification: 'true'
+            annotations:
+              message: 'Action required: User Workload Monitoring impacted by cluster
+                resource limits'
     - apiVersion: monitoring.coreos.com/v1
       kind: PrometheusRule
       metadata:

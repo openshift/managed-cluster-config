@@ -1,0 +1,13 @@
+apiVersion: ocmagent.managed.openshift.io/v1alpha1
+kind: ManagedNotification
+metadata:
+  name: sre-co-down-managed-notifications
+  namespace: openshift-ocm-agent-operator
+spec:
+  notifications:
+    - activeBody: |-
+        Your cluster requires you to take action. Your cluster's worker nodes do not have enough resources to run the cluster's User Workload Monitoring monitoring stack. As a result, its operation may be impaired. Please ensure that your workloads have CPU and Memory limits set to avoid overcommitting the worker nodes, and consider either reducing application load or increasing worker nodes. For more information on managing resource consumption, please see https://docs.openshift.com/container-platform/latest/nodes/clusters/nodes-cluster-limit-ranges.html.
+      name: ClusterOperatorDownMonitoringUpdatingPrometheusUserWorkloadFailed
+      resendWait: 24
+      severity: Warning
+      summary: "Action required: User Workload Monitoring impacted by cluster resource limits"

@@ -1,0 +1,22 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: sre-proxy-managed-notification-alerts
+    role: alert-rules 
+  name: sre-co-down-managed-notification-alerts
+  namespace: openshift-monitoring
+spec:
+  groups:
+  - name: sre-co-down-managed-notification-alerts
+    rules:
+    - alert: ClusterOperatorDownNotificationSRE
+      expr: max by (namespace, name, reason) (cluster_operator_up{job="cluster-version-operator",name="monitoring",reason="UpdatingPrometheusUserWorkloadFailed"} == 0)
+      for: 10m
+      labels:
+        severity: Warning
+        namespace: openshift-monitoring
+        managed_notification_template: "ClusterOperatorDownMonitoringUpdatingPrometheusUserWorkloadFailed"
+        send_managed_notification: "true"
+      annotations:
+        message: "Action required: User Workload Monitoring impacted by cluster resource limits"
