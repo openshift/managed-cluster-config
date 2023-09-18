@@ -32267,7 +32267,8 @@ objects:
               summary: Upgrade config validation failed
               description: Upgrade config validation failed
           - alert: UpgradeControlPlaneUpgradeTimeoutSRE
-            expr: avg_over_time(upgradeoperator_controlplane_timeout[10m]) == 1
+            expr: avg_over_time(upgradeoperator_controlplane_timeout[10m]) == 1 and
+              not ocm_agent_operator_pull_secret_invalid > 0
             for: 10m
             labels:
               severity: critical
