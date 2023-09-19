@@ -33249,7 +33249,7 @@ objects:
             for: 5m
             labels:
               namespace: openshift-logging
-              severity: critical
+              severity: warning
           - alert: ElasticsearchNodeDiskWatermarkReachedSRE
             annotations:
               message: Disk Flood Stage Watermark Reached at {{ $labels.pod }}. Every
@@ -33264,7 +33264,7 @@ objects:
             for: 5m
             labels:
               namespace: openshift-logging
-              severity: critical
+              severity: warning
           - alert: ElasticsearchJVMHeapUseHighSRE
             annotations:
               message: JVM Heap usage on the node {{ $labels.node }} in {{ $labels.cluster
@@ -33592,7 +33592,7 @@ objects:
         - name: sre-machine-out-of-compliance
           rules:
           - alert: MachineOutOfComplianceSRE
-            expr: mapi_machine_created_timestamp_seconds > 2419200
+            expr: (time() - mapi_machine_created_timestamp_seconds) > 2419200
             for: 60m
             labels:
               severity: warning
