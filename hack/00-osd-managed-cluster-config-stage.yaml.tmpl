@@ -34401,29 +34401,3 @@ objects:
           - events
           snapshotVolumes: false
           ttl: 0h25m0s
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    name: rhobs-hypershift-config
-  spec:
-    clusterDeploymentSelector:
-      matchExpressions:
-      - key: ext-hypershift.openshift.io/cluster-type
-        operator: In
-        values:
-        - management-cluster
-        - service-cluster
-    resourceApplyMode: Sync
-    secretMappings:
-    - sourceRef:
-        name: rhobs-hypershift-credential
-        namespace: hive
-      targetRef:
-        name: rhobs-hypershift-credential
-        namespace: openshift-monitoring
-    - sourceRef:
-        name: rhobs-hypershift-credential
-        namespace: hive
-      targetRef:
-        name: rhobs-hypershift-credential
-        namespace: openshift-observability-operator
