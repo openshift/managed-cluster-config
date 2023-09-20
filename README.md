@@ -23,12 +23,9 @@ add the policy as a new SelectorySyncSet.
 
 # Configuration
 
-All resources in `generated_deploy/` are bundled into a template that is used by config management to apply to target "hive" clusters.  The configuration for this supports two options for deployment.  They can be deployed in the template so they are:
+All resources in `generated_deploy/` are bundled into a template that is used by config management to apply to target "hive" clusters.  The configuration is deployed to the "hive" cluster inside a SelectorSyncSet.
 
-1. deployed directly to the "hive" cluster
-2. deployed to the "hive" cluster inside a SelectorSyncSet
-
-Direct deployment (#1) supports resources that are not synced down to OSD clusters.  SelectorSyncSet deployment (#2) supports resoures that _are_ synced down to OSD clusters.  Each are explained in detail here.  The general configuration is managed in a `config.yaml` file in each deploy directory.  Key things of note:
+SelectorSyncSet deployment supports resoures that are synced down to OSD clusters.  Each are explained in detail here.  The general configuration is managed in a `config.yaml` file in each deploy directory.  Key things of note:
 
 * This file is now mandatory in the scope of OSD-15267 and have been added to all folders. In case it is not define, `make` will fail
 ```
@@ -41,27 +38,7 @@ make: *** [generate-hive-templates] Error 1
 
 You must specify a `deploymentMode` property in `config.yaml`.
 
-* `deploymentMode` (optional, default = `"SelectorSyncSet"`) - either "Direct" or "SelectorSyncSet".
-
-## Direct Deployment
-
-You must specify the `environments` where the resource is deployed.  There is no default set of environments.  It is a child of the top level `direct` property.
-
-* `environments` (required, no default) - manages what environments the resources are deployed into.  Valid values are any of `"integration"`, `"stage"`, and `"production"`.
-
-Example to deploy only to all environments:
-```yaml
-deploymentMode: "Direct"
-direct:
-    environments: ["integration", "stage", "production"]
-```
-
-Example to deploy only to integration and stage:
-```yaml
-deploymentMode: "Direct"
-direct:
-    environments: ["integration", "stage"]
-```
+* `deploymentMode` (optional, default = `"SelectorSyncSet"`) - either "Policy" or "SelectorSyncSet".
 
 ## SelectorSyncSet Deployment
 
