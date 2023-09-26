@@ -13,45 +13,97 @@ spec:
     rules:
       - expr: label_replace(cluster:nodes_roles, "instance", "$1", "node", "(.*)") * on(instance) group_left node_memory_MemTotal_bytes
         record: sre:node_roles:memory_total_bytes
-      - expr: label_replace(cluster:nodes_roles, "instance", "$1", "node", "(.*)") * on(instance) group_left instance:node_num_cpu:sum
-        record: sre:node_roles:node_num_cpu
-      - expr: count(cluster:nodes_roles{label_node_role_kubernetes_io!~"(master|infra)"})
-        record: sre:node_workers:count
-      # master has less than 32GB RAM, worker count > 25, and worker count <= 100
-      # master has less than 64GB RAM, worker count > 100, and worker count <= 250
-      # master has less than 128GB RAM, worker count > 250
-      - expr: (
-                avg(sre:node_roles:memory_total_bytes{label_node_role_kubernetes_io="master"}) < 32*1024*1024*1024
-                AND sre:node_workers:count > 25
-                AND sre:node_workers:count <= 100
+      ## Expression Explanation:
+      ## Average of value of
+      ## the Average (per node) rate of change of CPU time spent in non-idle modes, totalled by CPU, looking back across the past 8h,
+      ## "*" applies a label replace to limit output to control plane nodes
+      ## Greater than (>) the threshold which is (n-1)/n where n is the number of control plane nodes, evaluating to 2/3 in most circumstances.
+      - expr: ( 
+                avg (
+                  avg by (instance) (
+                    sum by (cpu, instance) (
+                      rate(
+                        node_cpu_seconds_total{mode!="idle"}[8h]
+                      )
+                    )
+                  )
+                  *
+                  on (instance) (
+                    label_replace (
+                      kube_node_role{role ="master"}, "instance", "$1", "node", "(.*)"
+                    )
+                  )
+                )
+                >
+                (
+                  scalar (
+                    (
+                      count (
+                        cluster:nodes_roles{label_node_role_kubernetes_io ="master"}
+                      )
+                      - 1
+                    )
+                    /
+                    count (
+                      cluster:nodes_roles{label_node_role_kubernetes_io ="master"}
+                    )
+                  )
+                )
               )
-              OR
-              (
-                avg(sre:node_roles:memory_total_bytes{label_node_role_kubernetes_io="master"}) < 64*1024*1024*1024
-                AND sre:node_workers:count > 100
-                AND sre:node_workers:count <= 250
+        record: sre:node_control_plane:excessive_consumption_cpu
+      ## Expression Explanation: 
+      ## 1, minus the total amount of free memory divided by the total amount of memory for the infra node type, gives us the percent used memory as a decimal value: 0.%%
+      ## Greater than (>) the threshold which is (n-1)/n where n is the number of control plane nodes, evaluating to 2/3 in most circumstances.
+      - expr: ( 1 -
+                sum (
+                    node_memory_MemFree_bytes +
+                    node_memory_Buffers_bytes +
+                    node_memory_Cached_bytes
+                    AND on (instance) label_replace(
+                        kube_node_role{role="master"}, "instance", "$1", "node", "(.+)"
+                    )
+                ) 
+                / 
+                sum (
+                    node_memory_MemTotal_bytes
+                    AND on (instance) label_replace(
+                        kube_node_role{role="master"}, "instance", "$1", "node", "(.+)"
+                    )
+                )
+            ) 
+            > 
+            (
+              scalar (
+                (
+                  count (
+                    cluster:nodes_roles{label_node_role_kubernetes_io ="master"}
+                  )
+                  - 1
+                )
+                /
+                count (
+                  cluster:nodes_roles{label_node_role_kubernetes_io ="master"}
+                )
               )
-              OR
-              (
-                avg(sre:node_roles:memory_total_bytes{label_node_role_kubernetes_io="master"}) < 128*1024*1024*1024
-                AND sre:node_workers:count > 250
-              )
-        record: sre:node_masters:need_resize
+            )
+        record: sre:node_control_plane:excessive_consumption_memory
   - name: sre-control-plane-resizing-alerts
     rules:
-      - alert: MasterNodesNeedResizingSRE
-        expr: sre:node_masters:need_resize > 0
+        # This used to be called MasterNodesNeedResizingSRE
+      - alert: ControlPlaneNodesNeedResizingSRE
+        expr: (sre:node_control_plane:excessive_consumption_memory > 0) or (sre:node_control_plane:excessive_consumption_cpu > 0)
         for: 15m
         labels:
           severity: warning
           namespace: openshift-monitoring
         annotations:
-          message: "The cluster's master instance has been undersized for 15 minutes and should be vertically scaled to support the existing workers.  See linked SOP for details.  Critical alert will be raised at 2 hours."
-      - alert: MasterNodesNeedResizingSRE
-        expr: sre:node_masters:need_resize > 0
-        for: 2h
+          message: "The cluster's control plane nodes have been undersized for 15 minutes and should be vertically scaled to support the existing workload. See linked SOP for details. Critical alert will be raised at 24 hours."
+        # This used to be called MasterNodesNeedResizingSRE
+      - alert: ControlPlaneNodesNeedResizingSRE
+        expr: (sre:node_control_plane:excessive_consumption_memory > 0) or (sre:node_control_plane:excessive_consumption_cpu > 0)
+        for: 24h
         labels:
           severity: critical
           namespace: openshift-monitoring
         annotations:
-          message: "The cluster's master instance has been undersized for 2 hours and must be vertically scaled to support the existing workers.  See linked SOP for details."
+          message: "The cluster's control plane nodes have been undersized for 24 hours and must be vertically scaled to support the existing workload. See linked SOP for details."

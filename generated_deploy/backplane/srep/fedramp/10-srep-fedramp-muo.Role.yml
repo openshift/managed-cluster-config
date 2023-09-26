@@ -1,0 +1,16 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: backplane-srep-fedramp-muo
+  namespace: openshift-managed-upgrade-operator
+rules:
+# allows SREP to create upgradeconfigs for upgrades
+# until MUO-OCM functionallity is working
+# https://issues.redhat.com/browse/XCMSTRAT-240
+- apiGroups:
+  - upgrade.managed.openshift.io
+  resources:
+  - upgradeconfigs
+  verbs:
+  - create
+### END
