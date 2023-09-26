@@ -32070,27 +32070,6 @@ objects:
       kind: PrometheusRule
       metadata:
         labels:
-          prometheus: sre-dns-alerts
-          role: alert-rules
-        name: sre-dns-alerts
-        namespace: openshift-monitoring
-      spec:
-        groups:
-        - name: sre-dns-alerts
-          rules:
-          - alert: DNSErrors10MinSRE
-            expr: increase(dns_failure_failure_total[10m]) >= 3
-            for: 10m
-            labels:
-              severity: critical
-              namespace: openshift-monitoring
-            annotations:
-              message: At least 3 DNS checks have been failing for the past 10 minutes
-                on pod- {{ $labels.pod }}
-    - apiVersion: monitoring.coreos.com/v1
-      kind: PrometheusRule
-      metadata:
-        labels:
           prometheus: sre-elasticsearch-jobs
           role: alert-rules
         name: sre-elasticsearch-jobs
