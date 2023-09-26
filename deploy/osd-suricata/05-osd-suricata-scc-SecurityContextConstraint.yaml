@@ -2,12 +2,27 @@ kind: SecurityContextConstraints
 apiVersion: security.openshift.io/v1
 metadata:
   name: osd-suricata-scc
-allowPrivilegedContainer: true
+allowHostDirVolumePlugin: true
+allowHostIPC: false
 allowHostNetwork: true
+allowHostPID: false
+allowHostPorts: true
+allowPrivilegeEscalation: false
+allowPrivilegedContainer: false
 allowedCapabilities:
-- 'NET_ADMIN'
-- 'NET_RAW'
+- NET_ADMIN
+- NET_RAW
+fsGroup:
+  type: RunAsAny
+metadata:
+  name: osd-suricata-scc
+readOnlyRootFilesystem: false
 runAsUser:
   type: RunAsAny
 seLinuxContext:
   type: RunAsAny
+supplementalGroups:
+  type: RunAsAny
+volumes:
+- emptyDir
+- hostPath
