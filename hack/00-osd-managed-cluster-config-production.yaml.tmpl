@@ -30017,21 +30017,10 @@ objects:
         - security.openshift.io
         resources:
         - securitycontextconstraints
-        verbs:
-        - create
-        - get
-        - update
-        - use
-      - apiGroups:
-        - security.openshift.io
         resourceNames:
-        - privileged
-        resources:
-        - securitycontextconstraints
+        - osd-suricata-scc
         verbs:
-        - create
-        - get
-        - update
+        - use
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: RoleBinding
       metadata:
@@ -30074,8 +30063,10 @@ objects:
                   cpu: 100m
                   memory: 50Mi
               securityContext:
-                privileged: true
-                runAsUser: 0
+                capabilities:
+                  add:
+                  - NET_ADMIN
+                  - NET_RAW
               volumeMounts:
               - mountPath: /host/
                 name: host-filesystem
