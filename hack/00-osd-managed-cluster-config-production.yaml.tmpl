@@ -30112,6 +30112,10 @@ objects:
       matchLabels:
         api.openshift.com/managed: 'true'
       matchExpressions:
+      - key: environment
+        operator: In
+        values:
+        - integration
       - key: ext-hypershift.openshiftio/cluster-type
         operator: In
         values:
@@ -30130,15 +30134,28 @@ objects:
       apiVersion: security.openshift.io/v1
       metadata:
         name: osd-suricata-scc
-      allowPrivilegedContainer: true
+      allowHostDirVolumePlugin: true
+      allowHostIPC: false
       allowHostNetwork: true
+      allowHostPID: false
+      allowHostPorts: true
+      allowPrivilegeEscalation: false
+      allowPrivilegedContainer: false
       allowedCapabilities:
       - NET_ADMIN
       - NET_RAW
+      fsGroup:
+        type: RunAsAny
+      readOnlyRootFilesystem: false
       runAsUser:
         type: RunAsAny
       seLinuxContext:
         type: RunAsAny
+      supplementalGroups:
+        type: RunAsAny
+      volumes:
+      - emptyDir
+      - hostPath
     - apiVersion: v1
       kind: ServiceAccount
       metadata:
@@ -30155,21 +30172,10 @@ objects:
         - security.openshift.io
         resources:
         - securitycontextconstraints
-        verbs:
-        - create
-        - get
-        - update
-        - use
-      - apiGroups:
-        - security.openshift.io
         resourceNames:
-        - privileged
-        resources:
-        - securitycontextconstraints
+        - osd-suricata-scc
         verbs:
-        - create
-        - get
-        - update
+        - use
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: RoleBinding
       metadata:
@@ -30208,6 +30214,20 @@ objects:
           alert ssh any any -> any any (msg:"SSH traffic detected - this is unexpected
           on Openshift clusters"; sid:1000000; classtype:suspicious-login; flowbits:
           set,logged; flowbits:isnotset,logged;)
+
+
+          # Detect Denial of Service attack from and to anything that''s not HOME_NET:
+
+          # from https://github.com/arvindpj007/Suricata-Detect-DoS-Attack
+
+          alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"LOCAL DOS SYN packet
+          flood inbound, Potential DOS"; flow:to_server; flags: S,12; threshold: type
+          both, track by_dst, count 5000, seconds 5; classtype:misc-activity; sid:5;)
+
+          alert tcp $HOME_NET any -> $EXTERNAL_NET any (msg:"LOCAL DOS SYN packet
+          flood outbound, Potential DOS"; flow:to_server; flags: S,12; threshold:
+          type both, track by_dst, count 5000, seconds 5; classtype:misc-activity;
+          sid:6;)
 
           '
         suricata.yaml: "%YAML 1.1\n---\n# TODO: This should be a ConfigMap\n# Suricata\
@@ -31196,8 +31216,10 @@ objects:
                   cpu: 100m
                   memory: 50Mi
               securityContext:
-                privileged: true
-                runAsUser: 0
+                capabilities:
+                  add:
+                  - NET_ADMIN
+                  - NET_RAW
               volumeMounts:
               - mountPath: /host/
                 name: host-filesystem
@@ -31218,7 +31240,12 @@ objects:
               kubernetes.io/os: linux
             serviceAccountName: suricata-sa
             tolerations:
-            - operator: Exists
+            - key: node-role.kubernetes.io/master
+              operator: Exists
+              effect: NoSchedule
+            - key: node-role.kubernetes.io/infra
+              operator: Exists
+              effect: NoSchedule
             volumes:
             - hostPath:
                 path: /
