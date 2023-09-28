@@ -12,10 +12,12 @@ spec:
       - "infra"
       - "master"
     - key: hypershift.openshift.io/request-serving-component
+      operator: In
       values:
       - "true"
-  # An empty unhealthyConditions causes this MHC to execute only if a machine's underlying node is deleted
-  # https://github.com/openshift/machine-api-operator/blob/c11d6227cb4640ce979edd4e9469342274e88910/pkg/controller/machinehealthcheck/machinehealthcheck_controller.go#L789-L793
-  unhealthyConditions: []
+  unhealthyConditions:
+  - type:    "Ready"
+    timeout: "480s"
+    status: "Unknown"
   maxUnhealthy: 100%
   nodeStartupTimeout: 25m

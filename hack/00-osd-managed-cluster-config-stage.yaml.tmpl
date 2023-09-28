@@ -27910,9 +27910,13 @@ objects:
             - infra
             - master
           - key: hypershift.openshift.io/request-serving-component
+            operator: In
             values:
             - 'true'
-        unhealthyConditions: []
+        unhealthyConditions:
+        - type: Ready
+          timeout: 480s
+          status: Unknown
         maxUnhealthy: 100%
         nodeStartupTimeout: 25m
 - apiVersion: hive.openshift.io/v1
