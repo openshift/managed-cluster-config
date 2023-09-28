@@ -49,7 +49,12 @@ spec:
         kubernetes.io/os: linux
       serviceAccountName: suricata-sa
       tolerations:
-        - operator: Exists
+        - key: "node-role.kubernetes.io/master"
+          operator: "Exists"
+          effect: "NoSchedule"
+        - key: "node-role.kubernetes.io/infra"
+          operator: Exists
+          effect: "NoSchedule"
       volumes:
         - hostPath:
             path: /
