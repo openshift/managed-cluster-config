@@ -31303,6 +31303,15 @@ objects:
             labels:
               name: suricata
           spec:
+            affinity:
+              nodeAffinity:
+                requiredDuringSchedulingIgnoredDuringExecution:
+                  nodeSelectorTerms:
+                  - matchExpressions:
+                    - key: kubernetes.io/os
+                      operator: In
+                      values:
+                      - linux
             containers:
             - env:
               - name: OO_PAUSE_ON_START
@@ -31338,17 +31347,15 @@ objects:
                 name: host-filesystem
             dnsPolicy: ClusterFirst
             hostNetwork: true
-            nodeSelector:
-              kubernetes.io/os: linux
             serviceAccount: suricata-sa
             serviceAccountName: suricata-sa
             tolerations:
-            - key: node-role.kubernetes.io/master
+            - effect: NoSchedule
+              key: hypershift.openshift.io/cluster
               operator: Exists
-              effect: NoSchedule
-            - key: node-role.kubernetes.io/infra
+            - effect: NoSchedule
+              key: hypershift.openshift.io/request-serving-component
               operator: Exists
-              effect: NoSchedule
             volumes:
             - hostPath:
                 path: /var/log
