@@ -30,34 +30,35 @@ spec:
             capabilities:
               add: ["NET_ADMIN", "NET_RAW"]
           volumeMounts:
-            - mountPath: /host/
+            - mountPath: /host/var/log
               name: host-filesystem
             - mountPath: /etc/suricata/rules/sre-events.rules
-              subPath: "sre-events.rules"
+              subPath: sre-events.rules
               name: suricata-config
             - mountPath: /etc/suricata/suricata.yaml
-              subPath: "suricata.yaml"
               name: suricata-config
+              subPath: suricata.yaml
         - name: log-cleaner
           image: quay.io/app-sre/log-cleaner@sha256:5796aba1ff3f592cadda48de61084d7d570b6ed4dc28185514a5856afa8c49c5
           volumeMounts:
-            - mountPath: /host/
+            - mountPath: /host/var/log
               name: host-filesystem
       dnsPolicy: ClusterFirst
       hostNetwork: true
       nodeSelector:
         kubernetes.io/os: linux
+      serviceAccount: suricata-sa
       serviceAccountName: suricata-sa
       tolerations:
-        - key: "node-role.kubernetes.io/master"
-          operator: "Exists"
-          effect: "NoSchedule"
-        - key: "node-role.kubernetes.io/infra"
+        - key: node-role.kubernetes.io/master
           operator: Exists
-          effect: "NoSchedule"
+          effect: NoSchedule
+        - key: node-role.kubernetes.io/infra
+          operator: Exists
+          effect: NoSchedule
       volumes:
         - hostPath:
-            path: /
+            path: /var/log
           name: host-filesystem
         - name: suricata-config
           configMap:
