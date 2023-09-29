@@ -16,7 +16,7 @@ spec:
       - env:
         - name: OO_PAUSE_ON_START
           value: "false"
-        image: quay.io/app-sre/suricata@sha256:2e7ff9481e89b521d5d17ec9d17752d65684dcb616bbaafb442dae3eb5b2ed66
+        image: quay.io/app-sre/suricata@sha256:d437c8cf14cec7a3b215a4f318c604d9df6062e37a738b35253f52b093f4447f
         imagePullPolicy: IfNotPresent
         name: suricata
         resources:
@@ -30,12 +30,12 @@ spec:
           capabilities:
             add: ["NET_ADMIN", "NET_RAW"]
         volumeMounts:
-        - mountPath: /host/
+        - mountPath: /host/var/log
           name: host-filesystem
       - name: log-cleaner
-        image: quay.io/app-sre/log-cleaner@sha256:5796aba1ff3f592cadda48de61084d7d570b6ed4dc28185514a5856afa8c49c5
+        image: quay.io/app-sre/log-cleaner@sha256:eaebbfc805800f6f284b33e75686f137e607dca19370d9db11f1577ccf492fdb
         volumeMounts:
-        - mountPath: /host/
+        - mountPath: /host/var/log
           name: host-filesystem
       dnsPolicy: ClusterFirst
       hostNetwork: true
@@ -46,5 +46,5 @@ spec:
       - operator: Exists
       volumes:
       - hostPath:
-          path: /
+          path: /var/log
         name: host-filesystem
