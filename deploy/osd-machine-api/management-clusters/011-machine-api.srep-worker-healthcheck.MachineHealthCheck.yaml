@@ -16,8 +16,12 @@ spec:
       values:
       - "true"
   unhealthyConditions:
-  - type:    "Ready"
-    timeout: "480s"
-    status: "Unknown"
+  # Neither NonexistentStatus nor NonexistentCondition really exist as status conditions on a node.
+  # This lets the MachineHealthCheck only trigger when a node is deleted and not on any other node
+  # status conditions.
+  # # https://github.com/openshift/machine-api-operator/blob/c11d6227cb4640ce979edd4e9469342274e88910/pkg/controller/machinehealthcheck/machinehealthcheck_controller.go#L789-L793
+  - status: "NonexistentStatus"
+    type: "NonexistentCondition"
+    timeout: "0s"
   maxUnhealthy: 100%
   nodeStartupTimeout: 25m
