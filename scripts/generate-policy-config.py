@@ -24,6 +24,7 @@ directories = [
         'backplane/tam',
         'ccs-dedicated-admins',
         'customer-registry-cas',
+        'hypershift-ovn-logging',
         'osd-cluster-admin',
         'osd-customer-monitoring',
         'osd-delete-backplane-script-resources',
