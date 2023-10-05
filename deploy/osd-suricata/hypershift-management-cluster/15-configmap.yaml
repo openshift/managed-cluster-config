@@ -6,20 +6,11 @@ metadata:
   namespace: openshift-suricata
 data:
   sre-events.rules: |
-    # File containing specific suricata rules for SRE
-    # 1. Detect any kind of SSH traffic on the nodes:
-    #
-    # This alert uses 'flowbits' to mark a connection the first time - this
-    # makes it only trigger *one* event.
-    # Without flowbits every traffic over SSH would generate this alert,
-    # creating far more alerts than we care about.
-    # https://docs.suricata.io/en/suricata-6.0.0/rules/flow-keywords.html#flowbits
-    alert ssh any any -> any any (msg:"SSH traffic detected - this is unexpected on Openshift clusters"; sid:1000000; classtype:suspicious-login; flowbits: set,logged; flowbits:isnotset,logged;)
-
-    # Detect Denial of Service attack from and to anything that's not HOME_NET:
+    # Detect Denial of Service attack inbound, outbound, and internally
     # from https://github.com/arvindpj007/Suricata-Detect-DoS-Attack
-    alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"LOCAL DOS SYN packet flood inbound, Potential DOS"; flow:to_server; flags: S,12; threshold: type both, track by_dst, count 5000, seconds 5; classtype:misc-activity; sid:5;)
-    alert tcp $HOME_NET any -> $EXTERNAL_NET any (msg:"LOCAL DOS SYN packet flood outbound, Potential DOS"; flow:to_server; flags: S,12; threshold: type both, track by_dst, count 5000, seconds 5; classtype:misc-activity; sid:6;)
+    alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"DOS SYN packet flood inbound, Potential DOS"; flow:to_server; flags: S,12; threshold: type both, track by_dst, count 5000, seconds 5; classtype:misc-activity; sid:5;)
+    alert tcp $HOME_NET any -> $EXTERNAL_NET any (msg:"DOS SYN packet flood outbound, Potential DOS"; flow:to_server; flags: S,12; threshold: type both, track by_dst, count 5000, seconds 5; classtype:misc-activity; sid:6;)
+    alert tcp $HOME_NET any -> $HOME_NET any (msg:"DOS SYN packet flood internal, Potential DOS"; flow:to_server; flags: S,12; threshold: type both, track by_dst, count 5000, seconds 5; classtype:misc-activity; sid:7;)
   suricata.yaml: |
     %YAML 1.1
     ---
@@ -67,7 +58,7 @@ data:
     ## Step 2: Select outputs to enable
     ##
 
-    # Linux high speed capture support
+    # Linux high speed capture support (physical interface and ovn interface)
     af-packet:
       - interface: ens5
         cluster-id: 99
@@ -80,13 +71,16 @@ data:
             or
           (inbound and (src port 53) or not (src net 10.0.0.0/8 or 169.254.0.0/16 or 172.16.0.0/12 or 192.168.0.0/16))
 
-      - interface: tun0
+      - interface: ovn-k8s-mp0
         cluster-id: 98
         cluster-type: cluster_flow
-        defrag: no
+        defrag: yes
         checksum-checks: no
-        tpacket-v3: no
-        bpf-filter: *filter
+        tpacket-v3: yes
+        bpf-filter: &filter |
+          (outbound and (dst port 53) or not (dst net 10.0.0.0/8 or 169.254.0.0/16 or 172.16.0.0/12 or 192.168.0.0/16))
+            or
+          (inbound and (src port 53) or not (src net 10.0.0.0/8 or 169.254.0.0/16 or 172.16.0.0/12 or 192.168.0.0/16))
 
       - interface: default
         threads: auto

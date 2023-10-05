@@ -30144,39 +30144,22 @@ objects:
         name: suricata-config
         namespace: openshift-suricata
       data:
-        sre-events.rules: '# File containing specific suricata rules for SRE
-
-          # 1. Detect any kind of SSH traffic on the nodes:
-
-          #
-
-          # This alert uses ''flowbits'' to mark a connection the first time - this
-
-          # makes it only trigger *one* event.
-
-          # Without flowbits every traffic over SSH would generate this alert,
-
-          # creating far more alerts than we care about.
-
-          # https://docs.suricata.io/en/suricata-6.0.0/rules/flow-keywords.html#flowbits
-
-          alert ssh any any -> any any (msg:"SSH traffic detected - this is unexpected
-          on Openshift clusters"; sid:1000000; classtype:suspicious-login; flowbits:
-          set,logged; flowbits:isnotset,logged;)
-
-
-          # Detect Denial of Service attack from and to anything that''s not HOME_NET:
+        sre-events.rules: '# Detect Denial of Service attack inbound, outbound, and
+          internally
 
           # from https://github.com/arvindpj007/Suricata-Detect-DoS-Attack
 
-          alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"LOCAL DOS SYN packet
-          flood inbound, Potential DOS"; flow:to_server; flags: S,12; threshold: type
-          both, track by_dst, count 5000, seconds 5; classtype:misc-activity; sid:5;)
+          alert tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"DOS SYN packet flood
+          inbound, Potential DOS"; flow:to_server; flags: S,12; threshold: type both,
+          track by_dst, count 5000, seconds 5; classtype:misc-activity; sid:5;)
 
-          alert tcp $HOME_NET any -> $EXTERNAL_NET any (msg:"LOCAL DOS SYN packet
-          flood outbound, Potential DOS"; flow:to_server; flags: S,12; threshold:
-          type both, track by_dst, count 5000, seconds 5; classtype:misc-activity;
-          sid:6;)
+          alert tcp $HOME_NET any -> $EXTERNAL_NET any (msg:"DOS SYN packet flood
+          outbound, Potential DOS"; flow:to_server; flags: S,12; threshold: type both,
+          track by_dst, count 5000, seconds 5; classtype:misc-activity; sid:6;)
+
+          alert tcp $HOME_NET any -> $HOME_NET any (msg:"DOS SYN packet flood internal,
+          Potential DOS"; flow:to_server; flags: S,12; threshold: type both, track
+          by_dst, count 5000, seconds 5; classtype:misc-activity; sid:7;)
 
           '
         suricata.yaml: "%YAML 1.1\n---\n# TODO: This should be a ConfigMap\n# Suricata\
@@ -30196,28 +30179,33 @@ objects:
           \    MODBUS_PORTS: 502\n    FILE_DATA_PORTS: \"[$HTTP_PORTS,110,143]\"\n\
           \    FTP_PORTS: 21\n    GENEVE_PORTS: 6081\n    VXLAN_PORTS: 4789\n    TEREDO_PORTS:\
           \ 3544\n##\n## Step 2: Select outputs to enable\n##\n\n# Linux high speed\
-          \ capture support\naf-packet:\n  - interface: ens5\n    cluster-id: 99\n\
-          \    cluster-type: cluster_flow\n    defrag: yes\n    checksum-checks: no\n\
-          \    tpacket-v3: yes\n    bpf-filter: &filter |\n      (outbound and (dst\
-          \ port 53) or not (dst net 10.0.0.0/8 or 169.254.0.0/16 or 172.16.0.0/12\
-          \ or 192.168.0.0/16))\n        or\n      (inbound and (src port 53) or not\
-          \ (src net 10.0.0.0/8 or 169.254.0.0/16 or 172.16.0.0/12 or 192.168.0.0/16))\n\
-          \n  - interface: tun0\n    cluster-id: 98\n    cluster-type: cluster_flow\n\
-          \    defrag: no\n    checksum-checks: no\n    tpacket-v3: no\n    bpf-filter:\
-          \ *filter\n\n  - interface: default\n    threads: auto\n    use-mmap: yes\n\
-          \n# The default logging directory.  Any log or output file will be\n# placed\
-          \ here if it's not specified with a full path name. This can be\n# overridden\
-          \ with the -l command line parameter.\ndefault-log-dir: /host/var/log\n\n\
-          stats:\n  interval: 30\n  enabled: yes\n    # The interval field (in seconds)\
-          \ controls the interval at\n  # which stats are updated in the log.\n  decoder-events:\
-          \ false\n  # Add decode events to stats.\n  #decoder-events: true\n  # Decoder\
-          \ event prefix in stats. Has been 'decoder' before, but that leads\n  #\
-          \ to missing events in the eve.stats records. See issue #2225.\n  #decoder-events-prefix:\
-          \ \"decoder.event\"\n  # Add stream events as stats.\n  #stream-events:\
-          \ false\n\noutputs:\n  - fast:\n      enabled: no\n      filename: fast.log\n\
-          \      append: yes\n\n  # Extensible Event Format (nicknamed EVE) event\
-          \ log in JSON format\n  - eve-log:\n      filename: eve-%m-%d.json\n   \
-          \   rotate-interval: day\n      enabled: yes\n      filetype: regular #regular|syslog|unix_dgram|unix_stream|redis\n\
+          \ capture support (physical interface and ovn interface)\naf-packet:\n \
+          \ - interface: ens5\n    cluster-id: 99\n    cluster-type: cluster_flow\n\
+          \    defrag: yes\n    checksum-checks: no\n    tpacket-v3: yes\n    bpf-filter:\
+          \ &filter |\n      (outbound and (dst port 53) or not (dst net 10.0.0.0/8\
+          \ or 169.254.0.0/16 or 172.16.0.0/12 or 192.168.0.0/16))\n        or\n \
+          \     (inbound and (src port 53) or not (src net 10.0.0.0/8 or 169.254.0.0/16\
+          \ or 172.16.0.0/12 or 192.168.0.0/16))\n\n  - interface: ovn-k8s-mp0\n \
+          \   cluster-id: 98\n    cluster-type: cluster_flow\n    defrag: yes\n  \
+          \  checksum-checks: no\n    tpacket-v3: yes\n    bpf-filter: &filter |\n\
+          \      (outbound and (dst port 53) or not (dst net 10.0.0.0/8 or 169.254.0.0/16\
+          \ or 172.16.0.0/12 or 192.168.0.0/16))\n        or\n      (inbound and (src\
+          \ port 53) or not (src net 10.0.0.0/8 or 169.254.0.0/16 or 172.16.0.0/12\
+          \ or 192.168.0.0/16))\n\n  - interface: default\n    threads: auto\n   \
+          \ use-mmap: yes\n\n# The default logging directory.  Any log or output file\
+          \ will be\n# placed here if it's not specified with a full path name. This\
+          \ can be\n# overridden with the -l command line parameter.\ndefault-log-dir:\
+          \ /host/var/log\n\nstats:\n  interval: 30\n  enabled: yes\n    # The interval\
+          \ field (in seconds) controls the interval at\n  # which stats are updated\
+          \ in the log.\n  decoder-events: false\n  # Add decode events to stats.\n\
+          \  #decoder-events: true\n  # Decoder event prefix in stats. Has been 'decoder'\
+          \ before, but that leads\n  # to missing events in the eve.stats records.\
+          \ See issue #2225.\n  #decoder-events-prefix: \"decoder.event\"\n  # Add\
+          \ stream events as stats.\n  #stream-events: false\n\noutputs:\n  - fast:\n\
+          \      enabled: no\n      filename: fast.log\n      append: yes\n\n  # Extensible\
+          \ Event Format (nicknamed EVE) event log in JSON format\n  - eve-log:\n\
+          \      filename: eve-%m-%d.json\n      rotate-interval: day\n      enabled:\
+          \ yes\n      filetype: regular #regular|syslog|unix_dgram|unix_stream|redis\n\
           \      metadata: yes\n            # Enable for multi-threaded eve.json output;\
           \ output files are amended with\n      # with an identifier, e.g., eve.9.json\n\
           \      #threaded: false\n      #prefix: \"@cee: \" # prefix to prepend to\
