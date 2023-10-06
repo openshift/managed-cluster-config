@@ -3843,6 +3843,60 @@ objects:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
           policy.open-cluster-management.io/standards: NIST SP 800-53
+        name: hypershift-ovn-logging
+        namespace: openshift-acm-policies
+      spec:
+        disabled: false
+        policy-templates:
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+              name: hypershift-ovn-logging
+            spec:
+              evaluationInterval:
+                compliant: 2h
+                noncompliant: 45s
+              object-templates-raw: "{{- range (lookup \"v1\" \"Namespace\" \"\" \"\
+                \").items }}\n{{- if eq (index .metadata.labels \"hypershift.openshift.io/hosted-control-plane\"\
+                ) \"true\" }}\n- complianceType: musthave\n  objectDefinition:\n \
+                \   kind: Namespace\n    apiVersion: v1\n    metadata:\n      name:\
+                \ {{ .metadata.name }}\n      annotations:\n        k8s.ovn.org/acl-logging:\
+                \ '{ \"deny\": \"info\" }'\n{{- end }}\n{{- end }}\n"
+              remediationAction: enforce
+              severity: low
+    - apiVersion: apps.open-cluster-management.io/v1
+      kind: PlacementRule
+      metadata:
+        name: placement-hypershift-ovn-logging
+        namespace: openshift-acm-policies
+      spec:
+        clusterSelector:
+          matchExpressions:
+          - key: hypershift.open-cluster-management.io/management-cluster
+            operator: In
+            values:
+            - 'true'
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: PlacementBinding
+      metadata:
+        name: binding-hypershift-ovn-logging
+        namespace: openshift-acm-policies
+      placementRef:
+        apiGroup: apps.open-cluster-management.io
+        kind: PlacementRule
+        name: placement-hypershift-ovn-logging
+      subjects:
+      - apiGroup: policy.open-cluster-management.io
+        kind: Policy
+        name: hypershift-ovn-logging
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: Policy
+      metadata:
+        annotations:
+          policy.open-cluster-management.io/categories: CM Configuration Management
+          policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/standards: NIST SP 800-53
         name: osd-backplane-managed-scripts
         namespace: openshift-acm-policies
       spec:

@@ -1,0 +1,23 @@
+apiVersion: policy.open-cluster-management.io/v1
+kind: ConfigurationPolicy
+metadata:
+  name: hypershift-ovn-logging
+spec:
+  evaluationInterval:
+    compliant: 2h
+    noncompliant: 45s
+  object-templates-raw: |
+    {{- range (lookup "v1" "Namespace" "" "").items }}
+    {{- if eq (index .metadata.labels "hypershift.openshift.io/hosted-control-plane") "true" }}
+    - complianceType: musthave
+      objectDefinition:
+        kind: Namespace
+        apiVersion: v1
+        metadata:
+          name: {{ .metadata.name }}
+          annotations:
+            k8s.ovn.org/acl-logging: '{ "deny": "info" }'
+    {{- end }}
+    {{- end }}
+  remediationAction: enforce
+  severity: low
