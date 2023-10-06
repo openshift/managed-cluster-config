@@ -10,10 +10,45 @@ spec:
   groups:
   - name: sre-managed-notification-alerts
     rules:
-    - alert: LoggingVolumeFillingUpNotificationSRE
+    - alert: LoggingVolumeFillingUpNotificationSRE1m
     # KubePersistentVolumeFillingUp alert firing in openshift-logging Namespace.
-      expr: count(ALERTS{alertname="KubePersistentVolumeFillingUp", alertstate="firing", namespace="openshift-logging"}) >= 1
-      for: 30m
+    # See https://github.com/openshift/cluster-monitoring-operator/blob/master/assets/control-plane/prometheus-rule.yaml#L299
+      expr: |
+        (
+          kubelet_volume_stats_available_bytes{namespace="openshift-logging",job="kubelet", metrics_path="/metrics"}
+            /
+          kubelet_volume_stats_capacity_bytes{namespace="openshift-logging",job="kubelet", metrics_path="/metrics"}
+        ) < 0.03
+        and
+        kubelet_volume_stats_used_bytes{namespace="openshift-logging",job="kubelet", metrics_path="/metrics"} > 0
+        unless on(namespace, persistentvolumeclaim)
+        kube_persistentvolumeclaim_access_mode{namespace="openshift-logging", access_mode="ReadOnlyMany"} == 1
+        unless on(namespace, persistentvolumeclaim)
+        kube_persistentvolumeclaim_labels{namespace="openshift-logging",label_alerts_k8s_io_kube_persistent_volume_filling_up="disabled"} == 1
+      for: 1m
+      labels:
+        severity: Info
+        namespace: openshift-logging
+        send_managed_notification: "true"
+        managed_notification_template: "LoggingVolumeFillingUp"
+    - alert: LoggingVolumeFillingUpNotificationSRE1h
+    # KubePersistentVolumeFillingUp alert firing in openshift-logging Namespace.
+    # See https://github.com/openshift/cluster-monitoring-operator/blob/b836b1929584f47862cf0693b3b2d6299542cdee/assets/control-plane/prometheus-rule.yaml#L317
+      expr: |
+       (
+          kubelet_volume_stats_available_bytes{namespace="openshift-logging",job="kubelet", metrics_path="/metrics"}
+            /
+          kubelet_volume_stats_capacity_bytes{namespace="openshift-logging",job="kubelet", metrics_path="/metrics"}
+        ) < 0.15
+        and
+        kubelet_volume_stats_used_bytes{namespace="openshift-logging",job="kubelet", metrics_path="/metrics"} > 0
+        and
+        predict_linear(kubelet_volume_stats_available_bytes{namespace="openshift-logging",job="kubelet", metrics_path="/metrics"}[6h], 4 * 24 * 3600) < 0
+        unless on(namespace, persistentvolumeclaim)
+        kube_persistentvolumeclaim_access_mode{namespace="openshift-logging", access_mode="ReadOnlyMany"} == 1
+        unless on(namespace, persistentvolumeclaim)
+        kube_persistentvolumeclaim_labels{namespace="openshift-logging",label_alerts_k8s_io_kube_persistent_volume_filling_up="disabled"} == 1
+      for: 1h
       labels:
         severity: Info
         namespace: openshift-logging
