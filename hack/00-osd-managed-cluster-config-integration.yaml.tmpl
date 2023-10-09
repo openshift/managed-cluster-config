@@ -30356,7 +30356,7 @@ objects:
           \ Event Format (nicknamed EVE) event log in JSON format\n  - eve-log:\n\
           \      filename: eve-%m-%d.json\n      rotate-interval: day\n      enabled:\
           \ yes\n      filetype: regular #regular|syslog|unix_dgram|unix_stream|redis\n\
-          \      metadata: yes\n            # Enable for multi-threaded eve.json output;\
+          \      metadata: yes\n      # Enable for multi-threaded eve.json output;\
           \ output files are amended with\n      # with an identifier, e.g., eve.9.json\n\
           \      #threaded: false\n      #prefix: \"@cee: \" # prefix to prepend to\
           \ each log entry\n      # the following are valid when type: syslog above\n\
@@ -30452,53 +30452,57 @@ objects:
           \ sni, version, not_before, not_after, certificate, chain, ja3, ja3s]\n\
           \        - files:\n            enabled: no\n            force-magic: no\
           \ # force logging magic on all logged files\n            #force-hash: [md5]\n\
-          \        #- drop:\n        #    alerts: yes      # log alerts that caused\
-          \ drops\n        #    flows: all       # start or all: 'start' logs only\
-          \ a single drop\n        #                     # per flow direction. All\
-          \ logs each dropped pkt.\n        - smtp\n            #extended: yes # enable\
-          \ this for extended logging information\n            #custom: [received,\
-          \ x-mailer, x-originating-ip, relays, reply-to, bcc]\n            #md5:\
-          \ [body, subject]\n        - dnp3\n        - ftp\n        - rdp\n      \
-          \  - nfs\n        - smb\n        - tftp\n        - ikev2\n        - dcerpc\n\
-          \        - krb5\n        - snmp\n        - rfb\n        - sip:\n       \
-          \     enabled: no\n        - dhcp:\n            enabled: no\n          \
-          \  extended: no\n        - ssh\n        - mqtt:\n            enabled: yes\n\
-          \            passwords: no\n        - stats:\n            enabled: no\n\
-          \            totals: yes\n            threads: no\n            deltas: no\n\
-          \        - flow:\n            enabled: no\n        #- netflow\n        -\
-          \ metadata\n\n  # a line based log of HTTP requests (no alerts)\n  - http-log:\n\
-          \      enabled: no\n      filename: http.log\n      append: yes\n      #extended:\
-          \ yes     # enable this for extended logging information\n      #custom:\
-          \ yes       # enable the custom logging format (defined by customformat)\n\
-          \      #customformat: \"%{%D-%H:%M:%S}t.%z %{X-Forwarded-For}i %H %m %h\
-          \ %u %s %B %a:%p -> %A:%P\"\n      #filetype: regular # 'regular', 'unix_stream'\
-          \ or 'unix_dgram'\n\n  # a line based log of TLS handshake parameters (no\
-          \ alerts)\n  - tls-log:\n      enabled: no # Log TLS connections.\n    \
-          \  filename: tls.log # File to store TLS logs.\n      append: yes\n    \
-          \  #extended: yes     # Log extended information like fingerprint\n    \
-          \  #custom: yes       # enabled the custom logging format (defined by customformat)\n\
-          \      #customformat: \"%{%D-%H:%M:%S}t.%z %a:%p -> %A:%P %v %n %d %D\"\n\
-          \      #filetype: regular # 'regular', 'unix_stream' or 'unix_dgram'\n \
-          \     # output TLS transaction where the session is resumed using a\n  \
-          \    # session id\n      #session-resumption: no\n\n  # output module to\
-          \ store certificates chain to disk\n  - tls-store:\n      enabled: no\n\
-          \      #certs-log-dir: certs # directory to store the certificates files\n\
-          \n  # Packet log... log packets in pcap format. 3 modes of operation: \"\
-          normal\"\n  # \"multi\" and \"sguil\".\n  #\n  # In normal mode a pcap file\
-          \ \"filename\" is created in the default-log-dir,\n  # or as specified by\
-          \ \"dir\".\n  # In multi mode, a file is created per thread. This will perform\
-          \ much\n  # better, but will create multiple files where 'normal' would\
-          \ create one.\n  # In multi mode the filename takes a few special variables:\n\
-          \  # - %n -- thread number\n  # - %i -- thread id\n  # - %t -- timestamp\
-          \ (secs or secs.usecs based on 'ts-format'\n  # E.g. filename: pcap.%n.%t\n\
-          \  #\n  # Note that it's possible to use directories, but the directories\
-          \ are not\n  # created by Suricata. E.g. filename: pcaps/%n/log.%s will\
-          \ log into the\n  # per thread directory.\n  #\n  # Also note that the limit\
-          \ and max-files settings are enforced per thread.\n  # So the size limit\
-          \ when using 8 threads with 1000mb files and 2000 files\n  # is: 8*1000*2000\
-          \ ~ 16TiB.\n  #\n  # In Sguil mode \"dir\" indicates the base directory.\
-          \ In this base dir the\n  # pcaps are created in the directory structure\
-          \ Sguil expects:\n  #\n  # $sguil-base-dir/YYYY-MM-DD/$filename.<timestamp>\n\
+          \            #- drop:\n            #    alerts: yes      # log alerts that\
+          \ caused drops\n            #    flows: all       # start or all: 'start'\
+          \ logs only a single drop\n            #                     # per flow\
+          \ direction. All logs each dropped pkt.\n        - smtp:\n            enabled:\
+          \ no\n            #extended: yes # enable this for extended logging information\n\
+          \            #custom: [received, x-mailer, x-originating-ip, relays, reply-to,\
+          \ bcc]\n            #md5: [body, subject]\n        - dnp3:\n           \
+          \ enabled: no\n        - ftp:\n            enabled: no\n        - rdp:\n\
+          \            enabled: no\n        - nfs:\n            enabled: no\n    \
+          \    - smb:\n            enabled: no\n        - tftp:\n            enabled:\
+          \ no\n        - ikev2:\n            enabled: no\n        - dcerpc:\n   \
+          \         enabled: no\n        - krb5:\n            enabled: no\n      \
+          \  - snmp:\n            enabled: no\n        - rfb:\n            enabled:\
+          \ no\n        - sip:\n            enabled: no\n        - dhcp:\n       \
+          \     enabled: no\n            extended: no\n        - ssh\n        - mqtt:\n\
+          \            enabled: no\n            passwords: no\n        - stats:\n\
+          \            enabled: no\n            totals: yes\n            threads:\
+          \ no\n            deltas: no\n        - flow:\n            enabled: no\n\
+          \        #- netflow\n        - metadata\n\n  # a line based log of HTTP\
+          \ requests (no alerts)\n  - http-log:\n      enabled: no\n      filename:\
+          \ http.log\n      append: yes\n      #extended: yes     # enable this for\
+          \ extended logging information\n      #custom: yes       # enable the custom\
+          \ logging format (defined by customformat)\n      #customformat: \"%{%D-%H:%M:%S}t.%z\
+          \ %{X-Forwarded-For}i %H %m %h %u %s %B %a:%p -> %A:%P\"\n      #filetype:\
+          \ regular # 'regular', 'unix_stream' or 'unix_dgram'\n\n  # a line based\
+          \ log of TLS handshake parameters (no alerts)\n  - tls-log:\n      enabled:\
+          \ no # Log TLS connections.\n      filename: tls.log # File to store TLS\
+          \ logs.\n      append: yes\n      #extended: yes     # Log extended information\
+          \ like fingerprint\n      #custom: yes       # enabled the custom logging\
+          \ format (defined by customformat)\n      #customformat: \"%{%D-%H:%M:%S}t.%z\
+          \ %a:%p -> %A:%P %v %n %d %D\"\n      #filetype: regular # 'regular', 'unix_stream'\
+          \ or 'unix_dgram'\n      # output TLS transaction where the session is resumed\
+          \ using a\n      # session id\n      #session-resumption: no\n\n  # output\
+          \ module to store certificates chain to disk\n  - tls-store:\n      enabled:\
+          \ no\n      #certs-log-dir: certs # directory to store the certificates\
+          \ files\n\n  # Packet log... log packets in pcap format. 3 modes of operation:\
+          \ \"normal\"\n  # \"multi\" and \"sguil\".\n  #\n  # In normal mode a pcap\
+          \ file \"filename\" is created in the default-log-dir,\n  # or as specified\
+          \ by \"dir\".\n  # In multi mode, a file is created per thread. This will\
+          \ perform much\n  # better, but will create multiple files where 'normal'\
+          \ would create one.\n  # In multi mode the filename takes a few special\
+          \ variables:\n  # - %n -- thread number\n  # - %i -- thread id\n  # - %t\
+          \ -- timestamp (secs or secs.usecs based on 'ts-format'\n  # E.g. filename:\
+          \ pcap.%n.%t\n  #\n  # Note that it's possible to use directories, but the\
+          \ directories are not\n  # created by Suricata. E.g. filename: pcaps/%n/log.%s\
+          \ will log into the\n  # per thread directory.\n  #\n  # Also note that\
+          \ the limit and max-files settings are enforced per thread.\n  # So the\
+          \ size limit when using 8 threads with 1000mb files and 2000 files\n  #\
+          \ is: 8*1000*2000 ~ 16TiB.\n  #\n  # In Sguil mode \"dir\" indicates the\
+          \ base directory. In this base dir the\n  # pcaps are created in the directory\
+          \ structure Sguil expects:\n  #\n  # $sguil-base-dir/YYYY-MM-DD/$filename.<timestamp>\n\
           \  #\n  # By default all packets are logged except:\n  # - TCP streams beyond\
           \ stream.reassembly.depth\n  # - encrypted streams after the key exchange\n\
           \  #\n  - pcap-log:\n      enabled: no\n\n  - alert-debug:\n      enabled:\
