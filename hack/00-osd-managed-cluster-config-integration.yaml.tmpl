@@ -22605,14 +22605,17 @@ objects:
         name: ocpbugs-20184
         namespace: openshift-network-node-identity
       spec:
-        failedJobsHistoryLimit: 3
-        successfulJobsHistoryLimit: 3
+        failedJobsHistoryLimit: 2
+        successfulJobsHistoryLimit: 2
         concurrencyPolicy: Replace
-        schedule: 22 * * * *
+        schedule: '*/10 * * * *'
         jobTemplate:
           spec:
             ttlSecondsAfterFinished: 3600
             template:
+              metadata:
+                labels:
+                  app: ocpbugs-20184
               spec:
                 affinity:
                   nodeAffinity:
@@ -22622,9 +22625,19 @@ objects:
                         - key: node-role.kubernetes.io/infra
                           operator: Exists
                       weight: 1
+                  podAntiAffinity:
+                    preferredDuringSchedulingIgnoredDuringExecution:
+                    - podAffinityTerm:
+                        labelSelector:
+                          matchExpressions:
+                          - key: app
+                            operator: In
+                            values:
+                            - ocpbugs-20184
+                        topologyKey: kubernetes.io/hostname
+                      weight: 1
                 tolerations:
                 - effect: NoSchedule
-                  key: node-role.kubernetes.io/infra
                   operator: Exists
                 serviceAccountName: ocpbugs-20184
                 restartPolicy: Never
@@ -22632,6 +22645,13 @@ objects:
                 - name: ocpbugs-20184
                   image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
                   imagePullPolicy: Always
+                  resources:
+                    requests:
+                      cpu: 100m
+                      memory: 100Mi
+                    limits:
+                      cpu: 100m
+                      memory: 100Mi
                   command:
                   - oc
                   - delete
