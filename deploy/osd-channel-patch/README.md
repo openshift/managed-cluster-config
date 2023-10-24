@@ -12,6 +12,12 @@ On a minor upgrade (i.e. 4.5.z to 4.6.z) it is possible that hive will reset the
 
 NOTE that if OCP moves to a version agnostic channel strategy that we do not need as many of these SSS and can patch just to the channel `candidate`, `fast`, or `stable`.
 
+# Updating for new versions
+
+We can pre-populate future minor versions by copying previous versions and updating them. For example, the following command was used to populate 4.14 through 4.19:
+```bash
+for minor in {15..19}; do for channel in stable fast candidate; do cp -R ${channel}-4.14 ${channel}-4.${minor}; gsed -i -e s/4\.14/4\.${minor}/g ${channel}-4.${minor}/*.yaml; done; done
+```
 
 # Use Cases
 
