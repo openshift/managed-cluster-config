@@ -1,0 +1,17 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: sre-cgao-inative-heartbeat
+  namespace: openshift-monitoring
+spec:
+  groups:
+  - name: sre-cgao-inactive-heartbeat
+    rules:
+    - alert: CgaoInactiveHeartbeat
+      expr: cgao_heartbeat_inactive > 0
+      for: 30m
+      labels:
+        severity: critical
+        namespace: "{{ $labels.namespace }}"
+      annotations:
+        message: "The Goalert service for cluster {{ $labels.service_name }} has inactive heartbeatmonitor for 30m and requires SRE action."
