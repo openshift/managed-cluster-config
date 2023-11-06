@@ -12,9 +12,24 @@ spec:
     rules:
     - alert: KubeNodeUnschedulableSRE
       expr: (kube_node_spec_unschedulable > 0 and on(node) kube_node_role{role="master"}) or (kube_node_spec_unschedulable > 0 unless ignoring(node,container,endpoint,job,namespace,service) sum(mapi_machine_set_status_replicas{name=~".*upgrade$"}) > 0)
-      for: 60m
+      for: 61m
       labels:
         severity: critical
         namespace: openshift-monitoring
       annotations:
         message: "The node {{ $labels.node }} has been unschedulable for more than an hour."
+    - alert: ControlPlaneNodeUnschedulableSRE
+      expr: |-
+        (
+        kube_node_spec_unschedulable > 0
+        unless
+        ignoring(node,container,endpoint,job,namespace,service)
+        sum(mapi_machine_set_status_replicas{name=~".*upgrade$"}) > 0
+        )
+        and on (node) (kube_node_role{role=~"infra|control-plane|master"})
+      for: 60m
+      labels:
+        severity: critical
+        namespace: openshift-monitoring
+      annotations:
+        message: "The managed node {{ $labels.node }} has been unschedulable for more than an hour."
