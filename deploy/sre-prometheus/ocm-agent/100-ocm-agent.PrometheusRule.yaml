@@ -84,3 +84,31 @@ spec:
         send_managed_notification: "true"
       annotations:
         message: "Filesystem is predicted to run out of inodes within the next 4 hours."
+    - alert: CustomerWorkloadPreventingDrainSRE
+      # This alert will fire when a node is unscheduleable and is failing to drain for an extended period of time based on a customer workload that's failing to drain
+      # This alert will NOT fire if there is an ongoing upgrade, or if the node is not deleting.
+      expr: |-
+        (
+          (
+            kube_node_spec_unschedulable > 0
+            unless
+            ignoring(node,container,endpoint,job,namespace,service)
+            sum(mapi_machine_set_status_replicas{name=~".*upgrade$"}) > 0
+          )
+          * on (node)
+          group_right ()group by (node)
+            (pods_preventing_node_drain)
+        )
+        * on (node)
+        group_left ()group by (node)
+          (kube_node_role{role!~"infra|control-plane|master"})
+        unless group by(node)
+          (kube_node_role{role=~"infra|control-plane|master"})
+      for: 30m # KubeNodeUnscheduleableSRE fires at 1h, but since this is specific to customer workloads we can shorten the feedback loop here.
+      labels:
+        severity: critical
+        namespace: openshift-monitoring
+        managed_notification_template: CustomerWorkloadPreventingDrain
+        send_managed_notification: "true"
+      annotations:
+        message: "A non-openshift workload is preventing a node from draining."
