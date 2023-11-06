@@ -35448,83 +35448,94 @@ objects:
         - ibm-infra
     resourceApplyMode: Sync
     resources:
-    - apiVersion: monitoring.rhobs/v1
+    - apiVersion: monitoring.coreos.com/v1
       kind: PrometheusRule
       metadata:
         labels:
           prometheus: sre-dynatrace-workloads
           role: alert-rules
         name: sre-dynatrace-workloads
-        namespace: openshift-observability-dynatrace
+        namespace: openshift-monitoring
       spec:
         groups:
         - name: sre-dynatrace-workloads-failing
           rules:
           - alert: DynatraceMonitoringStackDownSRE
-            expr: 'sum(hypershift_hostedclusters) > 0 and (
+            expr: 'absent(kube_deployment_status_replicas{deployment="dynatrace-operator",
+              namespace="dynatrace"}) or
 
-              kube_deployment_status_replicas{deployment="dynatrace-operator", namespace="dynatrace"}
-              == 0 or
+              absent(kube_deployment_status_replicas{deployment="dynatrace-webhook",
+              namespace="dynatrace"}) or
 
-              kube_deployment_status_replicas{deployment="dynatrace-webhook", namespace="dynatrace"}
-              == 0 or
+              absent(kube_deployment_status_replicas{deployment="opentelemetry-dynatrace-collector",
+              namespace="dynatrace"}) or
 
-              kube_deployment_status_replicas{deployment="opentelemetry-dynatrace-collector",
-              namespace="dynatrace"} == 0 or
+              absent(kube_statefulset_status_replicas{statefulset=~".*-activegate",
+              namespace="dynatrace"}) or
 
-              kube_statefulset_status_replicas{statefulset=~".*-activegate", namespace="dynatrace"}
-              == 0 or
-
-              kube_daemonset_status_desired_number_scheduled{daemonset=~".*-oneagent",
-              namespace="dynatrace"} == 0 )
+              absent(kube_daemonset_status_desired_number_scheduled{daemonset=~".*-oneagent",
+              namespace="dynatrace"})
 
               '
             for: 15m
             labels:
               namespace: dynatrace
-              severity: warning
+              severity: critical
             annotations:
-              summary: Dynatrace Workloads are failing on the Management Cluster
-              description: The Dynatrace deployment on the Management Cluster has
-                failed to be deployed for 15 mins
+              summary: Dynatrace Workload(s) are absent or have failed to deploy on
+                the Management Cluster
+              description: 'The following Dynatrace Workload(s) are absent or have
+                failed to be deployed the Management Cluster for last 15 mins:
+
+                {{ if $labels.deployment }} {{$labels.deployment}} Deployment {{end}}
+
+                {{ if $labels.daemonset }} {{ $labels.daemonset }} Daemonset {{end}}
+
+                {{ if $labels.statefulset }} {{$labels.statefulset}} Statefulset {{end}}
+
+                '
+              SOP: https://github.com/openshift/ops-sop/blob/master/dynatrace/alerts/DynatraceMonitoringStackDownSRE.md
         - name: sre-dynatrace-monitoring-stack-degraded
           rules:
           - alert: DynatraceOperatorDegradedSRE
             expr: (sum(kube_deployment_spec_replicas{deployment="dynatrace-operator",
               namespace="dynatrace"}) without (deployment, instance, pod)) - (sum(kube_deployment_status_replicas_available{deployment="dynatrace-operator",
               namespace="dynatrace"}) without (deployment, instance, pod)) > 0
-            for: 10m
+            for: 15m
             labels:
               namespace: dynatrace
               severity: warning
             annotations:
               summary: The Dynatrace Operator is Degraded
-              description: '{{$value}} pods are not running out of total pods for
-                the Dynatrace Operator'
+              description: '{{$value}} replicas are not running out of total required
+                replicas for the Dynatrace Operator'
+              SOP: https://github.com/openshift/ops-sop/blob/master/dynatrace/alerts/DynatraceOperatorDegradedSRE.md
           - alert: DynatraceWebhookDegradedSRE
             expr: (sum(kube_deployment_spec_replicas{deployment="dynatrace-webhook",
               namespace="dynatrace"}) without (deployment, instance, pod)) - (sum(kube_deployment_status_replicas_available{deployment="dynatrace-webhook",
               namespace="dynatrace"}) without (deployment, instance, pod)) > 0
-            for: 10m
+            for: 15m
             labels:
               namespace: dynatrace
               severity: warning
             annotations:
               summary: Dynatrace Webhook is Degraded
-              description: '{{$value}} pods are not running out of total pods for
-                the Dynatrace Webhook'
+              description: '{{$value}} replicas are not running out of total required
+                replicas for the Dynatrace Webhook'
+              SOP: https://github.com/openshift/ops-sop/blob/master/dynatrace/alerts/DynatraceWebhookDegradedSRE.md
           - alert: DynatraceOpenTelemetryCollectorDegradedSRE
             expr: (sum(kube_deployment_spec_replicas{deployment="opentelemetry-dynatrace-collector",
               namespace="dynatrace"}) without (deployment, instance, pod)) - (sum(kube_deployment_status_replicas_available{deployment="opentelemetry-dynatrace-collector",
-              namespace="dynatrace"}) without (deployment, instance, pod)) == 0
+              namespace="dynatrace"}) without (deployment, instance, pod)) > 0
             for: 15m
             labels:
               namespace: dynatrace
               severity: warning
             annotations:
               summary: Dynatrace OTEL Collector is Degraded
-              description: '{{$value}} pods are not running out of total pods for
-                the OpenTelemetry Dynatrace Collector'
+              description: '{{$value}} replicas are not running out of total required
+                replicas for the OpenTelemetry Dynatrace Collector'
+              SOP: https://github.com/openshift/ops-sop/blob/master/dynatrace/alerts/DynatraceOpenTelemetryCollectorDegradedSRE.md
           - alert: DynatraceActiveGateDegradedSRE
             expr: (sum(kube_statefulset_status_replicas{statefulset=~".*-activegate",
               namespace="dynatrace"}) without (deployment, instance, pod)) - (sum(kube_statefulset_status_replicas_ready{statefulset=~".*-activegate",
@@ -35535,8 +35546,9 @@ objects:
               severity: warning
             annotations:
               summary: Dynatrace ActiveGate is Degraded
-              description: '{{$value}} pods are not running out of total pods for
-                Dynatrace ActiveGate'
+              description: '{{$value}} replicas are not running out of total required
+                replicas for Dynatrace ActiveGate'
+              SOP: https://github.com/openshift/ops-sop/blob/master/dynatrace/alerts/DynatraceActiveGateDegradedSRE.md
           - alert: DynatraceOneAgentDegradedSRE
             expr: sum(kube_daemonset_status_desired_number_scheduled{daemonset=~".*-oneagent",
               namespace="dynatrace"}) without (daemonset, instance, pod) - sum(kube_daemonset_status_number_ready{daemonset=~".*-oneagent",
@@ -35547,8 +35559,9 @@ objects:
               severity: warning
             annotations:
               summary: Dynatrace OneAgent is Degraded
-              description: '{{$value}} pods are not running out of total pods for
-                Dynatrace OneAgent'
+              description: '{{$value}} replicas are not running out of total required
+                replicas for Dynatrace OneAgent'
+              SOP: https://github.com/openshift/ops-sop/blob/master/dynatrace/alerts/DynatraceOneAgentDegradedSRE.md
           - alert: DynatracePodRestartsStuckSRE
             expr: kube_pod_container_status_restarts_total{namespace="dynatrace"}
               > 0 and increase(kube_pod_container_status_restarts_total{namespace="dynatrace"}[15m])
@@ -35561,6 +35574,7 @@ objects:
               summary: Pod Restarts Stuck Alert
               description: At least one pod in the 'dynatrace' namespace has been
                 stuck in restarts for the last 15 minutes.
+              SOP: https://github.com/openshift/ops-sop/blob/master/dynatrace/alerts/DynatracePodRestartsStuckSRE.md
     - apiVersion: monitoring.coreos.com/v1
       kind: PrometheusRule
       metadata:
