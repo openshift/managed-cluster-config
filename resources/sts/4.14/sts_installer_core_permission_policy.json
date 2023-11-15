@@ -1,6 +1,24 @@
 {
     "Version": "2012-10-17",
     "Statement": [
+		{
+			"Sid": "PassRoleToNodes",
+			"Action": [
+				"iam:PassRole"
+			],
+			"Effect": "Allow",
+			"Resource": [
+				"arn:*:iam::*:role/*-ControlPlane-Role",
+				"arn:*:iam::*:role/*-Worker-Role"
+			],
+			"Condition": {
+				"StringEquals": {
+					"iam:PassedToService": [
+						"ec2.amazonaws.com"
+					]
+				}
+			}
+		},
         {
             "Effect": "Allow",
             "Action": [
@@ -103,7 +121,6 @@
 		    "iam:ListRoles",
 		    "iam:ListUserPolicies",
 		    "iam:ListUsers",
-		    "iam:PassRole",
 		    "iam:RemoveRoleFromInstanceProfile",
 		    "iam:SimulatePrincipalPolicy",
 		    "iam:TagRole",
