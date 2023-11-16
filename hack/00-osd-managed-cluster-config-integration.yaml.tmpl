@@ -35610,6 +35610,27 @@ objects:
       kind: PrometheusRule
       metadata:
         labels:
+          prometheus: sre-kubelet-debugging-handlers-enabled
+          role: alert-rules
+        name: sre-kubelet-debugging-handlers-enabled
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-kubelet-debugging-handlers-enabled
+          rules:
+          - alert: KubeletDebuggingHandlersEnabledSRE
+            expr: compliance_monkey_kubeletconfig_debug_handlers_enabled == 1
+            for: 60m
+            labels:
+              severity: critical
+              namespace: openshift-compliance-monkey
+              link: https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/KubeletDebuggingHandlersEnabledSRE.md
+            annotations:
+              message: Kubelet debugging handlers are enabled on this cluster.
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
           prometheus: sre-machine-out-of-compliance
           role: alert-rules
         name: sre-machine-out-of-compliance
