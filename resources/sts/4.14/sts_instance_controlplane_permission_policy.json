@@ -23,20 +23,15 @@
                 "elasticloadbalancing:CreateLoadBalancer",
                 "elasticloadbalancing:CreateLoadBalancerPolicy",
                 "elasticloadbalancing:CreateLoadBalancerListeners",
-                "elasticloadbalancing:CreateTargetGroup",
                 "elasticloadbalancing:ConfigureHealthCheck",
                 "elasticloadbalancing:DeleteListener",
                 "elasticloadbalancing:DeleteLoadBalancer",
                 "elasticloadbalancing:DeleteLoadBalancerListeners",
-                "elasticloadbalancing:DeleteTargetGroup",
                 "elasticloadbalancing:DeregisterInstancesFromLoadBalancer",
-                "elasticloadbalancing:DeregisterTargets",
                 "elasticloadbalancing:Describe*",
                 "elasticloadbalancing:DetachLoadBalancerFromSubnets",
                 "elasticloadbalancing:ModifyListener",
                 "elasticloadbalancing:ModifyLoadBalancerAttributes",
-                "elasticloadbalancing:ModifyTargetGroup",
-                "elasticloadbalancing:ModifyTargetGroupAttributes",
                 "elasticloadbalancing:RegisterInstancesWithLoadBalancer",
                 "elasticloadbalancing:RegisterTargets",
                 "elasticloadbalancing:SetLoadBalancerPoliciesForBackendServer",
@@ -44,6 +39,51 @@
                 "kms:DescribeKey"
             ],
             "Resource": "*"
+        },
+        {
+            "Sid": "ReadPermissions",
+            "Effect": "Allow",
+            "Action": [
+              "elasticloadbalancing:DescribeTargetGroups",
+              "elasticloadbalancing:DescribeTargetGroupAttributes",
+              "elasticloadbalancing:DescribeTargetHealth",
+            ],
+            "Resource": [
+              "*"
+            ]
+        },
+        {
+          "Sid": "CreateTargetGroup",
+          "Effect": "Allow",
+          "Action": [
+            "elasticloadbalancing:CreateTargetGroup"
+          ],
+          "Resource": [
+            "*"
+          ],
+          "Condition": {
+            "StringEquals": {
+              "aws:RequestTag/red-hat-managed": "true"
+            }
+          }
+        },
+        {
+            "Sid": "TargetGroupManagementResourceTag",
+            "Effect": "Allow",
+            "Action": [
+              "elasticloadbalancing:ModifyTargetGroup",
+              "elasticloadbalancing:DeleteTargetGroup",
+              "elasticloadbalancing:ModifyTargetGroupAttributes",
+              "elasticloadbalancing:DeregisterTargets"
+            ],
+            "Resource": [
+              "*"
+            ],
+            "Condition": {
+              "StringEquals": {
+                "aws:ResourceTag/red-hat-managed": "true"
+              }
+            }
         }
     ]
 }
