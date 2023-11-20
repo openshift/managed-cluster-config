@@ -8,7 +8,12 @@
         "s3:ListBucket",
         "s3:ListBucketMultipartUploads"
       ],
-      "Resource": "*"
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+            "aws:ResourceAccount": "${aws:PrincipalAccount}"
+        }
+      }
     },
     {
       "Sid": "AllowSpecificBucketActions",
@@ -28,7 +33,12 @@
       ],
       "Resource": [
         "arn:aws:s3:::*-image-registry-${aws:RequestedRegion}*"
-      ]
+      ],
+      "Condition": {
+        "StringEquals": {
+            "aws:ResourceAccount": "${aws:PrincipalAccount}"
+       }
+      }
     },
     {
       "Sid": "AllowSpecificObjectActions",
@@ -42,7 +52,12 @@
       ],
       "Resource": [
         "arn:aws:s3:::*-image-registry-${aws:RequestedRegion}*/*"
-      ]
+      ],
+      "Condition": {
+        "StringEquals": {
+            "aws:ResourceAccount": "${aws:PrincipalAccount}"
+        }
+      }
     }
   ]
 }
