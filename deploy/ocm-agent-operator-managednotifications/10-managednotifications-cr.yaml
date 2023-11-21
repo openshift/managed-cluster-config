@@ -13,6 +13,12 @@ spec:
       summary: "Multiple ingress controllers detected"
       logType: Cluster Configuration
     - activeBody: |-
+        Your cluster is currently alerting with 'KubePersistentVolumeFillingUp' in '${namespace}' for PVC '${persistentvolumeclaim}'. This is not an actionable alert for the SRE team. Please address this capacity issue using this reference documentation: https://docs.openshift.com/container-platform/latest/storage/expanding-persistent-volumes.html.
+      name: KubePersistentVolumeFillingUp
+      resendWait: 1
+      severity: Error
+      summary: "Action required: Persistent Volume filling"
+    - activeBody: |-
         Your cluster requires you to take action as its ElasticSearch cluster logging deployment has been detected as reaching a high disk usage threshold. Red Hat SRE strongly recommends reducing application logging on your cluster to ensure logging continues to function. If logging disk consumption exceeds 95%, data will be at risk of becoming unavailable or lost and the stability of your ElasticSearch deployment may be impacted.
       name: LoggingVolumeFillingUp
       resendWait: 24
