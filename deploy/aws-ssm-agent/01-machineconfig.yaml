@@ -1,0 +1,29 @@
+apiVersion: machineconfiguration.openshift.io/v1
+kind: MachineConfig
+metadata:
+  labels:
+    machineconfiguration.openshift.io/role: worker
+  name: 99-install-ssm-agent
+spec:
+  config:
+    ignition:
+      version:  3.2.0
+    systemd:
+      units:
+      - name: 99-install-ssm-agent.service
+        enabled: true
+        contents: |
+          [Unit]
+          Description=Install and launch the AWS Systems Manager (SSM) Agent.
+          Wants=network-online.target
+          After=network-online.target
+          ConditionPathExists=!/usr/bin/amazon-ssm-agent
+
+          [Service]
+          Type=oneshot
+          ExecStart=/usr/bin/rpm-ostree install --apply-live --assumeyes --idempotent https://s3.us-east-1.amazonaws.com/amazon-ssm-us-east-1/latest/linux_amd64/amazon-ssm-agent.rpm
+          ExecStart=/usr/sbin/restorecon /etc/systemd/system/amazon-ssm-agent.service
+          ExecStart=/usr/bin/systemctl enable amazon-ssm-agent --now
+
+          [Install]
+          WantedBy=multi-user.target
