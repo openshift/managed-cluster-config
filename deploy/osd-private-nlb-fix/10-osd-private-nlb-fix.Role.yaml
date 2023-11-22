@@ -1,0 +1,27 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: osd-private-nlb-fix
+  namespace: openshift-ingress
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - services
+  - services/status
+  verbs:
+  - get
+  - patch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: osd-private-nlb-fix
+  namespace: openshift-ingress-operator
+rules:
+- apiGroups:
+  - operator.openshift.io
+  resources:
+  - ingresscontrollers
+  verbs:
+  - get

@@ -28863,6 +28863,144 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: osd-private-nlb-fix
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: osd-private-nlb-fix
+        namespace: openshift-config
+    - apiVersion: batch/v1
+      kind: CronJob
+      metadata:
+        name: osd-private-nlb-fix
+        namespace: openshift-config
+      spec:
+        failedJobsHistoryLimit: 3
+        successfulJobsHistoryLimit: 3
+        concurrencyPolicy: Replace
+        schedule: '*/5 * * * *'
+        jobTemplate:
+          spec:
+            template:
+              spec:
+                affinity:
+                  nodeAffinity:
+                    preferredDuringSchedulingIgnoredDuringExecution:
+                    - preference:
+                        matchExpressions:
+                        - key: node-role.kubernetes.io/infra
+                          operator: Exists
+                      weight: 1
+                tolerations:
+                - effect: NoSchedule
+                  key: node-role.kubernetes.io/infra
+                  operator: Exists
+                serviceAccountName: osd-private-nlb-fix
+                restartPolicy: Never
+                containers:
+                - name: osd-private-nlb-fix
+                  image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+                  imagePullPolicy: Always
+                  args:
+                  - /usr/bin/python
+                  - -c
+                  - "import os\nimport json\nimport socket\n\ndef shell(command):\n\
+                    \    f = os.popen(command)\n    stdout = f.read()\n    error =\
+                    \ f.close()\n    if error:\n        print(stdout)\n        exit(1)\n\
+                    \    return stdout\n\nout = shell(\"oc get ingresscontroller -n\
+                    \ openshift-ingress-operator default -ojsonpath='{.spec.endpointPublishingStrategy.loadBalancer}'\"\
+                    )\nload_balancer_config = json.loads(out)\nif not (\"aws\" in\
+                    \ load_balancer_config[\"providerParameters\"]\n        and load_balancer_config[\"\
+                    providerParameters\"][\"aws\"][\"type\"] == \"NLB\"\n        and\
+                    \ load_balancer_config[\"scope\"] == \"Internal\"):\n    print(\n\
+                    \        \"Not private AWS NLB, not assigning NLB IP to router-default\
+                    \ service\"\n    )\n    print(\n        \"Default IngressController\
+                    \ .spec.endpointPublishingStrategy.loadBalancer\",\n        load_balancer_config\n\
+                    \    )\n\nprint(\"Private NLB, will patch external IP with VPC\
+                    \ internal IP\")\nout = shell(\"oc get service router-default\
+                    \ -n openshift-ingress -ojson\")\nrouter_default_svc = json.loads(out)\n\
+                    hostname = router_default_svc[\"status\"][\"loadBalancer\"][\"\
+                    ingress\"][0][\"hostname\"]\n\n# Get NLB IP address inside VPC\n\
+                    # https://stackoverflow.com/questions/12297500/python-module-for-nslookup\n\
+                    print(f\"Looking up IP by hostname {hostname}\")\nvpc_ip = socket.gethostbyname(hostname)\n\
+                    router_status_ingress = router_default_svc[\"status\"][\"loadBalancer\"\
+                    ][\"ingress\"][0]\nif \"ip\" in router_status_ingress and router_status_ingress[\"\
+                    ip\"] == vpc_ip:\n    print(\"VPC IP matches router ingress IP,\
+                    \ no more work needed.\")\n    exit(0)\ntry:\n    socket.inet_aton(vpc_ip)\n\
+                    \    router_default_patch = [\n        {\n            'op': 'replace',\n\
+                    \            'path': '/status/loadBalancer/ingress/0/ip',\n  \
+                    \          'value': vpc_ip\n        }\n    ]\n    patch_file =\
+                    \ json.dumps(router_default_patch)\n    out = shell(f\"oc patch\
+                    \ service router-default -n openshift-ingress --type=json --subresource=status\
+                    \ --patch='{patch_file}'\")\n    print(out)\nexcept OSError:\n\
+                    \    print(f'router_default IP {router_default_svc[\"status\"\
+                    ][\"loadBalancer\"][\"ingress\"][0][\"hostname\"]} Not a valid\
+                    \ IPv4 address.')\n"
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: osd-private-nlb-fix
+        namespace: openshift-ingress
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - services
+        - services/status
+        verbs:
+        - get
+        - patch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: osd-private-nlb-fix
+        namespace: openshift-ingress-operator
+      rules:
+      - apiGroups:
+        - operator.openshift.io
+        resources:
+        - ingresscontrollers
+        verbs:
+        - get
+    - kind: RoleBinding
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        name: osd-private-nlb-fix
+        namespace: openshift-ingress
+      subjects:
+      - kind: ServiceAccount
+        name: osd-private-nlb-fix
+        namespace: openshift-config
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: osd-private-nlb-fix
+    - kind: RoleBinding
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        name: osd-private-nlb-fix
+        namespace: openshift-ingress-operator
+      subjects:
+      - kind: ServiceAccount
+        name: osd-private-nlb-fix
+        namespace: openshift-config
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: osd-private-nlb-fix
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: osd-project-request-template
   spec:
     clusterDeploymentSelector:

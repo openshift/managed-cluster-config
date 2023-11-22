@@ -1,0 +1,89 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: osd-private-nlb-fix
+  namespace: openshift-config
+spec:
+  failedJobsHistoryLimit: 3
+  successfulJobsHistoryLimit: 3
+  concurrencyPolicy: Replace
+  schedule: "*/5 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          affinity:
+            nodeAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+              - preference:
+                  matchExpressions:
+                  - key: node-role.kubernetes.io/infra
+                    operator: Exists
+                weight: 1
+          tolerations:
+            - effect: NoSchedule
+              key: node-role.kubernetes.io/infra
+              operator: Exists
+          serviceAccountName: osd-private-nlb-fix
+          restartPolicy: Never
+          containers:
+          - name: osd-private-nlb-fix
+            image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+            imagePullPolicy: Always
+            args:
+            - /usr/bin/python
+            - -c
+            - |
+              import os
+              import json
+              import socket
+
+              def shell(command):
+                  f = os.popen(command)
+                  stdout = f.read()
+                  error = f.close()
+                  if error:
+                      print(stdout)
+                      exit(1)
+                  return stdout
+
+              out = shell("oc get ingresscontroller -n openshift-ingress-operator default -ojsonpath='{.spec.endpointPublishingStrategy.loadBalancer}'")
+              load_balancer_config = json.loads(out)
+              if not ("aws" in load_balancer_config["providerParameters"]
+                      and load_balancer_config["providerParameters"]["aws"]["type"] == "NLB"
+                      and load_balancer_config["scope"] == "Internal"):
+                  print(
+                      "Not private AWS NLB, not assigning NLB IP to router-default service"
+                  )
+                  print(
+                      "Default IngressController .spec.endpointPublishingStrategy.loadBalancer",
+                      load_balancer_config
+                  )
+
+              print("Private NLB, will patch external IP with VPC internal IP")
+              out = shell("oc get service router-default -n openshift-ingress -ojson")
+              router_default_svc = json.loads(out)
+              hostname = router_default_svc["status"]["loadBalancer"]["ingress"][0]["hostname"]
+
+              # Get NLB IP address inside VPC
+              # https://stackoverflow.com/questions/12297500/python-module-for-nslookup
+              print(f"Looking up IP by hostname {hostname}")
+              vpc_ip = socket.gethostbyname(hostname)
+              router_status_ingress = router_default_svc["status"]["loadBalancer"]["ingress"][0]
+              if "ip" in router_status_ingress and router_status_ingress["ip"] == vpc_ip:
+                  print("VPC IP matches router ingress IP, no more work needed.")
+                  exit(0)
+              try:
+                  socket.inet_aton(vpc_ip)
+                  router_default_patch = [
+                      {
+                          'op': 'replace',
+                          'path': '/status/loadBalancer/ingress/0/ip',
+                          'value': vpc_ip
+                      }
+                  ]
+                  patch_file = json.dumps(router_default_patch)
+                  out = shell(f"oc patch service router-default -n openshift-ingress --type=json --subresource=status --patch='{patch_file}'")
+                  print(out)
+              except OSError:
+                  print(f'router_default IP {router_default_svc["status"]["loadBalancer"]["ingress"][0]["hostname"]} Not a valid IPv4 address.')
