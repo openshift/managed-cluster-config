@@ -7744,15 +7744,17 @@ objects:
                 \    kind: IngressController\n    metadata:\n      name: default\n\
                 \      namespace: openshift-ingress-operator\n      annotations:\n\
                 \        ingress.operator.openshift.io/auto-delete-load-balancer:\
-                \ 'true'\n    spec:\n      defaultCertificate:\n        name: '{{hub\
-                \ (printf \"%s-primary-cert-bundle-secret\" .ManagedClusterName) hub}}'\n\
-                \      {{hub- if ne (lookup \"v1\" \"ConfigMap\" \"openshift-acm-policies\"\
-                \ .ManagedClusterName).data nil hub}}\n      endpointPublishingStrategy:\n\
-                \        type: LoadBalancerService\n        loadBalancer:\n      \
-                \    dnsManagementPolicy: 'Managed'\n          scope: '{{hub- if eq\
-                \ (fromConfigMap \"openshift-acm-policies\" .ManagedClusterName \"\
-                endpoint-publishing-strategy\") \"internal\" -hub}} Internal {{hub-\
-                \ else -hub}} External {{hub- end -hub}}'\n      {{hub- end hub}}\n"
+                \ 'true'\n    spec:\n      {{hub- if ne (fromConfigMap \"openshift-acm-policies\"\
+                \ .ManagedClusterName \"disable-certificates\") \"true\" hub}}\n \
+                \     defaultCertificate:\n        name: '{{hub (printf \"%s-primary-cert-bundle-secret\"\
+                \ .ManagedClusterName) hub}}'\n      {{hub- end hub}}\n      {{hub-\
+                \ if ne (lookup \"v1\" \"ConfigMap\" \"openshift-acm-policies\" .ManagedClusterName).data\
+                \ nil hub}}\n      endpointPublishingStrategy:\n        type: LoadBalancerService\n\
+                \        loadBalancer:\n          dnsManagementPolicy: 'Managed'\n\
+                \          scope: '{{hub- if eq (fromConfigMap \"openshift-acm-policies\"\
+                \ .ManagedClusterName \"endpoint-publishing-strategy\") \"internal\"\
+                \ -hub}} Internal {{hub- else -hub}} External {{hub- end -hub}}'\n\
+                \      {{hub- end hub}}\n"
               pruneObjectBehavior: None
               remediationAction: enforce
               severity: low
@@ -7771,21 +7773,15 @@ objects:
               evaluationInterval:
                 compliant: 2h
                 noncompliant: 45s
-              object-templates:
-              - complianceType: musthave
-                metadataComplianceType: musthave
-                objectDefinition:
-                  apiVersion: v1
-                  data:
-                    tls.crt: '{{hub fromSecret "openshift-acm-policies" .ManagedClusterName
-                      "tls.crt" hub}}'
-                    tls.key: '{{hub fromSecret "openshift-acm-policies" .ManagedClusterName
-                      "tls.key" hub}}'
-                  kind: Secret
-                  metadata:
-                    name: '{{hub (printf "%s-primary-cert-bundle-secret" .ManagedClusterName)
-                      hub}}'
-                    namespace: openshift-ingress
+              object-templates-raw: "{{hub- if ne (fromConfigMap \"openshift-acm-policies\"\
+                \ .ManagedClusterName \"disable-certificates\") \"true\" hub}}\n-\
+                \ complianceType: musthave\n  metadataComplianceType: musthave\n \
+                \ objectDefinition:\n    apiVersion: v1\n    data:\n      tls.crt:\
+                \ '{{hub fromSecret \"openshift-acm-policies\" .ManagedClusterName\
+                \ \"tls.crt\" hub}}'\n      tls.key: '{{hub fromSecret \"openshift-acm-policies\"\
+                \ .ManagedClusterName \"tls.key\" hub}}'\n    kind: Secret\n    metadata:\n\
+                \      name: '{{hub (printf \"%s-primary-cert-bundle-secret\" .ManagedClusterName)\
+                \ hub}}'\n      namespace: openshift-ingress\n{{hub- end hub}}\n"
               pruneObjectBehavior: DeleteIfCreated
               remediationAction: enforce
               severity: low

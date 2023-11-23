@@ -26,8 +26,10 @@ spec:
           annotations:
             ingress.operator.openshift.io/auto-delete-load-balancer: 'true'
         spec:
+          {{hub- if ne (fromConfigMap "openshift-acm-policies" .ManagedClusterName "disable-certificates") "true" hub}}
           defaultCertificate:
             name: '{{hub (printf "%s-primary-cert-bundle-secret" .ManagedClusterName) hub}}'
+          {{hub- end hub}}
           {{hub- if ne (lookup "v1" "ConfigMap" "openshift-acm-policies" .ManagedClusterName).data nil hub}}
           endpointPublishingStrategy:
             type: LoadBalancerService

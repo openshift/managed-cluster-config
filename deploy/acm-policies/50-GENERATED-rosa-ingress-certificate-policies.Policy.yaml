@@ -38,8 +38,10 @@ spec:
                           annotations:
                             ingress.operator.openshift.io/auto-delete-load-balancer: 'true'
                         spec:
+                          {{hub- if ne (fromConfigMap "openshift-acm-policies" .ManagedClusterName "disable-certificates") "true" hub}}
                           defaultCertificate:
                             name: '{{hub (printf "%s-primary-cert-bundle-secret" .ManagedClusterName) hub}}'
+                          {{hub- end hub}}
                           {{hub- if ne (lookup "v1" "ConfigMap" "openshift-acm-policies" .ManagedClusterName).data nil hub}}
                           endpointPublishingStrategy:
                             type: LoadBalancerService
@@ -65,18 +67,20 @@ spec:
                 evaluationInterval:
                     compliant: 2h
                     noncompliant: 45s
-                object-templates:
+                object-templates-raw: |
+                    {{hub- if ne (fromConfigMap "openshift-acm-policies" .ManagedClusterName "disable-certificates") "true" hub}}
                     - complianceType: musthave
                       metadataComplianceType: musthave
                       objectDefinition:
                         apiVersion: v1
                         data:
-                            tls.crt: '{{hub fromSecret "openshift-acm-policies" .ManagedClusterName "tls.crt" hub}}'
-                            tls.key: '{{hub fromSecret "openshift-acm-policies" .ManagedClusterName "tls.key" hub}}'
+                          tls.crt: '{{hub fromSecret "openshift-acm-policies" .ManagedClusterName "tls.crt" hub}}'
+                          tls.key: '{{hub fromSecret "openshift-acm-policies" .ManagedClusterName "tls.key" hub}}'
                         kind: Secret
                         metadata:
-                            name: '{{hub (printf "%s-primary-cert-bundle-secret" .ManagedClusterName) hub}}'
-                            namespace: openshift-ingress
+                          name: '{{hub (printf "%s-primary-cert-bundle-secret" .ManagedClusterName) hub}}'
+                          namespace: openshift-ingress
+                    {{hub- end hub}}
                 pruneObjectBehavior: DeleteIfCreated
                 remediationAction: enforce
                 severity: low
