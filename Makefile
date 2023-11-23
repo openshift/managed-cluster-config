@@ -36,9 +36,16 @@ ifndef GEN_CMO_CONFIG
 $(error GEN_CMO_CONFIG is not set; check project.mk file)
 endif
 
-
+VOLUME_MOUNT_FLAGS = :z
 CONTAINER_ENGINE?=$(shell command -v docker 2>/dev/null || command -v podman 2>/dev/null)
-CONTAINER_RUN_FLAGS=--user : --rm -v `pwd -P`:`pwd -P`:z -w=`pwd` --platform linux/amd64
+ifneq (,$(findstring podman,$(CONTAINER_ENGINE)))
+	ifeq ($(shell uname -s), Darwin)
+		# if you're running podman on macOS, don't set the SELinux label
+		VOLUME_MOUNT_FLAGS =
+	endif
+endif
+CONTAINER_RUN_FLAGS=--user : --rm -v `pwd -P`:`pwd -P`${VOLUME_MOUNT_FLAGS} -w=`pwd` --platform linux/amd64
+
 
 ifeq ($(CONTAINER_ENGINE),)
 # Running already in a container
