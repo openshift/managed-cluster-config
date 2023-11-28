@@ -16,34 +16,110 @@
                 "ec2:ModifyInstanceAttribute",
                 "ec2:ModifyVolume",
                 "ec2:RevokeSecurityGroupIngress",
-                "elasticloadbalancing:AddTags",
-                "elasticloadbalancing:AttachLoadBalancerToSubnets",
-                "elasticloadbalancing:ApplySecurityGroupsToLoadBalancer",
-                "elasticloadbalancing:CreateListener",
-                "elasticloadbalancing:CreateLoadBalancer",
-                "elasticloadbalancing:CreateLoadBalancerPolicy",
-                "elasticloadbalancing:CreateLoadBalancerListeners",
-                "elasticloadbalancing:CreateTargetGroup",
-                "elasticloadbalancing:ConfigureHealthCheck",
-                "elasticloadbalancing:DeleteListener",
-                "elasticloadbalancing:DeleteLoadBalancer",
-                "elasticloadbalancing:DeleteLoadBalancerListeners",
-                "elasticloadbalancing:DeleteTargetGroup",
-                "elasticloadbalancing:DeregisterInstancesFromLoadBalancer",
-                "elasticloadbalancing:DeregisterTargets",
                 "elasticloadbalancing:Describe*",
-                "elasticloadbalancing:DetachLoadBalancerFromSubnets",
-                "elasticloadbalancing:ModifyListener",
-                "elasticloadbalancing:ModifyLoadBalancerAttributes",
-                "elasticloadbalancing:ModifyTargetGroup",
-                "elasticloadbalancing:ModifyTargetGroupAttributes",
-                "elasticloadbalancing:RegisterInstancesWithLoadBalancer",
-                "elasticloadbalancing:RegisterTargets",
-                "elasticloadbalancing:SetLoadBalancerPoliciesForBackendServer",
-                "elasticloadbalancing:SetLoadBalancerPoliciesOfListener",
                 "kms:DescribeKey"
             ],
             "Resource": "*"
+        },
+        {
+            "Sid": "ReadPermissions",
+            "Effect": "Allow",
+            "Action": [
+              "elasticloadbalancing:DescribeTargetGroups"
+            ],
+            "Resource": [
+              "*"
+            ]
+        },
+        {
+            "Sid": "LoadBalanacerManagementResourceTag",
+            "Effect": "Allow",
+            "Action": [
+              "elasticloadbalancing:ModifyTargetGroup",
+              "elasticloadbalancing:DeleteListener", //Part of role/ManagedOpenShift-Installer-Role
+              "elasticloadbalancing:CreateLoadBalancerListeners", 
+              "elasticloadbalancing:DeleteLoadBalancerListeners", 
+              "elasticloadbalancing:ModifyListener",  //Testing needed. I can do it with myself but wont be able to do as controlplane
+              "elasticloadbalancing:SetLoadBalancerPoliciesOfListener",       //Testing needed   
+              "elasticloadbalancing:DeleteTargetGroup",
+              "elasticloadbalancing:ModifyTargetGroupAttributes", //Part of role/ManagedOpenShift-Installer-Role
+              "elasticloadbalancing:CreateTargetGroup",
+              "elasticloadbalancing:AttachLoadBalancerToSubnets",
+              "elasticloadbalancing:DetachLoadBalancerFromSubnets", //Testing needed. I can do it with myself but wont be able to do as controlplane
+              "elasticloadbalancing:ApplySecurityGroupsToLoadBalancer" 
+            ],
+            "Resource": [
+              "*"
+            ],
+            "Condition": {
+              "StringEquals": {
+                "aws:ResourceTag/red-hat-managed": "true"
+              }
+            }
+        },
+        {
+            "Sid": "LoadBalanacerManagement",
+            "Effect": "Allow",
+            "Action": [
+              "elasticloadbalancing:AddTags",
+              "elasticloadbalancing:ConfigureHealthCheck",
+              "elasticloadbalancing:CreateLoadBalancerPolicy",
+              "elasticloadbalancing:DeleteLoadBalancer",
+              "elasticloadbalancing:DeregisterInstancesFromLoadBalancer", //Testing needed. I can do it with myself but wont be able to do as controlplane
+              "elasticloadbalancing:ModifyLoadBalancerAttributes",
+              "elasticloadbalancing:RegisterInstancesWithLoadBalancer",
+              "elasticloadbalancing:SetLoadBalancerPoliciesForBackendServer"
+            ],
+            "Resource": [
+              "*"
+            ]
+        },
+        {
+            "Sid": "CreateLoadBalancer",
+            "Effect": "Allow",
+            "Action": [
+              "elasticloadbalancing:CreateLoadBalancer"
+            ],
+            "Resource": [
+              "arn:aws:elasticloadbalancing:*:*:loadbalancer/*"
+            ],
+            "Condition": {
+              "StringEquals": {
+                "aws:RequestTag/red-hat-managed": "true"
+              }
+            }
+        },
+        {
+            "Sid": "CreateListeners",
+            "Effect": "Allow",
+            "Action": [
+                "elasticloadbalancing:CreateListener"
+            ],
+            "Resource": [
+                "*"
+            ],
+            "Condition": {
+                "StringEquals": {
+                    "aws:RequestTag/red-hat-managed": "true",
+                    "aws:ResourceTag/red-hat-managed": "true"
+                }
+            }
+        },
+        {
+            "Sid": "TargetRegisterDeregister",
+            "Effect": "Allow",
+            "Action": [
+              "elasticloadbalancing:RegisterTargets",
+              "elasticloadbalancing:DeregisterTargets"  //Part of role/ManagedOpenShift-Installer-Role
+            ],
+            "Resource": [
+                "*"
+              ],
+              "Condition": {
+                "StringEquals": {
+                  "aws:ResourceTag/red-hat-managed": "true"
+                }
+              }
         }
     ]
 }
