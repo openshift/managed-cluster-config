@@ -7720,6 +7720,75 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: aws-ssm-agent
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: ext-hypershift.openshift.io/cluster-type
+        operator: In
+        values:
+        - management-cluster
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+      - key: ext-hypershift.openshift.io/cluster-sector
+        operator: NotIn
+        values:
+        - ibm-infra
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: machineconfiguration.openshift.io/v1
+      kind: MachineConfig
+      metadata:
+        labels:
+          machineconfiguration.openshift.io/role: worker
+        name: 99-install-ssm-agent
+      spec:
+        config:
+          ignition:
+            version: 3.2.0
+          systemd:
+            units:
+            - name: 99-install-ssm-agent.service
+              enabled: true
+              contents: '[Unit]
+
+                Description=Install and launch the AWS Systems Manager (SSM) Agent.
+
+                Wants=network-online.target
+
+                After=network-online.target
+
+                ConditionPathExists=!/usr/bin/amazon-ssm-agent
+
+
+                [Service]
+
+                Type=oneshot
+
+                ExecStart=/usr/bin/rpm-ostree install --apply-live --assumeyes --idempotent
+                https://s3.us-east-1.amazonaws.com/amazon-ssm-us-east-1/latest/linux_amd64/amazon-ssm-agent.rpm
+
+                ExecStart=/usr/sbin/restorecon /etc/systemd/system/amazon-ssm-agent.service
+
+                ExecStart=/usr/bin/systemctl enable amazon-ssm-agent --now
+
+
+                [Install]
+
+                WantedBy=multi-user.target
+
+                '
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: backplane
   spec:
     clusterDeploymentSelector:
@@ -20770,7 +20839,7 @@ objects:
         config.yaml: "enableUserWorkload: true\nprometheusK8s:\n  remoteWrite:\n \
           \ - url: http://token-refresher.openshift-monitoring.svc.cluster.local\n\
           \    remoteTimeout: 30s\n    writeRelabelConfigs:\n    - sourceLabels:\n\
-          \      - __name__\n      action: keep\n      regex: (addon_operator_addons_count|addon_operator_addon_health_info|addon_operator_ocm_api_requests_durations|addon_operator_ocm_api_requests_durations_sum|addon_operator_ocm_api_requests_durations_count|addon_operator_paused|cluster_admin_enabled|limited_support_enabled|identity_provider|ingress_canary_route_reachable|ocm_agent_service_log_sent_total|sre:slo:probe_success_api|sre:slo:probe_success_console|sre:slo:upgradeoperator_upgrade_result|sre:slo:imageregistry_http_requests_total|sre:slo:oauth_server_requests_total|sre:sla:outage_5_minutes|sre:slo:apiserver_28d_slo|sre:slo:console_28d_slo|sre:error_budget_burn:apiserver_28d_slo|sre:error_budget_burn:console_28d_slo)\n\
+          \      - __name__\n      action: keep\n      regex: (addon_operator_addons_count|addon_operator_reconcile_error|addon_operator_addon_health_info|addon_operator_ocm_api_requests_durations|addon_operator_ocm_api_requests_durations_sum|addon_operator_ocm_api_requests_durations_count|addon_operator_paused|cluster_admin_enabled|limited_support_enabled|identity_provider|ingress_canary_route_reachable|ocm_agent_service_log_sent_total|sre:slo:probe_success_api|sre:slo:probe_success_console|sre:slo:upgradeoperator_upgrade_result|sre:slo:imageregistry_http_requests_total|sre:slo:oauth_server_requests_total|sre:sla:outage_5_minutes|sre:slo:apiserver_28d_slo|sre:slo:console_28d_slo|sre:error_budget_burn:apiserver_28d_slo|sre:error_budget_burn:console_28d_slo)\n\
           \    queueConfig:\n      capacity: 2500\n      maxShards: 1000\n      minShards:\
           \ 1\n      maxSamplesPerSend: 2000\n      batchSendDeadline: 60s\n     \
           \ minBackoff: 30ms\n      maxBackoff: 1m\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
@@ -20825,7 +20894,7 @@ objects:
         config.yaml: "enableUserWorkload: false\nprometheusK8s:\n  remoteWrite:\n\
           \  - url: http://token-refresher.openshift-monitoring.svc.cluster.local\n\
           \    remoteTimeout: 30s\n    writeRelabelConfigs:\n    - sourceLabels:\n\
-          \      - __name__\n      action: keep\n      regex: (addon_operator_addons_count|addon_operator_addon_health_info|addon_operator_ocm_api_requests_durations|addon_operator_ocm_api_requests_durations_sum|addon_operator_ocm_api_requests_durations_count|addon_operator_paused|cluster_admin_enabled|limited_support_enabled|identity_provider|ingress_canary_route_reachable|ocm_agent_service_log_sent_total|sre:slo:probe_success_api|sre:slo:probe_success_console|sre:slo:upgradeoperator_upgrade_result|sre:slo:imageregistry_http_requests_total|sre:slo:oauth_server_requests_total|sre:sla:outage_5_minutes|sre:slo:apiserver_28d_slo|sre:slo:console_28d_slo|sre:error_budget_burn:apiserver_28d_slo|sre:error_budget_burn:console_28d_slo)\n\
+          \      - __name__\n      action: keep\n      regex: (addon_operator_addons_count|addon_operator_reconcile_error|addon_operator_addon_health_info|addon_operator_ocm_api_requests_durations|addon_operator_ocm_api_requests_durations_sum|addon_operator_ocm_api_requests_durations_count|addon_operator_paused|cluster_admin_enabled|limited_support_enabled|identity_provider|ingress_canary_route_reachable|ocm_agent_service_log_sent_total|sre:slo:probe_success_api|sre:slo:probe_success_console|sre:slo:upgradeoperator_upgrade_result|sre:slo:imageregistry_http_requests_total|sre:slo:oauth_server_requests_total|sre:sla:outage_5_minutes|sre:slo:apiserver_28d_slo|sre:slo:console_28d_slo|sre:error_budget_burn:apiserver_28d_slo|sre:error_budget_burn:console_28d_slo)\n\
           \    queueConfig:\n      capacity: 2500\n      maxShards: 1000\n      minShards:\
           \ 1\n      maxSamplesPerSend: 2000\n      batchSendDeadline: 60s\n     \
           \ minBackoff: 30ms\n      maxBackoff: 1m\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
@@ -20880,7 +20949,7 @@ objects:
         config.yaml: "enableUserWorkload: false\nprometheusK8s:\n  remoteWrite:\n\
           \  - url: http://token-refresher.openshift-monitoring.svc.cluster.local\n\
           \    remoteTimeout: 30s\n    writeRelabelConfigs:\n    - sourceLabels:\n\
-          \      - __name__\n      action: keep\n      regex: (addon_operator_addons_count|addon_operator_addon_health_info|addon_operator_ocm_api_requests_durations|addon_operator_ocm_api_requests_durations_sum|addon_operator_ocm_api_requests_durations_count|addon_operator_paused|cluster_admin_enabled|limited_support_enabled|identity_provider|ingress_canary_route_reachable|ocm_agent_service_log_sent_total|sre:slo:probe_success_api|sre:slo:probe_success_console|sre:slo:upgradeoperator_upgrade_result|sre:slo:imageregistry_http_requests_total|sre:slo:oauth_server_requests_total|sre:sla:outage_5_minutes|sre:slo:apiserver_28d_slo|sre:slo:console_28d_slo|sre:error_budget_burn:apiserver_28d_slo|sre:error_budget_burn:console_28d_slo)\n\
+          \      - __name__\n      action: keep\n      regex: (addon_operator_addons_count|addon_operator_reconcile_error|addon_operator_addon_health_info|addon_operator_ocm_api_requests_durations|addon_operator_ocm_api_requests_durations_sum|addon_operator_ocm_api_requests_durations_count|addon_operator_paused|cluster_admin_enabled|limited_support_enabled|identity_provider|ingress_canary_route_reachable|ocm_agent_service_log_sent_total|sre:slo:probe_success_api|sre:slo:probe_success_console|sre:slo:upgradeoperator_upgrade_result|sre:slo:imageregistry_http_requests_total|sre:slo:oauth_server_requests_total|sre:sla:outage_5_minutes|sre:slo:apiserver_28d_slo|sre:slo:console_28d_slo|sre:error_budget_burn:apiserver_28d_slo|sre:error_budget_burn:console_28d_slo)\n\
           \    queueConfig:\n      capacity: 2500\n      maxShards: 1000\n      minShards:\
           \ 1\n      maxSamplesPerSend: 2000\n      batchSendDeadline: 60s\n     \
           \ minBackoff: 30ms\n      maxBackoff: 1m\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
@@ -22155,64 +22224,6 @@ objects:
         - 'true'
     resourceApplyMode: Sync
     resources:
-    - apiVersion: monitoring.coreos.com/v1
-      kind: PrometheusRule
-      metadata:
-        labels:
-          prometheus: sre-node-condition-managed-notification-alerts
-          role: alert-rules
-        name: sre-node-condition-managed-notification-alerts
-        namespace: openshift-monitoring
-      spec:
-        groups:
-        - name: sre-node-condition-managed-notification-alerts.record
-          rules:
-          - expr: label_replace ( clamp(mapi_machine_created_timestamp_seconds, 0,
-              1) * on (node) group_right(name) kube_node_status_condition{status!="false"}>0,
-              "machineset", "$1", "name", "^(.*)-[^-]*$" )
-            record: sre:node:condition
-        - name: sre-node-condition-managed-notification-alerts.alert
-          rules:
-          - alert: NodeConditionDiskPressureNotificationSRE
-            expr: count by (machineset, condition, status) ( count by(node) (cluster:cpu_core_node_labels{label_node_role_kubernetes_io_infra="",label_node_role_kubernetes_io_master=""})
-              * on (node) group_left(condition, machineset, status) sre:node:condition{condition="DiskPressure"}
-              ) > 0
-            for: 5m
-            labels:
-              severity: info
-              namespace: openshift-node
-              send_managed_notification: 'true'
-              managed_notification_template: NodeConditionDiskPressureNotification
-          - alert: NodeConditionMemoryPressureNotificationSRE
-            expr: count by (machineset, condition, status) ( count by(node) (cluster:cpu_core_node_labels{label_node_role_kubernetes_io_infra="",label_node_role_kubernetes_io_master=""})
-              * on (node) group_left(condition, machineset, status) sre:node:condition{condition="MemoryPressure"}
-              ) > 0
-            for: 5m
-            labels:
-              severity: info
-              namespace: openshift-node
-              send_managed_notification: 'true'
-              managed_notification_template: NodeConditionMemoryPressureNotification
-          - alert: NodeConditionPIDPressureNotificationSRE
-            expr: count by (machineset, condition, status) ( count by(node) (cluster:cpu_core_node_labels{label_node_role_kubernetes_io_infra="",label_node_role_kubernetes_io_master=""})
-              * on (node) group_left(condition, machineset, status) sre:node:condition{condition="PIDPressure"}
-              ) > 0
-            for: 5m
-            labels:
-              severity: info
-              namespace: openshift-node
-              send_managed_notification: 'true'
-              managed_notification_template: NodeConditionPIDPressureNotification
-          - alert: NodeConditionNetworkUnavailableNotificationSRE
-            expr: count by (machineset, condition, status) ( count by(node) (cluster:cpu_core_node_labels{label_node_role_kubernetes_io_infra="",label_node_role_kubernetes_io_master=""})
-              * on (node) group_left(condition, machineset, status) sre:node:condition{condition="NetworkUnavailable"}
-              ) > 0
-            for: 5m
-            labels:
-              severity: info
-              namespace: openshift-node
-              send_managed_notification: 'true'
-              managed_notification_template: NodeConditionNetworkUnavailableNotification
     - apiVersion: ocmagent.managed.openshift.io/v1alpha1
       kind: ManagedNotification
       metadata:
@@ -29263,29 +29274,43 @@ objects:
           \ \n#    but have nodeaffinity preferredDuringSchedulingIgnoredDuringExecution\
           \ for infra nodes\n# Notes: this is done as a response to an escalation\
           \ in https://issues.redhat.com/browse/OSD-13621 \n# A long term fix will\
-          \ follow \ninfraPodsMisscheduled(){\n    NODE_TAINT=\"node-role.kubernetes.io=infra\"\
-          \n    # The 'none' at the end accounts for pods which are currently being\
-          \ scheduled.\n    # we do not want to reschedule them before knowing where\
-          \ they landed\n    # the output will look like \"<node1>|<node2>|none\"\n\
-          \    infranodes_regexp=\"$(oc get no -l \"${NODE_TAINT}\" -o go-template='{{range\
-          \ .items}}{{.metadata.name}}{{\"|\"}}{{end}}')none\"\n    \n    # the output\
-          \ will look something like\n    # <namespace> | <pod> | <affinity> | <node>\n\
-          \    # each pod on the list needs to be rescheduled\n    misscheduled_pods=`for\
-          \ ns in $@; do oc -n $ns get po -o go-template='{{range .items}}{{$isjob\
+          \ follow \n# If there are already the same number of infra pods scheduled\
+          \ on the infra nodes, we will skip deleting the pods.\n# This is for SUPPORTEX-16697\
+          \ where >3 registry pods are needed to handle the load\ninfraPodsMisscheduled(){\n\
+          \    NODE_TAINT=\"node-role.kubernetes.io=infra\"\n    # The 'none' at the\
+          \ end accounts for pods which are currently being scheduled.\n    # we do\
+          \ not want to reschedule them before knowing where they landed\n    # the\
+          \ output will look like \"<node1>|<node2>|none\"\n    infranodes_regexp=\"\
+          $(oc get no -l \"${NODE_TAINT}\" -o go-template='{{range .items}}{{.metadata.name}}{{\"\
+          |\"}}{{end}}')none\"\n    \n    for ns in $@\n    do\n      echo \"INFO:\
+          \ check infra pods miss schedule in $ns\"\n      pod_number=`oc -n $ns get\
+          \ po -o go-template='{{range .items}}{{$isjob := index .metadata.labels\
+          \ \"job-name\"}}{{$namespace := .metadata.namespace}}{{$name := .metadata.name}}{{$affinity\
+          \ := .spec.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution\
+          \ }}{{if not $isjob}}{{if $affinity}}{{- $namespace }} | {{$name}} | {{$affinity}}\
+          \ | {{.spec.nodeName}} {{\"\\n\" -}} {{end}}{{end}}{{end}}'|grep \"node-role.kubernetes.io/infra\"\
+          \ |grep -E ${infranodes_regexp}|wc -l`\n      # if the pods number running\
+          \ on infra is more than the infra node count, we will skip the reschedule.\n\
+          \      if (( ${pod_number} >= ${INFRA_NODE_COUNT} ));then\n        echo\
+          \ \"INFO: there are already ${pod_number} pods running on ${INFRA_NODE_COUNT}\
+          \ infra nodes, skip reschedule\"\n        continue\n      fi\n\n      #\
+          \ the output will look something like\n      # <namespace> | <pod> | <affinity>\
+          \ | <node>\n      # each pod on the list needs to be rescheduled\n     \
+          \ missscheduled_pods=`oc -n $ns get po -o go-template='{{range .items}}{{$isjob\
           \ := index .metadata.labels \"job-name\"}}{{$namespace := .metadata.namespace}}{{$name\
           \ := .metadata.name}}{{$affinity := .spec.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution\
           \ }}{{if not $isjob}}{{if $affinity}}{{- $namespace }} | {{$name}} | {{$affinity}}\
-          \ | {{.spec.nodeName}} {{\"\\n\" -}} {{end}}{{end}}{{end}}';done |grep \"\
-          node-role.kubernetes.io/infra\" |grep -vE ${infranodes_regexp}`\n\n    if\
-          \ [ ! -z  \"$misscheduled_pods\" ]; then\n        # --ignore-not-found=true\
-          \ so that for STS clusters this doesn't fail when this can't find CIO or\
-          \ velero pods\n        while read line ; do cmd=`echo $line|awk -F'|' '{print\
-          \ \"oc -n \" $1 \" delete po --ignore-not-found=true \" $2}'`;echo \"INFO:\
-          \ $cmd\"; eval $cmd;done <<< \"$misscheduled_pods\"\n    else\n        echo\
-          \ \"INFO: no misscheduled pods in openshift-* namespaces\"\n    fi\n}\n\n\
-          echo \"INFO: Rebalancing openshift-dns/dns-default Daemonset...\"\nkubeDaemonsetMisscheduled\
-          \ \"openshift-dns\" \"dns.operator.openshift.io/daemonset-dns=default\"\n\
-          \necho \"INFO: Rebalancing prometheus pods...\"\nrebalancePods prometheus\
+          \ | {{.spec.nodeName}} {{\"\\n\" -}} {{end}}{{end}}{{end}}'|grep \"node-role.kubernetes.io/infra\"\
+          \ |grep -vE ${infranodes_regexp}`\n      if [ ! -z  \"$misscheduled_pods\"\
+          \ ]; then\n      # --ignore-not-found=true so that for STS clusters this\
+          \ doesn't fail when this can't find CIO or velero pods\n        while read\
+          \ line ; do cmd=`echo $line|awk -F'|' '{print \"oc -n \" $1 \" delete po\
+          \ --ignore-not-found=true \" $2}'`;echo \"INFO: $cmd\"; eval $cmd;done <<<\
+          \ \"$misscheduled_pods\"\n      else\n        echo \"INFO: no misscheduled\
+          \ pods in $ns namespaces\"\n      fi\n    done\n}\n\necho \"INFO: Rebalancing\
+          \ openshift-dns/dns-default Daemonset...\"\nkubeDaemonsetMisscheduled \"\
+          openshift-dns\" \"dns.operator.openshift.io/daemonset-dns=default\"\n\n\
+          echo \"INFO: Rebalancing prometheus pods...\"\nrebalancePods prometheus\
           \ openshift-monitoring app prometheus-data\n\necho \"INFO: Rebalancing UWM\
           \ prometheus pods...\"\nrebalancePods prometheus openshift-user-workload-monitoring\
           \ app prometheus-user-workload-db\n\necho \"INFO: Rebalancing alertmanager\
@@ -34363,7 +34388,7 @@ objects:
             expr: sum(mapi_current_pending_csr) > 1
             for: 15m
             labels:
-              severity: critical
+              severity: warning
               namespace: openshift-monitoring
             annotations:
               message: MAPI CSR requests have been pending for more then 15 minutes.
@@ -35473,6 +35498,10 @@ objects:
         operator: NotIn
         values:
         - 'true'
+      - key: api.openshift.com/sts
+        operator: In
+        values:
+        - 'true'
       - key: ext-hypershift.openshift.io/cluster-sector
         operator: NotIn
         values:
@@ -35606,6 +35635,27 @@ objects:
               description: At least one pod in the 'dynatrace' namespace has been
                 stuck in restarts for the last 15 minutes.
               SOP: https://github.com/openshift/ops-sop/blob/master/dynatrace/alerts/DynatracePodRestartsStuckSRE.md
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
+          prometheus: sre-kubelet-debugging-handlers-enabled
+          role: alert-rules
+        name: sre-kubelet-debugging-handlers-enabled
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-kubelet-debugging-handlers-enabled
+          rules:
+          - alert: KubeletDebuggingHandlersEnabledSRE
+            expr: compliance_monkey_kubeletconfig_debug_handlers_enabled == 1
+            for: 60m
+            labels:
+              severity: critical
+              namespace: openshift-compliance-monkey
+              link: https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/KubeletDebuggingHandlersEnabledSRE.md
+            annotations:
+              message: Kubelet debugging handlers are enabled on this cluster.
     - apiVersion: monitoring.coreos.com/v1
       kind: PrometheusRule
       metadata:
@@ -35887,6 +35937,87 @@ objects:
               namespace: openshift-monitoring
               send_managed_notification: 'true'
               managed_notification_template: MultipleIngressControllersDetected
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: sre-prometheus-ocm-agent-node-condition
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/product
+        operator: In
+        values:
+        - rosa
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
+          prometheus: sre-node-condition-managed-notification-alerts
+          role: alert-rules
+        name: sre-node-condition-managed-notification-alerts
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-node-condition-managed-notification-alerts.record
+          rules:
+          - expr: label_replace ( clamp(mapi_machine_created_timestamp_seconds, 0,
+              1) * on (node) group_right(name) kube_node_status_condition{status!="false"}>0,
+              "machineset", "$1", "name", "^(.*)-[^-]*$" )
+            record: sre:node:condition
+        - name: sre-node-condition-managed-notification-alerts.alert
+          rules:
+          - alert: NodeConditionDiskPressureNotificationSRE
+            expr: count by (machineset, condition, status) ( count by(node) (cluster:cpu_core_node_labels{label_node_role_kubernetes_io_infra="",label_node_role_kubernetes_io_master=""})
+              * on (node) group_left(condition, machineset, status) sre:node:condition{condition="DiskPressure"}
+              ) > 0
+            for: 5m
+            labels:
+              severity: info
+              namespace: openshift-node
+              send_managed_notification: 'true'
+              managed_notification_template: NodeConditionDiskPressureNotification
+          - alert: NodeConditionMemoryPressureNotificationSRE
+            expr: count by (machineset, condition, status) ( count by(node) (cluster:cpu_core_node_labels{label_node_role_kubernetes_io_infra="",label_node_role_kubernetes_io_master=""})
+              * on (node) group_left(condition, machineset, status) sre:node:condition{condition="MemoryPressure"}
+              ) > 0
+            for: 5m
+            labels:
+              severity: info
+              namespace: openshift-node
+              send_managed_notification: 'true'
+              managed_notification_template: NodeConditionMemoryPressureNotification
+          - alert: NodeConditionPIDPressureNotificationSRE
+            expr: count by (machineset, condition, status) ( count by(node) (cluster:cpu_core_node_labels{label_node_role_kubernetes_io_infra="",label_node_role_kubernetes_io_master=""})
+              * on (node) group_left(condition, machineset, status) sre:node:condition{condition="PIDPressure"}
+              ) > 0
+            for: 5m
+            labels:
+              severity: info
+              namespace: openshift-node
+              send_managed_notification: 'true'
+              managed_notification_template: NodeConditionPIDPressureNotification
+          - alert: NodeConditionNetworkUnavailableNotificationSRE
+            expr: count by (machineset, condition, status) ( count by(node) (cluster:cpu_core_node_labels{label_node_role_kubernetes_io_infra="",label_node_role_kubernetes_io_master=""})
+              * on (node) group_left(condition, machineset, status) sre:node:condition{condition="NetworkUnavailable"}
+              ) > 0
+            for: 5m
+            labels:
+              severity: info
+              namespace: openshift-node
+              send_managed_notification: 'true'
+              managed_notification_template: NodeConditionNetworkUnavailableNotification
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:

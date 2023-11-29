@@ -1,0 +1,25 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: sre-kubelet-debugging-handlers-enabled
+    role: alert-rules
+  name: sre-kubelet-debugging-handlers-enabled
+  namespace: openshift-monitoring
+spec:
+  groups:
+  - name: sre-kubelet-debugging-handlers-enabled
+    rules:
+    - alert: KubeletDebuggingHandlersEnabledSRE
+      # https://issues.redhat.com/browse/OSD-19635
+      # Kubelet Debugging Handlers must not be enabled on ROSA HCP Manangement Clusters, they are typically disabled via
+      # https://github.com/openshift/managed-cluster-config/blob/d45056a331b1f90f4e86c2411d4e2475bb866c46/deploy/kubelet-config/disable-debugging-handlers-workers/01-disable-debugging-handlers-workers.KubeletConfig.yaml
+      # So this alert is a compliance guardrail to ensure that they aren't accidentally enabled at any point.
+      expr: compliance_monkey_kubeletconfig_debug_handlers_enabled == 1
+      for: 60m
+      labels:
+        severity: critical
+        namespace: openshift-compliance-monkey
+        link: "https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/KubeletDebuggingHandlersEnabledSRE.md"
+      annotations:
+        message: Kubelet debugging handlers are enabled on this cluster.
