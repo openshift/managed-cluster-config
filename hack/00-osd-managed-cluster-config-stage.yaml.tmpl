@@ -29274,29 +29274,43 @@ objects:
           \ \n#    but have nodeaffinity preferredDuringSchedulingIgnoredDuringExecution\
           \ for infra nodes\n# Notes: this is done as a response to an escalation\
           \ in https://issues.redhat.com/browse/OSD-13621 \n# A long term fix will\
-          \ follow \ninfraPodsMisscheduled(){\n    NODE_TAINT=\"node-role.kubernetes.io=infra\"\
-          \n    # The 'none' at the end accounts for pods which are currently being\
-          \ scheduled.\n    # we do not want to reschedule them before knowing where\
-          \ they landed\n    # the output will look like \"<node1>|<node2>|none\"\n\
-          \    infranodes_regexp=\"$(oc get no -l \"${NODE_TAINT}\" -o go-template='{{range\
-          \ .items}}{{.metadata.name}}{{\"|\"}}{{end}}')none\"\n    \n    # the output\
-          \ will look something like\n    # <namespace> | <pod> | <affinity> | <node>\n\
-          \    # each pod on the list needs to be rescheduled\n    misscheduled_pods=`for\
-          \ ns in $@; do oc -n $ns get po -o go-template='{{range .items}}{{$isjob\
+          \ follow \n# If there are already the same number of infra pods scheduled\
+          \ on the infra nodes, we will skip deleting the pods.\n# This is for SUPPORTEX-16697\
+          \ where >3 registry pods are needed to handle the load\ninfraPodsMisscheduled(){\n\
+          \    NODE_TAINT=\"node-role.kubernetes.io=infra\"\n    # The 'none' at the\
+          \ end accounts for pods which are currently being scheduled.\n    # we do\
+          \ not want to reschedule them before knowing where they landed\n    # the\
+          \ output will look like \"<node1>|<node2>|none\"\n    infranodes_regexp=\"\
+          $(oc get no -l \"${NODE_TAINT}\" -o go-template='{{range .items}}{{.metadata.name}}{{\"\
+          |\"}}{{end}}')none\"\n    \n    for ns in $@\n    do\n      echo \"INFO:\
+          \ check infra pods miss schedule in $ns\"\n      pod_number=`oc -n $ns get\
+          \ po -o go-template='{{range .items}}{{$isjob := index .metadata.labels\
+          \ \"job-name\"}}{{$namespace := .metadata.namespace}}{{$name := .metadata.name}}{{$affinity\
+          \ := .spec.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution\
+          \ }}{{if not $isjob}}{{if $affinity}}{{- $namespace }} | {{$name}} | {{$affinity}}\
+          \ | {{.spec.nodeName}} {{\"\\n\" -}} {{end}}{{end}}{{end}}'|grep \"node-role.kubernetes.io/infra\"\
+          \ |grep -E ${infranodes_regexp}|wc -l`\n      # if the pods number running\
+          \ on infra is more than the infra node count, we will skip the reschedule.\n\
+          \      if (( ${pod_number} >= ${INFRA_NODE_COUNT} ));then\n        echo\
+          \ \"INFO: there are already ${pod_number} pods running on ${INFRA_NODE_COUNT}\
+          \ infra nodes, skip reschedule\"\n        continue\n      fi\n\n      #\
+          \ the output will look something like\n      # <namespace> | <pod> | <affinity>\
+          \ | <node>\n      # each pod on the list needs to be rescheduled\n     \
+          \ missscheduled_pods=`oc -n $ns get po -o go-template='{{range .items}}{{$isjob\
           \ := index .metadata.labels \"job-name\"}}{{$namespace := .metadata.namespace}}{{$name\
           \ := .metadata.name}}{{$affinity := .spec.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution\
           \ }}{{if not $isjob}}{{if $affinity}}{{- $namespace }} | {{$name}} | {{$affinity}}\
-          \ | {{.spec.nodeName}} {{\"\\n\" -}} {{end}}{{end}}{{end}}';done |grep \"\
-          node-role.kubernetes.io/infra\" |grep -vE ${infranodes_regexp}`\n\n    if\
-          \ [ ! -z  \"$misscheduled_pods\" ]; then\n        # --ignore-not-found=true\
-          \ so that for STS clusters this doesn't fail when this can't find CIO or\
-          \ velero pods\n        while read line ; do cmd=`echo $line|awk -F'|' '{print\
-          \ \"oc -n \" $1 \" delete po --ignore-not-found=true \" $2}'`;echo \"INFO:\
-          \ $cmd\"; eval $cmd;done <<< \"$misscheduled_pods\"\n    else\n        echo\
-          \ \"INFO: no misscheduled pods in openshift-* namespaces\"\n    fi\n}\n\n\
-          echo \"INFO: Rebalancing openshift-dns/dns-default Daemonset...\"\nkubeDaemonsetMisscheduled\
-          \ \"openshift-dns\" \"dns.operator.openshift.io/daemonset-dns=default\"\n\
-          \necho \"INFO: Rebalancing prometheus pods...\"\nrebalancePods prometheus\
+          \ | {{.spec.nodeName}} {{\"\\n\" -}} {{end}}{{end}}{{end}}'|grep \"node-role.kubernetes.io/infra\"\
+          \ |grep -vE ${infranodes_regexp}`\n      if [ ! -z  \"$misscheduled_pods\"\
+          \ ]; then\n      # --ignore-not-found=true so that for STS clusters this\
+          \ doesn't fail when this can't find CIO or velero pods\n        while read\
+          \ line ; do cmd=`echo $line|awk -F'|' '{print \"oc -n \" $1 \" delete po\
+          \ --ignore-not-found=true \" $2}'`;echo \"INFO: $cmd\"; eval $cmd;done <<<\
+          \ \"$misscheduled_pods\"\n      else\n        echo \"INFO: no misscheduled\
+          \ pods in $ns namespaces\"\n      fi\n    done\n}\n\necho \"INFO: Rebalancing\
+          \ openshift-dns/dns-default Daemonset...\"\nkubeDaemonsetMisscheduled \"\
+          openshift-dns\" \"dns.operator.openshift.io/daemonset-dns=default\"\n\n\
+          echo \"INFO: Rebalancing prometheus pods...\"\nrebalancePods prometheus\
           \ openshift-monitoring app prometheus-data\n\necho \"INFO: Rebalancing UWM\
           \ prometheus pods...\"\nrebalancePods prometheus openshift-user-workload-monitoring\
           \ app prometheus-user-workload-db\n\necho \"INFO: Rebalancing alertmanager\
