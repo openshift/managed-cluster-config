@@ -1,0 +1,27 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: sre-insights-operator-alerts
+    role: alert-rules
+  name: sre-insights-operator-alerts
+  namespace: openshift-monitoring
+spec:
+  groups:
+  - name: sre-insights-operator-alerts
+    rules:
+    # Upstream alert: ClusterOperatorDown{name="insights"}
+    # https://github.com/openshift/cluster-version-operator/blob/master/install/0000_90_cluster-version-operator_02_servicemonitor.yaml#L96
+    # Redefined as part of https://issues.redhat.com/browse/OSD-19800
+    - alert: InsightsOperatorDownSRE
+      expr: |
+        max by (namespace, name, reason) (cluster_operator_up{job="cluster-version-operator", name="insights"} == 0)
+      for: 3h
+      labels:
+        severity: critical
+        namespace: openshift-monitoring
+      annotations:
+        summary: Insights operator has not been available for 3 hours.
+        description: The {{ "{{ $labels.name }}" }} operator may be down or disabled because {{ "{{ $labels.reason }}" }}, and the components it manages may be unavailable or degraded.  Cluster upgrades may not complete. For more information refer to 'oc get -o yaml clusteroperator {{ "{{ $labels.name }}" }}'{{ "{{ with $console_url := \"console_url\" | query }}{{ if ne (len (label \"url\" (first $console_url ) ) ) 0}} or {{ label \"url\" (first $console_url ) }}/settings/cluster/{{ end }}{{ end }}" }}.
+        link: "https://github.com/openshift/ops-sop/blob/master/v4/troubleshoot/clusteroperators/insights.md"
