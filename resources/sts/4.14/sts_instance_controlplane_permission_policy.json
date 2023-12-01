@@ -16,7 +16,6 @@
                 "ec2:ModifyInstanceAttribute",
                 "ec2:ModifyVolume",
                 "ec2:RevokeSecurityGroupIngress",
-                "elasticloadbalancing:Describe*",
                 "kms:DescribeKey"
             ],
             "Resource": "*"
@@ -25,27 +24,36 @@
             "Sid": "ReadPermissions",
             "Effect": "Allow",
             "Action": [
-              "elasticloadbalancing:DescribeTargetGroups"
+              "elasticloadbalancing:Describe*"
             ],
             "Resource": [
               "*"
             ]
         },
         {
-            "Sid": "LoadBalanacerManagementResourceTag",
+          "Sid": "CreateTargetGroup",
+          "Effect": "Allow",
+          "Action": [
+            "elasticloadbalancing:CreateTargetGroup"
+          ],
+          "Resource": [
+            "*"
+          ],
+          "Condition": {
+            "StringEquals": {
+              "aws:RequestTag/red-hat-managed": "true"
+            }
+          }
+        },
+        {
+            "Sid": "TargetGroupManagementResourceTag",
             "Effect": "Allow",
             "Action": [
               "elasticloadbalancing:ModifyTargetGroup",
-              "elasticloadbalancing:DeleteListener", //Part of role/ManagedOpenShift-Installer-Role
               "elasticloadbalancing:CreateLoadBalancerListeners", 
               "elasticloadbalancing:DeleteLoadBalancerListeners", 
-              "elasticloadbalancing:ModifyListener",  //Testing needed. I can do it with myself but wont be able to do as controlplane
-              "elasticloadbalancing:SetLoadBalancerPoliciesOfListener",       //Testing needed   
               "elasticloadbalancing:DeleteTargetGroup",
-              "elasticloadbalancing:ModifyTargetGroupAttributes", //Part of role/ManagedOpenShift-Installer-Role
-              "elasticloadbalancing:CreateTargetGroup",
               "elasticloadbalancing:AttachLoadBalancerToSubnets",
-              "elasticloadbalancing:DetachLoadBalancerFromSubnets", //Testing needed. I can do it with myself but wont be able to do as controlplane
               "elasticloadbalancing:ApplySecurityGroupsToLoadBalancer" 
             ],
             "Resource": [
@@ -65,7 +73,6 @@
               "elasticloadbalancing:ConfigureHealthCheck",
               "elasticloadbalancing:CreateLoadBalancerPolicy",
               "elasticloadbalancing:DeleteLoadBalancer",
-              "elasticloadbalancing:DeregisterInstancesFromLoadBalancer", //Testing needed. I can do it with myself but wont be able to do as controlplane
               "elasticloadbalancing:ModifyLoadBalancerAttributes",
               "elasticloadbalancing:RegisterInstancesWithLoadBalancer",
               "elasticloadbalancing:SetLoadBalancerPoliciesForBackendServer"
@@ -109,8 +116,7 @@
             "Sid": "TargetRegisterDeregister",
             "Effect": "Allow",
             "Action": [
-              "elasticloadbalancing:RegisterTargets",
-              "elasticloadbalancing:DeregisterTargets"  //Part of role/ManagedOpenShift-Installer-Role
+              "elasticloadbalancing:RegisterTargets"
             ],
             "Resource": [
                 "*"
