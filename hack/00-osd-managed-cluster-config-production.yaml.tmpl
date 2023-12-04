@@ -35446,6 +35446,57 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: sre-prometheus-insights
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
+          prometheus: sre-insights-operator-alerts
+          role: alert-rules
+        name: sre-insights-operator-alerts
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-insights-operator-alerts
+          rules:
+          - alert: InsightsOperatorDownSRE
+            expr: 'max by (namespace, name, reason) (cluster_operator_up{job="cluster-version-operator",
+              name="insights"} == 0)
+
+              '
+            for: 3h
+            labels:
+              severity: critical
+              namespace: openshift-monitoring
+            annotations:
+              summary: Insights operator has not been available for 3 hours.
+              description: The {{ "{{ $labels.name }}" }} operator may be down or
+                disabled because {{ "{{ $labels.reason }}" }}, and the components
+                it manages may be unavailable or degraded.  Cluster upgrades may not
+                complete. For more information refer to 'oc get -o yaml clusteroperator
+                {{ "{{ $labels.name }}" }}'{{ "{{ with $console_url := \"console_url\"
+                | query }}{{ if ne (len (label \"url\" (first $console_url ) ) ) 0}}
+                or {{ label \"url\" (first $console_url ) }}/settings/cluster/{{ end
+                }}{{ end }}" }}.
+              link: https://github.com/openshift/ops-sop/blob/master/v4/troubleshoot/clusteroperators/insights.md
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: sre-prometheus-legacy-ingress
   spec:
     clusterDeploymentSelector:
