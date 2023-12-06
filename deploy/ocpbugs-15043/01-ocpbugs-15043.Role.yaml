@@ -1,0 +1,42 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: ocpbugs-15043-read-pullsecret
+  namespace: openshift-config
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
+  - list
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: ocpbugs-15043-delete-machines
+  namespace: openshift-machine-api
+rules:
+- apiGroups:
+  - "machine.openshift.io"
+  resources:
+  - machines
+  verbs:
+  - get
+  - list
+  - delete
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: ocpbugs-15043-inspect-pods
+rules:
+- apiGroups:
+  - 
+  resources:
+  - pods
+  verbs:
+  - get
+  - list

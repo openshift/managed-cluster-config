@@ -1,0 +1,71 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ocpbugs-15043-script
+  namespace: openshift-config
+data:
+  ocpbugs-15043.sh: |
+    #!/usr/bin/env bash
+    check_ns=(
+        "openshift-sre-pruning"
+        "openshift-monitoring"
+    )
+    NODES=()
+
+    for current_ns in "${check_ns[@]}"; do
+        readarray -t failedPods < <(oc -n "$current_ns" get pods -owide | grep "CreateContainerError" | awk '{print $1}')
+        for pod in "${failedPods[@]}"; do
+            podDescribe="$(oc -n "$current_ns" describe pod "$pod")"
+            if ! echo "$podDescribe" | grep "error loading seccomp filter into kernel" >/dev/null; then
+                continue
+            fi
+            node="$(echo "$podDescribe" | grep Node: | awk '{print $2}' | cut -d "/" -f 1)"
+            if echo "${NODES[@]}" | grep "$node" >/dev/null; then
+                continue
+            fi
+            if oc get node "$node" | grep master >/dev/null; then
+                echo "Found node $node, however master nodes must be fixed manually by restarting the instance in ec2."
+            else
+                NODES+=("$node")
+            fi
+        done
+    done
+
+    if [ ${#NODES[@]} -eq 0 ]; then
+        echo "No affected nodes."
+        exit 0
+    fi
+
+    echo "Found:"
+    echo "${NODES[@]}"
+    echo ""
+
+    for NODE in "${NODES[@]}"; do
+        RESULT=$(oc debug -n default "node/$NODE" -- chroot /host cat /proc/vmallocinfo | grep bpf_jit | awk '{s+=$2} END {print s}')
+
+        echo " "
+        echo "The vmallocinfo value on $NODE for bpf_jit is $RESULT the clusterversion is"
+        oc get clusterversion version
+    done
+
+    date
+    echo "In case the cluster is at 4.12.z Please reach out on Slack with the following message and wait a few min for a response:"
+    echo "@Viktor Malik, @Arnaldo Melo, @raquini - we have a case of OCPBUGS-15043 bpf limits"
+
+    echo ""
+    echo "Replacing the nodes will reset the memory leak, the following machines will be instantly deleted (use your judgement when deleting more than 1 at a time)."
+    echo "${NODES[@]}"
+    read -r -p "Continue with machine reprovisioning (y/n)?" choice
+
+    if [[ ! $choice =~ ^[yY]$ ]]; then
+        echo "ok, skipping"
+        exit 0
+    fi
+
+    for NODE in "${NODES[@]}"; do
+        oc get machine -n openshift-machine-api -o wide | grep "$NODE" | awk '{print $1}' | grep -v master | xargs oc delete machine -n openshift-machine-api
+    done
+
+    osdctl servicelog post "$(oc get clusterversion version -o json | jq -r .spec.clusterID)" -t https://raw.githubusercontent.com/openshift/managed-notifications/master/osd/OCPBUGS-16655-remediation-please-upgrade.json
+
