@@ -33748,6 +33748,39 @@ objects:
       kind: PrometheusRule
       metadata:
         labels:
+          prometheus: sre-cluster-version-operator
+          role: alert-rules
+        name: sre-cluster-version-operator
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-cluster-version-operator
+          rules:
+          - alert: ClusterOperatorDegradedSRE
+            annotations:
+              summary: Cluster operator has been degraded for 1 day.
+              description: The {{ "{{ $labels.name }}" }} operator is degraded because
+                {{ "{{ $labels.reason }}" }}, and the components it manages may have
+                reduced quality of service.  Cluster upgrades may not complete. For
+                more information refer to 'oc get -o yaml clusteroperator {{ "{{ $labels.name
+                }}" }}'{{ "{{ with $console_url := \"console_url\" | query }}{{ if
+                ne (len (label \"url\" (first $console_url ) ) ) 0}} or {{ label \"url\"
+                (first $console_url ) }}/settings/cluster/{{ end }}{{ end }}" }}.
+            expr: "max by (namespace, name, reason)\n(\n  (\n    cluster_operator_conditions{job=\"\
+              cluster-version-operator\", condition=\"Degraded\", name =~ \"kube-apiserver|kube-controller-manager|kube-scheduler\"\
+              }\n    or on (namespace, name)\n    group by (namespace, name) (cluster_operator_up{job=\"\
+              cluster-version-operator\", name =~ \"kube-apiserver|kube-controller-manager|kube-scheduler\"\
+              })\n  ) == 1\n)\n"
+            for: 1d
+            labels:
+              link: https://github.com/openshift/ops-sop/blob/master/v4/alerts/ClusterOperatorDegraded.md
+              namespace: openshift-monitoring
+              needs_attention: 'true'
+              severity: warning
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
           prometheus: sre-configure-alertmanager-operator-offline-alerts
           role: alert-rules
         name: sre-configure-alertmanager-operator-offline-alerts
