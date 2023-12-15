@@ -126,7 +126,7 @@ data:
           # the output will look something like
           # <namespace> | <pod> | <affinity> | <node>
           # each pod on the list needs to be rescheduled
-          missscheduled_pods=`oc -n $ns get po -o go-template='{{range .items}}{{$isjob := index .metadata.labels "job-name"}}{{$namespace := .metadata.namespace}}{{$name := .metadata.name}}{{$affinity := .spec.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution }}{{if not $isjob}}{{if $affinity}}{{- $namespace }} | {{$name}} | {{$affinity}} | {{.spec.nodeName}} {{"\n" -}} {{end}}{{end}}{{end}}'|grep "node-role.kubernetes.io/infra" |grep -vE ${infranodes_regexp}`
+          misscheduled_pods=`oc -n $ns get po -o go-template='{{range .items}}{{$isjob := index .metadata.labels "job-name"}}{{$namespace := .metadata.namespace}}{{$name := .metadata.name}}{{$affinity := .spec.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution }}{{if not $isjob}}{{if $affinity}}{{- $namespace }} | {{$name}} | {{$affinity}} | {{.spec.nodeName}} {{"\n" -}} {{end}}{{end}}{{end}}'|grep "node-role.kubernetes.io/infra" |grep -vE ${infranodes_regexp}`
           if [ ! -z  "$misscheduled_pods" ]; then
           # --ignore-not-found=true so that for STS clusters this doesn't fail when this can't find CIO or velero pods
             while read line ; do cmd=`echo $line|awk -F'|' '{print "oc -n " $1 " delete po --ignore-not-found=true " $2}'`;echo "INFO: $cmd"; eval $cmd;done <<< "$misscheduled_pods"
