@@ -9,12 +9,12 @@
 apiVersion: policy.open-cluster-management.io/v1
 kind: ConfigurationPolicy
 metadata:
-  name: rosa-ingress-controller-policies
+  name: rosa-ingress-controller-check
 spec:
   evaluationInterval:
-      compliant: 2h
-      noncompliant: 45s
-  object-templates-raw: |
+    compliant: 2h
+    noncompliant: 45s
+  object-templates:
     - complianceType: musthave
       metadataComplianceType: musthave
       objectDefinition:
@@ -23,18 +23,6 @@ spec:
         metadata:
           name: default
           namespace: openshift-ingress-operator
-          annotations:
-            ingress.operator.openshift.io/auto-delete-load-balancer: 'true'
-        spec:
-          defaultCertificate:
-            name: '{{hub (printf "%s-primary-cert-bundle-secret" .ManagedClusterName) hub}}'
-          {{hub- if ne (lookup "v1" "ConfigMap" "openshift-acm-policies" .ManagedClusterName).data nil hub}}
-          endpointPublishingStrategy:
-            type: LoadBalancerService
-            loadBalancer:
-              dnsManagementPolicy: 'Managed'
-              scope: '{{hub- if eq (fromConfigMap "openshift-acm-policies" .ManagedClusterName "endpoint-publishing-strategy") "internal" -hub}} Internal {{hub- else -hub}} External {{hub- end -hub}}'
-          {{hub- end hub}}
   pruneObjectBehavior: None
-  remediationAction: enforce
+  remediationAction: inform
   severity: low
