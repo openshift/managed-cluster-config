@@ -6,6 +6,9 @@
 #  by the change.
 # Changing the policy directly, without the ConfigMap reference will apply to ALL HCP's
 #
+# SPECIAL NOTE:
+# The Namespace enforce at the bottom has an invalid name, this is designed to make the policy non-compliant
+# whenever the openshift-ingress-operator IngressController default customResource is missing.
 apiVersion: policy.open-cluster-management.io/v1
 kind: ConfigurationPolicy
 metadata:
@@ -36,6 +39,14 @@ spec:
               dnsManagementPolicy: 'Managed'
               scope: '{{hub- if eq (fromConfigMap "openshift-acm-policies" .ManagedClusterName "endpoint-publishing-strategy") "internal" -hub}} Internal {{hub- else -hub}} External {{hub- end -hub}}'
           {{hub- end hub}}
+    {{- end }}
+    {{- if ne (lookup "operator.openshift.io/v1" "IngressController" "openshift-ingress-operator" "default").metadata.name "default" }}
+    - complianceType: musthave
+      metadataComplianceType: musthave
+      objectDefinition:
+        kind: Namespace
+        metadata:
+          name: donotcreateme?
     {{- end }}
   pruneObjectBehavior: None
   remediationAction: enforce

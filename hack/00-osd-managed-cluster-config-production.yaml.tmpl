@@ -7644,7 +7644,11 @@ objects:
                 \ (fromConfigMap \"openshift-acm-policies\" .ManagedClusterName \"\
                 endpoint-publishing-strategy\") \"internal\" -hub}} Internal {{hub-\
                 \ else -hub}} External {{hub- end -hub}}'\n      {{hub- end hub}}\n\
-                {{- end }}\n"
+                {{- end }}\n{{- if ne (lookup \"operator.openshift.io/v1\" \"IngressController\"\
+                \ \"openshift-ingress-operator\" \"default\").metadata.name \"default\"\
+                \ }}\n- complianceType: musthave\n  metadataComplianceType: musthave\n\
+                \  objectDefinition:\n    kind: Namespace\n    metadata:\n      name:\
+                \ donotcreateme?\n{{- end }}\n"
               pruneObjectBehavior: None
               remediationAction: enforce
               severity: low

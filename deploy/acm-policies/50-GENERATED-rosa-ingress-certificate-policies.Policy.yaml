@@ -43,6 +43,14 @@ spec:
                               scope: '{{hub- if eq (fromConfigMap "openshift-acm-policies" .ManagedClusterName "endpoint-publishing-strategy") "internal" -hub}} Internal {{hub- else -hub}} External {{hub- end -hub}}'
                           {{hub- end hub}}
                     {{- end }}
+                    {{- if ne (lookup "operator.openshift.io/v1" "IngressController" "openshift-ingress-operator" "default").metadata.name "default" }}
+                    - complianceType: musthave
+                      metadataComplianceType: musthave
+                      objectDefinition:
+                        kind: Namespace
+                        metadata:
+                          name: donotcreateme?
+                    {{- end }}
                 pruneObjectBehavior: None
                 remediationAction: enforce
                 severity: low
