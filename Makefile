@@ -36,7 +36,7 @@ ifndef GEN_CMO_CONFIG
 $(error GEN_CMO_CONFIG is not set; check project.mk file)
 endif
 
-POLICYGEN_VERSION=v1.12.3
+POLICYGEN_VERSION=v1.12.4
 
 VOLUME_MOUNT_FLAGS = :z
 CONTAINER_ENGINE?=$(shell command -v docker 2>/dev/null || command -v podman 2>/dev/null)
