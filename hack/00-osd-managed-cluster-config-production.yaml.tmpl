@@ -27416,6 +27416,70 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: osd-fedramp-machineconfig-stg-pre-4.13
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/fedramp
+        operator: In
+        values:
+        - 'true'
+      - key: api.openshift.com/environment
+        operator: In
+        values:
+        - staging
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.11'
+        - '4.12'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: machineconfiguration.openshift.io/v1
+      kind: MachineConfig
+      metadata:
+        labels:
+          machineconfiguration.openshift.io/role: master
+        name: 51-master-rh-registry-trust
+      spec:
+        config:
+          ignition:
+            version: 3.2.0
+          storage:
+            files:
+            - contents:
+                compression: gzip
+                source: data:;base64,H4sIAAAAAAAC/8ySMWvDMBCFd/2K42bL3r2lUDyEgildSskgpKssHEtCugwi+L8XJ8a4pLRrBwmJd7z7jndXAYCGPtXlzNjChwAAuN5uAOQSCVtA5zPpS6KD1hT54AsPzlu8lc0C4FQtNpyUzzEkztiuHmiCHiltfwBMZF3mVGqlNeVcJzKD4lqHaeu/Z/jGkZ31ZJ4KVnt1pPK2FnR9d6SSH/Re8bDoDbFu4uiaFCdpo21e+xfZ9Z08Pr/LO4lMdCaVCTeLeX2dqocZVngX/j37Patqn4o0iqbg9+H8PcZvq/BDQ7GcWXwFAAD//2KyDxpnAgAA
+              mode: 420
+              overwrite: true
+              path: /etc/containers/policy.json
+    - apiVersion: machineconfiguration.openshift.io/v1
+      kind: MachineConfig
+      metadata:
+        labels:
+          machineconfiguration.openshift.io/role: worker
+        name: 51-worker-rh-registry-trust
+      spec:
+        config:
+          ignition:
+            version: 3.2.0
+          storage:
+            files:
+            - contents:
+                compression: gzip
+                source: data:;base64,H4sIAAAAAAAC/8ySMWvDMBCFd/2K42bL3r2lUDyEgildSskgpKssHEtCugwi+L8XJ8a4pLRrBwmJd7z7jndXAYCGPtXlzNjChwAAuN5uAOQSCVtA5zPpS6KD1hT54AsPzlu8lc0C4FQtNpyUzzEkztiuHmiCHiltfwBMZF3mVGqlNeVcJzKD4lqHaeu/Z/jGkZ31ZJ4KVnt1pPK2FnR9d6SSH/Re8bDoDbFu4uiaFCdpo21e+xfZ9Z08Pr/LO4lMdCaVCTeLeX2dqocZVngX/j37Patqn4o0iqbg9+H8PcZvq/BDQ7GcWXwFAAD//2KyDxpnAgAA
+              mode: 420
+              overwrite: true
+              path: /etc/containers/policy.json
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: osd-fedramp-managed-upgrade-operator-config
   spec:
     clusterDeploymentSelector:
