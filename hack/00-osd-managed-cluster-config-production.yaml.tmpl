@@ -22113,6 +22113,15 @@ objects:
           resendWait: 1
           severity: Error
           summary: Workload preventing machine deletion
+        - activeBody: ''
+          ? Your cluster requires you to take action. A persistent volume for User
+            Workload Monitoring is filling up. Without action, new metrics may fail
+            to be collected. Please see the following runbook for more information
+          : https://github.com/openshift/runbooks/blob/master/alerts/cluster-monitoring-operator/KubePersistentVolumeFillingUp.md.
+          name: UWMPersistentVolumeFillingUp
+          resendWait: 1
+          severity: Error
+          summary: User-Workload Monitoring PV Filling Up
     - apiVersion: ocmagent.managed.openshift.io/v1alpha1
       kind: ManagedNotification
       metadata:
@@ -36048,6 +36057,26 @@ objects:
               send_managed_notification: 'true'
             annotations:
               message: A non-openshift workload is preventing a node from draining.
+          - alert: UWMPersistentVolumeFillingUpSRE
+            expr: "(\n  kubelet_volume_stats_available_bytes{namespace=\"openshift-user-workload-monitoring\"\
+              ,job=\"kubelet\", metrics_path=\"/metrics\"}\n    /\n  kubelet_volume_stats_capacity_bytes{namespace=~\"\
+              openshift-user-workload-monitoring\",job=\"kubelet\", metrics_path=\"\
+              /metrics\"}\n) < 0.03\nand\nkubelet_volume_stats_used_bytes{namespace=~\"\
+              openshift-user-workload-monitoring\",job=\"kubelet\", metrics_path=\"\
+              /metrics\"} > 0\nunless on(namespace, persistentvolumeclaim)\nkube_persistentvolumeclaim_access_mode{namespace=~\"\
+              openshift-user-workload-monitoring\", access_mode=\"ReadOnlyMany\"}\
+              \ == 1\nunless on(namespace, persistentvolumeclaim)\nkube_persistentvolumeclaim_labels{namespace=~\"\
+              openshift-user-workload-monitoring\",label_alerts_k8s_io_kube_persistent_volume_filling_up=\"\
+              disabled\"} == 1"
+            for: 1m
+            labels:
+              severity: critical
+              namespace: openshift-monitoring
+              managed_notification_template: UWMPersistentVolumeFillingUp
+              send_managed_notification: 'true'
+            annotations:
+              message: A persistent volume for User Workload Monitoring is filling
+                up.
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
