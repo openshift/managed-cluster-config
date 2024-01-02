@@ -40,10 +40,20 @@
                 "elasticloadbalancing:RegisterInstancesWithLoadBalancer",
                 "elasticloadbalancing:RegisterTargets",
                 "elasticloadbalancing:SetLoadBalancerPoliciesForBackendServer",
-                "elasticloadbalancing:SetLoadBalancerPoliciesOfListener",
-                "kms:DescribeKey"
+                "elasticloadbalancing:SetLoadBalancerPoliciesOfListener"
             ],
             "Resource": "*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "kms:DescribeKey"
+            ],
+            "Condition": {
+                "StringEquals": {
+                    "aws:ResourceTag/red-hat": "true"
+                }
+            }
         }
     ]
 }
