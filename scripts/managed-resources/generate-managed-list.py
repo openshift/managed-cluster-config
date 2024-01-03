@@ -28,7 +28,6 @@ ADDITIONAL_MANAGED_NAMESPACES = [
     {"name": "keycloak"},
     {"name": "goalert"},
     {"name": "configure-goalert-operator"}
-
 ]
 
 
