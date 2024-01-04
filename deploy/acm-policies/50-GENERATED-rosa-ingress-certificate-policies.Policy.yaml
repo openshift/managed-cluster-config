@@ -11,7 +11,13 @@ metadata:
 spec:
     disabled: false
     policy-templates:
-        - objectDefinition:
+        - extraDependencies:
+            - apiVersion: policy.open-cluster-management.io/v1
+              compliance: Compliant
+              kind: Policy
+              name: rosa-ingress-certificate-check
+              namespace: openshift-acm-policies
+          objectDefinition:
             apiVersion: policy.open-cluster-management.io/v1
             kind: ConfigurationPolicy
             metadata:
@@ -21,7 +27,6 @@ spec:
                     compliant: 2h
                     noncompliant: 45s
                 object-templates-raw: |
-                    {{- if eq (lookup "operator.openshift.io/v1" "IngressController" "openshift-ingress-operator" "default").metadata.name "default" }}
                     - complianceType: musthave
                       metadataComplianceType: musthave
                       objectDefinition:
@@ -42,11 +47,16 @@ spec:
                               dnsManagementPolicy: 'Managed'
                               scope: '{{hub- if eq (fromConfigMap "openshift-acm-policies" .ManagedClusterName "endpoint-publishing-strategy") "internal" -hub}} Internal {{hub- else -hub}} External {{hub- end -hub}}'
                           {{hub- end hub}}
-                    {{- end }}
                 pruneObjectBehavior: None
                 remediationAction: enforce
                 severity: low
-        - objectDefinition:
+        - extraDependencies:
+            - apiVersion: policy.open-cluster-management.io/v1
+              compliance: Compliant
+              kind: Policy
+              name: rosa-ingress-certificate-check
+              namespace: openshift-acm-policies
+          objectDefinition:
             apiVersion: policy.open-cluster-management.io/v1
             kind: ConfigurationPolicy
             metadata:
@@ -70,6 +80,7 @@ spec:
                 pruneObjectBehavior: DeleteIfCreated
                 remediationAction: enforce
                 severity: low
+    remediationAction: enforce
 ---
 apiVersion: apps.open-cluster-management.io/v1
 kind: PlacementRule

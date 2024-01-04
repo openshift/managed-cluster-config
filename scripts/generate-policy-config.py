@@ -40,6 +40,7 @@ directories = [
         'rosa-console-branding',
         'rosa-console-branding-configmap',
         'rosa-ingress-certificate-policies',
+        'rosa-ingress-certificate-check',
         ]
 policy_generator_config = './scripts/policy-generator-config.yaml'
 config_filename = "config.yaml"
@@ -83,7 +84,9 @@ for directory in sorted(directories, key=str.casefold):
                 policy_template['policyDefaults']['complianceType'] = config['policy']['complianceType'].lower()
             if 'metadataComplianceType' in config['policy'].keys() and config['policy']['metadataComplianceType'] != '' : 
                 policy_template['policyDefaults']['metadataComplianceType'] = config['policy']['metadataComplianceType'].lower()
-       
+            if 'extraDependencies' in config['policy'].keys() and config['policy']['extraDependencies'] != '' : 
+                policy_template['policyDefaults']['extraDependencies'] = config['policy']['extraDependencies']
+
     for p in policy_template['policies']:
         p['name'] = policy_name
         for m in p['manifests']:
