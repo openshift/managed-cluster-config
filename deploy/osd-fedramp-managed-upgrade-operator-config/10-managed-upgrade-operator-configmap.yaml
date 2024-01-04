@@ -7,14 +7,13 @@ data:
   config.yaml: |
     upgradeType: OSD
     configManager:
-      source: LOCAL
-      localConfigName: managed-upgrade-config
+      source: OCM
+      ocmBaseUrl: ${OCM_BASE_URL}
       watchInterval: 60
     maintenance:
       controlPlaneTime: 130
       ignoredAlerts:
         controlPlaneCriticals:
-        # ClusterOperatorDown - https://bugzilla.redhat.com/show_bug.cgi?id=1955300
         - ClusterOperatorDown
     scale:
       timeOut: 30
@@ -34,9 +33,7 @@ data:
       - PrometheusRuleFailures
       - CannotRetrieveUpdates
       - FluentdNodeDown
-      # OSD-11927
       - ClusterProxyCAExpiringSRE
-      # https://bugzilla.redhat.com/show_bug.cgi?id=1986981
       - PrometheusRemoteWriteBehind
       - KubePersistentVolumeErrors
       - PrometheusBadConfig
@@ -59,5 +56,10 @@ data:
       - openshift-route-monitoring-operator
       - openshift-user-workload-monitoring
       - openshift-pipelines
+    extDependencyAvailabilityChecks:
+      http:
+        timeout: 10
+        urls:
+          - ${OCM_BASE_URL}/api/clusters_mgmt/v1      
     environment:
       fedramp: true
