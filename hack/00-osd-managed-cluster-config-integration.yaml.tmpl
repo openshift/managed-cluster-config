@@ -35812,6 +35812,53 @@ objects:
               link: https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/MachineOutOfCompliance.md
             annotations:
               message: A machine on a management cluster is older than 28 days.
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        name: oadp-backup-alerts
+        namespace: openshift-adp-operator
+      spec:
+        groups:
+        - name: oadp-backup-alerts
+          rules:
+          - alert: OADPHourlyBackupFailing
+            annotations:
+              description: OADP had {{$value | humanize}} hourly backup failures over
+                the last 2 hours.
+              summary: OADP has issues creating hourly backups
+            expr: 'increase(velero_backup_failure_total{schedule="hourly-full-backup"}[2h])
+              > 0
+
+              '
+            for: 5m
+            labels:
+              severity: warning
+              namespace: openshift-adp-operator
+          - alert: OADPDailyBackupFailing
+            annotations:
+              description: OADP had {{$value | humanize}} daily backup failures over
+                the last 24 hours.
+              summary: OADP has issues creating daily backups
+            expr: 'increase(velero_backup_failure_total{schedule="daily-full-backup"}[24h])
+              > 0
+
+              '
+            for: 5m
+            labels:
+              severity: warning
+              namespace: openshift-adp-operator
+          - alert: OADPBackupDeletionFailing
+            annotations:
+              description: OADP had {{$value | humanize}} backup deletion failures
+                over the last 24 hours
+              summary: OADP has issues removing backups
+            expr: 'increase(velero_backup_deletion_failure_total[24h]) > 0
+
+              '
+            for: 5m
+            labels:
+              severity: warning
+              namespace: openshift-adp-operator
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
