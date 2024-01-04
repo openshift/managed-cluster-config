@@ -24,7 +24,10 @@ data:
 ADDITIONAL_MANAGED_NAMESPACES = [
     {"name": "openshift-monitoring"},
     {"name": "openshift"},
-    {"name": "openshift-cluster-version"}
+    {"name": "openshift-cluster-version"},
+    {"name": "keycloak"},
+    {"name": "goalert"},
+    {"name": "configure-goalert-operator"}
 ]
 
 
