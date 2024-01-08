@@ -27,6 +27,14 @@ spec:
         severity: warning
         namespace: openshift-monitoring
         link: "https://github.com/openshift/ops-sop/blob/master/v4/alerts/OCMAgentResponseFailureServiceLogsSRE.md#verify-cluster-pull-secrets"
-
       annotations:
         message: OCM Agent Operator cannot retrieve or parse the cluster's `cloud.openshift.com` pull secret.
+    - alert: OCMAgentPullSecretInvalidSRE
+      expr: ocm_agent_pull_secret_invalid > 0
+      for: 15m
+      labels:
+        severity: warning
+        namespace: openshift-monitoring
+        link: "https://github.com/openshift/ops-sop/blob/master/v4/alerts/OCMAgentResponseFailureServiceLogsSRE.md#verify-cluster-pull-secrets"
+      annotations:
+        message: OCM Agent pull secret auth token is not valid.
