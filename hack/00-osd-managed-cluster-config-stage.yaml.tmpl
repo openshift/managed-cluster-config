@@ -36046,6 +36046,129 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: sre-prometheus-monitoring
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
+          prometheus: sre-cluster-monitoring-error-budget-burn
+          role: alert-rules
+        name: sre-cluster-monitoring-error-budget-burn
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-cluster-monitoring-error-budget-burn
+          rules:
+          - alert: ClusterMonitoringErrorBudgetBurnSRE
+            expr: '1 - ( sum(sum_over_time(cluster_operator_up{name="monitoring"}[5m]))
+              / sum(count_over_time(cluster_operator_up{name="monitoring"}[5m])) )
+              > (14.4 * (1 - 0.99))
+
+              and
+
+              1 - ( sum(sum_over_time(cluster_operator_up{name="monitoring"}[1h]))
+              / sum(count_over_time(cluster_operator_up{name="monitoring"}[1h])) )
+              > (14.4 * (1 - 0.99))
+
+              '
+            for: 2m
+            labels:
+              long_window: 1h
+              severity: critical
+              namespace: openshift-monitoring
+              source: https://issues.redhat.com/browse/OSD-19769
+              link: https://github.com/openshift/ops-sop/blob/master/v4/troubleshoot/clusteroperators/monitoring.md
+              short_window: 5m
+            annotations:
+              message: 'High error budget burn for the monitoring cluster operator
+                (current value: {{ $value }})'
+          - alert: ClusterMonitoringErrorBudgetBurnSRE
+            expr: '1 - ( sum(sum_over_time(cluster_operator_up{name="monitoring"}[30m]))
+              / sum(count_over_time(cluster_operator_up{name="monitoring"}[30m]))
+              ) > (6 * (1 - 0.99))
+
+              and
+
+              1 - ( sum(sum_over_time(cluster_operator_up{name="monitoring"}[6h]))
+              / sum(count_over_time(cluster_operator_up{name="monitoring"}[6h])) )
+              > (6 * (1 - 0.99))
+
+              '
+            for: 15m
+            labels:
+              long_window: 6h
+              severity: critical
+              namespace: openshift-monitoring
+              source: https://issues.redhat.com/browse/OSD-19769
+              link: https://github.com/openshift/ops-sop/blob/master/v4/troubleshoot/clusteroperators/monitoring.md
+              short_window: 30m
+            annotations:
+              message: 'High error budget burn for the monitoring cluster operator
+                (current value: {{ $value }})'
+          - alert: ClusterMonitoringErrorBudgetBurnSRE
+            expr: '1 - ( sum(sum_over_time(cluster_operator_up{name="monitoring"}[2h]))
+              / sum(count_over_time(cluster_operator_up{name="monitoring"}[2h])) )
+              > (3 * (1 - 0.99))
+
+              and
+
+              1 - ( sum(sum_over_time(cluster_operator_up{name="monitoring"}[1d]))
+              / sum(count_over_time(cluster_operator_up{name="monitoring"}[1d])) )
+              > (3 * (1 - 0.99))
+
+              '
+            for: 1h
+            labels:
+              long_window: 1d
+              severity: critical
+              namespace: openshift-monitoring
+              source: https://issues.redhat.com/browse/OSD-19769
+              link: https://github.com/openshift/ops-sop/blob/master/v4/troubleshoot/clusteroperators/monitoring.md
+              short_window: 2h
+            annotations:
+              message: 'High error budget burn for the monitoring cluster operator
+                (current value: {{ $value }})'
+          - alert: ClusterMonitoringErrorBudgetBurnSRE
+            expr: '1 - ( sum(sum_over_time(cluster_operator_up{name="monitoring"}[6h]))
+              / sum(count_over_time(cluster_operator_up{name="monitoring"}[6h])) )
+              > (1 * (1 - 0.99))
+
+              and
+
+              1 - ( sum(sum_over_time(cluster_operator_up{name="monitoring"}[3d]))
+              / sum(count_over_time(cluster_operator_up{name="monitoring"}[3d])) )
+              > (1 * (1 - 0.99))
+
+              '
+            for: 3h
+            labels:
+              long_window: 3d
+              severity: critical
+              namespace: openshift-monitoring
+              source: https://issues.redhat.com/browse/OSD-19769
+              link: https://github.com/openshift/ops-sop/blob/master/v4/troubleshoot/clusteroperators/monitoring.md
+              short_window: 6h
+            annotations:
+              message: 'High error budget burn for the monitoring cluster operator
+                (current value: {{ $value }})'
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: sre-prometheus-ocm-agent
   spec:
     clusterDeploymentSelector:
