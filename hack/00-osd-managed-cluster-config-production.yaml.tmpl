@@ -28669,6 +28669,69 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: osd-machineconfig
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: ext-managed.openshift.io/hive-shard
+        operator: In
+        values:
+        - 'true'
+      - key: hive.openshift.io/version-major-minor-patch
+        operator: In
+        values:
+        - 4.?.?
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: machineconfiguration.openshift.io/v1
+      kind: MachineConfig
+      metadata:
+        labels:
+          machineconfiguration.openshift.io/role: master
+        name: 00-osd-master-chrony
+      spec:
+        config:
+          ignition:
+            version: 3.2.0
+          storage:
+            files:
+            - contents:
+                compression: ''
+                source: data:,server%20169.254.169.123%20prefer%20iburst%20minpoll%204%20maxpoll%204
+              mode: 420
+              overwrite: true
+              path: /etc/chrony.conf
+    - apiVersion: machineconfiguration.openshift.io/v1
+      kind: MachineConfig
+      metadata:
+        labels:
+          machineconfiguration.openshift.io/role: worker
+        name: 00-osd-worker-chrony
+      spec:
+        config:
+          ignition:
+            version: 3.2.0
+          storage:
+            files:
+            - contents:
+                compression: ''
+                source: data:,server%20169.254.169.123%20prefer%20iburst%20minpoll%204%20maxpoll%204
+              mode: 420
+              overwrite: true
+              path: /etc/chrony.conf
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: osd-managed-resources
   spec:
     clusterDeploymentSelector:
