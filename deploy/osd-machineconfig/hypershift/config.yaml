@@ -1,0 +1,16 @@
+deploymentMode: SelectorSyncSet 
+selectorSyncSet:
+  matchExpressions:
+  - key: ext-hypershift.openshift.io/cluster-type
+    operator: In
+    values: ["management-cluster", "service-cluster"]
+  - key: hive.openshift.io/version-major-minor-patch
+    operator: In
+    values: ["4.14.8"]
+  - key: api.openshift.com/fedramp
+    operator: NotIn
+    values:
+      - "true"
+  # - key: api.openshift.com/sts -- not sure if needed
+  #   operator: In
+  #   values: ["true"]
