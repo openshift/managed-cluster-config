@@ -1,8 +1,8 @@
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
-  name: oadp-backup-alerts
-  namespace: openshift-adp-operator
+  name: sre-oadp-alerts
+  namespace: openshift-monitoring
 spec:
   groups:
   - name: oadp-backup-alerts
@@ -16,7 +16,7 @@ spec:
       for: 5m
       labels:
         severity: warning
-        namespace: openshift-adp-operator
+        namespace: openshift-monitoring
     - alert: OADPDailyBackupFailing
       annotations:
         description: OADP had {{$value | humanize}} daily backup failures over the last 24 hours.
@@ -26,7 +26,7 @@ spec:
       for: 5m
       labels:
         severity: warning
-        namespace: openshift-adp-operator
+        namespace: openshift-monitoring
     - alert: OADPBackupDeletionFailing
       annotations:
         description: OADP had {{$value | humanize}} backup deletion failures over the last 24 hours
@@ -36,4 +36,4 @@ spec:
       for: 5m
       labels:
         severity: warning
-        namespace: openshift-adp-operator
+        namespace: openshift-monitoring
