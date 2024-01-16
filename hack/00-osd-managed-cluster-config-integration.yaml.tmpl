@@ -22701,6 +22701,366 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: ocpbugs-15043
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/version
+        operator: In
+        values:
+        - 4.13.0
+        - 4.13.1
+        - 4.13.2
+        - 4.13.3
+        - 4.13.4
+        - 4.13.5
+        - 4.13.6
+        - 4.13.7
+        - 4.13.8
+        - 4.13.9
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: ocpbugs-15043
+        namespace: openshift-config
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: ocpbugs-15043-read-pullsecret
+        namespace: openshift-config
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - secrets
+        verbs:
+        - get
+        - list
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: ocpbugs-15043-delete-machines
+        namespace: openshift-machine-api
+      rules:
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machines
+        verbs:
+        - get
+        - list
+        - delete
+        - watch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: ocpbugs-15043-read-configmap
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - configmaps
+        verbs:
+        - get
+        - list
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: ocpbugs-15043-manage-lastrun-cm
+        namespace: openshift-config
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - configmaps
+        verbs:
+        - get
+        - list
+        - create
+        - update
+        - patch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: ocpbugs-15043-inspect-pods
+      rules:
+      - apiGroups:
+        - null
+        resources:
+        - pods
+        verbs:
+        - get
+        - list
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: ocpbugs-15043-read-clusterversion
+      rules:
+      - apiGroups:
+        - config.openshift.io
+        resources:
+        - clusterversions
+        verbs:
+        - get
+        - list
+      - apiGroups:
+        - ''
+        resources:
+        - nodes
+        verbs:
+        - get
+        - list
+        - watch
+    - kind: RoleBinding
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        name: ocpbugs-15043-read-pullsecret
+        namespace: openshift-config
+      subjects:
+      - kind: ServiceAccount
+        name: ocpbugs-15043
+        namespace: openshift-config
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: ocpbugs-15043-read-pullsecret
+    - kind: RoleBinding
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        name: ocpbugs-15043-delete-machines
+        namespace: openshift-machine-api
+      subjects:
+      - kind: ServiceAccount
+        name: ocpbugs-15043
+        namespace: openshift-config
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: ocpbugs-15043-delete-machines
+    - kind: RoleBinding
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        name: ocpbugs-15043-read-muo-configmap
+        namespace: openshift-managed-upgrade-operator
+      subjects:
+      - kind: ServiceAccount
+        name: ocpbugs-15043
+        namespace: openshift-config
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: ocpbugs-15043-read-configmap
+    - kind: RoleBinding
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        name: ocpbugs-15043-read-oao-configmap
+        namespace: openshift-ocm-agent-operator
+      subjects:
+      - kind: ServiceAccount
+        name: ocpbugs-15043
+        namespace: openshift-config
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: ocpbugs-15043-read-configmap
+    - kind: RoleBinding
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        name: ocpbugs-15043-manage-lastrun-cm
+        namespace: openshift-config
+      subjects:
+      - kind: ServiceAccount
+        name: ocpbugs-15043
+        namespace: openshift-config
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: ocpbugs-15043-manage-lastrun-cm
+    - kind: RoleBinding
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        name: ocpbugs-15043-inspect-pods
+        namespace: openshift-sre-pruning
+      subjects:
+      - kind: ServiceAccount
+        name: ocpbugs-15043
+        namespace: openshift-config
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: ocpbugs-15043-inspect-pods
+    - kind: RoleBinding
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        name: ocpbugs-15043-inspect-pods
+        namespace: openshift-monitoring
+      subjects:
+      - kind: ServiceAccount
+        name: ocpbugs-15043
+        namespace: openshift-config
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: ocpbugs-15043-inspect-pods
+    - kind: ClusterRoleBinding
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        name: ocpbugs-15043-read-clusterversion
+      subjects:
+      - kind: ServiceAccount
+        name: ocpbugs-15043
+        namespace: openshift-config
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: ocpbugs-15043-read-clusterversion
+    - apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: ocpbugs-15043-script
+        namespace: openshift-config
+      data:
+        ocpbugs-15043.sh: "#!/bin/bash\n\nset -euo pipefail\n\nCHECKED_NAMESPACES=(\n\
+          \    \"openshift-sre-pruning\"\n    \"openshift-monitoring\"\n)\n\nLAST_SL_CONFIGMAP=\"\
+          ocpbugs-15043-last-sl-sent\"\nLAST_RUN_ANNOTATION=\"lasttimestamp\"\nDELAY_BETWEEN_SEND_SECONDS=\"\
+          86400\"\n\nNODES=()\n\nMACHINE_API_NAMESPACE=\"openshift-machine-api\"\n\
+          \nfor current_ns in \"${CHECKED_NAMESPACES[@]}\"; do\n    readarray -t failedPods\
+          \ < <(oc -n \"$current_ns\" get pods -owide | grep \"CreateContainerError\"\
+          \ | awk '{print $1}')\n    for pod in \"${failedPods[@]}\"; do\n       \
+          \ echo \"Found pod $pod failing.\"\n        podDescribe=\"$(oc -n \"$current_ns\"\
+          \ describe pod \"$pod\")\"\n\n        if ! echo \"$podDescribe\" | grep\
+          \ \"error loading seccomp filter into kernel\" >/dev/null; then\n      \
+          \      echo -e \"\\t$pod is failing for another reason. Ignoring\"\n   \
+          \         continue\n        fi\n\n        node=\"$(echo \"$podDescribe\"\
+          \ | grep Node: | awk '{print $2}' | cut -d \"/\" -f 1)\"\n        echo -e\
+          \ \"\\t$pod on $node having seccomp issues\"\n        if echo \"${NODES[@]}\"\
+          \ | grep \"$node\" >/dev/null; then\n            continue\n        fi\n\
+          \        NODES+=(\"$node\")\n    done\ndone\n\nif [ ${#NODES[@]} -eq 0 ];\
+          \ then\n    echo \"No affected nodes.\"\n    exit 0\nfi\n\n# print affected\
+          \ nodes and \n\nfor NODE in \"${NODES[@]}\"; do\n    nodeJson=\"$(oc get\
+          \ node \"$NODE\" -ojson)\"\n\n    # make sure we only restart infra nodes\n\
+          \    if ! jq -e '.metadata.labels.\"node-role.kubernetes.io/infra\"' <<<\
+          \ \"$nodeJson\" > /dev/null ; then\n      echo \"Found node '$node', however\
+          \ control-plane and worker nodes must be restarted manually\"\n      continue\n\
+          \    fi\n\n    echo \"Found node '$node'. Checking associated machine cr\"\
+          \n\n    MACHINE=\"$(jq -r '.metadata.annotations.\"machine.openshift.io/machine\"\
+          ' <<< \"$nodeJson\" | cut -d '/' -f2)\"\n    if [[ $MACHINE = \"\" ]]; then\n\
+          \      echo \"Couldn't find Machine for node $node. Skipping\"\n      continue\n\
+          \    fi\n\n    echo \"Found machine '$MACHINE' for node '$node'. Removing\
+          \ it...\"\n    oc -n \"$MACHINE_API_NAMESPACE\" delete machine \"$MACHINE\"\
+          \ --wait\n    echo \"Machine removed successfully. Waiting for all machines\
+          \ to be in Running state again\"\n    oc -n \"$MACHINE_API_NAMESPACE\" wait\
+          \ --all --for=jsonpath='{.status.phase}'=Running --timeout=5m machines\n\
+          \    echo \"All Machines are running again. Waiting for all nodes to become\
+          \ ready.\"\n    oc wait --all --for=condition=Ready=true --timeout=5m nodes\n\
+          \    echo \"All nodes are Ready. Continuing.\"\ndone\n\n\ncurrentTimestamp=$(date\
+          \ -u +%s)\n\nif oc get cm \"$LAST_SL_CONFIGMAP\" > /dev/null; then \n  if\
+          \ oc get cm \"$LAST_SL_CONFIGMAP\" -ojson | jq -e \".metadata.annotations.$LAST_RUN_ANNOTATION\"\
+          \ > /dev/null; then\n    lastSentTimestamp=$(oc get cm \"$LAST_SL_CONFIGMAP\"\
+          \ -ojson | jq -r \".metadata.annotations.$LAST_RUN_ANNOTATION\")\n    if\
+          \ [[ $(( currentTimestamp - lastSentTimestamp )) -lt $DELAY_BETWEEN_SEND_SECONDS\
+          \ ]]; then \n      echo \"An SL was already sent recently. Skipping it this\
+          \ time.\"\n      exit 0\n    fi\n  fi\nfi\n\necho \"Retrieving pull secret\"\
+          \nSECRET=$(oc -n openshift-config get secret pull-secret -ojson | jq -r\
+          \ '.data.\".dockerconfigjson\" | @base64d ' | jq -r '.auths.\"cloud.openshift.com\"\
+          .auth')\necho \"Pull secret retrieved\"\n\necho \"Retrieving cluster uuid\"\
+          \nEXTERNAL_CLUSTER_ID=$( oc get clusterversion version -o json | jq -r '.spec.clusterID'\
+          \ )\necho \"Cluster UUID is: $EXTERNAL_CLUSTER_ID\"\n\necho \"Getting OCM\
+          \ Base Url\"\nOAO_CONFIGMAP=\"ocm-agent-cm\"\nOAO_NAMESPACE=\"openshift-ocm-agent-operator\"\
+          \n\nMUO_CONFIGMAP=\"managed-upgrade-operator-config\"\nMUO_NAMESPACE=\"\
+          openshift-managed-upgrade-operator\"\nif oc get configmap -n \"$OAO_NAMESPACE\"\
+          \ \"$OAO_CONFIGMAP\"; then\n  OCM_BASE_URL=$(oc get configmap -n \"$OAO_NAMESPACE\"\
+          \ \"$OAO_CONFIGMAP\" -o json | jq -r '.data.ocmBaseURL')\nelif oc get configmap\
+          \ -n \"$MUO_NAMESPACE\" \"$MUO_CONFIGMAP\"; then\n  OCM_BASE_URL=$(oc get\
+          \ configmap -n \"$MUO_NAMESPACE\" \"$MUO_CONFIGMAP\" -o json | jq -r '.data.\"\
+          config.yaml\"' | grep ocmBaseUrl | awk '{print $2;}')\nelse \n  echo \"\
+          Couldn't determin OCM BASE URL. Won't send a servicelog\"\nfi\necho \"OCM\
+          \ Base URL is: $OCM_BASE_URL\"\n\n\nSL_URL=\"${OCM_BASE_URL}/api/service_logs/v1/cluster_logs\"\
+          \n\n\nSL_POST_DATA=$(cat << EOF\n{\n  \"cluster_uuid\": \"$EXTERNAL_CLUSTER_ID\"\
+          ,\n  \"severity\": \"Warning\",\n  \"service_name\": \"SREManualAction\"\
+          ,\n  \"summary\": \"Cluster impacted by OCPBUGS-16655, upgrade recommended\"\
+          ,\n  \"description\": \"Your cluster is impacted by https://issues.redhat.com/browse/OCPBUGS-16655,\
+          \ which results in nodes periodically being unable to run containers. Red\
+          \ Hat SRE has responded to and temporarily remediated impacts of this bug\
+          \ on this cluster and recommends that the cluster be upgraded to 4.13.10\
+          \ or later as soon as convenient.\",\n  \"internal_only\": false,\n  \"\
+          _tags\": [\n    \"sop_PruningCronjobErrorSRE\"\n  ]\n}\nEOF\n)\n\necho \"\
+          SENDING SL: $SL_POST_DATA\"\n\ncurl -v -m 20 -X POST \\\n  -d \"$SL_POST_DATA\"\
+          \ \\\n  -H \"Content-Type: application/json\" \\\n  -H \"Authorization:\
+          \ AccessToken $EXTERNAL_CLUSTER_ID:$SECRET\" \"$SL_URL\"\n\necho \"Annotation\
+          \ configmap with timestamp\"\n\noc create configmap \"$LAST_SL_CONFIGMAP\"\
+          \ || true\noc annotate configmap --overwrite \"$LAST_SL_CONFIGMAP\" \"${LAST_RUN_ANNOTATION}=${currentTimestamp}\"\
+          \n"
+    - apiVersion: batch/v1
+      kind: CronJob
+      metadata:
+        name: ocpbugs-15043
+        namespace: openshift-config
+      spec:
+        failedJobsHistoryLimit: 2
+        successfulJobsHistoryLimit: 2
+        concurrencyPolicy: Forbid
+        schedule: '*/5 * * * *'
+        jobTemplate:
+          spec:
+            ttlSecondsAfterFinished: 3600
+            template:
+              metadata:
+                labels:
+                  app: ocpbugs-15043
+              spec:
+                affinity:
+                  nodeAffinity:
+                    preferredDuringSchedulingIgnoredDuringExecution:
+                    - preference:
+                        matchExpressions:
+                        - key: node-role.kubernetes.io/master
+                          operator: Exists
+                      weight: 1
+                tolerations:
+                - effect: NoSchedule
+                  operator: Exists
+                serviceAccountName: ocpbugs-15043
+                restartPolicy: Never
+                volumes:
+                - name: scriptconfigmap
+                  configMap:
+                    defaultMode: 493
+                    name: ocpbugs-15043-script
+                    items:
+                    - key: ocpbugs-15043.sh
+                      path: ocpbugs-15043.sh
+                - name: pull-secret
+                  secret:
+                    secretName: pull-secret
+                containers:
+                - name: ocpbugs-15043
+                  image: image-registry.openshift-image-registry.svc:5000/openshift/tools:latest
+                  imagePullPolicy: Always
+                  volumeMounts:
+                  - mountPath: /tmp/config/
+                    name: scriptconfigmap
+                    readOnly: false
+                  resources:
+                    requests:
+                      cpu: 100m
+                      memory: 100Mi
+                    limits:
+                      cpu: 100m
+                      memory: 100Mi
+                  command:
+                  - /tmp/config/ocpbugs-15043.sh
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: ocpbugs-20184
   spec:
     clusterDeploymentSelector:
