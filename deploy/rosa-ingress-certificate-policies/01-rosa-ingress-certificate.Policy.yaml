@@ -1,8 +1,25 @@
-apiVersion: v1
-data:
-  tls.crt: '{{hub fromSecret "openshift-acm-policies" .ManagedClusterName "tls.crt" hub}}'
-  tls.key: '{{hub fromSecret "openshift-acm-policies" .ManagedClusterName "tls.key" hub}}'
-kind: Secret
+apiVersion: policy.open-cluster-management.io/v1
+kind: ConfigurationPolicy
 metadata:
-  name: '{{hub (printf "%s-primary-cert-bundle-secret" .ManagedClusterName) hub}}'
-  namespace: openshift-ingress
+  name: rosa-ingress-certificate-policies
+spec:
+  evaluationInterval:
+    compliant: 2h
+    noncompliant: 45s
+  object-templates-raw: |
+    {{hub- if ne (fromConfigMap "openshift-acm-policies" .ManagedClusterName "disable-certificates") "true" hub}}
+    - complianceType: musthave
+      metadataComplianceType: musthave
+      objectDefinition:
+        apiVersion: v1
+        data:
+          tls.crt: '{{hub fromSecret "openshift-acm-policies" .ManagedClusterName "tls.crt" hub}}'
+          tls.key: '{{hub fromSecret "openshift-acm-policies" .ManagedClusterName "tls.key" hub}}'
+        kind: Secret
+        metadata:
+          name: '{{hub (printf "%s-primary-cert-bundle-secret" .ManagedClusterName) hub}}'
+          namespace: openshift-ingress
+    {{hub- end hub}}
+  pruneObjectBehavior: DeleteIfCreated
+  remediationAction: enforce
+  severity: low
