@@ -33,10 +33,11 @@ spec:
           volumes:
             - name: scriptconfigmap
               configMap:
+                defaultMode: 493
                 name: ocpbugs-15043-script
                 items:
                   - key: ocpbugs-15043.sh
-                    path: script
+                    path: ocpbugs-15043.sh
             - name: pull-secret
               secret:
                 secretName: pull-secret
@@ -44,6 +45,10 @@ spec:
           - name: ocpbugs-15043
             image: image-registry.openshift-image-registry.svc:5000/openshift/tools:latest
             imagePullPolicy: Always
+            volumeMounts:
+              - mountPath: "/tmp/config/"
+                name: scriptconfigmap
+                readOnly: false
             resources:
               requests:
                 cpu: 100m
@@ -52,8 +57,4 @@ spec:
                 cpu: 100m
                 memory: 100Mi
             command:
-            - /bin/bash
-            - -c
-            - |
-                  chmod +x /etc/config/script/ocpbugs-15043.sh
-                  /etc/config/script/ocpbugs-15043.sh
+              - /tmp/config/ocpbugs-15043.sh
