@@ -1,0 +1,60 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: ocpbugs-15043
+  namespace: openshift-config
+spec:
+  failedJobsHistoryLimit: 2
+  successfulJobsHistoryLimit: 2
+  concurrencyPolicy: Forbid
+  schedule: "*/5 * * * *"
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: 3600
+      template:
+        metadata:
+          labels:
+            app: ocpbugs-15043
+        spec:
+          affinity:
+            nodeAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+              - preference:
+                  matchExpressions:
+                  - key: node-role.kubernetes.io/master
+                    operator: Exists
+                weight: 1
+          tolerations:
+            - effect: NoSchedule
+              operator: Exists
+          serviceAccountName: ocpbugs-15043
+          restartPolicy: Never
+          volumes:
+            - name: scriptconfigmap
+              configMap:
+                defaultMode: 493
+                name: ocpbugs-15043-script
+                items:
+                  - key: ocpbugs-15043.sh
+                    path: ocpbugs-15043.sh
+            - name: pull-secret
+              secret:
+                secretName: pull-secret
+          containers:
+          - name: ocpbugs-15043
+            image: image-registry.openshift-image-registry.svc:5000/openshift/tools:latest
+            imagePullPolicy: Always
+            volumeMounts:
+              - mountPath: "/tmp/config/"
+                name: scriptconfigmap
+                readOnly: false
+            resources:
+              requests:
+                cpu: 100m
+                memory: 100Mi
+              limits:
+                cpu: 100m
+                memory: 100Mi
+            command:
+              - /tmp/config/ocpbugs-15043.sh
