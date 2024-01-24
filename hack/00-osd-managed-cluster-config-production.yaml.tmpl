@@ -22163,6 +22163,14 @@ objects:
           severity: Info
           summary: Multiple ingress controllers detected
           logType: Cluster Configuration
+        - activeBody: "Your cluster is currently alerting with 'KubePersistentVolumeFillingUp'\
+            \ in '${namespace}' for PVC '${persistentvolumeclaim}'. This is not an\
+            \ actionable alert for the SRE team. Please address this capacity issue\
+            \ using this reference documentation:\_https://docs.openshift.com/container-platform/latest/storage/expanding-persistent-volumes.html."
+          name: KubePersistentVolumeFillingUp
+          resendWait: 1
+          severity: Error
+          summary: 'Action required: Persistent Volume filling'
         - activeBody: Your cluster requires you to take action as its ElasticSearch
             cluster logging deployment has been detected as reaching a high disk usage
             threshold. Red Hat SRE strongly recommends reducing application logging
@@ -36804,6 +36812,16 @@ objects:
         groups:
         - name: sre-managed-notification-alerts
           rules:
+          - alert: KubePersistentVolumeFillingUpSRE
+            expr: count by (namespace, persistentvolumeclaim) (ALERTS{alertname="KubePersistentVolumeFillingUp",
+              alertstate="firing", namespace="openshift-user-workload-monitoring"})
+              >= 1
+            for: 30m
+            labels:
+              severity: Info
+              namespace: '{{ $labels.namespace }}'
+              send_managed_notification: 'true'
+              managed_notification_template: KubePersistentVolumeFillingUp
           - alert: LoggingVolumeFillingUpNotificationSRE
             expr: count(ALERTS{alertname="KubePersistentVolumeFillingUp", alertstate="firing",
               namespace="openshift-logging"}) >= 1
