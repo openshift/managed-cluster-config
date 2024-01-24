@@ -11,6 +11,7 @@ spec:
       resendWait: 24
       severity: Info
       summary: "Multiple ingress controllers detected"
+      logType: Cluster Configuration
     - activeBody: |-
         Your cluster requires you to take action as its ElasticSearch cluster logging deployment has been detected as reaching a high disk usage threshold. Red Hat SRE strongly recommends reducing application logging on your cluster to ensure logging continues to function. If logging disk consumption exceeds 95%, data will be at risk of becoming unavailable or lost and the stability of your ElasticSearch deployment may be impacted.
       name: LoggingVolumeFillingUp
@@ -19,6 +20,7 @@ spec:
         Your cluster's ElasticSearch deployment is detected as being at safe disk consumption levels and no additional action on this issue is required.
       severity: Info
       summary: "ElasticSearch reaching disk capacity"
+      logType: Cluster Configuration
     - activeBody: |-
         Your cluster requires you to take action. SRE has observed that there is more than one default Storage Class configured for your cluster. Please specify one default storage class for your persistent volume claims. Consult the documentation for details: https://docs.openshift.com/container-platform/latest/storage/understanding-persistent-storage.html#pvc-storage-class_understanding-persistent-storage
       name: MultipleDefaultStorageClasses
@@ -27,12 +29,14 @@ spec:
         Your cluster no longer has multiple default storage classes defined. No further action is required.
       severity: Info
       summary: "Multiple Default Storage Classes Configured"
+      logType: Cluster Configuration
     - activeBody: |-
         A user on your system has removed a platform protection webhook. This protection has already been automatically replaced, and no further action is required. Tampering with platform protections can endanger SLAs.
       name: NonSystemChangeValidationWebhookConfigurations # https://issues.redhat.com/browse/OSD-13558
       resendWait: 1
       severity: Error
       summary: "Platform protections removed by non-Red Hat user"
+      logType: Cluster Security
     - activeBody: Your cluster requires you to take action. The kernel file descriptor
         limit for a worker node is currently at or above 90% and is predicted to be
         fully exhausted soon. This will prevent applications on the node from opening
@@ -46,27 +50,33 @@ spec:
         descriptor limit. No additional action on this issue is required.
       severity: Info
       summary: Worker node file descriptor limit nearly exhausted
+      logType: Cluster Configuration
     - activeBody: |-
         Red Hat has detected that your cluster is running multiple versions of EFS CSI driver. This configuration is not safe to use as this might lead to the EFS Operator not working as expected. Please use the officially supported version of EFS operator as described in https://access.redhat.com/solutions/4591701.
       name: MultipleEFSCSIDrivers
       resendWait: 72
       severity: Error
       summary: "Multiple EFS CSI drivers detected"
+      logType: Cluster Configuration
     - activeBody: |-
         Your cluster requires you to take action. The file system usage for a worker node is currently at or above 90% and is predicted to be fully exhausted soon. Without action, this could impact the usability of this node. Please reduce the amount of space used on this mountpoint, either by adjusting application configuration or by moving some applications to other nodes.
       name: WorkerNodeFilesystemSpaceFillingUp
       resendWait: 24
       severity: Info
       summary: Worker node is predicted to run out of inodes in 4 hours
+      logType: Cluster Configuration
     - activeBody: |-
         Your cluster requires you to take action. A workload is been preventing a machine from deleting. The name of the workload can be found by looking at the 'pods_preventing_node_drain' metric in Prometheus. Not taking action can result in higher compute costs as the instance won't terminate until the workload has been moved.
       name: CustomerWorkloadPreventingDrain
       resendWait: 1
       severity: Error
       summary: Workload preventing machine deletion
+      logType: Cluster Configuration
+      references: "https://access.redhat.com/documentation/en-us/red_hat_openshift_service_on_aws/4/html/nodes/working-with-pods#nodes-pods-pod-distruption-about_nodes-pods-configuring"
     - activeBody: |-
         Your cluster requires you to take action. The available file system inodes for a worker node are currently at or below 3% and are predicted to be fully exhausted soon. Without action, this could impact the usability of this node. Please reduce the amount of inodes used on this mountpoint, either by adjusting application configuration or by moving some applications to other nodes.
       name: WorkerNodeFilesystemAlmostOutOfFiles
       resendWait: 24
       severity: Error
       summary: "Filesystem has less than 3% inodes left"
+      logType: Cluster Configuration
