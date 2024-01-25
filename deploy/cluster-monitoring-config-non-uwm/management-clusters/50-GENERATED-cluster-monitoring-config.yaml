@@ -8,7 +8,16 @@ data:
     enableUserWorkload: false
     prometheusK8s:
       remoteWrite:
-      - url: http://token-refresher.openshift-monitoring.svc.cluster.local
+      - url: ${OBSERVATORIUM_URL}
+        oauth2:
+          clientId:
+            secret:
+              key: client-id
+              name: observatorium-credentials
+          clientSecret:
+            key: client-secret
+            name: observatorium-credentials
+          tokenUrl: https://sso.redhat.com/auth/realms/redhat-external/protocol/openid-connect/token
         remoteTimeout: 30s
         writeRelabelConfigs:
         - sourceLabels:
