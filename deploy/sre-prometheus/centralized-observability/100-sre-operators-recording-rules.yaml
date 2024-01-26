@@ -1,0 +1,31 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: sre-operators-recording-rules
+    role: recording-rules
+  name: sre-operators-recording-rules
+  namespace: openshift-monitoring
+spec:
+  groups:
+    - name: sre-operators.rules
+      rules:
+        - expr:
+            # csv_succeeded has a value of 1 or 0
+            # subscription_sync_total is an integer with value >0
+            # joining them with the operator ^ returns a value of 1 or 0
+            label_replace(sre:telemetry:managed_labels, "cluster_version", "$0", "version", ".*")
+            * on () group_right (_id, cluster_version, provider)
+              sum by (exported_namespace, installed, namespace, name, version, channel, package) (
+                  label_replace(
+                    csv_succeeded,
+                    "installed",
+                    "$0",
+                    "name",
+                    ".*"
+                  )
+                ^ on (installed) group_left (name, channel, package)
+                  subscription_sync_total
+              )
+          record:
+            sre:operators:succeeded
