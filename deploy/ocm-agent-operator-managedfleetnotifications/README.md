@@ -2,9 +2,9 @@
 
 This location manages the distribution of the OCM Agent Operator `ManagedFleetNotification` CR to hypershift-only OCM agent running on `rhobsp02ue1`.
 
-The purpose of the `ManagedFleetNotification` CR is to define Service Log templates that map to AlertManager alerts, allowing the OCM Agent to build and send Service Logs when it is notified about those alerts.
+The purpose of the `ManagedFleetNotification` CR is to define notification templates that map to AlertManager alerts, allowing the OCM Agent to build and send notifications when it is notified about those alerts.
 
-The different to the `ManagedNotification` is that the Fleet alerts are working for hypershift.
+`ManagedNotifications` are specifically for HyperShift and are currently sent from a centralized place (`rhobsp02ue1`) to the whole fleet of HCP clusters. Furthermore, `ManagedNotifications` support notifications of type limited support by setting the `limitedSupport` field to `true`. 
 
 ## How to make changes
 

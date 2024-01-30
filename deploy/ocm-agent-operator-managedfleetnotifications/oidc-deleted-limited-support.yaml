@@ -1,0 +1,14 @@
+apiVersion: ocmagent.managed.openshift.io/v1alpha1
+kind: ManagedFleetNotification
+metadata:
+  name: oidc-deleted-notification
+  namespace: openshift-ocm-agent-operator
+spec:
+  fleetNotification:
+    name: oidc-deleted-notification
+    summary: Cluster is in Limited Support due to unsupported cloud provider configuration
+    notificationMessage: |-
+      Your cluster requires you to take action because Red Hat is not able to access the infrastructure with the provided credentials. Please restore the credentials and permissions provided during install. If you have deleted the associated OpenIDConnectProvider, please recreate it by executing the command: rosa create oidc-provider --mode manual --cluster $CLUSTER
+    resendWait: 0
+    severity: Info
+    limitedSupport: true
