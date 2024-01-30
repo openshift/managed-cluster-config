@@ -19,7 +19,7 @@ spec:
       for: 2m
       labels:
         long_window: 1h
-        severity: warning
+        severity: critical
         namespace: openshift-monitoring
         source: "https://issues.redhat.com/browse/OSD-19769"
         link: "https://github.com/openshift/ops-sop/blob/master/v4/troubleshoot/clusteroperators/monitoring.md"
@@ -34,40 +34,10 @@ spec:
       for: 15m
       labels:
         long_window: 6h
-        severity: warning
+        severity: critical
         namespace: openshift-monitoring
         source: "https://issues.redhat.com/browse/OSD-19769"
         link: "https://github.com/openshift/ops-sop/blob/master/v4/troubleshoot/clusteroperators/monitoring.md"
         short_window: 30m
-      annotations:
-        message: "High error budget burn for the monitoring cluster operator (current value: {{ $value }})"
-    - alert: ClusterMonitoringErrorBudgetBurnSRE
-      expr: |
-          1 - ( sum(sum_over_time(cluster_operator_up{name="monitoring"}[2h])) / sum(count_over_time(cluster_operator_up{name="monitoring"}[2h])) ) > (3 * (1 - 0.983))
-          and
-          1 - ( sum(sum_over_time(cluster_operator_up{name="monitoring"}[1d])) / sum(count_over_time(cluster_operator_up{name="monitoring"}[1d])) ) > (3 * (1 - 0.983))
-      for: 1h
-      labels:
-        long_window: 1d
-        severity: warning
-        namespace: openshift-monitoring
-        source: "https://issues.redhat.com/browse/OSD-19769"
-        link: "https://github.com/openshift/ops-sop/blob/master/v4/troubleshoot/clusteroperators/monitoring.md"
-        short_window: 2h
-      annotations:
-        message: "High error budget burn for the monitoring cluster operator (current value: {{ $value }})"
-    - alert: ClusterMonitoringErrorBudgetBurnSRE
-      expr: |
-          1 - ( sum(sum_over_time(cluster_operator_up{name="monitoring"}[6h])) / sum(count_over_time(cluster_operator_up{name="monitoring"}[6h])) ) > (1 * (1 - 0.983))
-          and
-          1 - ( sum(sum_over_time(cluster_operator_up{name="monitoring"}[3d])) / sum(count_over_time(cluster_operator_up{name="monitoring"}[3d])) ) > (1 * (1 - 0.983))
-      for: 3h
-      labels:
-        long_window: 3d
-        severity: warning
-        namespace: openshift-monitoring
-        source: "https://issues.redhat.com/browse/OSD-19769"
-        link: "https://github.com/openshift/ops-sop/blob/master/v4/troubleshoot/clusteroperators/monitoring.md"
-        short_window: 6h
       annotations:
         message: "High error budget burn for the monitoring cluster operator (current value: {{ $value }})"
