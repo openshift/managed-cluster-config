@@ -3,6 +3,7 @@ kind: ClusterRole
 metadata:
   name: backplane-acs-lpsre-admins-project
 rules:
+# LP SRE can interact with ACS
 - apiGroups:
   - platform.stackrox.io
   resources:
@@ -13,6 +14,7 @@ rules:
   - list
   - watch
   - patch
+# LP SRE can get pod logs
 - apiGroups:
   - ""
   resources:
@@ -21,3 +23,32 @@ rules:
   verbs:
   - get
   - watch
+# LP SRE can delete pods
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - delete
+# LP SRE can run commands in pods
+- apiGroups:
+  - ""
+  resources:
+  - pods/exec
+  verbs:
+  - create
+# LP SRE can restart deployments/statefulsets/deploymentconfigs
+- apiGroups:
+  - apps
+  resources:
+  - statefulsets
+  - deployments
+  verbs:
+  - patch
+# LP SRE can scale deployments
+- apiGroups:
+  - apps
+  resources:
+  - deployments/scale
+  verbs:
+  - patch

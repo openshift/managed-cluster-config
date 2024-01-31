@@ -16749,7 +16749,7 @@ objects:
         - clusterRoleName: view
           namespacesAllowedRegex: (^redhat-acs-fleetshard$|^rhacs$|^rhacs-.*)
           namespacesDeniedRegex: openshift-backplane-cluster-admin
-        - clusterRoleName: backplane-lpsre-acm-admins-project
+        - clusterRoleName: backplane-acs-lpsre-admins-project
           namespacesAllowedRegex: (^redhat-acs-fleetshard$|^rhacs$|^rhacs-.*)
           namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
@@ -16777,6 +16777,31 @@ objects:
         verbs:
         - get
         - watch
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - delete
+      - apiGroups:
+        - ''
+        resources:
+        - pods/exec
+        verbs:
+        - create
+      - apiGroups:
+        - apps
+        resources:
+        - statefulsets
+        - deployments
+        verbs:
+        - patch
+      - apiGroups:
+        - apps
+        resources:
+        - deployments/scale
+        verbs:
+        - patch
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
