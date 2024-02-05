@@ -21614,6 +21614,124 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: hive-2408-clustersync-pods
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: ext-managed.openshift.io/hive-shard
+        operator: In
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - kind: ServiceAccount
+      apiVersion: v1
+      metadata:
+        name: hive-2408
+        namespace: openshift-monitoring
+        annotations:
+          kubernetes.io/description: Mitigate https://issues.redhat.com/browse/HIVE-2408
+            by restarting completed/error hive pods
+    - kind: ClusterRole
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        name: hive-2408
+        namespace: openshift-monitoring
+        annotations:
+          kubernetes.io/description: Mitigate https://issues.redhat.com/browse/HIVE-2408
+            by restarting completed/error hive pods
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - get
+        - list
+        - watch
+        - delete
+    - apiVersion: batch/v1
+      kind: CronJob
+      metadata:
+        name: hive-2408
+        namespace: openshift-monitoring
+      spec:
+        failedJobsHistoryLimit: 2
+        successfulJobsHistoryLimit: 2
+        concurrencyPolicy: Replace
+        schedule: '*/10 * * * *'
+        jobTemplate:
+          spec:
+            ttlSecondsAfterFinished: 3600
+            template:
+              metadata:
+                labels:
+                  app: hive-2408
+              spec:
+                affinity:
+                  nodeAffinity:
+                    preferredDuringSchedulingIgnoredDuringExecution:
+                    - preference:
+                        matchExpressions:
+                        - key: node-role.kubernetes.io/infra
+                          operator: Exists
+                      weight: 1
+                  podAntiAffinity:
+                    preferredDuringSchedulingIgnoredDuringExecution:
+                    - podAffinityTerm:
+                        labelSelector:
+                          matchExpressions:
+                          - key: app
+                            operator: In
+                            values:
+                            - hive-2408
+                        topologyKey: kubernetes.io/hostname
+                      weight: 1
+                tolerations:
+                - effect: NoSchedule
+                  operator: Exists
+                serviceAccountName: hive-2408
+                restartPolicy: Never
+                containers:
+                - name: hive-2408
+                  image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+                  imagePullPolicy: Always
+                  resources:
+                    requests:
+                      cpu: 100m
+                      memory: 100Mi
+                    limits:
+                      cpu: 100m
+                      memory: 100Mi
+                  command:
+                  - /bin/sh
+                  - -c
+                  args:
+                  - "pods=$(oc get pod -n hive --field-selector=status.phase!=Running\
+                    \ -l control-plane=clustersync -o name);\nif [ -n \"$pods\" ];\
+                    \ then\n  for pod in $pods; do\n    oc delete \"$pod\" -n hive;\n\
+                    \  done;\nelse\n  echo \"No pods to delete.\";\nfi"
+    - kind: ClusterRoleBinding
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        name: hive-2408
+      subjects:
+      - kind: ServiceAccount
+        name: hive-2408
+        namespace: openshift-monitoring
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: hive-2408
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: hs-delete-custom-cmo-config
   spec:
     clusterDeploymentSelector:

@@ -1,0 +1,65 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: hive-2408
+  namespace: openshift-monitoring
+spec:
+  failedJobsHistoryLimit: 2
+  successfulJobsHistoryLimit: 2
+  concurrencyPolicy: Replace
+  schedule: "*/10 * * * *"
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: 3600
+      template:
+        metadata:
+          labels:
+            app: hive-2408
+        spec:
+          affinity:
+            nodeAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+              - preference:
+                  matchExpressions:
+                  - key: node-role.kubernetes.io/infra
+                    operator: Exists
+                weight: 1
+            podAntiAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+              - podAffinityTerm:
+                  labelSelector:
+                    matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                      - hive-2408
+                  topologyKey: kubernetes.io/hostname
+                weight: 1
+          tolerations:
+            - effect: NoSchedule
+              operator: Exists
+          serviceAccountName: hive-2408
+          restartPolicy: Never
+          containers:
+          - name: hive-2408
+            image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+            imagePullPolicy: Always
+            resources:
+              requests:
+                cpu: 100m
+                memory: 100Mi
+              limits:
+                cpu: 100m
+                memory: 100Mi
+            command: ["/bin/sh", "-c"]
+            args:
+            - |
+              pods=$(oc get pod -n hive --field-selector=status.phase!=Running -l control-plane=clustersync -o name);
+              if [ -n "$pods" ]; then
+                for pod in $pods; do
+                  oc delete "$pod" -n hive;
+                done;
+              else
+                echo "No pods to delete.";
+              fi
