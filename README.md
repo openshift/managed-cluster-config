@@ -25,7 +25,7 @@ add the policy as a new SelectorySyncSet.
 
 All resources in `generated_deploy/` are bundled into a template that is used by config management to apply to target "hive" clusters.  The configuration is deployed to the "hive" cluster inside a SelectorSyncSet.
 
-SelectorSyncSet deployment supports resoures that are synced down to OSD clusters.  Each are explained in detail here.  The general configuration is managed in a `config.yaml` file in each deploy directory.  Key things of note:
+SelectorSyncSet deployment supports resources that are synced down to OSD clusters.  Each are explained in detail here.  The general configuration is managed in a `config.yaml` file in each deploy directory.  Key things of note:
 
 * This file is now mandatory in the scope of OSD-15267 and have been added to all folders. In case it is not define, `make` will fail
 ```
