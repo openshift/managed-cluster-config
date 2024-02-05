@@ -40,6 +40,10 @@ You must specify a `deploymentMode` property in `config.yaml`.
 
 * `deploymentMode` (optional, default = `"SelectorSyncSet"`) - either "Policy" or "SelectorSyncSet".
 
+## Direct Deployment
+
+Direct deployments to Hive clusters should be done via [app-interface](https://gitlab.cee.redhat.com/service/app-interface#manage-openshift-resources-via-app-interface-openshiftnamespace-1yml).
+
 ## SelectorSyncSet Deployment
 
 In the `config.yaml` file you define a top level property `selectorSyncSet`.  Within this configuration is supported for `matchLabels`, `matchExpressions`, `matchLabelsApplyMode`, `resourceApplyMode` and `applyBehavior`.
