@@ -93,18 +93,6 @@ def add_sss_for(name, directory, config):
     # collect the new sss for later processing
     data_sss.append(o)
 
-def add_resources_for(directory, config):
-    # there isn't a template, only thing we really care about is the environments and simply add each resource to each of those environments.
-    # at this point the properties we care about are _required_
-    yamls = get_all_yaml_obj(get_all_yaml_files(directory))
-    if len(yamls) == 0:
-        return
-
-    for y in yamls:
-        for environment in config["environments"]:
-            data_resources[environment].append(y)
-
-
 if __name__ == '__main__':
     #Argument parser
     parser = argparse.ArgumentParser(description="template generation tool", usage='%(prog)s [options]')
@@ -141,9 +129,6 @@ if __name__ == '__main__':
         # skip any directory only containing governance policies, as they are only for hypershift
         if deploymentMode == "Policy":
             continue
-
-        if deploymentMode == "Direct":
-            add_resources_for(dirpath, config["direct"])
 
         elif deploymentMode == "SelectorSyncSet":
             # initialize defaults for config
