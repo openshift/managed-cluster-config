@@ -34932,7 +34932,7 @@ objects:
         groups:
         - name: sre-infra-resource-consumption-recording.rules
           rules:
-          - expr: ( avg ( avg by (instance) ( sum by (cpu, instance) ( rate( node_cpu_seconds_total{mode!="idle"}[8h]
+          - expr: ( avg ( avg by (instance) ( sum by (cpu, instance) ( rate( node_cpu_seconds_total{mode!="idle"}[1h]
               ) ) ) * on (instance) ( label_replace ( kube_node_role{role ="infra"},
               "instance", "$1", "node", "(.*)" ) ) ) > ( scalar ( ( count ( cluster:nodes_roles{label_node_role_kubernetes_io
               ="infra"} ) - 1 ) / count ( cluster:nodes_roles{label_node_role_kubernetes_io
@@ -34952,6 +34952,16 @@ objects:
             record: sre:node_infras:need_resize
         - name: sre-infra-resizing-alerts
           rules:
+          - alert: cpu-InfraNodesExcessiveResourceConsumptionSRE1h
+            expr: sre:node_infra:excessive_consumption_cpu > 0
+            for: 1h
+            labels:
+              severity: warning
+              namespace: openshift-monitoring
+            annotations:
+              message: The cluster's infrastructure nodes have been consuming excessive
+                CPU for 1 hours and may need to be vertically scaled to support the
+                existing workers. See linked SOP for details.
           - alert: cpu-InfraNodesExcessiveResourceConsumptionSRE
             expr: sre:node_infra:excessive_consumption_cpu > 0
             for: 16h

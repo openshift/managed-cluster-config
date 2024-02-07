@@ -12,7 +12,7 @@ spec:
     rules:
     ## Expression Explanation:
     ## Average of value of
-    ## the Average (per node) rate of change of CPU time spent in non-idle modes, totalled by CPU, looking back across the past 8h,
+    ## the Average (per node) rate of change of CPU time spent in non-idle modes, totalled by CPU, looking back across the past 1h,
     ## "*" applies a label replace to limit output to infra nodes
     ## Greater than (>) is the threshold
     ## Count of the infra nodes - 1, divided by the total infra nodes gives the max percent CPU utilization free required to handle a full node failure, as a decimal value: 0.%%
@@ -22,7 +22,7 @@ spec:
                   avg by (instance) (
                     sum by (cpu, instance) (
                       rate(
-                        node_cpu_seconds_total{mode!="idle"}[8h]
+                        node_cpu_seconds_total{mode!="idle"}[1h]
                       )
                     )
                   )
@@ -99,8 +99,16 @@ spec:
         record: sre:node_infras:need_resize
   - name: sre-infra-resizing-alerts
     rules:
-    ## While individual spikes in CPU usage are acceptable, even if spikes are flappy, because CPU is a renewable resource,
-    ## long term (8h) CPU consumption above the threshold indicates CPU consumption has outgrown the cluster
+      - alert: cpu-InfraNodesExcessiveResourceConsumptionSRE1h
+        expr: sre:node_infra:excessive_consumption_cpu > 0
+        for: 1h
+        labels:
+          severity: warning
+          namespace: openshift-monitoring
+        annotations:
+          message: "The cluster's infrastructure nodes have been consuming excessive CPU for 1 hours and may need to be vertically scaled to support the existing workers. See linked SOP for details."
+      ## While individual spikes in CPU usage are acceptable, even if spikes are flappy, because CPU is a renewable resource,
+      ## long term (8h) CPU consumption above the threshold indicates CPU consumption has outgrown the cluster
       - alert: cpu-InfraNodesExcessiveResourceConsumptionSRE
         expr: sre:node_infra:excessive_consumption_cpu > 0
         for: 16h
