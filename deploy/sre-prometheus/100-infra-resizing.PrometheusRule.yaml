@@ -91,7 +91,7 @@ spec:
       ## If either of the CPU or Memory resource consumption alerts (see below) fire, then trigger an alert for SRE
       - expr: (
                 count(
-                  ALERTS{alertname="cpu-InfraNodesExcessiveResourceConsumptionSRE", alertstate="firing"}
+                  ALERTS{alertname="cpu-InfraNodesExcessiveResourceConsumptionSRE1h", alertstate="firing"}
                   OR
                   ALERTS{alertname="memory-InfraNodesExcessiveResourceConsumptionSRE", alertstate="firing"}
                 ) >= 1
@@ -129,7 +129,7 @@ spec:
       ## If the CPU or Memory related "InfraNodesExcessiveResourceConsumptionSRE" alerts are firing, raise a critical ticket to SRE to scale the infra nodes up
       - alert: InfraNodesNeedResizingSRE
         expr: sre:node_infras:need_resize > 0
-        for: 2h
+        for: 5m
         labels:
           severity: critical
           namespace: openshift-monitoring
