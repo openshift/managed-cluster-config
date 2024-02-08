@@ -34946,7 +34946,7 @@ objects:
               ="infra"} ) - 1 ) / count ( cluster:nodes_roles{label_node_role_kubernetes_io
               ="infra"} ) ) )
             record: sre:node_infra:excessive_consumption_memory
-          - expr: ( count( ALERTS{alertname="cpu-InfraNodesExcessiveResourceConsumptionSRE",
+          - expr: ( count( ALERTS{alertname="cpu-InfraNodesExcessiveResourceConsumptionSRE1h",
               alertstate="firing"} OR ALERTS{alertname="memory-InfraNodesExcessiveResourceConsumptionSRE",
               alertstate="firing"} ) >= 1 )
             record: sre:node_infras:need_resize
@@ -34984,7 +34984,7 @@ objects:
                 the existing workers. See linked SOP for details.
           - alert: InfraNodesNeedResizingSRE
             expr: sre:node_infras:need_resize > 0
-            for: 2h
+            for: 5m
             labels:
               severity: critical
               namespace: openshift-monitoring
