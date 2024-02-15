@@ -1,0 +1,6 @@
+apiVersion: ""
+kind: ConfigMap
+name: cluster-monitoring-config
+namespace: openshift-monitoring
+patch: |-
+  { "data": { "config.yaml": "monitoringPlugin:\n  nodeSelector:\n    node-role.kubernetes.io/infra: \"\"\n  tolerations:\n    - effect: NoSchedule\n      key: node-role.kubernetes.io/infra\n      operator: Exists" } }
