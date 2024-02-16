@@ -22,6 +22,8 @@ parameters:
   required: true
 - name: ROUTER_REPLICA_CLUSTER_IDS
   required: true
+- name: ROUTER_REPLICA_ENTITY_IDS
+  required: true
 - name: SEGMENT_API_KEY
   required: true
 - name: RHOBS_URL
@@ -30599,6 +30601,34 @@ objects:
           namespace: openshift-console
         slo:
           targetAvailabilityPercent: '99.5'
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-router-replicas-by-entity-id
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/multi-az
+        operator: In
+        values: 'true'
+      - key: api.openshift.com/legal-entity-id
+        operator: In
+        values: ${{ROUTER_REPLICA_ENTITY_IDS}}
+    resourceApplyMode: Sync
+    patches:
+    - apiVersion: v1
+      kind: IngressController
+      name: default
+      namespace: openshift-ingress-operator
+      applyMode: AlwaysApply
+      patch: '{"spec":{"replicas":3}}'
+      patchType: merge
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
