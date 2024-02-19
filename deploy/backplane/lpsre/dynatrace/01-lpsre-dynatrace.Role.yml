@@ -1,0 +1,25 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: backplane-lpsre-dynatrace
+  namespace: dynatrace
+rules:
+# LPSRE can read dynakubes
+- apiGroups:
+  - dynatrace.com
+  resources:
+  - dynakubes
+  verbs:
+  - list
+  - get
+  - watch
+# LPSRE can read pods
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - pods/log
+  verbs:
+  - get
+  - list
+  - watch
