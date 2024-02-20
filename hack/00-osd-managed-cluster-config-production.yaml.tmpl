@@ -24163,6 +24163,149 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: osd-21066-camo-olm-dance
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.11'
+        - '4.12'
+        - '4.13'
+        - '4.14'
+        - '4.15'
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: sre-operator-reinstall-sa
+        namespace: openshift-monitoring
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: sre-operator-reinstall-role
+        namespace: openshift-monitoring
+      rules:
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - subscriptions
+        verbs:
+        - list
+        - get
+        - patch
+      - apiGroups:
+        - batch
+        resources:
+        - cronjobs
+        verbs:
+        - list
+        - get
+        - delete
+      - apiGroups:
+        - ''
+        resources:
+        - serviceaccounts
+        verbs:
+        - list
+        - get
+        - delete
+      - apiGroups:
+        - rbac.authorization.k8s.io
+        resources:
+        - roles
+        - rolebindings
+        verbs:
+        - list
+        - get
+        - delete
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: sre-operator-reinstall-rb
+        namespace: openshift-monitoring
+      roleRef:
+        kind: Role
+        name: sre-operator-reinstall-role
+        apiGroup: rbac.authorization.k8s.io
+        namespace: openshift-monitoring
+      subjects:
+      - kind: ServiceAccount
+        name: sre-operator-reinstall-sa
+        namespace: openshift-monitoring
+    - apiVersion: batch/v1
+      kind: CronJob
+      metadata:
+        name: sre-operator-reinstall
+        namespace: openshift-monitoring
+      spec:
+        ttlSecondsAfterFinished: 100
+        failedJobsHistoryLimit: 1
+        successfulJobsHistoryLimit: 3
+        concurrencyPolicy: Replace
+        schedule: '*/30 * * * *'
+        jobTemplate:
+          spec:
+            template:
+              spec:
+                serviceAccountName: sre-operator-reinstall-sa
+                restartPolicy: Never
+                containers:
+                - name: operator-reinstaller
+                  image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+                  imagePullPolicy: Always
+                  command:
+                  - sh
+                  - -c
+                  - "#!/bin/bash\nset -euxo pipefail\nNAMESPACE=openshift-monitoring\n\
+                    \nSUBSCRIPTION_SAVED=$(oc get subscriptions.operators.coreos.com\
+                    \ -n \"${NAMESPACE}\" -ojson | jq -r 'del(.items[].metadata.annotations.\"\
+                    kubectl.kubernetes.io/last-applied-configuration\")')\nSUBSCRIPTION=$(oc\
+                    \ get subscriptions.operators.coreos.com -n \"${NAMESPACE}\" -o\
+                    \ jsonpath='{.items[*].metadata.name}')\nCATALOG_SOURCE_SAVED=$(oc\
+                    \ get catalogsources.operators.coreos.com -n \"${NAMESPACE}\"\
+                    \ -ojson | jq -r 'del(.items[].metadata.annotations.\"kubectl.kubernetes.io/last-applied-configuration\"\
+                    )')\nCATALOG_SOURCE=$(oc get catalogsources.operators.coreos.com\
+                    \ -n \"${NAMESPACE}\" -o jsonpath='{.items[*].metadata.name}')\n\
+                    OPERATOR_GROUP_SAVED=$(oc get operatorgroups.operators.coreos.com\
+                    \ -n \"${NAMESPACE}\" -ojson | jq -r 'del(.items[].metadata.annotations.\"\
+                    kubectl.kubernetes.io/last-applied-configuration\")')\nOPERATOR_GROUP=$(oc\
+                    \ get operatorgroups.operators.coreos.com -n \"${NAMESPACE}\"\
+                    \ -o jsonpath='{.items[*].metadata.name}')\n\nif [[ -n \"${SUBSCRIPTION}\"\
+                    \ ]]; then\n  oc delete subscriptions.operators.coreos.com \"\
+                    ${SUBSCRIPTION}\" -n \"${NAMESPACE}\"\nfi\nif [[ -n \"${CATALOG_SOURCE}\"\
+                    \ ]]; then\n  oc delete catalogsources.operators.coreos.com \"\
+                    ${CATALOG_SOURCE}\" -n \"${NAMESPACE}\"\nfi\nif [[ -n \"${OPERATOR_GROUP}\"\
+                    \ ]]; then\n  oc delete operatorgroups.operators.coreos.com \"\
+                    ${OPERATOR_GROUP}\" -n \"${NAMESPACE}\"\nfi\n\nfor csv in $(oc\
+                    \ get clusterserviceversions.operators.coreos.com -n \"${NAMESPACE}\"\
+                    \ -o jsonpath='{range .items[*]}{.metadata.name}{\"\\n\"}{end}')\n\
+                    do\n  oc delete clusterserviceversions.operators.coreos.com \"\
+                    ${csv}\" -n \"${NAMESPACE}\"\ndone\n\nif [[ -n \"${SUBSCRIPTION}\"\
+                    \ ]]; then\n  echo \"${SUBSCRIPTION_SAVED}\" |  oc create -f -\n\
+                    fi\nif [[ -n \"${CATALOG_SOURCE}\" ]]; then\n  echo \"${CATALOG_SOURCE_SAVED}\"\
+                    \ | oc create -f -\nfi\nif [[ -n \"${OPERATOR_GROUP}\" ]]; then\n\
+                    \  echo \"${OPERATOR_GROUP_SAVED}\" | oc create -f -\nfi\n\noc\
+                    \ -n \"$NAMESPACE\" delete cronjob sre-operator-reinstall || true\n\
+                    oc -n \"$NAMESPACE\" delete role sre-operator-reinstall-role ||\
+                    \ true\noc -n \"$NAMESPACE\" delete rolebinding sre-operator-reinstall-rb\
+                    \ || true\noc -n \"$NAMESPACE\" delete serviceaccount sre-operator-reinstall-sa\
+                    \ || true\nexit 0\n"
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: osd-aquasec-operator
   spec:
     clusterDeploymentSelector:
