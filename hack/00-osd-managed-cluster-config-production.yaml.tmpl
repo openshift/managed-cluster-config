@@ -37280,15 +37280,6 @@ objects:
               namespace: openshift-monitoring
               managed_notification_template: WorkerNodeFilesystemAlmostOutOfFiles
               send_managed_notification: 'true'
-          - alert: KubeNodeUnschedulableSRE
-            expr: (kube_node_spec_unschedulable > 0 and on(node) kube_node_role{role="master"})
-              or (kube_node_spec_unschedulable > 0 unless ignoring(node,container,endpoint,job,namespace,service)
-              sum(mapi_machine_set_status_replicas{name=~".*upgrade$"}) > 0)
-            labels:
-              severity: Info
-              namespace: openshift-monitoring
-              send_managed_notification: 'true'
-              managed_notification_template: KubeNodeUnschedulableSRE
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
