@@ -10,6 +10,7 @@ spec:
   groups:
   - name: sre-managed-notification-alerts
     rules:
+    
     - alert: KubePersistentVolumeFillingUpSRE
     # KubePersistentVolumeFillingUp alert firing in openshift-user-workload-monitoring namespace (could be extended to other namespaces if needed).
       expr: count by (namespace, persistentvolumeclaim) (ALERTS{alertname="KubePersistentVolumeFillingUp", alertstate="firing", namespace="openshift-user-workload-monitoring"}) >= 1
@@ -143,3 +144,4 @@ spec:
         namespace: openshift-monitoring
         managed_notification_template: WorkerNodeFilesystemAlmostOutOfFiles
         send_managed_notification: "true"
+    

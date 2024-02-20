@@ -22591,6 +22591,14 @@ objects:
           severity: Error
           summary: Filesystem has less than 3% inodes left
           logType: Cluster Configuration
+        - activeBody: 'Your cluster currently has at least one unschedulable worker
+            node. Please troubleshoot this node using the following reference documentation:
+            https://docs.openshift.com/rosa/rosa_cluster_admin/rosa-cordoning-nodes.'
+          name: KubeNodeUnschedulableSRE
+          resendWait: 6
+          severity: Error
+          summary: 'Action required: a worker node is Unschedulable for more than
+            an hour'
     - apiVersion: ocmagent.managed.openshift.io/v1alpha1
       kind: ManagedNotification
       metadata:
@@ -35438,8 +35446,10 @@ objects:
               sum(mapi_machine_set_status_replicas{name=~".*upgrade$"}) > 0)
             for: 61m
             labels:
-              severity: critical
+              severity: Warning
               namespace: openshift-monitoring
+              send_managed_notification: 'true'
+              managed_notification_template: KubeNodeUnschedulableSRE
             annotations:
               message: The node {{ $labels.node }} has been unschedulable for more
                 than an hour.
