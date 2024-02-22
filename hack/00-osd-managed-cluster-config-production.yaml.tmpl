@@ -29583,6 +29583,33 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: osd-monitoring-plugin
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.14'
+        - '4.15'
+    resourceApplyMode: Sync
+    patches:
+    - apiVersion: ''
+      kind: ConfigMap
+      name: cluster-monitoring-config
+      namespace: openshift-monitoring
+      patch: '{ "data": { "config.yaml": "monitoringPlugin:\n  nodeSelector:\n    node-role.kubernetes.io/infra:
+        \"\"\n  tolerations:\n    - effect: NoSchedule\n      key: node-role.kubernetes.io/infra\n      operator:
+        Exists" } }'
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: osd-must-gather-operator
   spec:
     clusterDeploymentSelector:
