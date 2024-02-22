@@ -16,8 +16,6 @@ parameters:
   required: true
 - name: LOG_LINKING_ENTITY_IDS
   required: true
-- name: ALLOW_CORDON_WORKER_NODE_ENTITY_IDS
-  required: true
 - name: ALLOWED_CIDR_BLOCKS
   required: true
 - name: ROUTER_REPLICA_CLUSTER_IDS
@@ -21598,33 +21596,6 @@ objects:
               overwrite: true
               path: /etc/crio/crio.conf.d/90-linked-log.conf
         osImageURL: ''
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    labels:
-      managed.openshift.io/gitHash: ${IMAGE_TAG}
-      managed.openshift.io/gitRepoName: ${REPO_NAME}
-      managed.openshift.io/osd: 'true'
-    name: customer-cordon-node-configmap
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-      matchExpressions:
-      - key: api.openshift.com/legal-entity-id
-        operator: In
-        values: ${{ALLOW_CORDON_WORKER_NODE_ENTITY_IDS}}
-      - key: api.openshift.com/fedramp
-        operator: NotIn
-        values:
-        - 'true'
-    resourceApplyMode: Sync
-    resources:
-    - apiVersion: v1
-      kind: ConfigMap
-      metadata:
-        name: allow-worker-node-cordon
-        namespace: openshift-validation-webhook
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
