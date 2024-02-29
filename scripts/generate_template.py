@@ -73,8 +73,8 @@ def add_sss_for(name, directory, config):
         for item in config['matchExpressions']:
             o['spec']['clusterDeploymentSelector']['matchExpressions'].append(item)
 
-    if 'enableResourceParameters' in config:
-        o['spec']['enableResourceParameters'] = config['enableResourceParameters']
+    if 'enableResourceTemplates' in config:
+        o['spec']['enableResourceTemplates'] = config['enableResourceTemplates']
 
     # Get all yaml files as array of yaml objects
     yamls = get_all_yaml_obj(get_all_yaml_files(directory))
