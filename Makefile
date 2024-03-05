@@ -94,3 +94,7 @@ enforce-backplane-rules:
 	else \
 		${ENFORCE_BACKPLANE_RULES};\
 	fi
+
+.PHONY: checklinks
+checklinks:
+	scripts/checklinks.sh
