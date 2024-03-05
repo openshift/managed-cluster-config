@@ -7,7 +7,7 @@ IGNORE_REPOS=(
     "https://jira.coreos.com"
     "https://grafana"
 )
-find . -type f -not -path '*/\.*' -print | while read -r file; do
+find . -type f -not -path '*/\.*' -not -path './Makefile' -print | while read -r file; do
     grep -shEo "(http|https)://[a-zA-Z0-9./?=_-]*" "$file" | sort -u | while IFS= read -r URL; do
         skip=false
         for repo in "${IGNORE_REPOS[@]}"; do
