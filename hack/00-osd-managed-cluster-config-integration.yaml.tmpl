@@ -21116,6 +21116,8 @@ objects:
           \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
           \    operator: Exists\nthanosQuerier:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
           \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
+          \    operator: Exists\nmonitoringPlugin:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
+          \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
           \    operator: Exists\n"
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
@@ -21182,6 +21184,8 @@ objects:
           \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
           \    operator: Exists\nthanosQuerier:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
           \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
+          \    operator: Exists\nmonitoringPlugin:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
+          \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
           \    operator: Exists\n"
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
@@ -21239,6 +21243,8 @@ objects:
           \    operator: Exists\nopenshiftStateMetrics:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
           \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
           \    operator: Exists\nthanosQuerier:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
+          \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
+          \    operator: Exists\nmonitoringPlugin:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
           \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
           \    operator: Exists\n"
 - apiVersion: hive.openshift.io/v1
@@ -21305,6 +21311,8 @@ objects:
           \    operator: Exists\nopenshiftStateMetrics:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
           \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
           \    operator: Exists\nthanosQuerier:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
+          \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
+          \    operator: Exists\nmonitoringPlugin:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
           \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
           \    operator: Exists\n"
 - apiVersion: hive.openshift.io/v1
@@ -21375,6 +21383,8 @@ objects:
           \    operator: Exists\nopenshiftStateMetrics:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
           \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
           \    operator: Exists\nthanosQuerier:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
+          \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
+          \    operator: Exists\nmonitoringPlugin:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
           \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
           \    operator: Exists\n"
 - apiVersion: hive.openshift.io/v1
@@ -28056,6 +28066,8 @@ objects:
           \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
           \    operator: Exists\nthanosQuerier:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
           \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
+          \    operator: Exists\nmonitoringPlugin:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
+          \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
           \    operator: Exists\n"
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
@@ -29613,34 +29625,6 @@ objects:
           \  - name: openshift-route-controller-manager\n  - name: openshift-service-ca\n\
           \  - name: openshift-service-ca-operator\n  - name: openshift-user-workload-monitoring\n\
           \  - name: openshift-vsphere-infra\n"
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    labels:
-      managed.openshift.io/gitHash: ${IMAGE_TAG}
-      managed.openshift.io/gitRepoName: ${REPO_NAME}
-      managed.openshift.io/osd: 'true'
-    name: osd-monitoring-plugin
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-      matchExpressions:
-      - key: hive.openshift.io/version-major-minor
-        operator: In
-        values:
-        - '4.14'
-        - '4.15'
-    resourceApplyMode: Sync
-    patches:
-    - apiVersion: ''
-      kind: ConfigMap
-      name: cluster-monitoring-config
-      namespace: openshift-monitoring
-      patch: '{ "data": { "config.yaml": "monitoringPlugin:\n  nodeSelector:\n    node-role.kubernetes.io/infra:
-        \"\"\n  tolerations:\n    - effect: NoSchedule\n      key: node-role.kubernetes.io/infra\n      operator:
-        Exists" } }'
-      patchType: merge
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
