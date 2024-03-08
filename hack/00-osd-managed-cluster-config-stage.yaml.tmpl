@@ -36840,32 +36840,6 @@ objects:
               description: '{{$value}} replicas are not running out of total required
                 replicas for the OpenTelemetry Dynatrace Collector'
               SOP: https://github.com/openshift/ops-sop/blob/master/dynatrace/alerts/DynatraceOpenTelemetryCollectorDegradedSRE.md
-          - alert: DynatraceActiveGateDegradedSRE
-            expr: (sum(kube_statefulset_status_replicas{statefulset=~".*-activegate",
-              namespace="dynatrace"}) without (deployment, instance, pod)) - (sum(kube_statefulset_status_replicas_ready{statefulset=~".*-activegate",
-              namespace="dynatrace"}) without (deployment, instance, pod)) > 0
-            for: 15m
-            labels:
-              namespace: dynatrace
-              severity: warning
-            annotations:
-              summary: Dynatrace ActiveGate is Degraded
-              description: '{{$value}} replicas are not running out of total required
-                replicas for Dynatrace ActiveGate'
-              SOP: https://github.com/openshift/ops-sop/blob/master/dynatrace/alerts/DynatraceActiveGateDegradedSRE.md
-          - alert: DynatraceOneAgentDegradedSRE
-            expr: sum(kube_daemonset_status_desired_number_scheduled{daemonset=~".*-oneagent",
-              namespace="dynatrace"}) without (daemonset, instance, pod) - sum(kube_daemonset_status_number_ready{daemonset=~".*-oneagent",
-              namespace="dynatrace"}) without (daemonset, instance, pod) > 0
-            for: 15m
-            labels:
-              namespace: dynatrace
-              severity: warning
-            annotations:
-              summary: Dynatrace OneAgent is Degraded
-              description: '{{$value}} replicas are not running out of total required
-                replicas for Dynatrace OneAgent'
-              SOP: https://github.com/openshift/ops-sop/blob/master/dynatrace/alerts/DynatraceOneAgentDegradedSRE.md
           - alert: DynatracePodRestartsStuckSRE
             expr: kube_pod_container_status_restarts_total{namespace="dynatrace"}
               > 0 and increase(kube_pod_container_status_restarts_total{namespace="dynatrace"}[15m])
@@ -36879,6 +36853,86 @@ objects:
               description: At least one pod in the 'dynatrace' namespace has been
                 stuck in restarts for the last 15 minutes.
               SOP: https://github.com/openshift/ops-sop/blob/master/dynatrace/alerts/DynatracePodRestartsStuckSRE.md
+          - alert: DynatraceDynakubeComponenetsDegradedSRE
+            expr: count(kube_daemonset_status_desired_number_scheduled{namespace="dynatrace",
+              daemonset=~"hs-mc.+"})
+            for: 60m
+            labels:
+              namespace: dynatrace
+              severity: critical
+              daemonset: hcp-workload-oneagent
+            annotations:
+              summary: HCP workload oneagent daemonset missing
+              description: HCP workload oneagent daemonset in the 'dynatrace' namespace
+                is missing for 60 minutes.
+              SOP: https://github.com/openshift/ops-sop/blob/master/dynatrace/docs/troubleshooting/dynakube.md
+          - alert: DynatraceDynakubeComponenetsDegradedSRE
+            expr: (kube_daemonset_status_desired_number_scheduled{namespace="dynatrace",
+              daemonset=~"hs-mc.+"} - kube_daemonset_status_number_ready{namespace="dynatrace",
+              daemonset=~"hs-mc.+"}) > 0
+            for: 60m
+            labels:
+              namespace: dynatrace
+              severity: critical
+              daemonset: hcp-workload-oneagent
+            annotations:
+              summary: HCP workload oneagent pods degraded
+              description: At least one HCP workload oneagent pod in the 'dynatrace'
+                namespace is not available for 60 minutes.
+              SOP: https://github.com/openshift/ops-sop/blob/master/dynatrace/docs/troubleshooting/dynakube.md
+          - alert: DynatraceDynakubeComponenetsDegradedSRE
+            expr: count(kube_daemonset_status_desired_number_scheduled{namespace="dynatrace",
+              daemonset="request-serving-oneagent"})
+            for: 60m
+            labels:
+              namespace: dynatrace
+              severity: critical
+              daemonset: request-serving-oneagent
+            annotations:
+              summary: Request serving oneagent daemonset missing.
+              description: Request serving oneagent daemonset in the 'dynatrace' namespace
+                is missing for 60 minutes.
+              SOP: https://github.com/openshift/ops-sop/blob/master/dynatrace/docs/troubleshooting/dynakube.md
+          - alert: DynatraceDynakubeComponenetsDegradedSRE
+            expr: (kube_daemonset_status_desired_number_scheduled{namespace="dynatrace",
+              daemonset="request-serving-oneagent"} - kube_daemonset_status_number_ready{namespace="dynatrace",
+              daemonset="request-serving-oneagent"}) > 0
+            for: 60m
+            labels:
+              namespace: dynatrace
+              severity: critical
+              daemonset: request-serving-oneagent
+            annotations:
+              summary: Request serving oneagent pods degraded
+              description: At least one request serving oneagent pod in the 'dynatrace'
+                namespace is not available for 60 minutes.
+              SOP: https://github.com/openshift/ops-sop/blob/master/dynatrace/docs/troubleshooting/dynakube.md
+          - alert: DynatraceDynakubeComponenetsDegradedSRE
+            expr: count(kube_statefulset_replicas{namespace="dynatrace", statefulset=~"hs-mc-.+"})
+            for: 60m
+            labels:
+              namespace: dynatrace
+              severity: critical
+              statefulset: activegate
+            annotations:
+              summary: Dynatrace Activegate statefulset missing
+              description: Activegate statefulset in the 'dynatrace' namespace is
+                missing for 60 minutes.
+              SOP: https://github.com/openshift/ops-sop/blob/master/dynatrace/docs/troubleshooting/dynakube.md
+          - alert: DynatraceDynakubeComponenetsDegradedSRE
+            expr: (kube_statefulset_replicas{namespace="dynatrace", statefulset=~"hs-mc-.+"}
+              - kube_statefulset_status_replicas_ready{namespace="dynatrace", statefulset=~"hs-mc.+"})
+              > 0
+            for: 60m
+            labels:
+              namespace: dynatrace
+              severity: critical
+              statefulset: activegate
+            annotations:
+              summary: Dynatrace Activegate pods degraded
+              description: At least one activegate pod in the 'dynatrace' namespace
+                is not available for 60 minutes.
+              SOP: https://github.com/openshift/ops-sop/blob/master/dynatrace/docs/troubleshooting/dynakube.md
     - apiVersion: monitoring.coreos.com/v1
       kind: PrometheusRule
       metadata:
