@@ -21875,6 +21875,44 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: hypershift-route-monitor-operator
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: ext-hypershift.openshift.io/cluster-type
+        operator: In
+        values:
+        - management-cluster
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+      - key: ext-hypershift.openshift.io/cluster-sector
+        operator: NotIn
+        values:
+        - ibm-infra
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: monitoring.openshift.io/v1alpha1
+      kind: ClusterUrlMonitor
+      metadata:
+        name: api
+        namespace: openshift-route-monitor-operator
+      spec:
+        prefix: https://api.
+        port: '6443'
+        suffix: /livez
+        slo:
+          targetAvailabilityPercent: '99.0'
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: hypershift-sre-metric-set
   spec:
     clusterDeploymentSelector:
@@ -30741,6 +30779,10 @@ objects:
         operator: NotIn
         values:
         - 'true'
+      - key: ext-hypershift.openshift.io/cluster-type
+        operator: NotIn
+        values:
+        - management-cluster
     resourceApplyMode: Sync
     resources:
     - apiVersion: monitoring.openshift.io/v1alpha1
