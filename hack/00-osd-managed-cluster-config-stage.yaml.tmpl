@@ -24266,38 +24266,20 @@ objects:
                   - sh
                   - -c
                   - "#!/bin/bash\nset -euxo pipefail\nNAMESPACE=openshift-monitoring\n\
-                    \nSUBSCRIPTION_SAVED=$(oc get subscriptions.operators.coreos.com\
-                    \ -n \"${NAMESPACE}\" -ojson | jq -r 'del(.items[].metadata.annotations.\"\
-                    kubectl.kubernetes.io/last-applied-configuration\")')\nSUBSCRIPTION=$(oc\
-                    \ get subscriptions.operators.coreos.com -n \"${NAMESPACE}\" -o\
-                    \ jsonpath='{.items[*].metadata.name}')\nCATALOG_SOURCE_SAVED=$(oc\
-                    \ get catalogsources.operators.coreos.com -n \"${NAMESPACE}\"\
-                    \ -ojson | jq -r 'del(.items[].metadata.annotations.\"kubectl.kubernetes.io/last-applied-configuration\"\
-                    )')\nCATALOG_SOURCE=$(oc get catalogsources.operators.coreos.com\
-                    \ -n \"${NAMESPACE}\" -o jsonpath='{.items[*].metadata.name}')\n\
-                    OPERATOR_GROUP_SAVED=$(oc get operatorgroups.operators.coreos.com\
-                    \ -n \"${NAMESPACE}\" -ojson | jq -r 'del(.items[].metadata.annotations.\"\
-                    kubectl.kubernetes.io/last-applied-configuration\")')\nOPERATOR_GROUP=$(oc\
-                    \ get operatorgroups.operators.coreos.com -n \"${NAMESPACE}\"\
-                    \ -o jsonpath='{.items[*].metadata.name}')\n\nif [[ -n \"${SUBSCRIPTION}\"\
-                    \ ]]; then\n  oc delete subscriptions.operators.coreos.com \"\
-                    ${SUBSCRIPTION}\" -n \"${NAMESPACE}\"\nfi\nif [[ -n \"${CATALOG_SOURCE}\"\
-                    \ ]]; then\n  oc delete catalogsources.operators.coreos.com \"\
-                    ${CATALOG_SOURCE}\" -n \"${NAMESPACE}\"\nfi\nif [[ -n \"${OPERATOR_GROUP}\"\
-                    \ ]]; then\n  oc delete operatorgroups.operators.coreos.com \"\
-                    ${OPERATOR_GROUP}\" -n \"${NAMESPACE}\"\nfi\n\nfor csv in $(oc\
-                    \ get clusterserviceversions.operators.coreos.com -n \"${NAMESPACE}\"\
-                    \ -o jsonpath='{range .items[*]}{.metadata.name}{\"\\n\"}{end}')\n\
-                    do\n  oc delete clusterserviceversions.operators.coreos.com \"\
-                    ${csv}\" -n \"${NAMESPACE}\"\ndone\n\nif [[ -n \"${SUBSCRIPTION}\"\
-                    \ ]]; then\n  echo \"${SUBSCRIPTION_SAVED}\" |  oc create -f -\n\
-                    fi\nif [[ -n \"${CATALOG_SOURCE}\" ]]; then\n  echo \"${CATALOG_SOURCE_SAVED}\"\
-                    \ | oc create -f -\nfi\nif [[ -n \"${OPERATOR_GROUP}\" ]]; then\n\
-                    \  echo \"${OPERATOR_GROUP_SAVED}\" | oc create -f -\nfi\n\noc\
-                    \ -n \"$NAMESPACE\" delete cronjob sre-operator-reinstall || true\n\
-                    oc -n \"$NAMESPACE\" delete role sre-operator-reinstall-role ||\
-                    \ true\noc -n \"$NAMESPACE\" delete rolebinding sre-operator-reinstall-rb\
-                    \ || true\noc -n \"$NAMESPACE\" delete serviceaccount sre-operator-reinstall-sa\
+                    CSV_FOUND=$(oc -n \"$NAMESPACE\" get clusterserviceversions.operators.coreos.com\
+                    \ -o name | grep configure-alertmanager-operator) || true\nif\
+                    \ [[ ! -z \"$CSV_FOUND\" ]]; then\n  oc -n \"$NAMESPACE\" delete\
+                    \ clusterserviceversions.operators.coreos.com -l operators.coreos.com/configure-alertmanager-operator.openshift-monitoring=\"\
+                    \"\n  oc -n \"$NAMESPACE\" delete installplan.operators.coreos.com\
+                    \ -l operators.coreos.com/configure-alertmanager-operator.openshift-monitoring=\"\
+                    \"\n  oc -n \"$NAMESPACE\" get subscriptions.operators.coreos.com\
+                    \ configure-alertmanager-operator -o yaml > /tmp/sub.yaml\n  oc\
+                    \ -n \"$NAMESPACE\" delete -f /tmp/sub.yaml\n  oc -n \"$NAMESPACE\"\
+                    \ apply -f /tmp/sub.yaml\nfi\noc -n \"$NAMESPACE\" delete cronjob\
+                    \ sre-operator-reinstall || true\noc -n \"$NAMESPACE\" delete\
+                    \ role sre-operator-reinstall-role || true\noc -n \"$NAMESPACE\"\
+                    \ delete rolebinding sre-operator-reinstall-rb || true\noc -n\
+                    \ \"$NAMESPACE\" delete serviceaccount sre-operator-reinstall-sa\
                     \ || true\nexit 0\n"
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
