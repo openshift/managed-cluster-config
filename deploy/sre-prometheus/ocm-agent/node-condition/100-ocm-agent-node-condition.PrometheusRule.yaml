@@ -38,7 +38,11 @@ spec:
         severity: info
         namespace: openshift-node
         send_managed_notification: "true"
-        managed_notification_template: "NodeConditionDiskPressureNotification"
+        managed_notification_template: "NodeConditionNotification"
+      annotations:
+        condition: "DiskPressure"
+        explanation: " Consider moving application storage off the worker node and into persistent volumes."
+        documentation: "https://access.redhat.com/documentation/en-us/red_hat_openshift_service_on_aws/4/html/storage/configuring-persistent-storage"
     - alert: NodeConditionMemoryPressureNotificationSRE
       expr: count by (machineset, condition, status)
             (
@@ -51,7 +55,11 @@ spec:
         severity: info
         namespace: openshift-node
         send_managed_notification: "true"
-        managed_notification_template: "NodeConditionMemoryPressureNotification"
+        managed_notification_template: "NodeConditionNotification"
+      annotations:
+        condition: "MemoryPressure"
+        explanation: ""
+        documentation: "https://access.redhat.com/documentation/en-us/red_hat_openshift_service_on_aws/4/html/cluster_administration/nodes#nodes-cluster-resource-configure-about_nodes-cluster-resource-configure"
     - alert: NodeConditionPIDPressureNotificationSRE
       expr: count by (machineset, condition, status)
             (
@@ -64,7 +72,11 @@ spec:
         severity: info
         namespace: openshift-node
         send_managed_notification: "true"
-        managed_notification_template: "NodeConditionPIDPressureNotification"
+        managed_notification_template: "NodeConditionNotification"
+      annotations:
+        condition: "PIDPressure"
+        explanation: " This means that more than the maximum allowed number of process identifiers are consumed on one or more worker nodes. This is likely to create instability in the node, as required system services may not be able to create new processes."
+        documentation: "https://access.redhat.com/articles/7033551"
     - alert: NodeConditionNetworkUnavailableNotificationSRE
       expr: count by (machineset, condition, status)
             (
@@ -77,4 +89,8 @@ spec:
         severity: info
         namespace: openshift-node
         send_managed_notification: "true"
-        managed_notification_template: "NodeConditionNetworkUnavailableNotification"
+        managed_notification_template: "NodeConditionNotification"
+      annotations:
+        condition: "NetworkUnavailable"
+        explanation: " Red Hat SRE will be alerted and triage issues. If action is required, a proactive case will be opened by Red Hat."
+        documentation: "https://docs.openshift.com/rosa/rosa_planning/rosa-cloud-expert-prereq-checklist.html#networking-prerequisites"

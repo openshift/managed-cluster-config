@@ -22719,54 +22719,13 @@ objects:
         namespace: openshift-ocm-agent-operator
       spec:
         notifications:
-        - name: NodeConditionDiskPressureNotification
+        - name: NodeConditionNotification
           severity: Warning
-          summary: Worker node is experiencing DiskPressure
-          activeBody: 'DiskPressure condition is true for at least one worker. Consider
-            moving application storage off the worker node and into persistent volumes.
-            For more information, see "Configuring persistent storage" in the ROSA
-            documentation: https://access.redhat.com/documentation/en-us/red_hat_openshift_service_on_aws/4/html/storage/configuring-persistent-storage'
-          resolvedBody: DiskPressure condition is resolved.
+          summary: Worker node is experiencing ${condition}
+          activeBody: '${condition} condition is true for at least one worker.${explanation}
+            For more information, consult the relevant ROSA documentation here: ${documentation}.'
+          resolvedBody: ${condition} condition is resolved.
           resendWait: 6
-          references:
-          - https://access.redhat.com/documentation/en-us/red_hat_openshift_service_on_aws/4/html/storage/configuring-persistent-storage
-          logType: Capacity Management
-        - name: NodeConditionMemoryPressureNotification
-          severity: Warning
-          summary: Worker node is experiencing MemoryPressure
-          activeBody: 'MemoryPressure condition is true for at least one worker. For
-            more information on memory management in OpenShift applications, see "Understanding
-            managing application memory" in the ROSA documentation: https://access.redhat.com/documentation/en-us/red_hat_openshift_service_on_aws/4/html/cluster_administration/nodes#nodes-cluster-resource-configure-about_nodes-cluster-resource-configure'
-          resolvedBody: MemoryPressure condition is resolved.
-          resendWait: 6
-          references:
-          - https://access.redhat.com/documentation/en-us/red_hat_openshift_service_on_aws/4/html/cluster_administration/nodes#nodes-cluster-resource-configure-about_nodes-cluster-resource-configure
-          logType: Capacity Management
-        - name: NodeConditionPIDPressureNotification
-          severity: Warning
-          summary: Worker node is experiencing PIDPressure
-          activeBody: PIDPressure condition is true for at least one worker. This
-            means that more than the maximum allowed number of process identifiers
-            are consumed on one or more worker nodes. This is likely to create instability
-            in the node, as required system services may not be able to create new
-            processes. For more information see https://access.redhat.com/articles/7033551.
-            Reduce the number of pods scheduled to the impacted nodes, or reduce the
-            number of process identifiers consumed by applications on the impacted
-            nodes.
-          resolvedBody: PIDPressure condition is resolved.
-          resendWait: 6
-          references:
-          - https://access.redhat.com/articles/7033551
-          logType: Cluster Configuration
-        - name: NodeConditionNetworkUnavailableNotification
-          severity: Warning
-          summary: Worker node is experiencing NetworkUnavailable
-          activeBody: NetworkUnavailable condition is true for at least one worker.
-            Red Hat SRE will be alerted and triage issues. If action is required,
-            a proactive case will be opened by Red Hat.
-          resolvedBody: NetworkUnavailable condition is resolved.
-          resendWait: 6
-          logType: Cluster Networking
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -37440,7 +37399,12 @@ objects:
               severity: info
               namespace: openshift-node
               send_managed_notification: 'true'
-              managed_notification_template: NodeConditionDiskPressureNotification
+              managed_notification_template: NodeConditionNotification
+            annotations:
+              condition: DiskPressure
+              explanation: ' Consider moving application storage off the worker node
+                and into persistent volumes.'
+              documentation: https://access.redhat.com/documentation/en-us/red_hat_openshift_service_on_aws/4/html/storage/configuring-persistent-storage
           - alert: NodeConditionMemoryPressureNotificationSRE
             expr: count by (machineset, condition, status) ( count by(node) (cluster:cpu_core_node_labels{label_node_role_kubernetes_io_infra="",label_node_role_kubernetes_io_master=""})
               * on (node) group_left(condition, machineset, status) sre:node:condition{condition="MemoryPressure"}
@@ -37450,7 +37414,11 @@ objects:
               severity: info
               namespace: openshift-node
               send_managed_notification: 'true'
-              managed_notification_template: NodeConditionMemoryPressureNotification
+              managed_notification_template: NodeConditionNotification
+            annotations:
+              condition: MemoryPressure
+              explanation: ''
+              documentation: https://access.redhat.com/documentation/en-us/red_hat_openshift_service_on_aws/4/html/cluster_administration/nodes#nodes-cluster-resource-configure-about_nodes-cluster-resource-configure
           - alert: NodeConditionPIDPressureNotificationSRE
             expr: count by (machineset, condition, status) ( count by(node) (cluster:cpu_core_node_labels{label_node_role_kubernetes_io_infra="",label_node_role_kubernetes_io_master=""})
               * on (node) group_left(condition, machineset, status) sre:node:condition{condition="PIDPressure"}
@@ -37460,7 +37428,14 @@ objects:
               severity: info
               namespace: openshift-node
               send_managed_notification: 'true'
-              managed_notification_template: NodeConditionPIDPressureNotification
+              managed_notification_template: NodeConditionNotification
+            annotations:
+              condition: PIDPressure
+              explanation: ' This means that more than the maximum allowed number
+                of process identifiers are consumed on one or more worker nodes. This
+                is likely to create instability in the node, as required system services
+                may not be able to create new processes.'
+              documentation: https://access.redhat.com/articles/7033551
           - alert: NodeConditionNetworkUnavailableNotificationSRE
             expr: count by (machineset, condition, status) ( count by(node) (cluster:cpu_core_node_labels{label_node_role_kubernetes_io_infra="",label_node_role_kubernetes_io_master=""})
               * on (node) group_left(condition, machineset, status) sre:node:condition{condition="NetworkUnavailable"}
@@ -37470,7 +37445,12 @@ objects:
               severity: info
               namespace: openshift-node
               send_managed_notification: 'true'
-              managed_notification_template: NodeConditionNetworkUnavailableNotification
+              managed_notification_template: NodeConditionNotification
+            annotations:
+              condition: NetworkUnavailable
+              explanation: ' Red Hat SRE will be alerted and triage issues. If action
+                is required, a proactive case will be opened by Red Hat.'
+              documentation: https://docs.openshift.com/rosa/rosa_planning/rosa-cloud-expert-prereq-checklist.html#networking-prerequisites
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
