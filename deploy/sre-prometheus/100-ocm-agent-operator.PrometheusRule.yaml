@@ -38,3 +38,15 @@ spec:
         link: "https://github.com/openshift/ops-sop/blob/master/v4/alerts/OCMAgentResponseFailureServiceLogsSRE.md#verify-cluster-pull-secrets"
       annotations:
         message: OCM Agent pull secret auth token is not valid.
+
+
+    # Alert SRE if the OCM agent service log metric has been sent more than 20 within a 24-hour period.
+    - alert: OCMAgentServiceLogsSentExceedingLimit
+      expr: sum(increase(ocm_agent_service_log_sent_total[1d])) > 20
+      for: 1m
+      labels:
+        severity: warning
+        namespace: openshift-monitoring
+        link: "https://github.com/openshift/ops-sop/blob/master/v4/alerts/OCMAgentServiceLogsSentExceedingLimit.md"
+      annotations:
+        message: OCM Agent has sent an excessive number of service logs, potentially indicating an issue. Immediate investigation may be required.
