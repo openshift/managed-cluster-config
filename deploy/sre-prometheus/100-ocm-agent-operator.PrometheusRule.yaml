@@ -40,9 +40,9 @@ spec:
         message: OCM Agent pull secret auth token is not valid.
 
 
-    # Alert SRE if the OCM agent service log metric has been sent more than 20 within a 24-hour period.
+    # Alert SRE if the OCM agent service log metric has been sent more than 10 within a 3-day period.
     - alert: OCMAgentServiceLogsSentExceedingLimit
-      expr: sum(increase(ocm_agent_service_log_sent_total[1d])) > 20
+      expr: sum(increase(ocm_agent_service_log_sent_total[3d])) > 10
       for: 1m
       labels:
         severity: warning
