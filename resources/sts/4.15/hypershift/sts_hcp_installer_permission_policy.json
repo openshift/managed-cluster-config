@@ -22,8 +22,6 @@
                 "elasticloadbalancing:DescribeLoadBalancers",
                 "iam:GetOpenIDConnectProvider",
                 "iam:GetRole",
-                "iam:ListAttachedRolePolicies",
-                "iam:ListRolePolicies",
                 "route53:GetHostedZone",
                 "route53:ListHostedZones",
                 "route53:ListHostedZonesByName",
@@ -321,6 +319,20 @@
                     "aws:TagKeys": [
                         "kubernetes.io/cluster/*"
                     ]
+                }
+            }
+        },
+        {
+            "Sid": "ListPoliciesAttachedToRoles",
+            "Effect": "Allow",
+            "Action": [
+                "iam:ListAttachedRolePolicies",
+                "iam:ListRolePolicies"
+            ],
+            "Resource": "arn:aws:iam::*:role/*",
+            "Condition": {
+                "StringEquals": {
+                    "aws:ResourceTag/red-hat-managed": "true"
                 }
             }
         }
