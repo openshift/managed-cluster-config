@@ -2,7 +2,7 @@
 
 Some versions of Openshift may require manual steps as prerequisites for a successful cluster upgrade. These pre-requirements will be formulated in form of gates that block cluster-version-operator of kicking off an upgrade.
 
-Read more about CVO gates [here](https://github.com/openshift/enhancements/blob/mater/enhancements/update/upgrades-blocking-on-ack.md#general-implementation).
+Read more about CVO gates [here](https://github.com/openshift/enhancements/blob/master/enhancements/update/upgrades-blocking-on-ack.md#general-implementation).
 
 For AWS STS cluster an additional annotation on the cloud-credentials may be necessary.
 
