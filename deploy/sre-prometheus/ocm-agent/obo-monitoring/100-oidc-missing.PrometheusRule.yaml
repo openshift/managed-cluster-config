@@ -1,0 +1,31 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: oidc-missing
+    role: alert-rules
+  name: oidc-missing
+  namespace: openshift-observability-operator
+spec:
+  groups:
+    - name: OIDCMissingFleetNotification
+      interval: 60s
+      rules:
+        - alert: OIDCMissingFleetNotification
+          annotations:
+            description: "Customer cloud environment is unreachable from the management cluster due to invalid aws credentials"
+            summary: "Cluster has invalid AWS credentials"
+          # Clusters tend to have their `hypershift_cluster_invalid_aws_creds` set to > 0 while the cluster didn't finish the installation, thus we check
+          # that the cluster is not rolling out in our expression (= hypershift_cluster_initial_rolling_out_duration_seconds does not exist)
+          # hypershift_cluster_initial_rolling_out_duration_seconds stops being emitted once the cluster is rolled out
+          expr: sum by (mc_name, _mc_id, sector, region, env, namespace, exported_namespace, source, _id) (last_over_time(hypershift_cluster_invalid_aws_creds[10m])) > 0 unless on (exported_namespace) hypershift_cluster_initial_rolling_out_duration_seconds unless on (exported_namespace) last_over_time(hypershift_cluster_deleting_duration_seconds[10m])
+          for: 10m
+          labels:
+            severity: warning
+            send_managed_notification: "true"
+            managed_notification_template: oidc-deleted-notification
+            # We don't want the wrapper to auto resolve this, as the notification itself is setting limited support via OCM-Agent.
+            # This alert would resolve itself by firing, thus removing limited support and causing itself to flap.
+            silencing_wrapper: none
+            namespace: "{{ $labels.namespace }}"
