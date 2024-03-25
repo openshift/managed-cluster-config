@@ -21838,6 +21838,42 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: hypershift-obo-alertmanager-config
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: ext-hypershift.openshift.io/cluster-type
+        operator: In
+        values:
+        - management-cluster
+      - key: api.openshift.com/managed
+        operator: In
+        values:
+        - 'true'
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      data:
+        alertmanager.yaml: Z2xvYmFsOgogIHJlc29sdmVfdGltZW91dDogNW0Kcm91dGU6CiAgcmVjZWl2ZXI6ICJudWxsIgogIHJvdXRlczoKICAtIHJlY2VpdmVyOiBvY21hZ2VudAogICAgbWF0Y2hlcnM6CiAgICAtIHNlbmRfbWFuYWdlZF9ub3RpZmljYXRpb24gPSB0cnVlCiAgICByZXBlYXRfaW50ZXJ2YWw6IDEwbQogIC0gcmVjZWl2ZXI6ICJudWxsIgogIGdyb3VwX3dhaXQ6IDMwcwogIGdyb3VwX2ludGVydmFsOiA1bQogIHJlcGVhdF9pbnRlcnZhbDogMTJoCnJlY2VpdmVyczoKLSBuYW1lOiBvY21hZ2VudAogIHdlYmhvb2tfY29uZmlnczoKICAtIHNlbmRfcmVzb2x2ZWQ6IHRydWUKICAgIHVybDogaHR0cDovL29jbS1hZ2VudC1mbGVldC5vcGVuc2hpZnQtb2NtLWFnZW50LW9wZXJhdG9yLnN2Yy5jbHVzdGVyLmxvY2FsOjgwODEvYWxlcnRtYW5hZ2VyLXJlY2VpdmVyCi0gbmFtZTogIm51bGwiCg==
+      kind: Secret
+      metadata:
+        creationTimestamp: null
+        name: alertmanager-hypershift-monitoring-stack
+        namespace: openshift-observability-operator
+      type: Opaque
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: hypershift-obo-nodeselector-tolerations
   spec:
     clusterDeploymentSelector:
