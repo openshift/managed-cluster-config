@@ -46,6 +46,23 @@ spec:
                       metadataComplianceType: musthave
                       objectDefinition:
                         apiVersion: rbac.authorization.k8s.io/v1
+                        kind: Role
+                        metadata:
+                            name: restricted-scc-user
+                            namespace: openshift-backplane-managed-scripts
+                        rules:
+                            - apiGroups:
+                                - security.openshift.io
+                              resourceNames:
+                                - restricted-v2
+                              resources:
+                                - securitycontextconstraints
+                              verbs:
+                                - use
+                    - complianceType: mustonlyhave
+                      metadataComplianceType: musthave
+                      objectDefinition:
+                        apiVersion: rbac.authorization.k8s.io/v1
                         kind: ClusterRoleBinding
                         metadata:
                             name: openshift-backplane-managed-scripts-reader
@@ -53,6 +70,21 @@ spec:
                             apiGroup: rbac.authorization.k8s.io
                             kind: ClusterRole
                             name: openshift-backplane-managed-scripts-reader
+                        subjects:
+                            - kind: Group
+                              name: system:serviceaccounts:openshift-backplane-managed-scripts
+                    - complianceType: mustonlyhave
+                      metadataComplianceType: musthave
+                      objectDefinition:
+                        apiVersion: rbac.authorization.k8s.io/v1
+                        kind: RoleBinding
+                        metadata:
+                            name: restricted-scc-user
+                            namespace: openshift-backplane-managed-scripts
+                        roleRef:
+                            apiGroup: rbac.authorization.k8s.io
+                            kind: Role
+                            name: restricted-scc-user
                         subjects:
                             - kind: Group
                               name: system:serviceaccounts:openshift-backplane-managed-scripts
