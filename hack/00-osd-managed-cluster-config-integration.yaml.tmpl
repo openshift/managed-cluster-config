@@ -37356,6 +37356,81 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: sre-prometheus-ocm-agent-obo-monitoring
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: ext-hypershift.openshift.io/cluster-type
+        operator: In
+        values:
+        - management-cluster
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
+          prometheus: audit-webhook-error-putting-minimized-cloudwatch-log
+          role: alert-rules
+        name: audit-webhook-error-putting-minimized-cloudwatch-log
+        namespace: openshift-observability-operator
+      spec:
+        groups:
+        - name: AuditWebhookCloudWatchErrors
+          interval: 60s
+          rules:
+          - alert: AuditWebhookErrorPuttingMinimizedCloudwatchLog
+            annotations:
+              description: The audit webhook failed to put a minimized event to cloudwatch
+                in {{ $labels.namespace }}.
+              summary: Audit webhook cloudwatch PutEvents failed for a minimized event
+            expr: sum by (mc_name, _mc_id, sector, region, env, namespace, source,
+              _id) (rate (splunkforwarder_audit_filter_cloudwatch_put_log_errors_total{error_code=~"invalidparameterexception_.*"}[5m]))
+              > 0
+            for: 1m
+            labels:
+              severity: info
+              send_managed_notification: 'true'
+              managed_notification_template: audit-webhook-error-putting-minimized-cloudwatch-log
+              namespace: '{{ $labels.namespace }}'
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
+          prometheus: oidc-missing
+          role: alert-rules
+        name: oidc-missing
+        namespace: openshift-observability-operator
+      spec:
+        groups:
+        - name: OIDCMissingFleetNotification
+          interval: 60s
+          rules:
+          - alert: OIDCMissingFleetNotification
+            annotations:
+              description: Customer cloud environment is unreachable from the management
+                cluster due to invalid aws credentials
+              summary: Cluster has invalid AWS credentials
+            expr: sum by (mc_name, _mc_id, sector, region, env, namespace, exported_namespace,
+              source, _id) (last_over_time(hypershift_cluster_invalid_aws_creds[10m]))
+              > 0 unless on (exported_namespace) hypershift_cluster_initial_rolling_out_duration_seconds
+              unless on (exported_namespace) last_over_time(hypershift_cluster_deleting_duration_seconds[10m])
+            for: 10m
+            labels:
+              severity: warning
+              send_managed_notification: 'true'
+              managed_notification_template: oidc-deleted-notification
+              silencing_wrapper: none
+              namespace: '{{ $labels.namespace }}'
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: sre-prometheus-ocm-agent-unsupported-logging
   spec:
     clusterDeploymentSelector:

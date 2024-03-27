@@ -1,0 +1,30 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: audit-webhook-error-putting-minimized-cloudwatch-log
+    role: alert-rules
+  name: audit-webhook-error-putting-minimized-cloudwatch-log
+  namespace: openshift-observability-operator
+spec:
+  groups:
+    - name: AuditWebhookCloudWatchErrors
+      interval: 60s
+      rules:
+        - alert: AuditWebhookErrorPuttingMinimizedCloudwatchLog
+          annotations:
+            description: "The audit webhook failed to put a minimized event to cloudwatch in {{ $labels.namespace }}."
+            summary: "Audit webhook cloudwatch PutEvents failed for a minimized event"
+          # All suffixed invalidparameterexception indicate that the resend failed, which we want to alert on:
+          # This includes the following errors:
+          # - invalidparameterexception_reduce_failed
+          # - invalidparameterexception_marshal_failed
+          # - invalidparameterexception_resent_failed
+          expr: sum by (mc_name, _mc_id, sector, region, env, namespace, source, _id) (rate (splunkforwarder_audit_filter_cloudwatch_put_log_errors_total{error_code=~"invalidparameterexception_.*"}[5m])) > 0
+          for: 1m
+          labels:
+            severity: info
+            send_managed_notification: "true"
+            managed_notification_template: audit-webhook-error-putting-minimized-cloudwatch-log
+            namespace: "{{ $labels.namespace }}"
