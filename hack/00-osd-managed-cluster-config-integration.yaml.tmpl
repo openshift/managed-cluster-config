@@ -7923,6 +7923,89 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: backplane-acs
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/addon-acs-fleetshard: 'true'
+        api.openshift.com/addon-acs-fleetshard-dev: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: openshift-backplane-addon-acs-fleet-shard
+    - apiVersion: managed.openshift.io/v1alpha1
+      kind: SubjectPermission
+      metadata:
+        name: backplane-acs-admins-project
+        namespace: openshift-rbac-permissions
+      spec:
+        permissions:
+        - clusterRoleName: view
+          namespacesAllowedRegex: (^redhat-acs-fleetshard$|^rhacs$|^rhacs-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-acs-admins-project
+          namespacesAllowedRegex: (^redhat-acs-fleetshard$|^rhacs$|^rhacs-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        subjectKind: Group
+        subjectName: system:serviceaccounts:openshift-backplane-acs
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-acs-admins-project
+      rules:
+      - apiGroups:
+        - platform.stackrox.io
+        resources:
+        - centrals
+        - securedclusters
+        verbs:
+        - get
+        - list
+        - watch
+        - patch
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        - pods/log
+        verbs:
+        - get
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - delete
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - create
+      - apiGroups:
+        - apps
+        resources:
+        - statefulsets
+        - deployments
+        verbs:
+        - patch
+      - apiGroups:
+        - apps
+        resources:
+        - deployments/scale
+        verbs:
+        - patch
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: backplane-addon-connectors-addon-connectors-operator
   spec:
     clusterDeploymentSelector:
