@@ -9,7 +9,8 @@ This directory is focused around managing roles for backplane users based on the
 | mtsre  | RBAC for the Managed Tenants SRE team, which manages layered products or add-ons in OSD clusters. This has subdirectories for each available add-on |
 | lpsre | RBAC for SRE Layered Products team (Combining of CS and MT SRE teams) |
 | srep  | RBAC for SRE Platform team  |
-| mkrts | RBAC for RTS team |
+| acs | RBAC for the ACS team to access acs dataplane clusters  |
+
 
 ## Guidelines
 
