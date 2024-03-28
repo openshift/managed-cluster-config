@@ -1,0 +1,26 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: sre-control-plane-machine-set-alerts
+    role: alert-rules
+  name: sre-control-plane-machine-set-alerts
+  namespace: openshift-monitoring
+spec:
+  groups:
+  - name: sre-control-plane-machine-set-alerts
+    rules:
+        - alert: SREControlPlaneMachineSetStuck
+          expr: cpms_enabled > 0 AND (
+            count ( cluster:nodes_roles{label_node_role_kubernetes_io="master"} ) > 3
+            OR
+            count ( cluster:nodes_roles{label_node_role_kubernetes_io="control-plane"} ) > 3
+            )
+          for: 1h
+          labels:
+            severity: critical
+            namespace: openshift-monitoring
+            link: "https://github.com/openshift/ops-sop/blob/master/v4/alerts/SREControlPlaneMachineSetStuck.md"
+          annotations:
+            message: "The clusters controlplane machineset has additional nodes for more than 1 hour."
+
