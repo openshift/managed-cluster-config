@@ -35608,6 +35608,15 @@ objects:
               link: https://github.com/openshift/ops-sop/blob/master/v4/alerts/OCMAgentResponseFailureServiceLogsSRE.md#verify-cluster-pull-secrets
             annotations:
               message: OCM Agent pull secret auth token is not valid.
+          - alert: OCMAgentServiceLogsSentExceedingLimit
+            expr: sum(increase(ocm_agent_service_log_sent_total[3d])) > 10
+            labels:
+              severity: warning
+              namespace: openshift-monitoring
+              link: https://github.com/openshift/ops-sop/blob/master/v4/alerts/OCMAgentServiceLogsSentExceedingLimit.md
+            annotations:
+              message: OCM Agent has sent an excessive number of service logs, potentially
+                indicating an issue. Immediate investigation may be required.
     - apiVersion: monitoring.coreos.com/v1
       kind: PrometheusRule
       metadata:
@@ -37171,7 +37180,7 @@ objects:
             labels:
               severity: Info
               namespace: openshift-monitoring
-              managed_notification_template: AdditionalTrustBundleCAExpiring
+              managed_notification_template: AdditionalTrust BundleCAExpiring
               send_managed_notification: 'true'
             annotations:
               message: Additional Trust Bundle CA certificate will expire in {{ $value
