@@ -78,8 +78,8 @@ spec:
       severity: Error
       summary: Workload preventing machine deletion
       logType: Cluster Configuration
-      references: 
-      - "https://access.redhat.com/documentation/en-us/red_hat_openshift_service_on_aws/4/html/nodes/working-with-pods#nodes-pods-pod-distruption-about_nodes-pods-configuring"
+      references:
+        - "https://access.redhat.com/documentation/en-us/red_hat_openshift_service_on_aws/4/html/nodes/working-with-pods#nodes-pods-pod-distruption-about_nodes-pods-configuring"
     - activeBody: |-
         Your cluster requires you to take action. The available file system inodes for a worker node are currently at or below 3% and are predicted to be fully exhausted soon. Without action, this could impact the usability of this node. Please reduce the amount of inodes used on this mountpoint, either by adjusting application configuration or by moving some applications to other nodes.
       name: WorkerNodeFilesystemAlmostOutOfFiles
@@ -88,8 +88,19 @@ spec:
       summary: "Filesystem has less than 3% inodes left"
       logType: Cluster Configuration
     - activeBody: |-
-        Your cluster currently has at least one unschedulable worker node. Please troubleshoot this node using the following reference documentation: https://docs.openshift.com/container-platform/latest/nodes/nodes/nodes-nodes-working.html#nodes-nodes-working-marking_nodes-nodes-working.
+        Your cluster currently has at least one unschedulable worker node. Please troubleshoot this node.
       name: KubeNodeUnschedulableSRE
       resendWait: 6
       severity: Error
       summary: "Action required: a worker node is Unschedulable for more than an hour"
+      references:
+        - "https://docs.openshift.com/container-platform/latest/nodes/nodes/nodes-nodes-working.html#nodes-nodes-working-marking_nodes-nodes-working"
+    - activeBody: |-
+        Your cluster requires your attention. User Workload Montioring is currently degraded because unscheduleable worker nodes are preventing deployment of UWM pods. Please scale up the MachinePool for this cluster or uncordon any cordoned worker nodes.
+      name: "UnscheduleableNodesPreventingUWMDeployment"
+      resendWait: 2
+      severity: Error
+      summary: "Action required: User Workload Monitoring is degraded"
+      logType: Cluster Configuration
+      references:
+        - "https://docs.openshift.com/rosa/nodes/nodes/rosa-working-with-nodes"
