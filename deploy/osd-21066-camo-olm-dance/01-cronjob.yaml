@@ -1,0 +1,43 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: sre-operator-reinstall
+  namespace: openshift-monitoring
+spec:
+  ttlSecondsAfterFinished: 100
+  failedJobsHistoryLimit: 1
+  successfulJobsHistoryLimit: 3
+  concurrencyPolicy: Replace
+  schedule: "*/5 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: sre-operator-reinstall-sa
+          restartPolicy: Never
+          containers:
+          - name: operator-reinstaller
+            image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+            imagePullPolicy: Always
+            command:
+            - sh
+            - -c
+            - |
+              #!/bin/bash
+              set -euxo pipefail
+              NAMESPACE=openshift-monitoring
+
+              # Check for the presence of CAMO v0.1.581. If it exists, do nothing. If any other version is found clean up OLM resources
+              # The resources will be re-created with the latest verseion as we are keeping the subscription around.
+              if ! oc -n "$NAMESPACE" get clusterserviceversions.operators.coreos.com configure-alertmanager-operator.v0.1.581-c2526fb; then
+                oc -n "$NAMESPACE" delete clusterserviceversions.operators.coreos.com $(oc -n "$NAMESPACE" get clusterserviceversions.operators.coreos.com -ojsonpath='{.items[?(@.spec.displayName=="configure-alertmanager-operator")].metadata.name}') || true
+                oc -n "$NAMESPACE" delete installplan.operators.coreos.com -l operators.coreos.com/configure-alertmanager-operator.openshift-monitoring=""
+              fi
+
+              # Prevent the job from -rerunning
+              oc -n "$NAMESPACE" delete cronjob sre-operator-reinstall || true
+              oc -n "$NAMESPACE" delete role sre-operator-reinstall-role || true
+              oc -n "$NAMESPACE" delete rolebinding sre-operator-reinstall-rb || true
+              oc -n "$NAMESPACE" delete serviceaccount sre-operator-reinstall-sa || true
+              exit 0
