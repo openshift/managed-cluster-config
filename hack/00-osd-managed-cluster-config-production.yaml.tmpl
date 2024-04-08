@@ -7923,21 +7923,65 @@ objects:
       kind: Namespace
       metadata:
         name: openshift-backplane-addon-acs-fleet-shard
-    - apiVersion: managed.openshift.io/v1alpha1
-      kind: SubjectPermission
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
       metadata:
-        name: backplane-acs-admins-project
-        namespace: openshift-rbac-permissions
-      spec:
-        permissions:
-        - clusterRoleName: view
-          namespacesAllowedRegex: (^redhat-acs-fleetshard$|^rhacs$|^rhacs-.*)
-          namespacesDeniedRegex: openshift-backplane-cluster-admin
-        - clusterRoleName: backplane-acs-admins-project
-          namespacesAllowedRegex: (^redhat-acs-fleetshard$|^rhacs$|^rhacs-.*)
-          namespacesDeniedRegex: openshift-backplane-cluster-admin
-        subjectKind: Group
-        subjectName: system:serviceaccounts:openshift-backplane-addon-acs-fleet-shard
+        name: backplane-acs-admins-cluster-aggregate
+        labels:
+          managed.openshift.io/aggregate-to-acs-admins: cluster
+      rules:
+      - apiGroups:
+        - config.openshift.io
+        resources:
+        - projects
+        verbs:
+        - create
+        - get
+        - list
+        - patch
+        - update
+        - watch
+      - apiGroups:
+        - config.openshift.io
+        resources:
+        - infrastructures
+        - oauths
+        verbs:
+        - get
+      - apiGroups:
+        - project.openshift.io
+        resources:
+        - projects
+        verbs:
+        - create
+        - get
+        - list
+        - patch
+        - update
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - namespaces
+        - namespaces/finalize
+        verbs:
+        - create
+        - get
+        - list
+        - patch
+        - update
+        - watch
+      - apiGroups:
+        - user.openshift.io
+        resources:
+        - '*'
+        verbs:
+        - create
+        - get
+        - list
+        - patch
+        - update
+        - watch
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
@@ -7945,6 +7989,7 @@ objects:
       rules:
       - apiGroups:
         - platform.stackrox.io
+        - cloud.stackrox.io
         resources:
         - centrals
         - securedclusters
@@ -7971,13 +8016,16 @@ objects:
         - ''
         resources:
         - pods
+        - exec
         verbs:
         - create
       - apiGroups:
         - apps
+        - apps.openshift.io
         resources:
         - statefulsets
         - deployments
+        - deploymentconfigs
         verbs:
         - patch
       - apiGroups:
@@ -7986,6 +8034,28 @@ objects:
         - deployments/scale
         verbs:
         - patch
+      - apiGroups:
+        - policy
+        resources:
+        - poddisruptionbudgets
+        verbs:
+        - list
+        - get
+    - apiVersion: managed.openshift.io/v1alpha1
+      kind: SubjectPermission
+      metadata:
+        name: backplane-acs-admins-project
+        namespace: openshift-rbac-permissions
+      spec:
+        permissions:
+        - clusterRoleName: view
+          namespacesAllowedRegex: (^redhat-acs-fleetshard$|^rhacs$|^rhacs-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-acs-admins-project
+          namespacesAllowedRegex: (^redhat-acs-fleetshard$|^rhacs$|^rhacs-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        subjectKind: Group
+        subjectName: system:serviceaccounts:openshift-backplane-addon-acs-fleet-shard
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -8005,21 +8075,65 @@ objects:
       kind: Namespace
       metadata:
         name: openshift-backplane-addon-acs-fleet-shard
-    - apiVersion: managed.openshift.io/v1alpha1
-      kind: SubjectPermission
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
       metadata:
-        name: backplane-acs-admins-project
-        namespace: openshift-rbac-permissions
-      spec:
-        permissions:
-        - clusterRoleName: view
-          namespacesAllowedRegex: (^redhat-acs-fleetshard$|^rhacs$|^rhacs-.*)
-          namespacesDeniedRegex: openshift-backplane-cluster-admin
-        - clusterRoleName: backplane-acs-admins-project
-          namespacesAllowedRegex: (^redhat-acs-fleetshard$|^rhacs$|^rhacs-.*)
-          namespacesDeniedRegex: openshift-backplane-cluster-admin
-        subjectKind: Group
-        subjectName: system:serviceaccounts:openshift-backplane-addon-acs-fleet-shard
+        name: backplane-acs-admins-cluster-aggregate
+        labels:
+          managed.openshift.io/aggregate-to-acs-admins: cluster
+      rules:
+      - apiGroups:
+        - config.openshift.io
+        resources:
+        - projects
+        verbs:
+        - create
+        - get
+        - list
+        - patch
+        - update
+        - watch
+      - apiGroups:
+        - config.openshift.io
+        resources:
+        - infrastructures
+        - oauths
+        verbs:
+        - get
+      - apiGroups:
+        - project.openshift.io
+        resources:
+        - projects
+        verbs:
+        - create
+        - get
+        - list
+        - patch
+        - update
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - namespaces
+        - namespaces/finalize
+        verbs:
+        - create
+        - get
+        - list
+        - patch
+        - update
+        - watch
+      - apiGroups:
+        - user.openshift.io
+        resources:
+        - '*'
+        verbs:
+        - create
+        - get
+        - list
+        - patch
+        - update
+        - watch
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
@@ -8027,6 +8141,7 @@ objects:
       rules:
       - apiGroups:
         - platform.stackrox.io
+        - cloud.stackrox.io
         resources:
         - centrals
         - securedclusters
@@ -8053,13 +8168,16 @@ objects:
         - ''
         resources:
         - pods
+        - exec
         verbs:
         - create
       - apiGroups:
         - apps
+        - apps.openshift.io
         resources:
         - statefulsets
         - deployments
+        - deploymentconfigs
         verbs:
         - patch
       - apiGroups:
@@ -8068,6 +8186,28 @@ objects:
         - deployments/scale
         verbs:
         - patch
+      - apiGroups:
+        - policy
+        resources:
+        - poddisruptionbudgets
+        verbs:
+        - list
+        - get
+    - apiVersion: managed.openshift.io/v1alpha1
+      kind: SubjectPermission
+      metadata:
+        name: backplane-acs-admins-project
+        namespace: openshift-rbac-permissions
+      spec:
+        permissions:
+        - clusterRoleName: view
+          namespacesAllowedRegex: (^redhat-acs-fleetshard$|^rhacs$|^rhacs-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-acs-admins-project
+          namespacesAllowedRegex: (^redhat-acs-fleetshard$|^rhacs$|^rhacs-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        subjectKind: Group
+        subjectName: system:serviceaccounts:openshift-backplane-addon-acs-fleet-shard
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:

@@ -6,6 +6,7 @@ rules:
 # ACS team can interact with ACS
 - apiGroups:
   - platform.stackrox.io
+  - cloud.stackrox.io
   resources:
   - centrals
   - securedclusters
@@ -35,14 +36,17 @@ rules:
   - ""
   resources:
   - pods
+  - exec
   verbs:
   - create
 # ACS team can restart deployments/statefulsets/deploymentconfigs
 - apiGroups:
   - apps
+  - apps.openshift.io
   resources:
   - statefulsets
   - deployments
+  - deploymentconfigs
   verbs:
   - patch
 # ACS team can scale deployments
@@ -52,3 +56,11 @@ rules:
   - deployments/scale
   verbs:
   - patch
+  # ACS SRE can list/get PDB
+- apiGroups:
+  - policy
+  resources:
+  - poddisruptionbudgets
+  verbs:
+  - list
+  - get
