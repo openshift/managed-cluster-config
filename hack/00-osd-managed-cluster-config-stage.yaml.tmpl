@@ -27180,7 +27180,7 @@ objects:
       - apiGroups:
         - operators.coreos.com
         resources:
-        - subscriptions
+        - subscriptions.operators.coreos.com
         verbs:
         - patch
         - get
@@ -27240,27 +27240,28 @@ objects:
                     \ for each subscription having a curated source\n# patch the source\n\
                     # NOTE there are loops for each source to keep the jsonpath simple\
                     \ and the logic easy to read\n\necho START\nfor NS in $(oc get\
-                    \ subscription -A -o jsonpath='{.items[?(@.spec.source==\"osd-curated-redhat-operators\"\
-                    )].metadata.namespace}');\ndo\n  for SUB in $(oc -n $NS get subscription\
+                    \ subscriptions.operators.coreos.com -A -o jsonpath='{.items[?(@.spec.source==\"\
+                    osd-curated-redhat-operators\")].metadata.namespace}');\ndo\n\
+                    \  for SUB in $(oc -n $NS get subscriptions.operators.coreos.com\
                     \ -o jsonpath='{.items[?(@.spec.source==\"osd-curated-redhat-operators\"\
                     )].metadata.name}');\n  do\n    echo \"Patching subscription '$SUB'\
-                    \ in namespace '$NS'\"\n    oc -n $NS patch subscription $SUB\
-                    \ --patch '{\"spec\":{\"source\":\"redhat-operators\"}}' --type\
-                    \ merge\n  done\ndone\n\nfor NS in $(oc get subscription -A -o\
-                    \ jsonpath='{.items[?(@.spec.source==\"osd-curated-certified-operators\"\
-                    )].metadata.namespace}');\ndo\n  for SUB in $(oc -n $NS get subscription\
+                    \ in namespace '$NS'\"\n    oc -n $NS patch subscriptions.operators.coreos.com\
+                    \ $SUB --patch '{\"spec\":{\"source\":\"redhat-operators\"}}'\
+                    \ --type merge\n  done\ndone\n\nfor NS in $(oc get subscriptions.operators.coreos.com\
+                    \ -A -o jsonpath='{.items[?(@.spec.source==\"osd-curated-certified-operators\"\
+                    )].metadata.namespace}');\ndo\n  for SUB in $(oc -n $NS get subscriptions.operators.coreos.com\
                     \ -o jsonpath='{.items[?(@.spec.source==\"osd-curated-certified-operators\"\
                     )].metadata.name}');\n  do\n    echo \"Patching subscription '$SUB'\
-                    \ in namespace '$NS'\"\n    oc -n $NS patch subscription $SUB\
-                    \ --patch '{\"spec\":{\"source\":\"certified-operators\"}}' --type\
-                    \ merge\n  done\ndone\n\nfor NS in $(oc get subscription -A -o\
-                    \ jsonpath='{.items[?(@.spec.source==\"osd-curated-community-operators\"\
-                    )].metadata.namespace}');\ndo\n  for SUB in $(oc -n $NS get subscription\
+                    \ in namespace '$NS'\"\n    oc -n $NS patch subscriptions.operators.coreos.com\
+                    \ $SUB --patch '{\"spec\":{\"source\":\"certified-operators\"\
+                    }}' --type merge\n  done\ndone\n\nfor NS in $(oc get subscriptions.operators.coreos.com\
+                    \ -A -o jsonpath='{.items[?(@.spec.source==\"osd-curated-community-operators\"\
+                    )].metadata.namespace}');\ndo\n  for SUB in $(oc -n $NS get subscriptions.operators.coreos.com\
                     \ -o jsonpath='{.items[?(@.spec.source==\"osd-curated-community-operators\"\
                     )].metadata.name}');\n  do\n    echo \"Patching subscription '$SUB'\
-                    \ in namespace '$NS'\"\n    oc -n $NS patch subscription $SUB\
-                    \ --patch '{\"spec\":{\"source\":\"community-operators\"}}' --type\
-                    \ merge\n  done\ndone\necho FINISH\n"
+                    \ in namespace '$NS'\"\n    oc -n $NS patch subscriptions.operators.coreos.com\
+                    \ $SUB --patch '{\"spec\":{\"source\":\"community-operators\"\
+                    }}' --type merge\n  done\ndone\necho FINISH\n"
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
