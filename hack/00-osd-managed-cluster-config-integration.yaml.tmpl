@@ -28888,6 +28888,34 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: osd-ingress-routerreplicas-osd-20989
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/legal-entity-id
+        operator: In
+        values: ${{ROUTER_REPLICA_ORG_IDS}}
+      - key: api.openshift.com/multi-az
+        operator: In
+        values: 'true'
+    resourceApplyMode: Sync
+    patches:
+    - apiVersion: v1
+      kind: IngressController
+      name: default
+      namespace: openshift-ingress-operator
+      applyMode: AlwaysApply
+      patch: '{"spec":{"replicas":3}}'
+      patchType: merge
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: osd-legacy-ingress-feature-labeller
   spec:
     clusterDeploymentSelector:
