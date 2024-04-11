@@ -1,115 +1,205 @@
 {
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Action": [
-                "ec2-instance-connect:SendSerialConsoleSSHPublicKey",
-                "ec2:CopySnapshot",
-                "ec2:CreateNetworkInsightsPath",
-                "ec2:CreateSnapshot",
-                "ec2:CreateSnapshots",
-                "ec2:DeleteNetworkInsightsAnalysis",
-                "ec2:DeleteNetworkInsightsPath",
-                "ec2:DescribeAccountAttributes",
-                "ec2:DescribeAddresses",
-                "ec2:DescribeAddressesAttribute",
-                "ec2:DescribeAggregateIdFormat",
-                "ec2:DescribeByoipCidrs",
-                "ec2:DescribeCapacityReservations",
-                "ec2:DescribeCarrierGateways",
-                "ec2:DescribeClassicLinkInstances",
-                "ec2:DescribeClientVpnAuthorizationRules",
-                "ec2:DescribeClientVpnConnections",
-                "ec2:DescribeClientVpnEndpoints",
-                "ec2:DescribeClientVpnRoutes",
-                "ec2:DescribeClientVpnTargetNetworks",
-                "ec2:DescribeCoipPools",
-                "ec2:DescribeCustomerGateways",
-                "ec2:DescribeEgressOnlyInternetGateways",
-                "ec2:DescribeIdentityIdFormat",
-                "ec2:DescribeIdFormat",
-                "ec2:DescribeImageAttribute",
-                "ec2:DescribeImages",
-                "ec2:DescribeInstanceAttribute",
-                "ec2:DescribeInstanceTypeOfferings",
-                "ec2:DescribeInternetGateways",
-                "ec2:DescribeIpv6Pools",
-                "ec2:DescribeKeyPairs",
-                "ec2:DescribeLaunchTemplates",
-                "ec2:DescribeLocalGatewayRouteTables",
-                "ec2:DescribeLocalGatewayRouteTableVirtualInterfaceGroupAssociations",
-                "ec2:DescribeLocalGatewayRouteTableVpcAssociations",
-                "ec2:DescribeLocalGateways",
-                "ec2:DescribeLocalGatewayVirtualInterfaceGroups",
-                "ec2:DescribeLocalGatewayVirtualInterfaces",
-                "ec2:DescribeManagedPrefixLists",
-                "ec2:DescribeNetworkInsightsAnalyses",
-                "ec2:DescribeNetworkInsightsPaths",
-                "ec2:DescribePlacementGroups",
-                "ec2:DescribePrefixLists",
-                "ec2:DescribePrincipalIdFormat",
-                "ec2:DescribePublicIpv4Pools",
-                "ec2:DescribeSnapshotAttribute",
-                "ec2:DescribeSnapshots",
-                "ec2:DescribeSpotFleetInstances",
-                "ec2:DescribeTags",
-                "ec2:DescribeTransitGatewayAttachments",
-                "ec2:DescribeTransitGatewayConnectPeers",
-                "ec2:DescribeTransitGatewayConnects",
-                "ec2:DescribeTransitGatewayMulticastDomains",
-                "ec2:DescribeTransitGatewayPeeringAttachments",
-                "ec2:DescribeTransitGatewayRouteTables",
-                "ec2:DescribeTransitGateways",
-                "ec2:DescribeTransitGatewayVpcAttachments",
-                "ec2:DescribeVpcAttribute",
-                "ec2:DescribeVpcClassicLink",
-                "ec2:DescribeVpcClassicLinkDnsSupport",
-                "ec2:DescribeVpcEndpointConnectionNotifications",
-                "ec2:DescribeVpcEndpointServiceConfigurations",
-                "ec2:DescribeVpcEndpointServicePermissions",
-                "ec2:DescribeVpcEndpointServices",
-                "ec2:DescribeVpcPeeringConnections",
-                "ec2:DescribeVpnConnections",
-                "ec2:DescribeVpnGateways",
-                "ec2:GetAssociatedIpv6PoolCidrs",
-                "ec2:GetManagedPrefixListEntries",
-                "ec2:GetSerialConsoleAccessStatus",
-                "ec2:GetTransitGatewayAttachmentPropagations",
-                "ec2:GetTransitGatewayMulticastDomainAssociations",
-                "ec2:GetTransitGatewayPrefixListReferences",
-                "ec2:GetTransitGatewayRouteTableAssociations",
-                "ec2:GetTransitGatewayRouteTablePropagations",
-                "ec2:ModifyInstanceAttribute",
-                "ec2:SearchLocalGatewayRoutes",
-                "ec2:SearchTransitGatewayMulticastGroups",
-                "ec2:SearchTransitGatewayRoutes",
-                "ec2:StartNetworkInsightsAnalysis",
-                "elasticloadbalancing:ConfigureHealthCheck",
-                "kms:CreateGrant",
-                "s3:GetBucketTagging",
-                "s3:GetObjectAcl",
-                "s3:GetObjectTagging",
-                "s3:ListAllMyBuckets",
-                "tiros:CreateQuery",
-                "tiros:GetQueryAnswer",
-                "tiros:GetQueryExplanation",
-                "ec2:RunInstances",
-                "ec2:DescribeInstanceTypes",
-                "ec2:CreateTags",
-                "ec2:GetConsoleOutput"
-            ],
-            "Resource": "*"
-        },
-        {
-            "Effect": "Allow",
-            "Action": [
-                "s3:ListBucket"
-            ],
-            "Resource": [
-                "arn:aws:s3:::managed-velero*",
-                "arn:aws:s3:::*image-registry*"
-            ]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "SendSerialConsoleSSHPublicKey",
+      "Effect": "Allow",
+      "Action": [
+        "ec2-instance-connect:SendSerialConsoleSSHPublicKey"
+      ],
+      "Resource": "arn:aws:ec2:*:*:instance/*",
+      "Condition": {
+        "StringEquals": {
+          "aws:ResourceTag/red-hat-managed": "true"
         }
-    ]
+      }
+    },
+    {
+      "Sid": "CreateNetworkInsightsPathTagRestriction",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:CreateNetworkInsightsPath"
+      ],
+      "Resource": "arn:aws:ec2:*:*:network-insights-path/*",
+      "Condition": {
+        "StringEquals": {
+          "aws:RequestTag/red-hat-managed": "true"
+        }
+      }
+    },
+    {
+      "Sid": "CreateNetworkInsightsPath",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:CreateNetworkInsightsPath"
+      ],
+      "Resource": [
+        "arn:aws:ec2:*:*:internet-gateway/*",
+        "arn:aws:ec2:*:*:network-interface/*",
+        "arn:aws:ec2:*:*:transit-gateway/*",
+        "arn:aws:ec2:*:*:vpc-endpoint/*",
+        "arn:aws:ec2:*:*:vpc-endpoint-service/*",
+        "arn:aws:ec2:*:*:vpc-peering-connection/*",
+        "arn:aws:ec2:*:*:vpn-gateway/*"
+      ]
+    },
+    {
+      "Sid": "CreateNetworkInsightsPathfroInstance",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:CreateNetworkInsightsPath"
+      ],
+      "Resource": [
+        "arn:aws:ec2:*:*:instance/*"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "aws:ResourceTag/red-hat-managed": "true"
+        }
+      }
+    },
+    {
+      "Sid": "DescribeNetworkInsightsPath",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:DescribeNetworkInsightsPaths",
+        "ec2:DescribeNetworkInsightsAnalyses"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "DeleteNetworkInsightsPath",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:DeleteNetworkInsightsPath"
+      ],
+      "Resource": "arn:aws:ec2:*:*:network-insights-path/*",
+      "Condition": {
+        "StringEquals": {
+          "aws:ResourceTag/red-hat-managed": "true"
+        }
+      }
+    },
+    {
+      "Sid": "StartNetworkInsightsAnalysisTagRestriction",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:StartNetworkInsightsAnalysis"
+      ],
+      "Resource": [
+        "arn:aws:ec2:*:*:network-insights-analysis/*"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "aws:RequestTag/red-hat-managed": "true"
+        }
+      }
+    },
+    {
+      "Sid": "StartNetworkInsightsAnalysis",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:StartNetworkInsightsAnalysis"
+      ],
+      "Resource": "arn:aws:ec2:*:*:network-insights-path/*",
+      "Condition": {
+        "StringEquals": {
+          "aws:ResourceTag/red-hat-managed": "true"
+        }
+      }
+    },
+    {
+      "Sid": "DeleteNetworkInsightsAnalysis",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:DeleteNetworkInsightsAnalysis"
+      ],
+      "Resource": "arn:aws:ec2:*:*:network-insights-analysis/*",
+      "Condition": {
+        "StringEquals": {
+          "aws:ResourceTag/red-hat-managed": "true"
+        }
+      }
+    },
+    {
+      "Sid": "DescribeInstanceAttribute",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:DescribeInstanceAttribute"
+      ],
+      "Resource": "arn:aws:ec2:*:*:instance/*",
+      "Condition": {
+        "StringEquals": {
+          "aws:ResourceTag/red-hat-managed": "true"
+        }
+      }
+    },
+    {
+      "Sid": "DescribeVpcAttribute",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:DescribeVpcAttribute"
+      ],
+      "Resource": "arn:aws:ec2:*:*:vpc/*"
+    },
+    {
+      "Sid": "GetAndCreateTirosQueries",
+      "Effect": "Allow",
+      "Action": [
+        "tiros:CreateQuery",
+        "tiros:GetQueryAnswer",
+        "tiros:GetQueryExplanation"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "CreateRedHatManagedTag",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:CreateTags"
+      ],
+      "Resource": [
+        "arn:aws:ec2:*:*:network-insights-path/*"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "ec2:CreateAction": [
+            "CreateNetworkInsightsPath"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "CreateRedHatManagedTagForNetworkVerifier",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:CreateTags"
+      ],
+      "Resource": [
+        "arn:aws:ec2:*:*:instance/*"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "ec2:CreateAction": [
+            "RunInstances"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "NetworkVerifierInstance",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:RunInstances",
+        "ec2:DescribeInstanceTypes",
+        "ec2:GetConsoleOutput"
+      ],
+      "Resource": "arn:aws:ec2:*:*:instance/*",
+      "Condition": {
+        "StringEquals": {
+          "aws:ResourceTag/red-hat-managed": "true"
+        }
+      }
+    }
+  ]
 }
