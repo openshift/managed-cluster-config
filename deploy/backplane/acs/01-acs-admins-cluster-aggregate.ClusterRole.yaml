@@ -5,18 +5,14 @@ metadata:
   labels:
     managed.openshift.io/aggregate-to-acs-admins: "cluster"
 rules:
-# ACS SRE can manage projects
+# ACS Eng can manage projects
 - apiGroups:
   - config.openshift.io
   resources:
   - projects
   verbs:
-  - create
   - get
   - list
-  - patch
-  - update
-  - watch
 # ACS SRE can get infrastructure details (cluster)
 - apiGroups:
   - config.openshift.io
@@ -31,11 +27,8 @@ rules:
   resources:
   - projects
   verbs:
-  - create
   - get
   - list
-  - patch
-  - update
   - watch
 - apiGroups:
   - ""
@@ -43,27 +36,7 @@ rules:
   - namespaces
   - namespaces/finalize
   verbs:
-  - create
   - get
   - list
-  - patch
   - update
-  - watch
-# ACS SRE can update existing groups 
-- apiGroups:
-  - user.openshift.io
-  resources:
-  - groups
-  verbs:
-  - patch
-  - update
-  - get
-  resources:
-  - '*'
-  verbs:
-  - create
-  - get
-  - list 
-  - patch 
-  - update 
   - watch

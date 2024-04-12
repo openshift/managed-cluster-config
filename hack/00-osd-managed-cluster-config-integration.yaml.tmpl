@@ -7935,12 +7935,8 @@ objects:
         resources:
         - projects
         verbs:
-        - create
         - get
         - list
-        - patch
-        - update
-        - watch
       - apiGroups:
         - config.openshift.io
         resources:
@@ -7953,11 +7949,8 @@ objects:
         resources:
         - projects
         verbs:
-        - create
         - get
         - list
-        - patch
-        - update
         - watch
       - apiGroups:
         - ''
@@ -7965,21 +7958,8 @@ objects:
         - namespaces
         - namespaces/finalize
         verbs:
-        - create
         - get
         - list
-        - patch
-        - update
-        - watch
-      - apiGroups:
-        - user.openshift.io
-        resources:
-        - '*'
-        verbs:
-        - create
-        - get
-        - list
-        - patch
         - update
         - watch
     - apiVersion: rbac.authorization.k8s.io/v1
@@ -8016,7 +7996,6 @@ objects:
         - ''
         resources:
         - pods
-        - exec
         verbs:
         - create
       - apiGroups:
@@ -8041,6 +8020,54 @@ objects:
         verbs:
         - list
         - get
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-acs-admins-project
+      rules:
+      - apiGroups:
+        - platform.stackrox.io
+        resources:
+        - centrals
+        - securedclusters
+        verbs:
+        - get
+        - list
+        - watch
+        - patch
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        - pods/log
+        verbs:
+        - get
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - delete
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - create
+      - apiGroups:
+        - apps
+        resources:
+        - statefulsets
+        - deployments
+        verbs:
+        - patch
+      - apiGroups:
+        - apps
+        resources:
+        - deployments/scale
+        verbs:
+        - patch
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
@@ -8087,12 +8114,8 @@ objects:
         resources:
         - projects
         verbs:
-        - create
         - get
         - list
-        - patch
-        - update
-        - watch
       - apiGroups:
         - config.openshift.io
         resources:
@@ -8105,11 +8128,8 @@ objects:
         resources:
         - projects
         verbs:
-        - create
         - get
         - list
-        - patch
-        - update
         - watch
       - apiGroups:
         - ''
@@ -8117,21 +8137,8 @@ objects:
         - namespaces
         - namespaces/finalize
         verbs:
-        - create
         - get
         - list
-        - patch
-        - update
-        - watch
-      - apiGroups:
-        - user.openshift.io
-        resources:
-        - '*'
-        verbs:
-        - create
-        - get
-        - list
-        - patch
         - update
         - watch
     - apiVersion: rbac.authorization.k8s.io/v1
@@ -8168,7 +8175,6 @@ objects:
         - ''
         resources:
         - pods
-        - exec
         verbs:
         - create
       - apiGroups:
@@ -8193,6 +8199,54 @@ objects:
         verbs:
         - list
         - get
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-acs-admins-project
+      rules:
+      - apiGroups:
+        - platform.stackrox.io
+        resources:
+        - centrals
+        - securedclusters
+        verbs:
+        - get
+        - list
+        - watch
+        - patch
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        - pods/log
+        verbs:
+        - get
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - delete
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - create
+      - apiGroups:
+        - apps
+        resources:
+        - statefulsets
+        - deployments
+        verbs:
+        - patch
+      - apiGroups:
+        - apps
+        resources:
+        - deployments/scale
+        verbs:
+        - patch
     - apiVersion: managed.openshift.io/v1alpha1
       kind: SubjectPermission
       metadata:
