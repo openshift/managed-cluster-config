@@ -34,7 +34,6 @@ Permissions at cluster scope. `TBD`
 * get deployments
 * get pods
 * scale prometheus
-* resize and delete PVCs
 * view jobs
 
 Examples, see [srep](srep).
