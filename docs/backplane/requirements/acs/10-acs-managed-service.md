@@ -10,7 +10,7 @@ label selectors:
 These permissions are a baseline acess for the ACS:CS team across OSD/ROSA infra.
 
 ## backlplane-acs-admins-cluster: `cluster`
-Permissions at cluster scope. `TBD`
+Permissions at cluster scope. 
 
 * view projects
 * get projects
