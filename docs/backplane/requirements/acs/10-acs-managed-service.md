@@ -12,11 +12,12 @@ These permissions are a baseline acess for the ACS:CS team across OSD/ROSA infra
 ## backlplane-acs-admins-cluster: `cluster`
 Permissions at cluster scope. `TBD`
 
-* view machine resources
-* view ingresscontrollers
-* view ingresses
-* view nodes
-* view autoscaling
+* view projects
+* get projects
+* get nodes
+* view oauth
+* view namespaces
+* view finalizers
 
 ## backplane-acs-admins-project: `(^redhat-acs-fleetshard$|^rhacs$|^rhacs-.*)`
 - ACS team needs read/list/watch access to core `redhat` and `rhacs` objects within their namespaces.
@@ -25,15 +26,7 @@ Permissions at cluster scope. `TBD`
 * get centrals
 * get stackrox
 * get secureclusters
-* get pod logs
-* get configmaps
-* view network policies
-* scale machinesets
-* view monitoring
-* get routes
-* get deployments
-* get pods
-* scale prometheus
-* view jobs
+* get pods and pod logs
+* scale deployments
 
-Examples, see [srep](srep).
+**Note** Please update this document as addional permisions are requested, thank you.
