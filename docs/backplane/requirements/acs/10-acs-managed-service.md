@@ -30,7 +30,7 @@ label selectors:
 
 For where access is applied
 
-These permissions are a baseline access for the ACS:CS team across OSD/ROSA infra.
+These permissions are a baseline access for the ACS:CS team across OSD/ROSA infra.  Scope of permissions are the Red Hat servers hosting ACS Central (fleetshard) and not to end-customer clusters.
 
 ## backplane-acs-admins-cluster: `cluster`
 Permissions at cluster scope. 
