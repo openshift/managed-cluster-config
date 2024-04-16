@@ -23,7 +23,6 @@ Permissions at cluster scope.
 * view infrastructure
 * view ingresscontrollers
 * view dnsrecords
-* view publishingstrategies
 * view ingresses
 * view networks
 * view nodes
