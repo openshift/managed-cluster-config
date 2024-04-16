@@ -21092,17 +21092,19 @@ objects:
             an hour'
           references:
           - https://docs.openshift.com/container-platform/latest/nodes/nodes/nodes-nodes-working.html#nodes-nodes-working-marking_nodes-nodes-working
-        - activeBody: Your cluster requires your attention. User Workload Montioring
-            is currently degraded because unscheduleable worker nodes are preventing
-            deployment of UWM pods. Please scale up the MachinePool for this cluster
-            or uncordon any cordoned worker nodes.
-          name: UnscheduleableNodesPreventingUWMDeployment
+        - activeBody: 'Your cluster requires your attention. User Workload Monitoring
+            is currently degraded. Please review your configuration alongside the
+            product documentation: https://docs.openshift.com/rosa/observability/monitoring/configuring-the-monitoring-stack.html.
+            If you need assistance to restore the User Workload Monitoring, please
+            open a support case.'
+          name: UWMDeploymentErrorBudgetBurn
           resendWait: 2
           severity: Error
           summary: 'Action required: User Workload Monitoring is degraded'
           logType: Cluster Configuration
           references:
           - https://docs.openshift.com/rosa/rosa_cluster_admin/rosa_nodes/rosa-managing-worker-nodes.html
+          - https://docs.openshift.com/rosa/observability/monitoring/configuring-the-monitoring-stack.html
     - apiVersion: ocmagent.managed.openshift.io/v1alpha1
       kind: ManagedNotification
       metadata:
@@ -35364,79 +35366,9 @@ objects:
             annotations:
               message: 'High error budget burn for the monitoring cluster operator
                 (current value: {{ $value }})'
-        - name: sre-user-workload-monitoring-error-budget-burn
-          rules:
-          - alert: UserWorkloadMonitoringErrorBudgetBurnSRE
-            expr: '1 - ( sum(sum_over_time(cluster_operator_up{name="monitoring",reason=~"UserWorkload.*"}[5m]))
-              / sum(count_over_time(cluster_operator_up{name="monitoring",reason=~"UserWorkload.*"}[5m]))
-              ) > (14.4 * (1 - 0.983))
-
-              and
-
-              1 - ( sum(sum_over_time(cluster_operator_up{name="monitoring",reason=~"UserWorkload.*"}[1h]))
-              / sum(count_over_time(cluster_operator_up{name="monitoring",reason=~"UserWorkload.*"}[1h]))
-              ) > (14.4 * (1 - 0.983))
-
-              and
-
-              # check for unscheduleable customer worker nodes that do not have running
-              workload monitoring pods.
-
-              # if a unscheduleable worker node has running uwm pods then this budget
-              burn is not due to potential customer cordons and should be investigated
-
-              count ((kube_node_spec_unschedulable > 0 and on (node) cluster:nodes_roles{label_node_role_kubernetes_io!~"infra|master|control-plane"})
-              unless on (node) kube_pod_info{namespace="openshift-user-workload-monitoring"})
-              == 0
-
-              '
-            for: 2m
-            labels:
-              long_window: 1h
-              severity: critical
-              namespace: openshift-monitoring
-              link: https://github.com/openshift/ops-sop/blob/master/v4/troubleshoot/clusteroperators/monitoring.md
-              short_window: 5m
-            annotations:
-              message: 'High error budget burn for User Workload Monitoring (current
-                value: {{ $value }})'
-          - alert: UserWorkloadMonitoringErrorBudgetBurnSRE
-            expr: '1 - ( sum(sum_over_time(cluster_operator_up{name="monitoring",reason=~"UserWorkload.*"}[30m]))
-              / sum(count_over_time(cluster_operator_up{name="monitoring",reason=~"UserWorkload.*"}[30m]))
-              ) > (6 * (1 - 0.983))
-
-              and
-
-              1 - ( sum(sum_over_time(cluster_operator_up{name="monitoring",reason=~"UserWorkload.*"}[6h]))
-              / sum(count_over_time(cluster_operator_up{name="monitoring",reason=~"UserWorkload.*"}[6h]))
-              ) > (6 * (1 - 0.983))
-
-              and
-
-              # check for unscheduleable customer worker nodes that do not have running
-              workload monitoring pods.
-
-              # if a unscheduleable worker node has running uwm pods then this budget
-              burn is not due to potential customer cordons and should be investigated
-
-              count ((kube_node_spec_unschedulable > 0 and on (node) cluster:nodes_roles{label_node_role_kubernetes_io!~"infra|master|control-plane"})
-              unless on (node) kube_pod_info{namespace="openshift-user-workload-monitoring"})
-              == 0
-
-              '
-            for: 15m
-            labels:
-              long_window: 6h
-              severity: critical
-              namespace: openshift-monitoring
-              link: https://github.com/openshift/ops-sop/blob/master/v4/troubleshoot/clusteroperators/monitoring.md
-              short_window: 30m
-            annotations:
-              message: 'High error budget burn for User Workload Monitoring (current
-                value: {{ $value }})'
         - name: customer-user-workload-monitoring-error-budget-burn
           rules:
-          - alert: UnscheduleableNodesPreventingUWMDeployment
+          - alert: UserWorkloadMonitoringErrorBudgetBurn
             expr: '1 - ( sum(sum_over_time(cluster_operator_up{name="monitoring",reason=~"UserWorkload.*"}[5m]))
               / sum(count_over_time(cluster_operator_up{name="monitoring",reason=~"UserWorkload.*"}[5m]))
               ) > (14.4 * (1 - 0.983))
@@ -35446,15 +35378,6 @@ objects:
               1 - ( sum(sum_over_time(cluster_operator_up{name="monitoring",reason=~"UserWorkload.*"}[1h]))
               / sum(count_over_time(cluster_operator_up{name="monitoring",reason=~"UserWorkload.*"}[1h]))
               ) > (14.4 * (1 - 0.983))
-
-              and
-
-              # check for unscheduleable customer worker nodes that do not have running
-              workload monitoring pods.
-
-              count ((kube_node_spec_unschedulable > 0 and on (node) cluster:nodes_roles{label_node_role_kubernetes_io!~"infra|master|control-plane"})
-              unless on (node) kube_pod_info{namespace="openshift-user-workload-monitoring"})
-              > 0
 
               '
             for: 2m
@@ -35467,7 +35390,7 @@ objects:
             annotations:
               message: 'High error budget burn for User Workload Monitoring (current
                 value: {{ $value }})'
-          - alert: UnscheduleableNodesPreventingUWMDeployment
+          - alert: UserWorkloadMonitoringErrorBudgetBurn
             expr: '1 - ( sum(sum_over_time(cluster_operator_up{name="monitoring",reason=~"UserWorkload.*"}[30m]))
               / sum(count_over_time(cluster_operator_up{name="monitoring",reason=~"UserWorkload.*"}[30m]))
               ) > (6 * (1 - 0.983))
@@ -35478,18 +35401,6 @@ objects:
               / sum(count_over_time(cluster_operator_up{name="monitoring",reason=~"UserWorkload.*"}[6h]))
               ) > (6 * (1 - 0.983))
 
-              and
-
-              # check for unscheduleable customer worker nodes that do not have running
-              workload monitoring pods.
-
-              # if a unscheduleable worker node has running uwm pods then this budget
-              burn is not due to potential customer cordons and should be investigated
-
-              count ((kube_node_spec_unschedulable > 0 and on (node) cluster:nodes_roles{label_node_role_kubernetes_io!~"infra|master|control-plane"})
-              unless on (node) kube_pod_info{namespace="openshift-user-workload-monitoring"})
-              > 0
-
               '
             for: 15m
             labels:
@@ -35498,7 +35409,7 @@ objects:
               namespace: openshift-monitoring
               short_window: 30m
               send_managed_notification: 'true'
-              managed_notifcation_template: UnscheduleableNodesPreventingUWMDeployment
+              managed_notifcation_template: UWMDeploymentErrorBudgetBurn
             annotations:
               message: 'High error budget burn for User Workload Monitoring (current
                 value: {{ $value }})'
