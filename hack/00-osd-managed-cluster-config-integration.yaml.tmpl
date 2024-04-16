@@ -35369,14 +35369,14 @@ objects:
         - name: customer-user-workload-monitoring-error-budget-burn
           rules:
           - alert: UserWorkloadMonitoringErrorBudgetBurn
-            expr: '1 - ( sum(sum_over_time(cluster_operator_up{name="monitoring",reason=~"UserWorkload.*"}[5m]))
-              / sum(count_over_time(cluster_operator_up{name="monitoring",reason=~"UserWorkload.*"}[5m]))
+            expr: '1 - ( sum(sum_over_time(cluster_operator_up{name="monitoring",reason=~".*UserWorkload.*"}[5m]))
+              / sum(count_over_time(cluster_operator_up{name="monitoring",reason=~".*UserWorkload.*"}[5m]))
               ) > (14.4 * (1 - 0.983))
 
               and
 
-              1 - ( sum(sum_over_time(cluster_operator_up{name="monitoring",reason=~"UserWorkload.*"}[1h]))
-              / sum(count_over_time(cluster_operator_up{name="monitoring",reason=~"UserWorkload.*"}[1h]))
+              1 - ( sum(sum_over_time(cluster_operator_up{name="monitoring",reason=~".*UserWorkload.*"}[1h]))
+              / sum(count_over_time(cluster_operator_up{name="monitoring",reason=~".*UserWorkload.*"}[1h]))
               ) > (14.4 * (1 - 0.983))
 
               '
@@ -35391,14 +35391,14 @@ objects:
               message: 'High error budget burn for User Workload Monitoring (current
                 value: {{ $value }})'
           - alert: UserWorkloadMonitoringErrorBudgetBurn
-            expr: '1 - ( sum(sum_over_time(cluster_operator_up{name="monitoring",reason=~"UserWorkload.*"}[30m]))
-              / sum(count_over_time(cluster_operator_up{name="monitoring",reason=~"UserWorkload.*"}[30m]))
+            expr: '1 - ( sum(sum_over_time(cluster_operator_up{name="monitoring",reason=~".*UserWorkload.*"}[30m]))
+              / sum(count_over_time(cluster_operator_up{name="monitoring",reason=~".*UserWorkload.*"}[30m]))
               ) > (6 * (1 - 0.983))
 
               and
 
-              1 - ( sum(sum_over_time(cluster_operator_up{name="monitoring",reason=~"UserWorkload.*"}[6h]))
-              / sum(count_over_time(cluster_operator_up{name="monitoring",reason=~"UserWorkload.*"}[6h]))
+              1 - ( sum(sum_over_time(cluster_operator_up{name="monitoring",reason=~".*UserWorkload.*"}[6h]))
+              / sum(count_over_time(cluster_operator_up{name="monitoring",reason=~".*UserWorkload.*"}[6h]))
               ) > (6 * (1 - 0.983))
 
               '
