@@ -1,0 +1,42 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: backplane-acs-admins-cluster-aggregate
+  labels:
+    managed.openshift.io/aggregate-to-acs-admins: "cluster"
+rules:
+# ACS Eng can manage projects
+- apiGroups:
+  - config.openshift.io
+  resources:
+  - projects
+  verbs:
+  - get
+  - list
+# ACS SRE can get infrastructure details (cluster)
+- apiGroups:
+  - config.openshift.io
+  resources:
+  - infrastructures
+  - oauths
+  verbs:
+  - get
+  - list
+  - watch
+# ACS SRE can manage namespaces / projects
+- apiGroups:
+  - project.openshift.io
+  resources:
+  - projects
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  verbs:
+  - get
+  - list
+  - watch

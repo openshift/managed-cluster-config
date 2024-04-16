@@ -6,6 +6,7 @@ rules:
 # ACS team can interact with ACS
 - apiGroups:
   - platform.stackrox.io
+  - cloud.stackrox.io
   resources:
   - centrals
   - securedclusters
@@ -13,7 +14,6 @@ rules:
   - get
   - list
   - watch
-  - patch
 # ACS team can get pod logs
 - apiGroups:
   - ""
@@ -23,32 +23,13 @@ rules:
   verbs:
   - get
   - watch
-# ACS team can delete pods
-- apiGroups:
-  - ""
-  resources:
-  - pods
-  verbs:
-  - delete
-# ACS team can run commands in pods
-- apiGroups:
-  - ""
-  resources:
-  - pods
-  verbs:
-  - create
-# ACS team can restart deployments/statefulsets/deploymentconfigs
-- apiGroups:
-  - apps
-  resources:
-  - statefulsets
-  - deployments
-  verbs:
-  - patch
+  - list
 # ACS team can scale deployments
 - apiGroups:
   - apps
   resources:
-  - deployments/scale
+  - deployments
   verbs:
-  - patch
+  - get
+  - list
+  - watch

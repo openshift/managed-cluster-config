@@ -10,7 +10,7 @@ label selectors:
 
 For where access is applied
 
-These permissions are a baseline acess for the ACS:CS team across OSD/ROSA infra.
+These permissions are a baseline access for the ACS:CS team across OSD/ROSA infra.
 
 ## backlplane-acs-admins-cluster: `cluster`
 Permissions at cluster scope. 
@@ -20,6 +20,7 @@ Permissions at cluster scope.
 * get nodes
 * view oauth
 * view namespaces
+* view infrastructure
 
 ## backplane-acs-admins-project: `(^redhat-acs-fleetshard$|^rhacs$|^rhacs-.*)`
 - ACS team needs read/list/watch access to core `redhat` and `rhacs` objects within their namespaces.
@@ -29,6 +30,7 @@ Permissions at cluster scope.
 * get stackrox
 * get secureclusters
 * get pods and pod logs
-* scale deployments
+* view deployments
+* get deployments
 
 **Note** Please update this document as addional permisions are requested, thank you.
