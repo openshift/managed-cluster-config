@@ -31,6 +31,7 @@ Permissions at cluster scope.
 * view pod and node metrics
 * view storageclasses
 * view persistentvolumes
+* view clustersecretstores
 
 ## backplane-acs-admins-project: `(^redhat-acs-fleetshard$|^rhacs$|^rhacs-.*)`
 - ACS team needs read/list/watch access to core `redhat` and `rhacs` objects within their namespaces.
@@ -46,6 +47,7 @@ Permissions at cluster scope.
 * view egress firewalls
 * view roles and rolebindings
 * patch persistentvolumeclaims
+* view secretstores
 
 ## backplane-acs-ingress: `openshift-ingress`
 
