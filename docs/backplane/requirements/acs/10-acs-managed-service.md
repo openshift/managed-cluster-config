@@ -47,10 +47,6 @@ Permissions at cluster scope.
 * view roles and rolebindings
 * patch persistentvolumeclaims
 
-ACS team needs to be able to delete a namespace
-
-* delete namespaces
-
 ## backplane-acs-ingress: `openshift-ingress`
 
 - ACS team needs get/list/watch access to inspect the routers and logs
