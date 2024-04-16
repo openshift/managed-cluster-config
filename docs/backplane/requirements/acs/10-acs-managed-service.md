@@ -78,6 +78,8 @@ Permissions at cluster scope.
 * view thanosrulers
 * view observabilities
 * view grafanas
+* view grafanadatasources
+* view grafanadashboards
 
 - ACS team needs to be able to increase the prometheus storage and restart prometheus
 
