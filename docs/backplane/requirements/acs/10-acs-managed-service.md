@@ -48,6 +48,8 @@ Permissions at cluster scope.
 * patch persistentvolumeclaims
 
 ACS team needs to inspect the `cloud-service-sensible-declarative-configs` secret
+This is for customer demands to enable multiple organizations access to an ACSCS 
+instance as per SOP https://gitlab.cee.redhat.com/stackrox/acs-cloud-service/runbooks/-/blob/master/sops/dp-034-allow-multiple-orgs-access.md?ref_type=heads
 
 * view secret `cloud-service-sensible-declarative-configs`
 
@@ -72,8 +74,22 @@ ACS team needs to be able to delete a namespace
 * view statefulsets
 * view services
 
-- ACS team needs to be able to increase the memory of prometheus
+## backplane-acs-rhacs-observability: `rhacs-observability`
 
+- ACS team needs to inspect the observability resources
+
+* view alertmanagerconfigs
+* view alertmanagers
+* view podmonitors
+* view probes
+* view prometheuses
+* view prometheusrules
+* view servicemonitors
+* view thanosrulers
+
+- ACS team needs to be able to increase the prometheus storage and restart prometheus
+
+* patch persistentvolumeclaims
 * patch statefulsets
 
 **Note** Please update this document as addional permisions are requested, thank you.
