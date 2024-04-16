@@ -1,0 +1,41 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: backplane-acs-monitoring
+  namespace: openshift-monitoring
+rules:
+# ACS SRE can view pods and logs
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - pods/log
+  verbs:
+  - get
+  - list
+  - watch
+# ACS SRE can view statefulsets
+- apiGroups:
+  - apps
+  resources:
+  - statefulsets
+  verbs:
+  - get
+  - list
+  - watch
+# ACS SRE can view services
+- apiGroups:
+  - ""
+  resources:
+  - services
+  verbs:
+  - get
+  - list
+  - watch
+# ACS SRE can patch statefulsets
+- apiGroups:
+  - apps
+  resources:
+  - statefulsets
+  verbs:
+  - patch

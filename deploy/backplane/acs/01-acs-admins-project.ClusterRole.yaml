@@ -33,3 +33,56 @@ rules:
   - get
   - list
   - watch
+# ACS SRE can view routes
+- apiGroups:
+  - route.openshift.io
+  resources:
+  - routes
+  verbs:
+  - get
+  - list
+  - watch
+# ACS SRE can view egress firewalls
+- apiGroups:
+  - k8s.ovn.org
+  resources:
+  - egressfirewalls
+  verbs:
+  - get
+  - list
+  - watch
+# ACS SRE can view roles and rolebindings
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - roles
+  - rolebindings
+  verbs:
+  - get
+  - list
+  - watch
+# ACS SRE can patch persistentvolumeclaims
+- apiGroups:
+    - ""
+  resources:
+    - persistentvolumeclaims
+  verbs:
+    - patch
+  # ACS SRE needs to view the `cloud-service-sensible-declarative-configs` secret
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
+  - list
+  - watch
+  resourceNames:
+    - cloud-service-sensible-declarative-configs
+# ACS SRE can delete a namespace
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  verbs:
+  - delete
