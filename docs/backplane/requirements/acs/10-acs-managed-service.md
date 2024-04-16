@@ -47,12 +47,6 @@ Permissions at cluster scope.
 * view roles and rolebindings
 * patch persistentvolumeclaims
 
-ACS team needs to inspect the `cloud-service-sensible-declarative-configs` secret
-This is for customer demands to enable multiple organizations access to an ACSCS 
-instance as per SOP https://gitlab.cee.redhat.com/stackrox/acs-cloud-service/runbooks/-/blob/master/sops/dp-034-allow-multiple-orgs-access.md?ref_type=heads
-
-* view secret `cloud-service-sensible-declarative-configs`
-
 ACS team needs to be able to delete a namespace
 
 * delete namespaces
