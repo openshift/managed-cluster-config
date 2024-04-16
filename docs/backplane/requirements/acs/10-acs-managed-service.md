@@ -1,5 +1,25 @@
 # *ACS Team* for *OSD/ROSA*
 
+## Context
+
+When reviewing the permissions for the ACS team, we need to consider the following:
+
+ACS-CS runs a very small fleet of clusters for hosting all of its data-plane:
+- 1 x integration
+- 2 x stage
+- 2 x production
+
+The scale of the fleet will remain small for the foreseeable future.
+The production clusters can already host hundreds of tenants, which is more
+than enough for the current needs.
+
+### Considerations
+- The `AcsFleetShard` addon installs the resources needed to run an ACS-CS DataPlane cluster.
+- The `AcsFleetShard` addon is *only* installed on those clusters. It will *never* be installed on customer clusters.
+- These clusters are *only* accessible by internal staff, such as SRE and ACS-CS team members. Customers will *not* have access to these clusters.
+- Each tenant gets its own namespace, `Central` instance, `Route` and DNS record.
+- Tenants are only given the URL to their `Central` instance. They do not interact with the cluster in any other way.
+
 Process is captured [ROX-22017: Harden Network Security API Permissions](https://docs.google.com/document/d/1lyzFjK51py6o62zS5ErPFLbCNVJfq4e5PvVI2Y2z0Mg/edit)
 
 label selectors:
