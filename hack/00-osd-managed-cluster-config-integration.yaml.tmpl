@@ -7962,6 +7962,97 @@ objects:
         - get
         - list
         - watch
+      - apiGroups:
+        - operator.openshift.io
+        resources:
+        - ingresscontrollers
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ingress.operator.openshift.io
+        resources:
+        - dnsrecords
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - networking.k8s.io
+        resources:
+        - ingresses
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - config.openshift.io
+        resources:
+        - networks
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - nodes
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - rbac.authorization.k8s.io
+        resources:
+        - clusterroles
+        - clusterrolebindings
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - apiextensions.k8s.io
+        resources:
+        - customresourcedefinitions
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - metrics.k8s.io
+        resources:
+        - pods
+        - nodes
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - storage.k8s.io
+        resources:
+        - storageclasses
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - persistentvolumes
+        - persistentvolumeclaims
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - external-secrets.io
+        resources:
+        - clustersecretstores
+        verbs:
+        - get
+        - list
+        - watch
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
@@ -7987,9 +8078,58 @@ objects:
         - watch
         - list
       - apiGroups:
+        - ''
+        resources:
+        - services
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
         - apps
         resources:
         - deployments
+        - statefulsets
+        - daemonsets
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - route.openshift.io
+        resources:
+        - routes
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - k8s.ovn.org
+        resources:
+        - egressfirewalls
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - rbac.authorization.k8s.io
+        resources:
+        - roles
+        - rolebindings
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - persistentvolumeclaims
+        verbs:
+        - patch
+      - apiGroups:
+        - external-secrets.io
+        resources:
+        - secretstores
         verbs:
         - get
         - list
@@ -8009,6 +8149,150 @@ objects:
           namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-addon-acs-fleet-shard
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: backplane-acs-openshift-ingress
+        namespace: openshift-ingress
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        - pods/log
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - apps
+        resources:
+        - deployments
+        verbs:
+        - get
+        - list
+        - watch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: backplane-acs-openshift-ingress
+        namespace: openshift-ingress
+      subjects:
+      - apiGroup: rbac.authorization.k8s.io
+        kind: Group
+        name: system:serviceaccounts:openshift-backplane-addon-acs-fleet-shard
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: backplane-acs-ingress
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: backplane-acs-openshift-monitoring
+        namespace: openshift-monitoring
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        - pods/log
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - apps
+        resources:
+        - statefulsets
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - services
+        verbs:
+        - get
+        - list
+        - watch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: backplane-acs-openshift-monitoring
+        namespace: openshift-monitoring
+      subjects:
+      - apiGroup: rbac.authorization.k8s.io
+        kind: Group
+        name: system:serviceaccounts:openshift-backplane-addon-acs-fleet-shard
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: backplane-acs-monitoring
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: backplane-acs-rhacs-observability
+        namespace: rhacs-observability
+      rules:
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - alertmanagerconfigs
+        - alertmanagers
+        - podmonitors
+        - probes
+        - prometheuses
+        - prometheusrules
+        - servicemonitors
+        - thanosrulers
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - observability.redhat.com
+        resources:
+        - observabilities
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - integreatly.org
+        resources:
+        - grafanas
+        - grafanadatasources
+        - grafanadashboards
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - persistentvolumeclaims
+        verbs:
+        - patch
+      - apiGroups:
+        - apps
+        resources:
+        - statefulsets
+        verbs:
+        - patch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: backplane-acs-rhacs-observability
+        namespace: rhacs-observability
+      subjects:
+      - apiGroup: rbac.authorization.k8s.io
+        kind: Group
+        name: system:serviceaccounts:openshift-backplane-addon-acs-fleet-shard
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: backplane-acs-rhacs-observability
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -8067,6 +8351,97 @@ objects:
         - get
         - list
         - watch
+      - apiGroups:
+        - operator.openshift.io
+        resources:
+        - ingresscontrollers
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ingress.operator.openshift.io
+        resources:
+        - dnsrecords
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - networking.k8s.io
+        resources:
+        - ingresses
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - config.openshift.io
+        resources:
+        - networks
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - nodes
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - rbac.authorization.k8s.io
+        resources:
+        - clusterroles
+        - clusterrolebindings
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - apiextensions.k8s.io
+        resources:
+        - customresourcedefinitions
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - metrics.k8s.io
+        resources:
+        - pods
+        - nodes
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - storage.k8s.io
+        resources:
+        - storageclasses
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - persistentvolumes
+        - persistentvolumeclaims
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - external-secrets.io
+        resources:
+        - clustersecretstores
+        verbs:
+        - get
+        - list
+        - watch
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
@@ -8092,9 +8467,58 @@ objects:
         - watch
         - list
       - apiGroups:
+        - ''
+        resources:
+        - services
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
         - apps
         resources:
         - deployments
+        - statefulsets
+        - daemonsets
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - route.openshift.io
+        resources:
+        - routes
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - k8s.ovn.org
+        resources:
+        - egressfirewalls
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - rbac.authorization.k8s.io
+        resources:
+        - roles
+        - rolebindings
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - persistentvolumeclaims
+        verbs:
+        - patch
+      - apiGroups:
+        - external-secrets.io
+        resources:
+        - secretstores
         verbs:
         - get
         - list
@@ -8114,6 +8538,150 @@ objects:
           namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-addon-acs-fleet-shard
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: backplane-acs-openshift-ingress
+        namespace: openshift-ingress
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        - pods/log
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - apps
+        resources:
+        - deployments
+        verbs:
+        - get
+        - list
+        - watch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: backplane-acs-openshift-ingress
+        namespace: openshift-ingress
+      subjects:
+      - apiGroup: rbac.authorization.k8s.io
+        kind: Group
+        name: system:serviceaccounts:openshift-backplane-addon-acs-fleet-shard
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: backplane-acs-ingress
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: backplane-acs-openshift-monitoring
+        namespace: openshift-monitoring
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        - pods/log
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - apps
+        resources:
+        - statefulsets
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - services
+        verbs:
+        - get
+        - list
+        - watch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: backplane-acs-openshift-monitoring
+        namespace: openshift-monitoring
+      subjects:
+      - apiGroup: rbac.authorization.k8s.io
+        kind: Group
+        name: system:serviceaccounts:openshift-backplane-addon-acs-fleet-shard
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: backplane-acs-monitoring
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: backplane-acs-rhacs-observability
+        namespace: rhacs-observability
+      rules:
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - alertmanagerconfigs
+        - alertmanagers
+        - podmonitors
+        - probes
+        - prometheuses
+        - prometheusrules
+        - servicemonitors
+        - thanosrulers
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - observability.redhat.com
+        resources:
+        - observabilities
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - integreatly.org
+        resources:
+        - grafanas
+        - grafanadatasources
+        - grafanadashboards
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - persistentvolumeclaims
+        verbs:
+        - patch
+      - apiGroups:
+        - apps
+        resources:
+        - statefulsets
+        verbs:
+        - patch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: backplane-acs-rhacs-observability
+        namespace: rhacs-observability
+      subjects:
+      - apiGroup: rbac.authorization.k8s.io
+        kind: Group
+        name: system:serviceaccounts:openshift-backplane-addon-acs-fleet-shard
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: backplane-acs-rhacs-observability
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -8172,6 +8740,97 @@ objects:
         - get
         - list
         - watch
+      - apiGroups:
+        - operator.openshift.io
+        resources:
+        - ingresscontrollers
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ingress.operator.openshift.io
+        resources:
+        - dnsrecords
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - networking.k8s.io
+        resources:
+        - ingresses
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - config.openshift.io
+        resources:
+        - networks
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - nodes
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - rbac.authorization.k8s.io
+        resources:
+        - clusterroles
+        - clusterrolebindings
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - apiextensions.k8s.io
+        resources:
+        - customresourcedefinitions
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - metrics.k8s.io
+        resources:
+        - pods
+        - nodes
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - storage.k8s.io
+        resources:
+        - storageclasses
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - persistentvolumes
+        - persistentvolumeclaims
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - external-secrets.io
+        resources:
+        - clustersecretstores
+        verbs:
+        - get
+        - list
+        - watch
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
@@ -8197,9 +8856,58 @@ objects:
         - watch
         - list
       - apiGroups:
+        - ''
+        resources:
+        - services
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
         - apps
         resources:
         - deployments
+        - statefulsets
+        - daemonsets
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - route.openshift.io
+        resources:
+        - routes
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - k8s.ovn.org
+        resources:
+        - egressfirewalls
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - rbac.authorization.k8s.io
+        resources:
+        - roles
+        - rolebindings
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - persistentvolumeclaims
+        verbs:
+        - patch
+      - apiGroups:
+        - external-secrets.io
+        resources:
+        - secretstores
         verbs:
         - get
         - list
@@ -8219,6 +8927,150 @@ objects:
           namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-addon-acs-fleet-shard
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: backplane-acs-openshift-ingress
+        namespace: openshift-ingress
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        - pods/log
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - apps
+        resources:
+        - deployments
+        verbs:
+        - get
+        - list
+        - watch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: backplane-acs-openshift-ingress
+        namespace: openshift-ingress
+      subjects:
+      - apiGroup: rbac.authorization.k8s.io
+        kind: Group
+        name: system:serviceaccounts:openshift-backplane-addon-acs-fleet-shard
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: backplane-acs-ingress
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: backplane-acs-openshift-monitoring
+        namespace: openshift-monitoring
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        - pods/log
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - apps
+        resources:
+        - statefulsets
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - services
+        verbs:
+        - get
+        - list
+        - watch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: backplane-acs-openshift-monitoring
+        namespace: openshift-monitoring
+      subjects:
+      - apiGroup: rbac.authorization.k8s.io
+        kind: Group
+        name: system:serviceaccounts:openshift-backplane-addon-acs-fleet-shard
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: backplane-acs-monitoring
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: backplane-acs-rhacs-observability
+        namespace: rhacs-observability
+      rules:
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - alertmanagerconfigs
+        - alertmanagers
+        - podmonitors
+        - probes
+        - prometheuses
+        - prometheusrules
+        - servicemonitors
+        - thanosrulers
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - observability.redhat.com
+        resources:
+        - observabilities
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - integreatly.org
+        resources:
+        - grafanas
+        - grafanadatasources
+        - grafanadashboards
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - persistentvolumeclaims
+        verbs:
+        - patch
+      - apiGroups:
+        - apps
+        resources:
+        - statefulsets
+        verbs:
+        - patch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: backplane-acs-rhacs-observability
+        namespace: rhacs-observability
+      subjects:
+      - apiGroup: rbac.authorization.k8s.io
+        kind: Group
+        name: system:serviceaccounts:openshift-backplane-addon-acs-fleet-shard
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: backplane-acs-rhacs-observability
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
