@@ -38,8 +38,9 @@ These permissions are a baseline access for the ACS:CS team across OSD/ROSA infr
 Permissions at cluster scope. 
 
 * view projects
-* get projects
-* get nodes
+* view nodes
+* view pods
+* view pod and node metrics
 * view oauth
 * view namespaces
 * view infrastructure
@@ -48,9 +49,8 @@ Permissions at cluster scope.
 * view ingresses
 * view networks
 * view nodes
-* view clusterroles and clusterrolebindings
+* view clusterroles, clusterrolebindings, roles and rolebindings
 * view customresourcedefinitions
-* view pod and node metrics
 * view storageclasses
 * view persistentvolumes
 * view persistentvolumeclaims

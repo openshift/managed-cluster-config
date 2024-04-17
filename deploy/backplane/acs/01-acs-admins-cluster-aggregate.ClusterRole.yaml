@@ -23,7 +23,7 @@ rules:
   - get
   - list
   - watch
-# ACS SRE can manage namespaces / projects
+# ACS SRE can view namespaces / projects
 - apiGroups:
   - project.openshift.io
   resources:
@@ -83,10 +83,21 @@ rules:
   - get
   - list
   - watch
-# ACS SRE can view clusterroles and clusterrolebindings
+  # ACS SRE can view pods
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - get
+  - list
+  - watch
+# ACS SRE can view roles, roleBindings, clusterroles and clusterrolebindings
 - apiGroups:
   - rbac.authorization.k8s.io
   resources:
+  - roles
+  - rolebindings
   - clusterroles
   - clusterrolebindings
   verbs:
