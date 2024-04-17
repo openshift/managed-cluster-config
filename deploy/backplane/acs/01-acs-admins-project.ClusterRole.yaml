@@ -24,11 +24,22 @@ rules:
   - get
   - watch
   - list
-# ACS team can scale deployments
+# ACS SRE can view services
+- apiGroups:
+  - ""
+  resources:
+  - services
+  verbs:
+  - get
+  - list
+  - watch
+# ACS team can view deployments
 - apiGroups:
   - apps
   resources:
   - deployments
+  - statefulsets
+  - daemonsets
   verbs:
   - get
   - list
@@ -61,7 +72,7 @@ rules:
   - get
   - list
   - watch
-# ACS SRE can patch persistentvolumeclaims
+# ACS SRE can patch persistentvolumeclaims in rhacs-observability
 - apiGroups:
   - ""
   resources:
