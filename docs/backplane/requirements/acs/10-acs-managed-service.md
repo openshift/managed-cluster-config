@@ -74,7 +74,7 @@ Permissions at cluster scope.
 * patch persistentvolumeclaims
 * view secretstores
 
-## backplane-acs-ingress: `openshift-ingress`
+## backplane-acs-openshift-ingress: `openshift-ingress`
 
 - ACS team needs get/list/watch access to inspect the routers and logs
 
