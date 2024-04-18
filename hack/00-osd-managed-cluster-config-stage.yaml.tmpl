@@ -34159,6 +34159,32 @@ objects:
       kind: PrometheusRule
       metadata:
         labels:
+          prometheus: sre-poddisruptionbudget
+          role: alert-rules
+        name: sre-poddisruptionbudget
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-poddisruptionbudget
+          rules:
+          - alert: PodDisruptionBudgetLimitSRE
+            expr: "max by(namespace, poddisruptionbudget) (\n    kube_poddisruptionbudget_status_current_healthy{namespace=~\"\
+              openshift-.*\"} < kube_poddisruptionbudget_status_desired_healthy{namespace=~\"\
+              openshift-.*\"}\n)\nand\nmax by(namespace, poddisruptionbudget) (\n\
+              \    kube_poddisruptionbudget_status_current_healthy{namespace!~\"openshift-(logging|user-workload-monitoring|operators)\"\
+              } < kube_poddisruptionbudget_status_desired_healthy{namespace!~\"openshift-(logging|user-workload-monitoring|operators)\"\
+              }\n)"
+            for: 15m
+            labels:
+              severity: critical
+            annotations:
+              message: The pod disruption budget is below the minimum disruptions
+                allowed level and is not satisfied. The number of current healthy
+                pods is less than the desired healthy pods.
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
           prometheus: sre-pruning
           role: alert-rules
         name: sre-pruning
