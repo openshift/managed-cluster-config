@@ -24,11 +24,66 @@ rules:
   - get
   - watch
   - list
-# ACS team can scale deployments
+# ACS SRE can view services
+- apiGroups:
+  - ""
+  resources:
+  - services
+  verbs:
+  - get
+  - list
+  - watch
+# ACS team can view deployments, statefulsets, daemonsets
 - apiGroups:
   - apps
   resources:
   - deployments
+  - statefulsets
+  - daemonsets
+  verbs:
+  - get
+  - list
+  - watch
+# ACS SRE can view routes
+- apiGroups:
+  - route.openshift.io
+  resources:
+  - routes
+  verbs:
+  - get
+  - list
+  - watch
+# ACS SRE can view egress firewalls
+- apiGroups:
+  - k8s.ovn.org
+  resources:
+  - egressfirewalls
+  verbs:
+  - get
+  - list
+  - watch
+# ACS SRE can view roles and rolebindings
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - roles
+  - rolebindings
+  verbs:
+  - get
+  - list
+  - watch
+# ACS SRE can patch persistentvolumeclaims in rhacs-observability
+- apiGroups:
+  - ""
+  resources:
+  - persistentvolumeclaims
+  verbs:
+  - patch
+# ACS SRE can view clusterSecretStores
+- apiGroups:
+  - external-secrets.io
+  resources:
+  - secretstores
   verbs:
   - get
   - list
