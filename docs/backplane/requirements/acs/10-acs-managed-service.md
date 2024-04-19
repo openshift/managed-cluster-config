@@ -90,6 +90,12 @@ Permissions at cluster scope.
 * view pods/log
 * view statefulsets
 * view services
+* view deployments (required for `ocm backplane console`)
+* create portforwards (required for `ocm backplane console`)
+
+## backplane-acs-openshift-console: `openshift-console`
+
+* view deployments (required for `ocm backplane console`)
 
 ## backplane-acs-rhacs-observability: `rhacs-observability`
 
