@@ -9,3 +9,37 @@ When Service Accounts, Roles and/or Permissions need to be updated, execute the 
 1. Create a PR to this repo with the desired changes to the policies. 
 2. Once merged, Create an MR to [Cluster Servicesi (NOTE: This link needs to be updated)](https://gitlab.cee.redhat.com/service/app-interface/-/blob/master/data/services/ocm/shared-resources/common.yml#L19) to update the referenced commit hash to consume new changes. 
 3. Cluster service will restart pods automatically making policy changes available almost immediately.
+
+## Example wif_template Scheme
+```
+{
+  "id": "v4.14",
+  "kind": "WifTemplate",
+  "service_accounts": [
+    {
+      "id": "osd-deployer",
+      "kind": "ServiceAccount",
+      "osd_role": "deployer",
+      "access_method": "impersonate",
+      "roles": [
+        {
+          "id": "compute.admin",
+          "kind": "Role",
+          "predefined": true
+        },
+        {
+          "id": "custom",
+          "kind": "Role",
+          "predefined": false,
+          "permissions": [
+            "iam.serviceAccounts.get"
+          ]
+        },
+      ]
+    },
+  ],
+  "service_apis": [
+    "deploymentmanager.googleapis.com",
+  ]
+}
+```
