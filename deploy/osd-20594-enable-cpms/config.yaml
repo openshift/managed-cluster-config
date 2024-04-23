@@ -1,0 +1,13 @@
+deploymentMode: "SelectorSyncSet"
+selectorSyncSet:
+  resourceApplyMode: "Sync"
+  matchLabels:
+    api.openshift.com/managed: "true"
+  matchExpressions:
+  - key: api.openshift.com/fedramp
+    operator: NotIn
+    values: ["true"]
+  - key: hive.openshift.io/cluster-region
+    operator: In
+    values:
+      - "eu-west-3"

@@ -23567,6 +23567,35 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: osd-20594-enable-cpms
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+      - key: hive.openshift.io/cluster-region
+        operator: In
+        values:
+        - eu-west-3
+    resourceApplyMode: Sync
+    patches:
+    - apiVersion: machine.openshift.io/v1
+      kind: ControlPlaneMachineSet
+      name: cluster
+      namespace: openshift-machine-api
+      patch: '{"spec":{"state": "Active"}}'
+      patchType: merge
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: osd-aquasec-operator
   spec:
     clusterDeploymentSelector:
