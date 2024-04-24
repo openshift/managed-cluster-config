@@ -27,15 +27,17 @@ Process is captured [ROX-22017: Harden Network Security API Permissions](https:/
 label selectors:
 * labels
 - `api.openshift.com/addon-acs-fleetshard: "true"` OR
-- `api.openshift.com/addon-acs-fleetshard-qa: "true"` OR
-- `api.openshift.com/addon-acs-fleetshard-dev: "true"` 
+- `api.openshift.com/addon-acs-fleetshard-qe: "true"` OR
+- `api.openshift.com/addon-acs-fleetshard-dev: "true"`
 
 For where access is applied
+
+Permissions are applied via `backplane-acs-admins-project` SubjectPermission.
 
 These permissions are a baseline access for the ACS:CS team across OSD/ROSA infra.  Scope of permissions are the Red Hat servers hosting ACS Central (fleetshard) and not to end-customer clusters.
 
 ## backplane-acs-admins-cluster: `cluster`
-Permissions at cluster scope. 
+Permissions at cluster scope.
 
 * view projects
 * view nodes
