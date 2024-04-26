@@ -1,0 +1,25 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: sre-machine-health-check-unterminated-short-circuit-alert
+    role: alert-rules
+  name: sre-machine-health-check-unterminated-short-circuit-alert
+  namespace: openshift-monitoring
+spec:
+  groups:
+  - name: sre-machine-health-check-unterminated-short-circuit-alert
+    rules:
+    - alert: MachineHealthCheckUnterminatedShortCircuitSRE
+      expr: |
+        mapi_machinehealthcheck_short_circuit == 1
+      for: 30m
+      labels:
+        severity: critical
+        namespace: '{{ $labels.namespace }}'
+      annotations:
+        description: |
+          The number of unhealthy machines has exceeded the `maxUnhealthy` limit
+          for the check, you should check the status of machines in the cluster.
+        summary: machine health check {{ $labels.name }} has been disabled
+          by short circuit for more than 30 minutes
