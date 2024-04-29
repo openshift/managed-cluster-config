@@ -43,16 +43,22 @@ Permissions at cluster scope.
 * view projects
 * view nodes
 * view pods
+* view services
+* view routes
+* view networkpolicies
 * view deployments
 * view deploymentconfigs
 * view statefulsets
 * view daemonsets
 * view replicasets
+* view replicationcontrollers
 * view jobs
 * view cronjobs
+* view poddisruptionbudgets
 * view pod and node metrics
 * view oauth
 * view namespaces
+* view operator namespaces
 * view infrastructure
 * view ingresscontrollers
 * view dnsrecords
@@ -75,8 +81,10 @@ Permissions at cluster scope.
 * view prometheuses
 * view prometheusrules
 * view thanosrulers
-* view clusterserviceversions
+* view operator namespaces
+* view clusterversions
 * view clusteroperators
+* view clusterserviceversions
 * view subscriptions
 * view catalogsources
 * view operatorgroups

@@ -3,7 +3,7 @@ kind: ClusterRole
 metadata:
   name: backplane-acs-admins-cluster
 rules:
-# ACS Eng can manage projects
+# ACS Eng can view projects
 - apiGroups:
   - config.openshift.io
   resources:
@@ -11,6 +11,7 @@ rules:
   verbs:
   - get
   - list
+  - watch
 # ACS SRE can get infrastructure details (cluster)
 - apiGroups:
   - config.openshift.io
@@ -124,6 +125,7 @@ rules:
   - statefulsets
   - daemonsets
   - replicasets
+  - replicationcontrollers
   verbs:
   - get
   - list
@@ -134,6 +136,42 @@ rules:
   resources:
   - jobs
   - cronjobs
+  verbs:
+  - get
+  - list
+  - watch
+# ACS SRE can view podDisruptionBudgets
+- apiGroups:
+  - policy
+  resources:
+  - poddisruptionbudgets
+  verbs:
+  - get
+  - list
+  - watch
+# ACS SRE can view services
+- apiGroups:
+  - ""
+  resources:
+  - services
+  verbs:
+  - get
+  - list
+  - watch
+# ACS SRE can view routes
+- apiGroups:
+  - route.openshift.io
+  resources:
+  - routes
+  verbs:
+  - get
+  - list
+  - watch
+# ACS SRE can view network policies
+- apiGroups:
+  - networking.k8s.io
+  resources:
+  - networkpolicies
   verbs:
   - get
   - list
@@ -232,12 +270,21 @@ rules:
   - get
   - list
   - watch
-# ACS SRE can view clusterserviceversions, clusteroperators, subscriptions, catalogsources, operatorgroups, operators, installplans, olmconfigs, operatorconditions
+  # ACS SRE can view clusterversions
+- apiGroups:
+  - config.openshift.io
+  resources:
+  - clusterversions
+  verbs:
+  - get
+  - list
+  - watch
+# ACS SRE can view namespaces, clusterserviceversions, clusteroperators, subscriptions, catalogsources, operatorgroups, operators, installplans, olmconfigs, operatorconditions
 - apiGroups:
   - operators.coreos.com
   resources:
+  - namespaces
   - clusterserviceversions
-  - clusteroperators
   - subscriptions
   - catalogsources
   - operatorgroups
