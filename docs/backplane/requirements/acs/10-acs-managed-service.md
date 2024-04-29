@@ -75,15 +75,15 @@ Permissions at cluster scope.
 * view prometheuses
 * view prometheusrules
 * view thanosrulers
-* view clusteroperators
 * view clusterserviceversions
+* view clusteroperators
 * view subscriptions
 * view catalogsources
 * view operatorgroups
 * view operators
 * view installplans
-* view operatorconditions
 * view olmconfigs
+* view operatorconditions
 * view resourcequotas
 * view appliedclusterresourcequotas
 * view limitranges
