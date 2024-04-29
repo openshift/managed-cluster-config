@@ -106,14 +106,15 @@ Permissions at cluster scope.
 - ACS team needs read/list/watch access to core `redhat` and `rhacs` objects within their namespaces.
 - Permisions at namespace scope.
 
-* get centrals
-* get stackrox
-* get secureclusters
-* get pods and pod logs
+* view centrals
+* view stackrox
+* view securedclusters
+* view pods and pod logs
 * view services
 * view deployments
 * view statefulsets
 * view daemonsets
+* view applications
 * view routes
 * view egress firewalls
 * view roles and rolebindings
