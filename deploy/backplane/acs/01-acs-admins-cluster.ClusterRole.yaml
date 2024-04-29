@@ -98,6 +98,46 @@ rules:
   - get
   - list
   - watch
+# ACS SRE can view events
+- apiGroups:
+    - ""
+  resources:
+    - events
+  verbs:
+    - get
+    - list
+    - watch
+# ACS SRE can view pod logs
+- apiGroups:
+  - ""
+  resources:
+  - pods/log
+  verbs:
+  - get
+  - watch
+  - list
+# ACS SRE can view deployments, statefulsets, daemonsets, replicasets
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  - statefulsets
+  - daemonsets
+  - replicasets
+  verbs:
+  - get
+  - list
+  - watch
+# ACS SRE can view jobs and cronjobs
+- apiGroups:
+  - batch
+  resources:
+  - jobs
+  - cronjobs
+  verbs:
+  - get
+  - list
+  - watch
 # ACS SRE can view roles, roleBindings, clusterroles and clusterrolebindings
 - apiGroups:
   - rbac.authorization.k8s.io
@@ -153,6 +193,130 @@ rules:
   - external-secrets.io
   resources:
   - clustersecretstores
+  verbs:
+  - get
+  - list
+  - watch
+# ACS SRE can view machineconfigs and machineconfigpools
+- apiGroups:
+  - machineconfiguration.openshift.io
+  resources:
+  - machineconfigs
+  - machineconfigpools
+  verbs:
+  - get
+  - list
+  - watch
+# ACS SRE can view observability resources
+- apiGroups:
+  - monitoring.coreos.com
+  resources:
+  - alertmanagerconfigs
+  - alertmanagers
+  - podmonitors
+  - probes
+  - prometheuses
+  - prometheusrules
+  - servicemonitors
+  - thanosrulers
+  verbs:
+  - get
+  - list
+  - watch
+# ACS SRE can view clusteroperators
+- apiGroups:
+  - config.openshift.io
+  resources:
+  - clusteroperators
+  verbs:
+  - get
+  - list
+  - watch
+# ACS SRE can view clusterserviceversions, subscriptions, catalogsources, operatorgroups, installplans
+- apiGroups:
+  - operators.coreos.com
+  resources:
+  - clusterserviceversions
+  - clusteroperators
+  - subscriptions
+  - catalogsources
+  - operatorgroups
+  - operators
+  - installplans
+  - olmconfigs
+  - operatorconditions
+  verbs:
+  - get
+  - list
+  - watch
+# ACS SRE can view serviceaccounts
+- apiGroups:
+  - ""
+  resources:
+  - serviceaccounts
+  verbs:
+  - get
+  - list
+  - watch
+# ACS SRE can view resourcequotas
+- apiGroups:
+  - ""
+  resources:
+  - resourcequotas
+  verbs:
+  - get
+  - list
+  - watch
+# ACS SRE can view appliedclusterresourcequotas
+- apiGroups:
+  - quota.openshift.io
+  resources:
+  - appliedclusterresourcequotas
+  verbs:
+  - get
+  - list
+  - watch
+# ACS SRE can view limitranges
+- apiGroups:
+  - ""
+  resources:
+  - limitranges
+  verbs:
+  - get
+  - list
+  - watch
+# ACS SRE can view deploymentconfigs
+- apiGroups:
+  - apps.openshift.io
+  resources:
+  - deploymentconfigs
+  verbs:
+  - get
+  - list
+  - watch
+# ACS SRE can view horizontal pod autoscalers
+- apiGroups:
+  - autoscaling
+  resources:
+  - horizontalpodautoscalers
+  verbs:
+  - get
+  - list
+  - watch
+# ACS SRE can view projecthelmchartrepositories
+- apiGroups:
+  - helm.openshift.io
+  resources:
+  - projecthelmchartrepositories
+  verbs:
+  - get
+  - list
+  - watch
+# ACS SRE can view addonoperators
+- apiGroups:
+  - addons.managed.openshift.io
+  resources:
+  - addonoperators
   verbs:
   - get
   - list

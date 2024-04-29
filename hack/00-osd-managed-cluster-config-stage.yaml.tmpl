@@ -8017,6 +8017,42 @@ objects:
         - list
         - watch
       - apiGroups:
+        - ''
+        resources:
+        - events
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - pods/log
+        verbs:
+        - get
+        - watch
+        - list
+      - apiGroups:
+        - apps
+        resources:
+        - deployments
+        - statefulsets
+        - daemonsets
+        - replicasets
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - batch
+        resources:
+        - jobs
+        - cronjobs
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
         - rbac.authorization.k8s.io
         resources:
         - roles
@@ -8065,6 +8101,118 @@ objects:
         - external-secrets.io
         resources:
         - clustersecretstores
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - machineconfiguration.openshift.io
+        resources:
+        - machineconfigs
+        - machineconfigpools
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - alertmanagerconfigs
+        - alertmanagers
+        - podmonitors
+        - probes
+        - prometheuses
+        - prometheusrules
+        - servicemonitors
+        - thanosrulers
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - config.openshift.io
+        resources:
+        - clusteroperators
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - clusterserviceversions
+        - clusteroperators
+        - subscriptions
+        - catalogsources
+        - operatorgroups
+        - operators
+        - installplans
+        - olmconfigs
+        - operatorconditions
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - serviceaccounts
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - resourcequotas
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - quota.openshift.io
+        resources:
+        - appliedclusterresourcequotas
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - limitranges
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - apps.openshift.io
+        resources:
+        - deploymentconfigs
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - autoscaling
+        resources:
+        - horizontalpodautoscalers
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - helm.openshift.io
+        resources:
+        - projecthelmchartrepositories
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - addons.managed.openshift.io
+        resources:
+        - addonoperators
         verbs:
         - get
         - list
@@ -8146,6 +8294,23 @@ objects:
         - external-secrets.io
         resources:
         - secretstores
+        - external-secrets
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - serviceaccounts
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - security.openshift.io
+        resources:
+        - securitycontextconstraints
         verbs:
         - get
         - list
@@ -8288,6 +8453,36 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-acs-openshift-console
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: backplane-acs-openshift-machine-api
+        namespace: openshift-machine-api
+      rules:
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machines
+        - machinesets
+        - machineautoscalers
+        - machinehealthchecks
+        verbs:
+        - get
+        - list
+        - watch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: backplane-acs-openshift-machine-api
+        namespace: openshift-machine-api
+      subjects:
+      - apiGroup: rbac.authorization.k8s.io
+        kind: Group
+        name: system:serviceaccounts:openshift-backplane-addon-acs-fleet-shard
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: backplane-acs-openshift-machine-api
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: Role
       metadata:
@@ -8465,6 +8660,42 @@ objects:
         - list
         - watch
       - apiGroups:
+        - ''
+        resources:
+        - events
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - pods/log
+        verbs:
+        - get
+        - watch
+        - list
+      - apiGroups:
+        - apps
+        resources:
+        - deployments
+        - statefulsets
+        - daemonsets
+        - replicasets
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - batch
+        resources:
+        - jobs
+        - cronjobs
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
         - rbac.authorization.k8s.io
         resources:
         - roles
@@ -8513,6 +8744,118 @@ objects:
         - external-secrets.io
         resources:
         - clustersecretstores
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - machineconfiguration.openshift.io
+        resources:
+        - machineconfigs
+        - machineconfigpools
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - alertmanagerconfigs
+        - alertmanagers
+        - podmonitors
+        - probes
+        - prometheuses
+        - prometheusrules
+        - servicemonitors
+        - thanosrulers
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - config.openshift.io
+        resources:
+        - clusteroperators
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - clusterserviceversions
+        - clusteroperators
+        - subscriptions
+        - catalogsources
+        - operatorgroups
+        - operators
+        - installplans
+        - olmconfigs
+        - operatorconditions
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - serviceaccounts
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - resourcequotas
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - quota.openshift.io
+        resources:
+        - appliedclusterresourcequotas
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - limitranges
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - apps.openshift.io
+        resources:
+        - deploymentconfigs
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - autoscaling
+        resources:
+        - horizontalpodautoscalers
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - helm.openshift.io
+        resources:
+        - projecthelmchartrepositories
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - addons.managed.openshift.io
+        resources:
+        - addonoperators
         verbs:
         - get
         - list
@@ -8594,6 +8937,23 @@ objects:
         - external-secrets.io
         resources:
         - secretstores
+        - external-secrets
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - serviceaccounts
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - security.openshift.io
+        resources:
+        - securitycontextconstraints
         verbs:
         - get
         - list
@@ -8736,6 +9096,36 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-acs-openshift-console
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: backplane-acs-openshift-machine-api
+        namespace: openshift-machine-api
+      rules:
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machines
+        - machinesets
+        - machineautoscalers
+        - machinehealthchecks
+        verbs:
+        - get
+        - list
+        - watch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: backplane-acs-openshift-machine-api
+        namespace: openshift-machine-api
+      subjects:
+      - apiGroup: rbac.authorization.k8s.io
+        kind: Group
+        name: system:serviceaccounts:openshift-backplane-addon-acs-fleet-shard
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: backplane-acs-openshift-machine-api
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: Role
       metadata:
@@ -8913,6 +9303,42 @@ objects:
         - list
         - watch
       - apiGroups:
+        - ''
+        resources:
+        - events
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - pods/log
+        verbs:
+        - get
+        - watch
+        - list
+      - apiGroups:
+        - apps
+        resources:
+        - deployments
+        - statefulsets
+        - daemonsets
+        - replicasets
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - batch
+        resources:
+        - jobs
+        - cronjobs
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
         - rbac.authorization.k8s.io
         resources:
         - roles
@@ -8961,6 +9387,118 @@ objects:
         - external-secrets.io
         resources:
         - clustersecretstores
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - machineconfiguration.openshift.io
+        resources:
+        - machineconfigs
+        - machineconfigpools
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - alertmanagerconfigs
+        - alertmanagers
+        - podmonitors
+        - probes
+        - prometheuses
+        - prometheusrules
+        - servicemonitors
+        - thanosrulers
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - config.openshift.io
+        resources:
+        - clusteroperators
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - clusterserviceversions
+        - clusteroperators
+        - subscriptions
+        - catalogsources
+        - operatorgroups
+        - operators
+        - installplans
+        - olmconfigs
+        - operatorconditions
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - serviceaccounts
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - resourcequotas
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - quota.openshift.io
+        resources:
+        - appliedclusterresourcequotas
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - limitranges
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - apps.openshift.io
+        resources:
+        - deploymentconfigs
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - autoscaling
+        resources:
+        - horizontalpodautoscalers
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - helm.openshift.io
+        resources:
+        - projecthelmchartrepositories
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - addons.managed.openshift.io
+        resources:
+        - addonoperators
         verbs:
         - get
         - list
@@ -9042,6 +9580,23 @@ objects:
         - external-secrets.io
         resources:
         - secretstores
+        - external-secrets
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - serviceaccounts
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - security.openshift.io
+        resources:
+        - securitycontextconstraints
         verbs:
         - get
         - list
@@ -9184,6 +9739,36 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-acs-openshift-console
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: backplane-acs-openshift-machine-api
+        namespace: openshift-machine-api
+      rules:
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machines
+        - machinesets
+        - machineautoscalers
+        - machinehealthchecks
+        verbs:
+        - get
+        - list
+        - watch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: backplane-acs-openshift-machine-api
+        namespace: openshift-machine-api
+      subjects:
+      - apiGroup: rbac.authorization.k8s.io
+        kind: Group
+        name: system:serviceaccounts:openshift-backplane-addon-acs-fleet-shard
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: backplane-acs-openshift-machine-api
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: Role
       metadata:

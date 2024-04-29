@@ -1,0 +1,18 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: backplane-acs-openshift-machine-api
+  namespace: openshift-machine-api
+rules:
+# ACS SRE can use the `ocm backplane console` command
+- apiGroups:
+  - machine.openshift.io
+  resources:
+  - machines
+  - machinesets
+  - machineautoscalers
+  - machinehealthchecks
+  verbs:
+  - get
+  - list
+  - watch
