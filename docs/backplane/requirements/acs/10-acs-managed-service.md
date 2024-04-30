@@ -43,7 +43,7 @@ Permissions at cluster scope.
 * view projects
 * view nodes
 * view pods
-* view logs
+* view pod logs
 * view services
 * view routes
 * view networkpolicies
