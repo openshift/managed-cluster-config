@@ -163,6 +163,7 @@ Permissions at cluster scope.
 * view grafanas
 * view grafanadatasources
 * view grafanadashboards
+* view grafana-admin-credentials secret
 
 - ACS team needs to be able to increase the prometheus storage and restart prometheus
 
