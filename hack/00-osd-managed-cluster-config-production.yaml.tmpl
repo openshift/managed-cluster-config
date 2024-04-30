@@ -8585,16 +8585,6 @@ objects:
         - statefulsets
         verbs:
         - patch
-      - apiGroups:
-        - ''
-        resources:
-        - secrets
-        resourceNames:
-        - grafana-admin-credentials
-        verbs:
-        - get
-        - list
-        - watch
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: RoleBinding
       metadata:
@@ -9289,16 +9279,6 @@ objects:
         - statefulsets
         verbs:
         - patch
-      - apiGroups:
-        - ''
-        resources:
-        - secrets
-        resourceNames:
-        - grafana-admin-credentials
-        verbs:
-        - get
-        - list
-        - watch
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: RoleBinding
       metadata:
@@ -9993,16 +9973,6 @@ objects:
         - statefulsets
         verbs:
         - patch
-      - apiGroups:
-        - ''
-        resources:
-        - secrets
-        resourceNames:
-        - grafana-admin-credentials
-        verbs:
-        - get
-        - list
-        - watch
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: RoleBinding
       metadata:
@@ -10016,6 +9986,50 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-acs-rhacs-observability
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: backplane-acs-integration-addon-acs-fleetshard-dev
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+        api.openshift.com/addon-acs-fleetshard-dev: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: backplane-acs-integration-rhacs-observability
+        namespace: rhacs-observability
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - secrets
+        resourceNames:
+        - grafana-admin-credentials
+        verbs:
+        - get
+        - list
+        - watch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: backplane-acs-integration-rhacs-observability
+        namespace: rhacs-observability
+      subjects:
+      - apiGroup: rbac.authorization.k8s.io
+        kind: Group
+        name: system:serviceaccounts:openshift-backplane-addon-acs-fleet-shard
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: backplane-acs-integration-rhacs-observability
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
