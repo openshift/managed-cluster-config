@@ -43,6 +43,7 @@ Permissions at cluster scope.
 * view projects
 * view nodes
 * view pods
+* view logs
 * view services
 * view routes
 * view networkpolicies
@@ -120,7 +121,7 @@ Permissions at cluster scope.
 * view roles and rolebindings
 * patch persistentvolumeclaims
 * view secretstores
-* view external secrets
+* view externalsecrets
 * view serviceaccounts
 * view securitycontextconstraints
 

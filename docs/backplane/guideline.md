@@ -93,6 +93,7 @@ Resource specific guidelines below are enforced by CI where possible.
 The following secrets may be accessed by the respective persona for the given reasons.
 Note to be in this list the `Secret` must not contain any secret data (see [Definitions](#definitions)).
 
-| Persona | Namespace | Secret | Reason |
-| --- | --- | --- | --- |
-| SREP | openshift-monitoring | alertmanager-main | Platform SRE have access to the PagerDuty API and DMS Webhook from other systems. The ability to review the configuration of alertmanager is important for SRE to understand how monitoring has been configured and if there are issues with the routing of alerts. |
+| Persona        | Namespace            | Secret                    | Reason                                                                                                                                                                                                                                                              |
+|----------------|----------------------|---------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| SREP           | openshift-monitoring | alertmanager-main         | Platform SRE have access to the PagerDuty API and DMS Webhook from other systems. The ability to review the configuration of alertmanager is important for SRE to understand how monitoring has been configured and if there are issues with the routing of alerts. |
+| SRE or ACS eng | rhacs-observability  | grafana-admin-credentials | SREs and ACS engineers need admin access to Grafana to tweak dashboards. Changes to dashboards are temporary, as they are ultimately reconciled by [RHACS Observability Resources Repository](https://github.com/stackrox/rhacs-observability-resources).           |
