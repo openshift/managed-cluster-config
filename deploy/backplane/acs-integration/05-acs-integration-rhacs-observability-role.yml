@@ -1,0 +1,17 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: backplane-acs-integration-rhacs-observability
+  namespace: rhacs-observability
+rules:
+# ACS SRE can view grafana-admin-credentials secret
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  resourceNames:
+  - grafana-admin-credentials
+  verbs:
+  - get
+  - list
+  - watch

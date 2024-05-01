@@ -10,6 +10,7 @@ rules:
   resources:
   - centrals
   - securedclusters
+  - fleetshards
   verbs:
   - get
   - list
@@ -40,6 +41,15 @@ rules:
   - deployments
   - statefulsets
   - daemonsets
+  verbs:
+  - get
+  - list
+  - watch
+# ACS SRE can view applications
+- apiGroups:
+  - app.k8s.io
+  resources:
+  - applications
   verbs:
   - get
   - list
@@ -79,11 +89,30 @@ rules:
   - persistentvolumeclaims
   verbs:
   - patch
-# ACS SRE can view clusterSecretStores
+# ACS SRE can view secret stores and external secrets
 - apiGroups:
   - external-secrets.io
   resources:
   - secretstores
+  - externalsecrets
+  verbs:
+  - get
+  - list
+  - watch
+# ACS SRE can view serviceaccounts
+- apiGroups:
+  - ""
+  resources:
+  - serviceaccounts
+  verbs:
+  - get
+  - list
+  - watch
+# ACS SRE can view securitycontextconstraints
+- apiGroups:
+  - security.openshift.io
+  resources:
+  - securitycontextconstraints
   verbs:
   - get
   - list

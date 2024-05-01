@@ -39,12 +39,27 @@ These permissions are a baseline access for the ACS:CS team across OSD/ROSA infr
 ## backplane-acs-admins-cluster: `cluster`
 Permissions at cluster scope.
 
+* view events
 * view projects
 * view nodes
 * view pods
+* view pod logs
+* view services
+* view routes
+* view networkpolicies
+* view deployments
+* view deploymentconfigs
+* view statefulsets
+* view daemonsets
+* view replicasets
+* view replicationcontrollers
+* view jobs
+* view cronjobs
+* view poddisruptionbudgets
 * view pod and node metrics
 * view oauth
 * view namespaces
+* view operator namespaces
 * view infrastructure
 * view ingresscontrollers
 * view dnsrecords
@@ -57,24 +72,58 @@ Permissions at cluster scope.
 * view persistentvolumes
 * view persistentvolumeclaims
 * view clustersecretstores
+* view machineconfigs
+* view machineconfigpools
+* view servicemonitors
+* view podmonitors
+* view alertmanagerconfigs
+* view alertmanagers
+* view probes
+* view prometheuses
+* view prometheusrules
+* view thanosrulers
+* view operator namespaces
+* view clusterversions
+* view clusteroperators
+* view clusterserviceversions
+* view subscriptions
+* view catalogsources
+* view operatorgroups
+* view operators
+* view installplans
+* view olmconfigs
+* view operatorconditions
+* view resourcequotas
+* view appliedclusterresourcequotas
+* view limitranges
+* view projecthelmchartrepositories
+* view templates
+* view horizontalpodautoscalers
+* view vertical pod autoscalers
+* view vertical pod autoscaler checkpoints
+* view addonoperators
 
 ## backplane-acs-admins-project: `(^redhat-acs-fleetshard$|^rhacs$|^rhacs-.*)`
 - ACS team needs read/list/watch access to core `redhat` and `rhacs` objects within their namespaces.
 - Permisions at namespace scope.
 
-* get centrals
-* get stackrox
-* get secureclusters
-* get pods and pod logs
+* view centrals
+* view stackrox
+* view securedclusters
+* view pods and pod logs
 * view services
 * view deployments
 * view statefulsets
 * view daemonsets
+* view applications
 * view routes
 * view egress firewalls
 * view roles and rolebindings
 * patch persistentvolumeclaims
 * view secretstores
+* view externalsecrets
+* view serviceaccounts
+* view securitycontextconstraints
 
 ## backplane-acs-openshift-ingress: `openshift-ingress`
 
@@ -120,5 +169,14 @@ Permissions at cluster scope.
 
 * patch persistentvolumeclaims
 * patch statefulsets
+
+## backplane-acs-openshift-machine-api: `openshift-machine-api`
+
+- ACS team needs to inspect the machine-api resources
+
+* view machines
+* view machinesets
+* view machineautoscalers
+* view machinehealthchecks
 
 **Note** Please update this document as addional permisions are requested, thank you.
