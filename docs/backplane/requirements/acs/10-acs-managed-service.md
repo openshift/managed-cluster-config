@@ -55,6 +55,7 @@ Permissions at cluster scope.
 * view replicationcontrollers
 * view jobs
 * view cronjobs
+* view configmaps
 * view poddisruptionbudgets
 * view pod and node metrics
 * view oauth
@@ -71,6 +72,8 @@ Permissions at cluster scope.
 * view storageclasses
 * view persistentvolumes
 * view persistentvolumeclaims
+* view volumesnapshots
+* view templates
 * view clustersecretstores
 * view machineconfigs
 * view machineconfigpools
@@ -107,7 +110,7 @@ Permissions at cluster scope.
 * view vertical pod autoscaler checkpoints
 * view addonoperators
 
-## backplane-acs-admins-project: `(^redhat-acs-fleetshard$|^rhacs$|^rhacs-.*)`
+## backplane-acs-admins-project: `(^redhat-acs-fleetshard$|^rhacs$|^rhacs-.*|^acscs-dataplane-cd$)`
 - ACS team needs read/list/watch access to core `redhat` and `rhacs` objects within their namespaces.
 - Permisions at namespace scope.
 
