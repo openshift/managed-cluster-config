@@ -74,6 +74,10 @@ Permissions at cluster scope.
 * view clustersecretstores
 * view machineconfigs
 * view machineconfigpools
+* view machines
+* view machinesets
+* view machineautoscalers
+* view machinehealthchecks
 * view servicemonitors
 * view podmonitors
 * view alertmanagerconfigs
@@ -169,14 +173,5 @@ Permissions at cluster scope.
 
 * patch persistentvolumeclaims
 * patch statefulsets
-
-## backplane-acs-openshift-machine-api: `openshift-machine-api`
-
-- ACS team needs to inspect the machine-api resources
-
-* view machines
-* view machinesets
-* view machineautoscalers
-* view machinehealthchecks
 
 **Note** Please update this document as addional permisions are requested, thank you.

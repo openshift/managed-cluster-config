@@ -125,6 +125,13 @@ rules:
   - statefulsets
   - daemonsets
   - replicasets
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
   - replicationcontrollers
   verbs:
   - get
@@ -364,6 +371,26 @@ rules:
   - addons.managed.openshift.io
   resources:
   - addonoperators
+  verbs:
+  - get
+  - list
+  - watch
+# ACS SRE can view machines, machinesets, machinehealthchecks
+- apiGroups:
+  - machine.openshift.io
+  resources:
+  - machines
+  - machinesets
+  - machinehealthchecks
+  verbs:
+  - get
+  - list
+  - watch
+# ACS SRE can view machineautoscalers
+- apiGroups:
+  - autoscaling.openshift.io
+  resources:
+  - machineautoscalers
   verbs:
   - get
   - list
