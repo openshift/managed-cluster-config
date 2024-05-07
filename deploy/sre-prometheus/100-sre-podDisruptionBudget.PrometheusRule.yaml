@@ -13,20 +13,16 @@ spec:
     - alert: PodDisruptionBudgetLimitSRE
       # This takes the original PodDisruptionBudgetLimit alert and adjusts to filter by namespace
       # In the first max by() statement we ONLY care about the `openshift-*` namespaces. We then
-      # do an AND on any namespaces that are NOT `openshift-logging`, `openshift-operators`,
-      # or `openshift-user-workload-monitoring`. When we join the two statements together we are
-      # left with only the openshift-* namespaces that are NOT excluded by the second statement
+      # do an AND on any namespaces that are NOT `openshift-logging`, `openshift-operators`, etc.
+      # When we join the two statements together we are left with only the openshift-* namespaces
+      # that are NOT excluded by the second statement
       #
       # To add more openshift-* namespaces to the exclusion list, add them to the
-      # second statement below.
+      # second statement excluding with unless below.
       expr: |-
-        max by(namespace, poddisruptionbudget) (
-            kube_poddisruptionbudget_status_current_healthy{namespace=~"openshift-.*"} < kube_poddisruptionbudget_status_desired_healthy{namespace=~"openshift-.*"}
-        )
-        and
-        max by(namespace, poddisruptionbudget) (
-            kube_poddisruptionbudget_status_current_healthy{namespace!~"openshift-(logging|user-workload-monitoring|operators)"} < kube_poddisruptionbudget_status_desired_healthy{namespace!~"openshift-(logging|user-workload-monitoring|operators)"}
-        )
+        max by(namespace, poddisruptionbudget) ( kube_poddisruptionbudget_status_current_healthy{namespace=~"openshift-.*"} < kube_poddisruptionbudget_status_desired_healthy{namespace=~"openshift-.*"} )
+        unless on(namespace)
+          kube_poddisruptionbudget_labels{namespace=~"openshift-(logging|user-workload-monitoring|operators|kyverno)"}
       for: 15m
       labels:
         severity: critical
