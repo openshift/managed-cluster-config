@@ -125,6 +125,13 @@ rules:
   - statefulsets
   - daemonsets
   - replicasets
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
   - replicationcontrollers
   verbs:
   - get
@@ -136,6 +143,15 @@ rules:
   resources:
   - jobs
   - cronjobs
+  verbs:
+  - get
+  - list
+  - watch
+# ACS SRE can view configmaps
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
   verbs:
   - get
   - list
@@ -222,6 +238,24 @@ rules:
   resources:
   - persistentvolumes
   - persistentvolumeclaims
+  verbs:
+  - get
+  - list
+  - watch
+# ACS SRE can view volumesnapshots
+- apiGroups:
+  - snapshot.storage.k8s.io
+  resources:
+  - volumesnapshots
+  verbs:
+  - get
+  - list
+  - watch
+# ACS SRE can view templates
+- apiGroups:
+  - template.openshift.io
+  resources:
+  - templates
   verbs:
   - get
   - list
@@ -364,6 +398,26 @@ rules:
   - addons.managed.openshift.io
   resources:
   - addonoperators
+  verbs:
+  - get
+  - list
+  - watch
+# ACS SRE can view machines, machinesets, machinehealthchecks
+- apiGroups:
+  - machine.openshift.io
+  resources:
+  - machines
+  - machinesets
+  - machinehealthchecks
+  verbs:
+  - get
+  - list
+  - watch
+# ACS SRE can view machineautoscalers
+- apiGroups:
+  - autoscaling.openshift.io
+  resources:
+  - machineautoscalers
   verbs:
   - get
   - list

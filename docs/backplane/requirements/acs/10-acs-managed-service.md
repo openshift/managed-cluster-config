@@ -55,6 +55,7 @@ Permissions at cluster scope.
 * view replicationcontrollers
 * view jobs
 * view cronjobs
+* view configmaps
 * view poddisruptionbudgets
 * view pod and node metrics
 * view oauth
@@ -71,9 +72,15 @@ Permissions at cluster scope.
 * view storageclasses
 * view persistentvolumes
 * view persistentvolumeclaims
+* view volumesnapshots
+* view templates
 * view clustersecretstores
 * view machineconfigs
 * view machineconfigpools
+* view machines
+* view machinesets
+* view machineautoscalers
+* view machinehealthchecks
 * view servicemonitors
 * view podmonitors
 * view alertmanagerconfigs
@@ -103,7 +110,7 @@ Permissions at cluster scope.
 * view vertical pod autoscaler checkpoints
 * view addonoperators
 
-## backplane-acs-admins-project: `(^redhat-acs-fleetshard$|^rhacs$|^rhacs-.*)`
+## backplane-acs-admins-project: `(^redhat-acs-fleetshard$|^rhacs$|^rhacs-.*|^acscs-dataplane-cd$)`
 - ACS team needs read/list/watch access to core `redhat` and `rhacs` objects within their namespaces.
 - Permisions at namespace scope.
 
@@ -169,14 +176,5 @@ Permissions at cluster scope.
 
 * patch persistentvolumeclaims
 * patch statefulsets
-
-## backplane-acs-openshift-machine-api: `openshift-machine-api`
-
-- ACS team needs to inspect the machine-api resources
-
-* view machines
-* view machinesets
-* view machineautoscalers
-* view machinehealthchecks
 
 **Note** Please update this document as addional permisions are requested, thank you.

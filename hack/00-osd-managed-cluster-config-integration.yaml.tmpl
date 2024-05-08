@@ -8040,6 +8040,13 @@ objects:
         - statefulsets
         - daemonsets
         - replicasets
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
         - replicationcontrollers
         verbs:
         - get
@@ -8050,6 +8057,14 @@ objects:
         resources:
         - jobs
         - cronjobs
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - configmaps
         verbs:
         - get
         - list
@@ -8127,6 +8142,22 @@ objects:
         resources:
         - persistentvolumes
         - persistentvolumeclaims
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - snapshot.storage.k8s.io
+        resources:
+        - volumesnapshots
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - template.openshift.io
+        resources:
+        - templates
         verbs:
         - get
         - list
@@ -8259,6 +8290,24 @@ objects:
         - get
         - list
         - watch
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machines
+        - machinesets
+        - machinehealthchecks
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - autoscaling.openshift.io
+        resources:
+        - machineautoscalers
+        verbs:
+        - get
+        - list
+        - watch
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
@@ -8379,7 +8428,7 @@ objects:
           namespacesAllowedRegex: (^redhat-.*|^rhacs$|^rhacs-.*|^openshift$|^openshift-.*|^default$|^kube$|^kube-.*)
           namespacesDeniedRegex: openshift-backplane-cluster-admin
         - clusterRoleName: backplane-acs-admins-project
-          namespacesAllowedRegex: (^redhat-acs-fleetshard$|^rhacs$|^rhacs-.*)
+          namespacesAllowedRegex: (^redhat-acs-fleetshard$|^rhacs$|^rhacs-.*|^acscs-dataplane-cd$)
           namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-addon-acs-fleet-shard
@@ -8504,36 +8553,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-acs-openshift-console
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: Role
-      metadata:
-        name: backplane-acs-openshift-machine-api
-        namespace: openshift-machine-api
-      rules:
-      - apiGroups:
-        - machine.openshift.io
-        resources:
-        - machines
-        - machinesets
-        - machineautoscalers
-        - machinehealthchecks
-        verbs:
-        - get
-        - list
-        - watch
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: RoleBinding
-      metadata:
-        name: backplane-acs-openshift-machine-api
-        namespace: openshift-machine-api
-      subjects:
-      - apiGroup: rbac.authorization.k8s.io
-        kind: Group
-        name: system:serviceaccounts:openshift-backplane-addon-acs-fleet-shard
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: Role
-        name: backplane-acs-openshift-machine-api
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: Role
       metadata:
@@ -8734,6 +8753,13 @@ objects:
         - statefulsets
         - daemonsets
         - replicasets
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
         - replicationcontrollers
         verbs:
         - get
@@ -8744,6 +8770,14 @@ objects:
         resources:
         - jobs
         - cronjobs
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - configmaps
         verbs:
         - get
         - list
@@ -8821,6 +8855,22 @@ objects:
         resources:
         - persistentvolumes
         - persistentvolumeclaims
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - snapshot.storage.k8s.io
+        resources:
+        - volumesnapshots
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - template.openshift.io
+        resources:
+        - templates
         verbs:
         - get
         - list
@@ -8953,6 +9003,24 @@ objects:
         - get
         - list
         - watch
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machines
+        - machinesets
+        - machinehealthchecks
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - autoscaling.openshift.io
+        resources:
+        - machineautoscalers
+        verbs:
+        - get
+        - list
+        - watch
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
@@ -9073,7 +9141,7 @@ objects:
           namespacesAllowedRegex: (^redhat-.*|^rhacs$|^rhacs-.*|^openshift$|^openshift-.*|^default$|^kube$|^kube-.*)
           namespacesDeniedRegex: openshift-backplane-cluster-admin
         - clusterRoleName: backplane-acs-admins-project
-          namespacesAllowedRegex: (^redhat-acs-fleetshard$|^rhacs$|^rhacs-.*)
+          namespacesAllowedRegex: (^redhat-acs-fleetshard$|^rhacs$|^rhacs-.*|^acscs-dataplane-cd$)
           namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-addon-acs-fleet-shard
@@ -9198,36 +9266,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-acs-openshift-console
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: Role
-      metadata:
-        name: backplane-acs-openshift-machine-api
-        namespace: openshift-machine-api
-      rules:
-      - apiGroups:
-        - machine.openshift.io
-        resources:
-        - machines
-        - machinesets
-        - machineautoscalers
-        - machinehealthchecks
-        verbs:
-        - get
-        - list
-        - watch
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: RoleBinding
-      metadata:
-        name: backplane-acs-openshift-machine-api
-        namespace: openshift-machine-api
-      subjects:
-      - apiGroup: rbac.authorization.k8s.io
-        kind: Group
-        name: system:serviceaccounts:openshift-backplane-addon-acs-fleet-shard
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: Role
-        name: backplane-acs-openshift-machine-api
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: Role
       metadata:
@@ -9428,6 +9466,13 @@ objects:
         - statefulsets
         - daemonsets
         - replicasets
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
         - replicationcontrollers
         verbs:
         - get
@@ -9438,6 +9483,14 @@ objects:
         resources:
         - jobs
         - cronjobs
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - configmaps
         verbs:
         - get
         - list
@@ -9515,6 +9568,22 @@ objects:
         resources:
         - persistentvolumes
         - persistentvolumeclaims
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - snapshot.storage.k8s.io
+        resources:
+        - volumesnapshots
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - template.openshift.io
+        resources:
+        - templates
         verbs:
         - get
         - list
@@ -9647,6 +9716,24 @@ objects:
         - get
         - list
         - watch
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machines
+        - machinesets
+        - machinehealthchecks
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - autoscaling.openshift.io
+        resources:
+        - machineautoscalers
+        verbs:
+        - get
+        - list
+        - watch
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
@@ -9767,7 +9854,7 @@ objects:
           namespacesAllowedRegex: (^redhat-.*|^rhacs$|^rhacs-.*|^openshift$|^openshift-.*|^default$|^kube$|^kube-.*)
           namespacesDeniedRegex: openshift-backplane-cluster-admin
         - clusterRoleName: backplane-acs-admins-project
-          namespacesAllowedRegex: (^redhat-acs-fleetshard$|^rhacs$|^rhacs-.*)
+          namespacesAllowedRegex: (^redhat-acs-fleetshard$|^rhacs$|^rhacs-.*|^acscs-dataplane-cd$)
           namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-addon-acs-fleet-shard
@@ -9892,36 +9979,6 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-acs-openshift-console
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: Role
-      metadata:
-        name: backplane-acs-openshift-machine-api
-        namespace: openshift-machine-api
-      rules:
-      - apiGroups:
-        - machine.openshift.io
-        resources:
-        - machines
-        - machinesets
-        - machineautoscalers
-        - machinehealthchecks
-        verbs:
-        - get
-        - list
-        - watch
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: RoleBinding
-      metadata:
-        name: backplane-acs-openshift-machine-api
-        namespace: openshift-machine-api
-      subjects:
-      - apiGroup: rbac.authorization.k8s.io
-        kind: Group
-        name: system:serviceaccounts:openshift-backplane-addon-acs-fleet-shard
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: Role
-        name: backplane-acs-openshift-machine-api
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: Role
       metadata:
