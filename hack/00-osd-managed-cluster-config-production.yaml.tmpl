@@ -35926,12 +35926,10 @@ objects:
         - name: sre-poddisruptionbudget
           rules:
           - alert: PodDisruptionBudgetLimitSRE
-            expr: "max by(namespace, poddisruptionbudget) (\n    kube_poddisruptionbudget_status_current_healthy{namespace=~\"\
+            expr: "max by(namespace, poddisruptionbudget) ( kube_poddisruptionbudget_status_current_healthy{namespace=~\"\
               openshift-.*\"} < kube_poddisruptionbudget_status_desired_healthy{namespace=~\"\
-              openshift-.*\"}\n)\nand\nmax by(namespace, poddisruptionbudget) (\n\
-              \    kube_poddisruptionbudget_status_current_healthy{namespace!~\"openshift-(logging|user-workload-monitoring|operators)\"\
-              } < kube_poddisruptionbudget_status_desired_healthy{namespace!~\"openshift-(logging|user-workload-monitoring|operators)\"\
-              }\n)"
+              openshift-.*\"} )\nunless on(namespace)\n  kube_poddisruptionbudget_labels{namespace=~\"\
+              openshift-(logging|user-workload-monitoring|operators|kyverno)\"}"
             for: 15m
             labels:
               severity: critical
