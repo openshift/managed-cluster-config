@@ -4,6 +4,9 @@ set -exv
 
 trap "rm -f sorted-before*.yaml.tmpl sorted-after*.yaml.tmpl" EXIT
 
+PROMTOOL_IMAGE=quay.io/prometheus/prometheus
+CONTAINER_ENGINE=docker
+
 # all custom alerts must have a namespace label
 MISSING_NS="false"
 for F in $(find ./deploy/sre-prometheus -type f -iname '*prometheusrule.yaml')
@@ -15,6 +18,12 @@ do
     then
         echo "ERROR: Rule missing 'namespace' in file '$F'"
         MISSING_NS="true"
+    fi
+
+    JSON_RULESFILE="$(cat "$F" | python -c 'import json, sys, yaml ; y=yaml.safe_load(sys.stdin.read()) ; print(json.dumps(y))' | jq -r '.spec')"
+    if ! echo "$JSON_RULESFILE" | $CONTAINER_ENGINE run -i --rm --entrypoint promtool $PROMTOOL_IMAGE check rules --lint-fatal; then
+      echo "Invalid rules file: '$F'" 
+      exit 1
     fi
 done
 
