@@ -36510,6 +36510,8 @@ objects:
             labels:
               namespace: openshift-logging
               severity: info
+              window: short
+              mark: low
           - alert: ElasticsearchNodeDiskWatermarkReachedSRE
             annotations:
               message: Disk High Watermark Reached at {{ $labels.pod }} pod. Some
@@ -36525,6 +36527,8 @@ objects:
             labels:
               namespace: openshift-logging
               severity: warning
+              window: short
+              mark: high
           - alert: ElasticsearchNodeDiskWatermarkReachedSRE
             annotations:
               message: Disk Flood Stage Watermark Reached at {{ $labels.pod }}. Every
@@ -36540,6 +36544,8 @@ objects:
             labels:
               namespace: openshift-logging
               severity: warning
+              window: short
+              mark: flood
           - alert: ElasticsearchJVMHeapUseHighSRE
             annotations:
               message: JVM Heap usage on the node {{ $labels.node }} in {{ $labels.cluster
@@ -36628,6 +36634,8 @@ objects:
             labels:
               namespace: openshift-logging
               severity: warning
+              window: long
+              mark: low
           - alert: ElasticsearchNodeDiskWatermarkReachedSRE
             annotations:
               message: Disk High Watermark is predicted to be reached within the next
@@ -36643,6 +36651,8 @@ objects:
             labels:
               namespace: openshift-logging
               severity: warning
+              window: long
+              mark: high
           - alert: ElasticsearchNodeDiskWatermarkReachedSRE
             annotations:
               message: Disk Flood Stage Watermark is predicted to be reached within
@@ -36658,6 +36668,8 @@ objects:
             labels:
               namespace: openshift-logging
               severity: warning
+              window: long
+              mark: flood
     - apiVersion: monitoring.coreos.com/v1
       kind: PrometheusRule
       metadata:
@@ -37072,6 +37084,7 @@ objects:
               namespace: dynatrace
               severity: critical
               daemonset: hcp-workload-oneagent
+              state: degraded
             annotations:
               summary: HCP workload oneagent daemonset missing
               description: HCP workload oneagent daemonset in the 'dynatrace' namespace
@@ -37086,6 +37099,7 @@ objects:
               namespace: dynatrace
               severity: critical
               daemonset: hcp-workload-oneagent
+              state: missing
             annotations:
               summary: HCP workload oneagent pods degraded
               description: At least one HCP workload oneagent pod in the 'dynatrace'
@@ -37099,6 +37113,7 @@ objects:
               namespace: dynatrace
               severity: critical
               daemonset: request-serving-oneagent
+              state: missing
             annotations:
               summary: Request serving oneagent daemonset missing.
               description: Request serving oneagent daemonset in the 'dynatrace' namespace
@@ -37113,6 +37128,7 @@ objects:
               namespace: dynatrace
               severity: critical
               daemonset: request-serving-oneagent
+              state: degraded
             annotations:
               summary: Request serving oneagent pods degraded
               description: At least one request serving oneagent pod in the 'dynatrace'
@@ -37125,6 +37141,7 @@ objects:
               namespace: dynatrace
               severity: critical
               statefulset: activegate
+              state: missing
             annotations:
               summary: Dynatrace Activegate statefulset missing
               description: Activegate statefulset in the 'dynatrace' namespace is
@@ -37139,6 +37156,7 @@ objects:
               namespace: dynatrace
               severity: critical
               statefulset: activegate
+              state: degraded
             annotations:
               summary: Dynatrace Activegate pods degraded
               description: At least one activegate pod in the 'dynatrace' namespace

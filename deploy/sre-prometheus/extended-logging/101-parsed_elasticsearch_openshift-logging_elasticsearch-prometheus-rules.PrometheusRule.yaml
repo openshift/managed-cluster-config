@@ -73,6 +73,8 @@ spec:
           labels:
             namespace: openshift-logging
             severity: info
+            window: short
+            mark: low
         - alert: ElasticsearchNodeDiskWatermarkReachedSRE
           annotations:
             message: Disk High Watermark Reached at {{ $labels.pod }} pod. Some shards will be re-allocated to different nodes if possible. Make sure more disk space is added to the node or drop old indices allocated to this node.
@@ -90,6 +92,8 @@ spec:
           labels:
             namespace: openshift-logging
             severity: warning
+            window: short
+            mark: high
         - alert: ElasticsearchNodeDiskWatermarkReachedSRE
           annotations:
             message: Disk Flood Stage Watermark Reached at {{ $labels.pod }}. Every index having a shard allocated on this node is enforced a read-only block. The index block must be released manually when the disk utilization falls below the high watermark.
@@ -107,6 +111,8 @@ spec:
           labels:
             namespace: openshift-logging
             severity: warning
+            window: short
+            mark: flood
         - alert: ElasticsearchJVMHeapUseHighSRE
           annotations:
             message: JVM Heap usage on the node {{ $labels.node }} in {{ $labels.cluster }} cluster is {{ $value }}%.
@@ -184,6 +190,8 @@ spec:
           labels:
             namespace: openshift-logging
             severity: warning
+            window: long
+            mark: low
         - alert: ElasticsearchNodeDiskWatermarkReachedSRE
           annotations:
             message: Disk High Watermark is predicted to be reached within the next 6h at {{ $labels.pod }} pod. Some shards will be re-allocated to different nodes if possible. Make sure more disk space is added to the node or drop old indices allocated to this node.
@@ -201,6 +209,8 @@ spec:
           labels:
             namespace: openshift-logging
             severity: warning
+            window: long
+            mark: high
         - alert: ElasticsearchNodeDiskWatermarkReachedSRE
           annotations:
             message: Disk Flood Stage Watermark is predicted to be reached within the next 6h at {{ $labels.pod }}. Every index having a shard allocated on this node is enforced a read-only block. The index block must be released manually when the disk utilization falls below the high watermark.
@@ -218,3 +228,5 @@ spec:
           labels:
             namespace: openshift-logging
             severity: warning
+            window: long
+            mark: flood
