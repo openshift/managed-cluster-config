@@ -320,3 +320,19 @@ rules:
   - get
   - list
   - watch
+### BEGIN - Allow viewing observe tab data in console and query the thanos API
+# Permission is needed in the project openshift-monitoring
+# prometheuses/api is an abstract construct and doesn't map to any concrete object
+# `get` is sufficient for the cluster console observe tab
+# `create` and `update` verbs allow interacting with the api directly
+- apiGroups:
+  - monitoring.coreos.com
+  resourceNames:
+  - k8s
+  resources:
+  - prometheuses/api
+  verbs:
+  - get
+  - create
+  - update
+### END - Allow viewing observe tab data in console and query the thanos API
