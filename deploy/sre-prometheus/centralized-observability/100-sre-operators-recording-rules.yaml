@@ -14,17 +14,11 @@ spec:
             # csv_succeeded has a value of 1 or 0
             # subscription_sync_total is an integer with value >0
             # joining them with the operator ^ returns a value of 1 or 0
-            label_replace(sre:telemetry:managed_labels, "cluster_version", "$0", "version", ".*")
+              label_replace(sre:telemetry:managed_labels, "cluster_version", "$0", "version", ".*")
             * on () group_right (_id, cluster_version, provider)
-              sum by (exported_namespace, installed, namespace, name, version, channel, package) (
-                  label_replace(
-                    csv_succeeded,
-                    "installed",
-                    "$0",
-                    "name",
-                    ".*"
-                  )
-                ^ on (installed) group_left (name, channel, package)
+              sum by (exported_namespace, name, version, channel, package) (
+                  label_replace(csv_succeeded, "name", "$1", "name", "([^.]+).*")
+                ^ on (name) group_left (channel, package)
                   subscription_sync_total{name=~"addon-operator|aws-vpce-operator|custom-domains-operator|managed-node-metadata-operator|managed-upgrade-operator|must-gather-operator|ocm-agent-operator|osd-metrics-exporter|rbac-permissions-operator|openshift-splunk-forwarder-operator|aws-account-operator|certman-operator|cloud-ingress-operator|configure-alertmanager-operator|deadmanssnitch-operator|deployment-validation-operator|dynatrace-operator|gcp-project-operator|managed-velero-operator|observability-operator|opentelemetry-operator|pagerduty-operator|route-monitor-operator"}
               )
           record:
