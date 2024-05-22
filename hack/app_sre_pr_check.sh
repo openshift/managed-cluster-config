@@ -21,7 +21,7 @@ do
     fi
 
     JSON_RULESFILE="$(cat "$F" | python -c 'import json, sys, yaml ; y=yaml.safe_load(sys.stdin.read()) ; print(json.dumps(y))' | jq -r '.spec')"
-    if ! echo "$JSON_RULESFILE" | $CONTAINER_ENGINE run -i --rm --entrypoint promtool $PROMTOOL_IMAGE check rules --lint="none"; then
+    if ! echo "$JSON_RULESFILE" | $CONTAINER_ENGINE run -i --rm --entrypoint promtool $PROMTOOL_IMAGE check rules --lint="all" --lint-fatal; then
       echo "Invalid rules file: '$F'" 
       exit 1
     fi
