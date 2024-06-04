@@ -21383,6 +21383,10 @@ objects:
       - key: api.openshift.com/id
         operator: In
         values: ${{ROUTER_REPLICA_CLUSTER_IDS}}
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
     resourceApplyMode: Sync
     patches:
     - apiVersion: v1
@@ -22024,6 +22028,10 @@ objects:
       - key: api.openshift.com/legal-entity-id
         operator: In
         values: ${{LOG_LINKING_ENTITY_IDS}}
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
     resourceApplyMode: Sync
     resources:
     - apiVersion: machineconfiguration.openshift.io/v1
