@@ -22841,9 +22841,10 @@ objects:
           \ ThanosRuleQueueIsDroppingAlerts\n  - WorkerNodeFileDescriptorLimitSRE\n\
           \  - WorkerNodeFilesystemAlmostOutOfFiles\n  - WorkerNodeFilesystemSpaceFillingUp\n\
           \  - MachineOutOfComplianceSRE\n  - DynatraceMonitoringStackDownSRE\n  -\
-          \ DynatraceDynakubeComponenetsDegradedSRE\n  ignoredNamespaces:\n  - openshift-logging\n\
-          \  - openshift-redhat-marketplace\n  - openshift-operators\n  - openshift-customer-monitoring\n\
-          \  - openshift-cnv\n  - openshift-route-monitoring-operator\n  - openshift-user-workload-monitoring\n\
+          \ DynatraceDynakubeComponenetsDegradedSRE\n  - KubeletDebuggingHandlersEnabledSRE\n\
+          \  ignoredNamespaces:\n  - openshift-logging\n  - openshift-redhat-marketplace\n\
+          \  - openshift-operators\n  - openshift-customer-monitoring\n  - openshift-cnv\n\
+          \  - openshift-route-monitoring-operator\n  - openshift-user-workload-monitoring\n\
           \  - openshift-pipelines\nextDependencyAvailabilityChecks:\n  http:\n  \
           \  timeout: 10\n    urls:\n      - ${OCM_BASE_URL}\n"
 - apiVersion: hive.openshift.io/v1
@@ -36757,6 +36758,27 @@ objects:
       kind: PrometheusRule
       metadata:
         labels:
+          prometheus: sre-kubelet-debugging-handlers-enabled
+          role: alert-rules
+        name: sre-kubelet-debugging-handlers-enabled
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-kubelet-debugging-handlers-enabled
+          rules:
+          - alert: KubeletDebuggingHandlersEnabledSRE
+            expr: compliance_monkey_kubeletconfig_debug_handlers_enabled == 1
+            for: 60m
+            labels:
+              severity: critical
+              namespace: openshift-compliance-monkey
+              link: https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/KubeletDebuggingHandlersEnabledSRE.md
+            annotations:
+              message: Kubelet debugging handlers are enabled on this cluster.
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
           prometheus: sre-machine-out-of-compliance
           role: alert-rules
         name: sre-machine-out-of-compliance
@@ -36822,63 +36844,6 @@ objects:
             labels:
               severity: warning
               namespace: openshift-monitoring
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    labels:
-      managed.openshift.io/gitHash: ${IMAGE_TAG}
-      managed.openshift.io/gitRepoName: ${REPO_NAME}
-      managed.openshift.io/osd: 'true'
-    name: sre-prometheus-management-cluster-production
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-      matchExpressions:
-      - key: ext-hypershift.openshift.io/cluster-type
-        operator: In
-        values:
-        - management-cluster
-      - key: api.openshift.com/fedramp
-        operator: NotIn
-        values:
-        - 'true'
-      - key: api.openshift.com/sts
-        operator: In
-        values:
-        - 'true'
-      - key: ext-hypershift.openshift.io/cluster-sector
-        operator: NotIn
-        values:
-        - ibm-infra
-      - key: api.openshift.com/environment
-        operator: NotIn
-        values:
-        - staging
-        - integration
-    resourceApplyMode: Sync
-    resources:
-    - apiVersion: monitoring.coreos.com/v1
-      kind: PrometheusRule
-      metadata:
-        labels:
-          prometheus: sre-kubelet-debugging-handlers-enabled
-          role: alert-rules
-        name: sre-kubelet-debugging-handlers-enabled
-        namespace: openshift-monitoring
-      spec:
-        groups:
-        - name: sre-kubelet-debugging-handlers-enabled
-          rules:
-          - alert: KubeletDebuggingHandlersEnabledSRE
-            expr: compliance_monkey_kubeletconfig_debug_handlers_enabled == 1
-            for: 60m
-            labels:
-              severity: critical
-              namespace: openshift-compliance-monkey
-              link: https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/KubeletDebuggingHandlersEnabledSRE.md
-            annotations:
-              message: Kubelet debugging handlers are enabled on this cluster.
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
