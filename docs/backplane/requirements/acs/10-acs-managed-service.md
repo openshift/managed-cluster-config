@@ -106,9 +106,10 @@ Permissions at cluster scope.
 * view projecthelmchartrepositories
 * view templates
 * view horizontalpodautoscalers
-* view vertical pod autoscalers
-* view vertical pod autoscaler checkpoints
 * view addonoperators
+* view verticalpodautoscalers
+* view verticalpodautoscalercheckpoints
+* view verticalpodautoscalercontrollers
 
 ## backplane-acs-admins-project: `(^redhat-acs-fleetshard$|^rhacs$|^rhacs-.*|^acscs-dataplane-cd$)`
 - ACS team needs read/list/watch access to core `redhat` and `rhacs` objects within their namespaces.
@@ -131,6 +132,8 @@ Permissions at cluster scope.
 * view externalsecrets
 * view serviceaccounts
 * view securitycontextconstraints
+* create pods/portforward
+* create pods/exec
 
 ## backplane-acs-openshift-ingress: `openshift-ingress`
 
