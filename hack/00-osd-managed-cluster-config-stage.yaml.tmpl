@@ -28380,6 +28380,31 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: osd-dns-default
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+    resourceApplyMode: Sync
+    patches:
+    - apiVersion: operator.openshift.io/v1
+      applyMode: Sync
+      kind: DNS
+      name: default
+      patchType: merge
+      patch: "{\"spec\":\n  {\"nodePlacement\":\n    {\"tolerations\":\n      [\n\
+        \        {\"effect\": \"NoSchedule\", \"key\": \"node-role.kubernetes.io\"\
+        , \"value\": \"infra\", \"operator\": \"Equal\"},\n        {\"effect\": \"\
+        NoSchedule\", \"key\": \"node-role.kubernetes.io/infra\", \"operator\": \"\
+        Exists\"},\n        {\"effect\": \"NoSchedule\", \"key\": \"node-role.kubernetes.io/master\"\
+        , \"operator\": \"Exists\"}\n      ]\n    }\n  }\n}"
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: osd-fedramp-cluster-monitoring-config
   spec:
     clusterDeploymentSelector:
@@ -30857,18 +30882,16 @@ objects:
           \ --ignore-not-found=true \" $2}'`;echo \"INFO: $cmd\"; eval $cmd;done <<<\
           \ \"$misscheduled_pods\"\n      else\n        echo \"INFO: no misscheduled\
           \ pods in $ns namespaces\"\n      fi\n    done\n}\n\necho \"INFO: Rebalancing\
-          \ openshift-dns/dns-default Daemonset...\"\nkubeDaemonsetMisscheduled \"\
-          openshift-dns\" \"dns.operator.openshift.io/daemonset-dns=default\"\n\n\
-          echo \"INFO: Rebalancing prometheus pods...\"\nrebalancePods prometheus\
-          \ openshift-monitoring app prometheus-data\n\necho \"INFO: Rebalancing UWM\
-          \ prometheus pods...\"\nrebalancePods prometheus openshift-user-workload-monitoring\
-          \ app prometheus-user-workload-db\n\necho \"INFO: Rebalancing alertmanager\
-          \ pods...\"\nrebalancePods alertmanager openshift-monitoring app alertmanager-data\n\
-          \necho \"INFO: Rebalancing splunk-heavy-forwarder pods...\"\nrebalancePods\
-          \ splunk-heavy-forwarder openshift-security name\n\nif $REBALANCE_PODS;\
-          \ then\n    echo \"INFO: Restarting prometheus operator...\"\n    OPERATOR_POD=$(\
-          \ oc get pod -n openshift-monitoring -l app.kubernetes.io/name=prometheus-operator\
-          \ -o jsonpath='{.items[*].metadata.name}' )\n    oc delete pod -n openshift-monitoring\
+          \ prometheus pods...\"\nrebalancePods prometheus openshift-monitoring app\
+          \ prometheus-data\n\necho \"INFO: Rebalancing UWM prometheus pods...\"\n\
+          rebalancePods prometheus openshift-user-workload-monitoring app prometheus-user-workload-db\n\
+          \necho \"INFO: Rebalancing alertmanager pods...\"\nrebalancePods alertmanager\
+          \ openshift-monitoring app alertmanager-data\n\necho \"INFO: Rebalancing\
+          \ splunk-heavy-forwarder pods...\"\nrebalancePods splunk-heavy-forwarder\
+          \ openshift-security name\n\nif $REBALANCE_PODS; then\n    echo \"INFO:\
+          \ Restarting prometheus operator...\"\n    OPERATOR_POD=$( oc get pod -n\
+          \ openshift-monitoring -l app.kubernetes.io/name=prometheus-operator -o\
+          \ jsonpath='{.items[*].metadata.name}' )\n    oc delete pod -n openshift-monitoring\
           \ $OPERATOR_POD --wait=true\n    sleep 10\nfi\n\necho \"INFO: Check pending\
           \ prometheus pods...\"\ncheckPendingPods prometheus openshift-monitoring\
           \ app\n\necho \"INFO: Check pending UWM prometheus pods...\"\ncheckPendingPods\
