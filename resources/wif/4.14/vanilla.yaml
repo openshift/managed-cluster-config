@@ -1,0 +1,216 @@
+id: v4.14
+kind: WifTemplate
+service_accounts:
+  - id: osd-deployer
+    kind: ServiceAccount
+    osd_role: deployer
+    access_method: impersonate
+    roles:
+      - id: compute.admin
+        kind: Role
+        predefined: true
+      - id: dns.admin
+        kind: Role
+        predefined: true
+      - id: iam.roleAdmin
+        kind: Role
+        predefined: true
+      - id: iam.securityAdmin
+        kind: Role
+        predefined: true
+      - id: iam.serviceAccountAdmin
+        kind: Role
+        predefined: true
+      - id: iam.ServiceAccountKeyAdmin
+        kind: Role
+        predefined: true
+      - id: iam.ServiceAccountUser
+        kind: Role
+        predefined: true
+      - id: storage.admin
+        kind: Role
+        predefined: true
+  - id: osd-support
+    kind: ServiceAccount
+    osd_role: support
+    access_method: impersonate
+    roles:
+      - id: compute.admin
+        kind: Role
+        predefined: true
+      - id: dns.admin
+        kind: Role
+        predefined: true
+      - id: iam.roleAdmin
+        kind: Role
+        predefined: true
+      - id: iam.securityAdmin
+        kind: Role
+        predefined: true
+      - id: iam.serviceAccountAdmin
+        kind: Role
+        predefined: true
+      - id: iam.ServiceAccountKeyAdmin
+        kind: Role
+        predefined: true
+      - id: iam.ServiceAccountUser
+        kind: Role
+        predefined: true
+      - id: storage.admin
+        kind: Role
+        predefined: true
+  - access_method: wif
+    credential_request:
+      SecretRef:
+        Name: cloud-credential-operator-gcp-ro-creds
+        Namespace: openshift-cloud-credential-operator
+      ServiceAccountNames:
+        - cloud-credential-operator
+    id: cloud-credential-operator-gcp-ro-creds
+    kind: ServiceAccount
+    osd_role: cloud-credential-operator-gcp-ro-creds
+    roles:
+      - id: iam.securityReviewer
+        kind: Role
+        predefined: true
+      - id: iam.roleViewer
+        kind: Role
+        predefined: true
+  - access_method: wif
+    credential_request:
+      SecretRef:
+        Name: cloud-credentials
+        Namespace: openshift-cloud-network-config-controller
+      ServiceAccountNames:
+        - cloud-network-config-controller
+    id: openshift-cloud-network-config-controller-gcp
+    kind: ServiceAccount
+    osd_role: operator-cloud-network-config-controller-gcp
+    roles:
+      - id: compute.admin
+        kind: Role
+        predefined: true
+  - access_method: wif
+    credential_request:
+      SecretRef:
+        Name: capg-manager-bootstrap-credentials
+        Namespace: openshift-cluster-api
+      ServiceAccountNames:
+        - cluster-capi-operator
+    id: openshift-cluster-api-gcp
+    kind: ServiceAccount
+    osd_role: operator-cluster-api-gcp
+    roles:
+      - id: compute.instanceAdmin.v1
+        kind: Role
+        predefined: true
+      - id: iam.serviceAccountUser
+        kind: Role
+        predefined: true
+      - id: compute.loadBalancerAdmin
+        kind: Role
+        predefined: true
+  - access_method: wif
+    credential_request:
+      SecretRef:
+        Name: gcp-ccm-cloud-credentials
+        Namespace: openshift-cloud-controller-manager
+      ServiceAccountNames:
+        - cloud-controller-manager
+    id: openshift-gcp-ccm
+    kind: ServiceAccount
+    osd_role: operator-gcp-ccm
+    roles:
+      - id: compute.instanceAdmin
+        kind: Role
+        predefined: true
+      - id: compute.loadBalancerAdmin
+        kind: Role
+        predefined: true
+      - id: iam.serviceAccountUser
+        kind: Role
+        predefined: true
+  - access_method: wif
+    credential_request:
+      SecretRef:
+        Name: gcp-pd-cloud-credentials
+        Namespace: openshift-cluster-csi-drivers
+      ServiceAccountNames:
+        - gcp-pd-csi-driver-operator
+        - gcp-pd-csi-driver-controller-sa
+    id: openshift-gcp-pd-csi-driver-operator
+    kind: ServiceAccount
+    osd_role: operator-gcp-pd-csi-driver-operator
+    roles:
+      - id: compute.instanceAdmin
+        kind: Role
+        predefined: true
+      - id: compute.storageAdmin
+        kind: Role
+        predefined: true
+      - id: iam.serviceAccountUser
+        kind: Role
+        predefined: true
+  - access_method: wif
+    credential_request:
+      SecretRef:
+        Name: installer-cloud-credentials
+        Namespace: openshift-image-registry
+      ServiceAccountNames:
+        - cluster-image-registry-operator
+        - registry
+    id: openshift-image-registry-gcs
+    kind: ServiceAccount
+    osd_role: operator-image-registry-gcs
+    roles:
+      - id: storage.admin
+        kind: Role
+        predefined: true
+      - id: resourcemanager.tagUser
+        kind: Role
+        predefined: true
+  - access_method: wif
+    credential_request:
+      SecretRef:
+        Name: cloud-credentials
+        Namespace: openshift-ingress-operator
+      ServiceAccountNames:
+        - ingress-operator
+    id: openshift-ingress-gcp
+    kind: ServiceAccount
+    osd_role: operator-ingress-gcp
+    roles:
+      - id: dns.admin
+        kind: Role
+        predefined: true
+  - access_method: wif
+    credential_request:
+      SecretRef:
+        Name: gcp-cloud-credentials
+        Namespace: openshift-machine-api
+      ServiceAccountNames:
+        - machine-api-controllers
+    id: openshift-machine-api-gcp
+    kind: ServiceAccount
+    osd_role: operator-machine-api-gcp
+    roles:
+      - id: compute.admin
+        kind: Role
+        predefined: true
+      - id: iam.serviceAccountUser
+        kind: Role
+        predefined: true
+service_apis:
+  - deploymentmanager.googleapis.com
+  - compute.googleapis.com
+  - cloudapis.googleapis.com
+  - cloudresourcemanager.googleapis.com
+  - dns.googleapis.com
+  - networksecurity.googleapis.com
+  - iamcredentials.googleapis.com
+  - iam.googleapis.com
+  - servicemanagement.googleapis.com
+  - serviceusage.googleapis.com
+  - storage-api.googleapis.com
+  - storage-component.googleapis.com
+  - orgpolicy.googleapis.com
