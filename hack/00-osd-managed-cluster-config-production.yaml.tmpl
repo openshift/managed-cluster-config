@@ -8622,6 +8622,49 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-acs-rhacs-observability
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: backplane-acs-rhacs-secured-cluster
+        namespace: rhacs-secured-cluster
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - secrets
+        resourceNames:
+        - admission-control-tls
+        - collector-tls
+        - sensor-tls
+        verbs:
+        - create
+        - update
+        - patch
+      - apiGroups:
+        - apps
+        resources:
+        - deployments
+        - daemonsets
+        resourceNames:
+        - sensor
+        - collector
+        - admission-control
+        verbs:
+        - get
+        - patch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: backplane-acs-rhacs-secured-cluster
+        namespace: rhacs-secured-cluster
+      subjects:
+      - apiGroup: rbac.authorization.k8s.io
+        kind: Group
+        name: system:serviceaccounts:openshift-backplane-addon-acs-fleet-shard
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: backplane-acs-rhacs-secured-cluster
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -9335,6 +9378,49 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-acs-rhacs-observability
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: backplane-acs-rhacs-secured-cluster
+        namespace: rhacs-secured-cluster
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - secrets
+        resourceNames:
+        - admission-control-tls
+        - collector-tls
+        - sensor-tls
+        verbs:
+        - create
+        - update
+        - patch
+      - apiGroups:
+        - apps
+        resources:
+        - deployments
+        - daemonsets
+        resourceNames:
+        - sensor
+        - collector
+        - admission-control
+        verbs:
+        - get
+        - patch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: backplane-acs-rhacs-secured-cluster
+        namespace: rhacs-secured-cluster
+      subjects:
+      - apiGroup: rbac.authorization.k8s.io
+        kind: Group
+        name: system:serviceaccounts:openshift-backplane-addon-acs-fleet-shard
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: backplane-acs-rhacs-secured-cluster
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -10048,6 +10134,49 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-acs-rhacs-observability
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: backplane-acs-rhacs-secured-cluster
+        namespace: rhacs-secured-cluster
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - secrets
+        resourceNames:
+        - admission-control-tls
+        - collector-tls
+        - sensor-tls
+        verbs:
+        - create
+        - update
+        - patch
+      - apiGroups:
+        - apps
+        resources:
+        - deployments
+        - daemonsets
+        resourceNames:
+        - sensor
+        - collector
+        - admission-control
+        verbs:
+        - get
+        - patch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: backplane-acs-rhacs-secured-cluster
+        namespace: rhacs-secured-cluster
+      subjects:
+      - apiGroup: rbac.authorization.k8s.io
+        kind: Group
+        name: system:serviceaccounts:openshift-backplane-addon-acs-fleet-shard
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: backplane-acs-rhacs-secured-cluster
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:

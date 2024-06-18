@@ -177,4 +177,11 @@ Permissions at cluster scope.
 * patch persistentvolumeclaims
 * patch statefulsets
 
-**Note** Please update this document as addional permisions are requested, thank you.
+## backplane-acs-rhacs-secured-cluster: `rhacs-secured-cluster`
+
+- ACS team needs to create/update Secured Cluster init-bundles
+
+* create tls secrets
+* update tls secrets
+
+**Note** Please update this document as additional permissions are requested, thank you.
