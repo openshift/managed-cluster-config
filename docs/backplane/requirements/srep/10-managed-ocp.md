@@ -25,10 +25,8 @@ Permissions at cluster scope.
 Permisions at namespace scope.
 * evict pods
 * portforward pods
-* exec pods
 * create and delete jobs
 * delete builds
-* oc debug
 * create security reviews
 * resize and delete PVCs
 * scale applications
