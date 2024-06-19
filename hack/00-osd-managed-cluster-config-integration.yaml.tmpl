@@ -23942,6 +23942,83 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: ocpbugs-25341
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: sre-replace-packageserver-csv
+        namespace: openshift-operator-lifecycle-manager
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: sre-replace-packageserver-csv
+        namespace: openshift-operator-lifecycle-manager
+      rules:
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - clusterserviceversions
+        verbs:
+        - list
+        - get
+        - watch
+        - delete
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: sre-replace-packageserver-csv
+        namespace: openshift-operator-lifecycle-manager
+      roleRef:
+        kind: Role
+        name: sre-replace-packageserver-csv
+        apiGroup: rbac.authorization.k8s.io
+      subjects:
+      - kind: ServiceAccount
+        name: sre-replace-packageserver-csv
+        namespace: openshift-operator-lifecycle-manager
+    - apiVersion: batch/v1
+      kind: Job
+      metadata:
+        name: sre-replace-packageserver-csv
+        namespace: openshift-operator-lifecycle-manager
+      spec:
+        ttlSecondsAfterFinish: 100
+        template:
+          spec:
+            serviceAccountName: sre-replace-packageserver-csv
+            restartPolicy: Never
+            containers:
+            - name: delete-csv
+              image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+              imagePullPolicy: Always
+              command:
+              - sh
+              - -c
+              - '#!/bin/sh
+
+                set -euxo pipefail
+
+                oc -n openshift-operator-lifecycle-manager delete csv packageserver
+
+                '
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: ocpbugs-773
   spec:
     clusterDeploymentSelector:

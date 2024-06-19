@@ -1,0 +1,23 @@
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "sre-replace-packageserver-csv"
+  namespace: "openshift-operator-lifecycle-manager"
+spec:
+  ttlSecondsAfterFinish: 100
+  template:
+    spec:
+      serviceAccountName: "sre-replace-packageserver-csv"
+      restartPolicy: Never
+      containers:
+      - name: delete-csv
+        image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+        imagePullPolicy: Always
+        command:
+        - sh
+        - -c
+        - |
+          #!/bin/sh
+          set -euxo pipefail
+          oc -n openshift-operator-lifecycle-manager delete csv packageserver
