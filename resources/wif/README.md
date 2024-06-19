@@ -11,7 +11,7 @@ is templated which Clusters Service pods (OCM) will read.
 
 ## How to update WIF templates
 
-When Service Accounts, Roles and/or Permissions need to be updated, execute the following. 
+When a new WIF template needs to be added or an existing one changed, follow this process:
 
 1. Create a PR to this repo with the desired changes to the policies. 
 2. Once merged, Create an MR to [Cluster Services](https://gitlab.cee.redhat.com/service/app-interface/-/blob/master/data/services/ocm/shared-resources/common.yml) to update the referenced commit hash to consume new changes. 
