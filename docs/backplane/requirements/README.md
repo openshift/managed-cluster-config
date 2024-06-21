@@ -7,7 +7,7 @@ In summary...
 * All requirements for backplane access are managed in a subdirectory of this directory.
 * SD Architecture is the initial approver for any new requirements.  
 * Additional approvers can be added in `OWNERS` files.  SD Architecture must remain an approver.
-* All requirements must conform to the [guidelines](../guidelines.md).
+* All requirements must conform to the [guidelines](../guideline.md).
 * Requirements encompass all access requirements including:
     * conditions for when authorization applies
     * authorization required in-cluster
