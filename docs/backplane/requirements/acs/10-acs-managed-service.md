@@ -134,6 +134,7 @@ Permissions at cluster scope.
 * view securitycontextconstraints
 * create pods/portforward
 * create pods/exec
+* delete pods
 
 ## backplane-acs-openshift-ingress: `openshift-ingress`
 
