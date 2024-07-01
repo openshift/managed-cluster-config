@@ -35173,8 +35173,9 @@ objects:
               description: node drain takes too long and cannot be finished in the
                 given time period during cluster upgrade
           - alert: UpgradeConfigSyncFailureOver4HrSRE
-            expr: absent_over_time(upgradeoperator_upgradeconfig_sync_timestamp[4h])
-              or time() - upgradeoperator_upgradeconfig_sync_timestamp > 14400
+            expr: (absent_over_time(upgradeoperator_upgradeconfig_sync_timestamp[4h])
+              or time() - upgradeoperator_upgradeconfig_sync_timestamp > 14400) and
+              count(cluster_version{type="cluster", version!~"4.16.*"}) > 0
             for: 2m
             labels:
               severity: critical
