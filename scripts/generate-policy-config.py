@@ -13,6 +13,7 @@ base_directory = "./deploy/"
 # This script doesn't walk the sub-directories.
 directories = [
         'backplane',
+        'backplane/acs',
         'backplane/cee',
         'backplane/cse',
         'backplane/csm',
@@ -64,11 +65,10 @@ for directory in sorted(directories, key=str.casefold):
         if entry.name == config_filename:
             with open(entry.path) as config_file:
                 config = yaml.safe_load(config_file)
-                if config['deploymentMode'] == 'Policy':
-                    if 'clusterSelectors' in config:
-                        cluster_selectors = config['clusterSelectors']
-                    if 'namespaceSelector' in config:
-                        namespace_selectors = config['namespaceSelector']
+                if 'clusterSelectors' in config:
+                    cluster_selectors = config['clusterSelectors']
+                if 'namespaceSelector' in config:
+                    namespace_selectors = config['namespaceSelector']
     #create a dir in /resources to hold the newly generated policy-generator-config.yaml
     #copy over the generator template
     shutil.copy(policy_generator_config, temp_directory)
