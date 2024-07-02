@@ -31,7 +31,6 @@ directories = [
         'osd-delete-backplane-serviceaccounts',
         'osd-backplane-managed-scripts',
         'osd-logging/unsupported',
-        'osd-must-gather-operator',
         'osd-openshift-operators-redhat',
         'osd-pcap-collector',
         'osd-project-request-template',
