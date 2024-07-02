@@ -1,0 +1,23 @@
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "sre-remove-dns-tolerations"
+  namespace: "openshift-sre-pruning"
+spec:
+  ttlSecondsAfterFinish: 100
+  template:
+    spec:
+      serviceAccountName: "sre-remove-dns-tolerations"
+      restartPolicy: Never
+      containers:
+      - name: delete-tolerations
+        image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+        imagePullPolicy: Always
+        command:
+        - sh
+        - -c
+        - |
+          #!/bin/sh
+          set -euxo pipefail
+          oc patch dnses.operator.openshift.io default --type merge -p '{"spec": {"nodePlacement": {"tolerations": []}}}'

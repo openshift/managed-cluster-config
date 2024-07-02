@@ -24519,6 +24519,76 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: osd-22018-remove-dns-tolerations
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions: []
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: sre-remove-dns-tolerations
+        namespace: openshift-sre-pruning
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: sre-remove-dns-tolerations
+      rules:
+      - apiGroups:
+        - operator.openshift.io
+        resources:
+        - dnses
+        verbs:
+        - get
+        - patch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: sre-remove-dns-tolerations
+      roleRef:
+        kind: ClusterRole
+        name: sre-remove-dns-tolerations
+        apiGroup: rbac.authorization.k8s.io
+      subjects:
+      - kind: ServiceAccount
+        name: sre-remove-dns-tolerations
+        namespace: openshift-sre-pruning
+    - apiVersion: batch/v1
+      kind: Job
+      metadata:
+        name: sre-remove-dns-tolerations
+        namespace: openshift-sre-pruning
+      spec:
+        ttlSecondsAfterFinish: 100
+        template:
+          spec:
+            serviceAccountName: sre-remove-dns-tolerations
+            restartPolicy: Never
+            containers:
+            - name: delete-tolerations
+              image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+              imagePullPolicy: Always
+              command:
+              - sh
+              - -c
+              - '#!/bin/sh
+
+                set -euxo pipefail
+
+                oc patch dnses.operator.openshift.io default --type merge -p ''{"spec":
+                {"nodePlacement": {"tolerations": []}}}''
+
+                '
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: osd-aquasec-operator
   spec:
     clusterDeploymentSelector:
