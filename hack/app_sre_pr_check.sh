@@ -48,7 +48,7 @@ make
 for environment in integration stage production;
 do
     cat hack/00-osd-managed-cluster-config-${environment}.yaml.tmpl | sort > sorted-after-${environment}.yaml.tmpl
-    diff sorted-before-${environment}.yaml.tmpl sorted-after-${environment}.yaml.tmpl || (echo "Running 'make' caused changes.  Run 'make' and commit changes to the PR to try again." && exit 1)
+    diff sorted-before-${environment}.yaml.tmpl sorted-after-${environment}.yaml.tmpl || (echo "Running 'make' caused changes.  Run 'make' and commit changes to the PR to try again. If you're removing ACM policies, you need to remove the generated file from deploy/acm-policies/50-GENERATED-* before running 'make'." && exit 1)
 done
 
 # check if roleref has been modified in a clusterrolebinding/rolebinding as a part of this change
