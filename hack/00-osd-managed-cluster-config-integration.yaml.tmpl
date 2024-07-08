@@ -25377,6 +25377,98 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: osd-24397
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.11'
+        - '4.12'
+        - '4.13'
+        - '4.14'
+        - '4.15'
+        - '4.16'
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: sre-cdo-reinstall-sa
+        namespace: openshift-custom-domains-operator
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: sre-cdo-reinstall-role
+        namespace: openshift-custom-domains-operator
+      rules:
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - clusterserviceversions
+        - subscriptions
+        - installplans
+        verbs:
+        - list
+        - get
+        - delete
+        - create
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: sre-cdo-reinstall-rolebinding
+        namespace: openshift-custom-domains-operator
+      roleRef:
+        kind: Role
+        name: sre-cdo-reinstall-role
+        apiGroup: rbac.authorization.k8s.io
+        namespace: openshift-custom-domains-operator
+      subjects:
+      - kind: ServiceAccount
+        name: sre-cdo-reinstall-sa
+        namespace: openshift-custom-domains-operator
+    - apiVersion: batch/v1
+      kind: Job
+      metadata:
+        name: sre-cdo-reinstall
+        namespace: openshift-custom-domains-operator
+      spec:
+        template:
+          spec:
+            serviceAccountName: sre-cdo-reinstall-sa
+            restartPolicy: Never
+            containers:
+            - name: operator-reinstaller
+              image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+              imagePullPolicy: Always
+              command:
+              - sh
+              - -c
+              - "#!/bin/bash\nset -euxo pipefail\nNAMESPACE=openshift-custom-domains-operator\n\
+                \n# Check for the presence of CDO v0.1.247-394c11f (current latest).\
+                \ If it exists, do nothing. If any other version is found clean up\
+                \ OLM resources\nif ! oc -n \"$NAMESPACE\" get clusterserviceversions.operators.coreos.com\
+                \ custom-domains-operator.v0.1.245-c1065b7; then\n  oc -n \"$NAMESPACE\"\
+                \ delete clusterserviceversions.operators.coreos.com $(oc -n \"$NAMESPACE\"\
+                \ get clusterserviceversions.operators.coreos.com -ojsonpath='{.items[?(@.spec.displayName==\"\
+                custom-domains-operator\")].metadata.name}') || true\n  oc -n \"$NAMESPACE\"\
+                \ delete installplan.operators.coreos.com -l operators.coreos.com/custom-domains-operator.openshift-custom-domains-operator=\"\
+                \"\n  oc -n \"$NAMESPACE\" delete subscriptions.operators.coreos.com\
+                \ custom-domains-operator\nfi\nexit 0\n"
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: osd-aquasec-operator
   spec:
     clusterDeploymentSelector:
