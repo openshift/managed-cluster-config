@@ -1,0 +1,39 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: sre-cdo-reinstall-sa
+  namespace: openshift-custom-domains-operator
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: sre-cdo-reinstall-role
+  namespace: openshift-custom-domains-operator
+rules:
+- apiGroups:
+  - "operators.coreos.com"
+  resources:
+  - clusterserviceversions
+  - subscriptions
+  - installplans
+  verbs:
+  - list
+  - get
+  - delete
+  - create
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: sre-cdo-reinstall-rolebinding
+  namespace: openshift-custom-domains-operator
+roleRef:
+  kind: Role
+  name: sre-cdo-reinstall-role
+  apiGroup: rbac.authorization.k8s.io
+  namespace: openshift-custom-domains-operator
+subjects:
+- kind: ServiceAccount
+  name: sre-cdo-reinstall-sa
+  namespace: openshift-custom-domains-operator
