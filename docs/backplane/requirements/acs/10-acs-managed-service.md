@@ -112,7 +112,7 @@ Permissions at cluster scope.
 * view verticalpodautoscalercontrollers
 
 ## backplane-acs-admins-project: `(^redhat-acs-fleetshard$|^rhacs$|^rhacs-.*|^acscs-dataplane-cd$)`
-- ACS team needs read/list/watch access to core `redhat` and `rhacs` objects within their namespaces.
+- ACS team needs read/list/watch access to core `redhat` and `rhacs` objects within their namespaces. This includes Custom Resource objects for ACS Addon.
 - Permisions at namespace scope.
 
 * view centrals
@@ -135,6 +135,17 @@ Permissions at cluster scope.
 * create pods/portforward
 * create pods/exec
 * delete pods
+* view clusterpackages
+* view clusterobjectdeployments
+* view clusterobjectsets
+* view clusterobjecttemplates
+* view packages
+* view objectdeployments
+* view objectsets
+* view objecttemplates
+* view addons
+* view addoninstance
+* view addonoperators
 
 ## backplane-acs-openshift-ingress: `openshift-ingress`
 
