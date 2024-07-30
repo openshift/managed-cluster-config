@@ -27522,7 +27522,7 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: osd-channel-patch-stable-4.12
+    name: osd-channel-patch-stable-4.12-fedramp
   spec:
     clusterDeploymentSelector:
       matchLabels:
@@ -27533,11 +27533,87 @@ objects:
         values:
         - '4.12'
       - key: api.openshift.com/channel-group
+        operator: In
+        values:
+        - stable
+      - key: api.openshift.com/fedramp
+        operator: In
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    patches:
+    - apiVersion: config.openshift.io/v1
+      kind: ClusterVersion
+      name: version
+      applyMode: AlwaysApply
+      patch: '{"spec":{"channel":"stable-4.12"}}'
+      patchType: merge
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-channel-patch-stable-4.12-nonprod
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.12'
+      - key: api.openshift.com/channel-group
+        operator: In
+        values:
+        - stable
+      - key: api.openshift.com/fedramp
         operator: NotIn
         values:
-        - nightly
-        - candidate
-        - fast
+        - 'true'
+      - key: api.openshift.com/environment
+        operator: NotIn
+        values:
+        - production
+    resourceApplyMode: Sync
+    patches:
+    - apiVersion: config.openshift.io/v1
+      kind: ClusterVersion
+      name: version
+      applyMode: AlwaysApply
+      patch: '{"spec":{"channel":"eus-4.12"}}'
+      patchType: merge
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-channel-patch-stable-4.12-production
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.12'
+      - key: api.openshift.com/channel-group
+        operator: In
+        values:
+        - stable
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+      - key: api.openshift.com/environment
+        operator: In
+        values:
+        - production
     resourceApplyMode: Sync
     patches:
     - apiVersion: config.openshift.io/v1
@@ -27584,7 +27660,7 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: osd-channel-patch-stable-4.14
+    name: osd-channel-patch-stable-4.14-fedramp
   spec:
     clusterDeploymentSelector:
       matchLabels:
@@ -27595,11 +27671,87 @@ objects:
         values:
         - '4.14'
       - key: api.openshift.com/channel-group
+        operator: In
+        values:
+        - stable
+      - key: api.openshift.com/fedramp
+        operator: In
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    patches:
+    - apiVersion: config.openshift.io/v1
+      kind: ClusterVersion
+      name: version
+      applyMode: AlwaysApply
+      patch: '{"spec":{"channel":"stable-4.14"}}'
+      patchType: merge
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-channel-patch-stable-4.14-nonprod
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.14'
+      - key: api.openshift.com/channel-group
+        operator: In
+        values:
+        - stable
+      - key: api.openshift.com/fedramp
         operator: NotIn
         values:
-        - nightly
-        - candidate
-        - fast
+        - 'true'
+      - key: api.openshift.com/environment
+        operator: NotIn
+        values:
+        - production
+    resourceApplyMode: Sync
+    patches:
+    - apiVersion: config.openshift.io/v1
+      kind: ClusterVersion
+      name: version
+      applyMode: AlwaysApply
+      patch: '{"spec":{"channel":"eus-4.14"}}'
+      patchType: merge
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-channel-patch-stable-4.14-production
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.14'
+      - key: api.openshift.com/channel-group
+        operator: In
+        values:
+        - stable
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+      - key: api.openshift.com/environment
+        operator: In
+        values:
+        - production
     resourceApplyMode: Sync
     patches:
     - apiVersion: config.openshift.io/v1
@@ -27646,7 +27798,7 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: osd-channel-patch-stable-4.16
+    name: osd-channel-patch-stable-4.16-fedramp
   spec:
     clusterDeploymentSelector:
       matchLabels:
@@ -27657,11 +27809,87 @@ objects:
         values:
         - '4.16'
       - key: api.openshift.com/channel-group
+        operator: In
+        values:
+        - stable
+      - key: api.openshift.com/fedramp
+        operator: In
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    patches:
+    - apiVersion: config.openshift.io/v1
+      kind: ClusterVersion
+      name: version
+      applyMode: AlwaysApply
+      patch: '{"spec":{"channel":"stable-4.16"}}'
+      patchType: merge
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-channel-patch-stable-4.16-nonprod
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.16'
+      - key: api.openshift.com/channel-group
+        operator: In
+        values:
+        - stable
+      - key: api.openshift.com/fedramp
         operator: NotIn
         values:
-        - nightly
-        - candidate
-        - fast
+        - 'true'
+      - key: api.openshift.com/environment
+        operator: NotIn
+        values:
+        - production
+    resourceApplyMode: Sync
+    patches:
+    - apiVersion: config.openshift.io/v1
+      kind: ClusterVersion
+      name: version
+      applyMode: AlwaysApply
+      patch: '{"spec":{"channel":"eus-4.16"}}'
+      patchType: merge
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-channel-patch-stable-4.16-production
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.16'
+      - key: api.openshift.com/channel-group
+        operator: In
+        values:
+        - stable
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+      - key: api.openshift.com/environment
+        operator: In
+        values:
+        - production
     resourceApplyMode: Sync
     patches:
     - apiVersion: config.openshift.io/v1
@@ -27708,7 +27936,7 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: osd-channel-patch-stable-4.18
+    name: osd-channel-patch-stable-4.18-fedramp
   spec:
     clusterDeploymentSelector:
       matchLabels:
@@ -27719,11 +27947,87 @@ objects:
         values:
         - '4.18'
       - key: api.openshift.com/channel-group
+        operator: In
+        values:
+        - stable
+      - key: api.openshift.com/fedramp
+        operator: In
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    patches:
+    - apiVersion: config.openshift.io/v1
+      kind: ClusterVersion
+      name: version
+      applyMode: AlwaysApply
+      patch: '{"spec":{"channel":"stable-4.18"}}'
+      patchType: merge
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-channel-patch-stable-4.18-nonprod
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.18'
+      - key: api.openshift.com/channel-group
+        operator: In
+        values:
+        - stable
+      - key: api.openshift.com/fedramp
         operator: NotIn
         values:
-        - nightly
-        - candidate
-        - fast
+        - 'true'
+      - key: api.openshift.com/environment
+        operator: NotIn
+        values:
+        - production
+    resourceApplyMode: Sync
+    patches:
+    - apiVersion: config.openshift.io/v1
+      kind: ClusterVersion
+      name: version
+      applyMode: AlwaysApply
+      patch: '{"spec":{"channel":"stable-4.18"}}'
+      patchType: merge
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-channel-patch-stable-4.18-production
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.18'
+      - key: api.openshift.com/channel-group
+        operator: In
+        values:
+        - stable
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+      - key: api.openshift.com/environment
+        operator: In
+        values:
+        - production
     resourceApplyMode: Sync
     patches:
     - apiVersion: config.openshift.io/v1
