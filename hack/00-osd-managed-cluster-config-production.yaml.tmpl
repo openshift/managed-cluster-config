@@ -24223,6 +24223,16 @@ objects:
           references:
           - https://docs.openshift.com/rosa/rosa_cluster_admin/rosa_nodes/rosa-managing-worker-nodes.html
           - https://docs.openshift.com/rosa/observability/monitoring/configuring-the-monitoring-stack.html
+        - activeBody: Your cluster has a degraded Authentication Operator. This may
+            cause components that rely on in-cluster oauth to see reduced performance
+            or failures. This may also prevent upgrades from completing successfully.
+            Please review your Oauth configuration and provider status.
+          name: OauthOperatorDegraded
+          resendWait: 6
+          severity: Error
+          summary: 'Important: Oauth Operator is Degraded'
+          references:
+          - https://docs.openshift.com/rosa/authentication/sd-configuring-identity-providers.html
     - apiVersion: ocmagent.managed.openshift.io/v1alpha1
       kind: ManagedNotification
       metadata:
@@ -38282,6 +38292,51 @@ objects:
               link: https://github.com/openshift/ops-sop/blob/master/v4/alerts/MultipleVersionsOfEFSCSIDriverInstalled.md
             annotations:
               message: Multiple versions of EFS CSI Driver installed
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
+          prometheus: sre-cluster-version-operator
+          role: alert-rules
+        name: sre-cluster-version-operator
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: oauthOperatorDegraded
+          rules:
+          - alert: OauthOperatorDegradedSRE
+            annotations:
+              summary: Oauth operator is degraded.
+              description: The Oauth operator and the components that utilize it may
+                have reduced quality of service.  Cluster upgrades may not complete.
+                For more information refer to 'oc get -o yaml clusteroperator oauth'{{
+                "{{ with $console_url := \"console_url\" | query }}{{ if ne (len (label
+                \"url\" (first $console_url ) ) ) 0}} or {{ label \"url\" (first $console_url
+                ) }}/settings/cluster/{{ end }}{{ end }}" }}.
+            expr: "max by (namespace, name, reason)\n(\n  (\n    cluster_operator_conditions{job=\"\
+              cluster-version-operator\", condition=\"Degraded\", name = \"oauth\"\
+              }\n    or on (namespace, name)\n    group by (namespace, name) (cluster_operator_up{job=\"\
+              cluster-version-operator\", name = \"oauth\"})\n  ) == 1\n)\n"
+            for: 20m
+            labels:
+              namespace: openshift-monitoring
+              severity: warning
+          - alert: OauthOperatorDegradedCriticalSRE
+            annotations:
+              summary: Oauth operator is degraded.
+              description: The Oauth operator and the components that utilize it may
+                have reduced quality of service.  Cluster upgrades may not complete.
+                For more information refer to 'oc get -o yaml clusteroperator oauth'.
+            expr: "max by (namespace, name, reason)\n(\n  (\n    cluster_operator_conditions{job=\"\
+              cluster-version-operator\", condition=\"Degraded\", name = \"oauth\"\
+              }\n    or on (namespace, name)\n    group by (namespace, name) (cluster_operator_up{job=\"\
+              cluster-version-operator\", name = \"oauth\"})\n  ) == 1\n)\n"
+            for: 2h
+            labels:
+              namespace: openshift-monitoring
+              severity: critical
+              send_managed_notification: 'true'
+              managed_notification_template: OauthOperatorDegraded
     - apiVersion: monitoring.coreos.com/v1
       kind: PrometheusRule
       metadata:
