@@ -35803,27 +35803,6 @@ objects:
           rules:
           - alert: ClusterOperatorDegradedSRE
             annotations:
-              summary: Cluster operator has been degraded for 1 day.
-              description: The {{ "{{ $labels.name }}" }} operator is degraded because
-                {{ "{{ $labels.reason }}" }}, and the components it manages may have
-                reduced quality of service.  Cluster upgrades may not complete. For
-                more information refer to 'oc get -o yaml clusteroperator {{ "{{ $labels.name
-                }}" }}'{{ "{{ with $console_url := \"console_url\" | query }}{{ if
-                ne (len (label \"url\" (first $console_url ) ) ) 0}} or {{ label \"url\"
-                (first $console_url ) }}/settings/cluster/{{ end }}{{ end }}" }}.
-            expr: "max by (namespace, name, reason)\n(\n  (\n    cluster_operator_conditions{job=\"\
-              cluster-version-operator\", condition=\"Degraded\", name =~ \"kube-apiserver|kube-controller-manager|kube-scheduler\"\
-              }\n    or on (namespace, name)\n    group by (namespace, name) (cluster_operator_up{job=\"\
-              cluster-version-operator\", name =~ \"kube-apiserver|kube-controller-manager|kube-scheduler\"\
-              })\n  ) == 1\n)\n"
-            for: 1d
-            labels:
-              link: https://github.com/openshift/ops-sop/blob/master/v4/alerts/ClusterOperatorDegraded.md
-              namespace: openshift-monitoring
-              needs_attention: 'true'
-              severity: warning
-          - alert: ClusterOperatorDegradedCriticalSRE
-            annotations:
               summary: Cluster operator has been degraded for 2 days.
               description: The {{ $labels.name }} operator is degraded because {{
                 $labels.reason }}, and the components it manages may have reduced
@@ -35842,7 +35821,6 @@ objects:
             labels:
               link: https://github.com/openshift/ops-sop/blob/master/v4/alerts/ClusterOperatorDegraded.md
               namespace: openshift-monitoring
-              needs_attention: 'true'
               severity: critical
     - apiVersion: monitoring.coreos.com/v1
       kind: PrometheusRule
