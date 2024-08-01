@@ -609,6 +609,34 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: managed-cluster-config
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/fedramp
+        operator: In
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: openshift-must-gather-operator
+        annotations:
+          openshift.io/node-selector: ''
+        labels:
+          openshift.io/cluster-logging: 'true'
+          openshift.io/cluster-monitoring: 'true'
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: acm-policies
   spec:
     clusterDeploymentSelector:
@@ -7162,6 +7190,7 @@ objects:
                         - cloud-ingress-operator
                         - rbac-permissions-operator
                         - splunk-forwarder-operator-og
+                        - must-gather-operator
                         - redhat-layered-product-og
                         - addon-rhmi-og
                         - addon-rhmi-internal-og
@@ -7178,6 +7207,7 @@ objects:
                         - openshift-managed-upgrade-operator
                         - openshift-velero
                         - openshift-ocm-agent-operator
+                        - openshift-must-gather-operator
                         - openshift-addon-operator
                   apiVersion: rbac.authorization.k8s.io/v1
                   kind: ClusterRole
@@ -7214,6 +7244,7 @@ objects:
                         - openshift-velero
                         - openshift-managed-upgrade-operator
                         - openshift-ocm-agent-operator
+                        - openshift-must-gather-operator
                   apiVersion: rbac.authorization.k8s.io/v1
                   kind: ClusterRole
                   metadata:
@@ -27816,6 +27847,35 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: osd-cluster-acks-gcp-4.15
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.14'
+      - key: hive.openshift.io/cluster-platform
+        operator: In
+        values:
+        - gcp
+    resourceApplyMode: Sync
+    patches:
+    - apiVersion: operator.openshift.io/v1
+      kind: CloudCredential
+      name: cluster
+      applyMode: AlwaysApply
+      patch: '{"metadata":{"annotations":{"cloudcredential.openshift.io/upgradeable-to":"v4.15"}}}'
+      patchType: merge
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: osd-cluster-acks-ocp-4.12
   spec:
     clusterDeploymentSelector:
@@ -34195,6 +34255,7 @@ objects:
             - cloud-ingress-operator
             - rbac-permissions-operator
             - splunk-forwarder-operator-og
+            - must-gather-operator
             - redhat-layered-product-og
             - addon-rhmi-og
             - addon-rhmi-internal-og
@@ -34211,6 +34272,7 @@ objects:
             - openshift-managed-upgrade-operator
             - openshift-velero
             - openshift-ocm-agent-operator
+            - openshift-must-gather-operator
             - openshift-addon-operator
       apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
@@ -34244,6 +34306,7 @@ objects:
             - openshift-velero
             - openshift-managed-upgrade-operator
             - openshift-ocm-agent-operator
+            - openshift-must-gather-operator
       apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
