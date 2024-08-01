@@ -54,8 +54,7 @@ spec:
       # Alert if MUO has been unable to successfully sync with its upgrade policy provider for a four-hour window
       # It will also be used for detecting the connection/authentication between cluster and OCM
       # Should be moved to OCM Agent service eventually
-      # FIXME: When SDE-2153 shipped
-      expr: (absent_over_time(upgradeoperator_upgradeconfig_sync_timestamp[4h]) or time() - upgradeoperator_upgradeconfig_sync_timestamp > 14400) and count(cluster_version{type="cluster", version!~"4.16.*"}) > 0
+      expr: absent_over_time(upgradeoperator_upgradeconfig_sync_timestamp[4h]) or time() - upgradeoperator_upgradeconfig_sync_timestamp > 14400) > 0
       for: 2m
       labels:
         severity: critical
