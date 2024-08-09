@@ -8,10 +8,10 @@ This is used to evenly distribute SRE workloads on infra nodes, so that infra no
 - OCM Agent Operator
 - OSD Metrics Exporter
 
-## non-STS
+## non-STS and non-WIF
 
-Velero Operator is only installed on non-STS clusters, so the relevant RBAC will only be applied to those clusters
+Velero Operator is only installed on clusters which are neither STS nor WIF, so the relevant RBAC will only be applied to those clusters
 
-## non-STS or non-PrivateLink
+## non-STS and non-WIF and non-PrivateLink
 
-Cloud Ingress Operator is only installed on non-STS and non-PrivateLink clusters, so the relevant RBAC will only be applied to those clusters.
+Cloud Ingress Operator is only installed on clusters which are neither STS, WIF nor PrivateLink, so the relevant RBAC will only be applied to those clusters.
