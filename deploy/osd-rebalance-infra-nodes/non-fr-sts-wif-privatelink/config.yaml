@@ -1,14 +1,15 @@
-deploymentMode: "SelectorSyncSet"
+deploymentMode: SelectorSyncSet
 selectorSyncSet:
-  resourceApplyMode: Upsert
   matchExpressions:
   - key: api.openshift.com/sts
     operator: NotIn
     values: ["true"]
+  - key: api.openshift.com/wif
+    operator: NotIn
+    values: ["true"]
   - key: api.openshift.com/private-link
-    operator: In
+    operator: NotIn
     values: ["true"]
   - key: api.openshift.com/fedramp
     operator: NotIn
-    values:
-      - "true"
+    values: ["true"]
