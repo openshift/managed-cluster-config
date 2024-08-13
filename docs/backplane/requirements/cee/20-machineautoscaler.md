@@ -8,7 +8,6 @@ These premissions are the baseline across the managed fleet and apply to all pro
 
 - OSD
 - ROSA Classic
-- ROSA HCP
 
 ## openshift-backplane-cee: `cluster`
 
