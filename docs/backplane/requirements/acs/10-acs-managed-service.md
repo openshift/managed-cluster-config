@@ -110,6 +110,7 @@ Permissions at cluster scope.
 * view verticalpodautoscalers
 * view verticalpodautoscalercheckpoints
 * view verticalpodautoscalercontrollers
+* view packagemanifests
 
 ## backplane-acs-admins-project: `(^redhat-acs-fleetshard$|^rhacs$|^rhacs-.*|^acscs-dataplane-cd$)`
 - ACS team needs read/list/watch access to core `redhat` and `rhacs` objects within their namespaces. This includes Custom Resource objects for ACS Addon.
