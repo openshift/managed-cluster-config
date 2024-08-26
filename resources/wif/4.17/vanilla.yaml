@@ -5,7 +5,7 @@ service_accounts:
     id: osd-deployer
     osd_role: deployer
     roles:
-      - id: osd_deployer
+      - id: osd_deployer_v4.17
         kind: Role
         permissions:
           - compute.addresses.create
@@ -14,9 +14,15 @@ service_accounts:
           - compute.addresses.deleteInternal
           - compute.addresses.get
           - compute.addresses.list
+          - compute.addresses.setLabels
           - compute.addresses.use
           - compute.addresses.useInternal
+          - compute.backendServices.create
+          - compute.backendServices.delete
+          - compute.backendServices.get
           - compute.backendServices.list
+          - compute.backendServices.update
+          - compute.backendServices.use
           - compute.disks.create
           - compute.disks.delete
           - compute.disks.get
@@ -31,8 +37,16 @@ service_accounts:
           - compute.forwardingRules.get
           - compute.forwardingRules.list
           - compute.forwardingRules.setLabels
+          - compute.globalAddresses.create
+          - compute.globalAddresses.delete
+          - compute.globalAddresses.get
           - compute.globalAddresses.list
+          - compute.globalAddresses.use
+          - compute.globalForwardingRules.create
+          - compute.globalForwardingRules.delete
+          - compute.globalForwardingRules.get
           - compute.globalForwardingRules.list
+          - compute.globalForwardingRules.setLabels
           - compute.globalOperations.get
           - compute.healthChecks.create
           - compute.healthChecks.delete
@@ -69,13 +83,18 @@ service_accounts:
           - compute.networks.get
           - compute.networks.list
           - compute.networks.updatePolicy
-          - compute.regionHealthChecks.list
+          - compute.networks.use
           - compute.regionBackendServices.create
           - compute.regionBackendServices.delete
           - compute.regionBackendServices.get
           - compute.regionBackendServices.list
           - compute.regionBackendServices.update
           - compute.regionBackendServices.use
+          - compute.regionHealthChecks.create
+          - compute.regionHealthChecks.delete
+          - compute.regionHealthChecks.get
+          - compute.regionHealthChecks.list
+          - compute.regionHealthChecks.useReadOnly
           - compute.regionOperations.get
           - compute.regions.get
           - compute.regions.list
@@ -101,7 +120,11 @@ service_accounts:
           - compute.targetPools.list
           - compute.targetPools.removeInstance
           - compute.targetPools.use
+          - compute.targetTcpProxies.create
+          - compute.targetTcpProxies.delete
+          - compute.targetTcpProxies.get
           - compute.targetTcpProxies.list
+          - compute.targetTcpProxies.use
           - compute.zoneOperations.get
           - compute.zones.get
           - compute.zones.list
@@ -181,7 +204,7 @@ service_accounts:
     kind: ServiceAccount
     osd_role: cloud-credential-operator-gcp-ro-creds
     roles:
-      - id: cloud_credential_operator_gcp_ro_creds
+      - id: cloud_credential_operator_gcp_ro_creds_v4.17
         kind: Role
         permissions:
           - iam.roles.get
@@ -201,7 +224,7 @@ service_accounts:
     kind: ServiceAccount
     osd_role: operator-cloud-network-config-controller-gcp
     roles:
-      - id: openshift_cloud_network_config_controller_gcp
+      - id: openshift_cloud_network_config_controller_gcp_v4.17
         kind: Role
         permissions:
           - compute.instances.get
@@ -220,7 +243,7 @@ service_accounts:
     kind: ServiceAccount
     osd_role: operator-gcp-ccm
     roles:
-      - id: openshift_gcp_ccm
+      - id: openshift_gcp_ccm_v4.17
         kind: Role
         permissions:
           - compute.addresses.create
@@ -279,7 +302,7 @@ service_accounts:
       - id: resourcemanager.tagUser
         kind: Role
         predefined: true
-      - id: openshift_gcp_pd_csi_driver_operator
+      - id: openshift_gcp_pd_csi_driver_operator_v4.17
         kind: Role
         permissions:
           - compute.instances.attachDisk
@@ -297,9 +320,12 @@ service_accounts:
     kind: ServiceAccount
     osd_role: operator-image-registry-gcs
     roles:
-      - id: openshift_image_registry_gcs
+      - id: openshift_image_registry_gcs_v4.17
         kind: Role
         permissions:
+          - resourcemanager.tagValueBindings.create
+          - resourcemanager.tagValues.get
+          - resourcemanager.tagValues.list
           - storage.buckets.create
           - storage.buckets.createTagBinding
           - storage.buckets.delete
@@ -310,9 +336,6 @@ service_accounts:
           - storage.objects.delete
           - storage.objects.get
           - storage.objects.list
-          - resourcemanager.tagValueBindings.create
-          - resourcemanager.tagValues.get
-          - resourcemanager.tagValues.list
   - access_method: wif
     credential_request:
       secret_ref:
@@ -324,7 +347,7 @@ service_accounts:
     kind: ServiceAccount
     osd_role: operator-ingress-gcp
     roles:
-      - id: openshift_ingress_gcp
+      - id: openshift_ingress_gcp_v4.17
         kind: Role
         permissions:
           - dns.changes.create
@@ -343,12 +366,13 @@ service_accounts:
     kind: ServiceAccount
     osd_role: operator-machine-api-gcp
     roles:
-      - id: openshift_machine_api_gcp
+      - id: openshift_machine_api_gcp_v4.17
         kind: Role
         permissions:
           - compute.acceleratorTypes.get
           - compute.acceleratorTypes.list
           - compute.disks.create
+          - compute.disks.createTagBinding
           - compute.disks.setLabels
           - compute.globalOperations.get
           - compute.globalOperations.list
@@ -359,6 +383,7 @@ service_accounts:
           - compute.instanceGroups.list
           - compute.instanceGroups.update
           - compute.instances.create
+          - compute.instances.createTagBinding
           - compute.instances.delete
           - compute.instances.get
           - compute.instances.list
@@ -389,6 +414,8 @@ service_accounts:
           - iam.serviceAccounts.actAs
           - iam.serviceAccounts.get
           - iam.serviceAccounts.list
+          - resourcemanager.tagValues.get
+          - resourcemanager.tagValues.list
           - serviceusage.quotas.get
           - serviceusage.services.get
           - serviceusage.services.list
