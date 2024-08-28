@@ -419,6 +419,34 @@ service_accounts:
           - serviceusage.quotas.get
           - serviceusage.services.get
           - serviceusage.services.list
+  - access_method: vm
+    id: osd-worker
+    kind: ServiceAccount
+    osd_role: worker
+    roles:
+      - id: compute.storageAdmin
+        kind: Role
+        predefined: true
+      - id: compute.viewer
+        kind: Role
+        predefined: true
+  - access_method: vm
+    id: osd-control-plane
+    kind: ServiceAccount
+    osd_role: control-plane
+    roles:
+      - id: compute.instanceAdmin
+        kind: Role
+        predefined: true
+      - id: compute.networkAdmin
+        kind: Role
+        predefined: true
+      - id: compute.securityAdmin
+        kind: Role
+        predefined: true
+      - id: compute.storageAdmin
+        kind: Role
+        predefined: true
 service_apis:
   - deploymentmanager.googleapis.com
   - compute.googleapis.com
