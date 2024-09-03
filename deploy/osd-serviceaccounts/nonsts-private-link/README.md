@@ -1,1 +1,1 @@
-For non-STS private-link clusters the cloud-ingress-operator is not deployed so we don't need to ensure the service account for this operators exists.
+For private-link clusters which are not STS the cloud-ingress-operator is not deployed but the managed-velero-operator is deployed so we need to ensure the service account for MVO is defined
