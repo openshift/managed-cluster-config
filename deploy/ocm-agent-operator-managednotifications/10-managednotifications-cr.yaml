@@ -16,7 +16,7 @@ spec:
         Your cluster is currently alerting with 'KubePersistentVolumeFillingUp' in '${namespace}' for PVC '${persistentvolumeclaim}'. This is not an actionable alert for the SRE team. Please address this capacity issue using this reference documentation: https://docs.openshift.com/container-platform/latest/storage/expanding-persistent-volumes.html.
       name: KubePersistentVolumeFillingUp
       resendWait: 1
-      severity: Error
+      severity: Major
       summary: "Action required: Persistent Volume filling"
     - activeBody: |-
         Your cluster requires you to take action as its ElasticSearch cluster logging deployment has been detected as reaching a high disk usage threshold. Red Hat SRE strongly recommends reducing application logging on your cluster to ensure logging continues to function. If logging disk consumption exceeds 95%, data will be at risk of becoming unavailable or lost and the stability of your ElasticSearch deployment may be impacted.
@@ -40,7 +40,7 @@ spec:
         A user on your system has removed a platform protection webhook. This protection has already been automatically replaced, and no further action is required. Tampering with platform protections can endanger SLAs.
       name: NonSystemChangeValidationWebhookConfigurations # https://issues.redhat.com/browse/OSD-13558
       resendWait: 1
-      severity: Error
+      severity: Info
       summary: "Platform protections removed by non-Red Hat user"
       logType: Cluster Security
     - activeBody: Your cluster requires you to take action. The kernel file descriptor
@@ -61,7 +61,7 @@ spec:
         Red Hat has detected that your cluster is running multiple versions of EFS CSI driver. This configuration is not safe to use as this might lead to the EFS Operator not working as expected. Please use the officially supported version of EFS operator as described in https://access.redhat.com/solutions/4591701.
       name: MultipleEFSCSIDrivers
       resendWait: 72
-      severity: Error
+      severity: Major
       summary: "Multiple EFS CSI drivers detected"
       logType: Cluster Configuration
     - activeBody: |-
@@ -75,7 +75,7 @@ spec:
         Your cluster requires you to take action. A workload is been preventing a machine from deleting. The name of the workload can be found by looking at the 'pods_preventing_node_drain' metric in Prometheus. Not taking action can result in higher compute costs as the instance won't terminate until the workload has been moved.
       name: CustomerWorkloadPreventingDrain
       resendWait: 1
-      severity: Error
+      severity: Major
       summary: Workload preventing machine deletion
       logType: Cluster Configuration
       references:
@@ -84,14 +84,14 @@ spec:
         Your cluster requires you to take action. The available file system inodes for a worker node are currently at or below 3% and are predicted to be fully exhausted soon. Without action, this could impact the usability of this node. Please reduce the amount of inodes used on this mountpoint, either by adjusting application configuration or by moving some applications to other nodes.
       name: WorkerNodeFilesystemAlmostOutOfFiles
       resendWait: 24
-      severity: Error
+      severity: Major
       summary: "Filesystem has less than 3% inodes left"
       logType: Cluster Configuration
     - activeBody: |-
         Your cluster currently has at least one unschedulable worker node. This may reduce cluster's effective capacity to schedule pods.
       name: KubeNodeUnschedulableSRE
       resendWait: 6
-      severity: Error
+      severity: Major
       summary: "Action required: a worker node is Unschedulable for more than an hour"
       references:
         - "https://docs.openshift.com/container-platform/latest/nodes/nodes/nodes-nodes-working.html#nodes-nodes-working-marking_nodes-nodes-working"
@@ -99,7 +99,7 @@ spec:
         Your cluster requires your attention. User Workload Monitoring is currently degraded. Please review your User Workload Monitoring configuration and ensure your worker nodes have capacity for User Workload Monitoring pods to be scheduled.
       name: "UWMDeploymentErrorBudgetBurn"
       resendWait: 2
-      severity: Error
+      severity: Major
       summary: "Action required: User Workload Monitoring is degraded"
       logType: Cluster Configuration
       references:
