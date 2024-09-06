@@ -2,6 +2,13 @@ deploymentMode: "SelectorSyncSet"
 selectorSyncSet:
   # if we ever remove this, do not remove the resources
   resourceApplyMode: "Upsert"
+
+  # Ignore the kubectl.kubernetes.io/last-applied-configuration
+  # annotation when patching resources. The result is that map additions
+  # made externally (e.g. by the customer) will be ignored rather than
+  # reverted.
+  applyBehavior: CreateOnly
+
   matchExpressions:
   # Disable in-cluster logging alerts for those clusters that do not already have logging installed
   # We removed the version check because that would conflict with this check here for clusters that
