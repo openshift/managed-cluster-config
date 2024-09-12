@@ -36074,9 +36074,9 @@ objects:
         - name: sre-alertmanager-silences-active
           rules:
           - alert: AlertmanagerSilencesActiveSRE
-            expr: avg without (instance,pod,endpoint,job,service,state,container)(alertmanager_silences{state="active"})
-              > 0 unless (count(cluster_version{type="updating"}) > 0 or sum by(namespace)
-              (time() - kube_pod_created{namespace="openshift-monitoring",pod=~"osd-cluster-ready.*"}
+            expr: avg without (instance,pod,endpoint,job,service,state,container)(alertmanager_silences{state="active",
+              namespace="openshift-monitoring"}) > 0 unless (count(cluster_version{type="updating"})
+              > 0 or sum by(namespace) (time() - kube_pod_created{namespace="openshift-monitoring",pod=~"osd-cluster-ready.*"}
               < 4500))
             for: 15m
             labels:
