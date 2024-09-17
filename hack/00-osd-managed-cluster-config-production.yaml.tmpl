@@ -36734,9 +36734,10 @@ objects:
         - name: sre-node-unschedulable
           rules:
           - alert: KubeNodeUnschedulableSRE
-            expr: (kube_node_spec_unschedulable > 0 and on(node) kube_node_role{role="master"})
-              or (kube_node_spec_unschedulable > 0 unless ignoring(node,container,endpoint,job,namespace,service)
-              sum(mapi_machine_set_status_replicas{name=~".*upgrade$"}) > 0)
+            expr: "sum( \n(kube_node_spec_unschedulable > 0 and on(node) kube_node_role{role=\"\
+              master\"})\nor \n(kube_node_spec_unschedulable > 0 unless ignoring(node,container,endpoint,job,namespace,service)\
+              \ sum(mapi_machine_set_status_replicas{name=~\".*upgrade$\"}) > 0)\n\
+              ) without(node)"
             for: 61m
             labels:
               severity: Warning
@@ -38711,12 +38712,13 @@ objects:
               message: Filesystem is predicted to run out of inodes within the next
                 4 hours.
           - alert: CustomerWorkloadPreventingDrainSRE
-            expr: "(\n  (\n    kube_node_spec_unschedulable > 0\n    unless\n    ignoring(node,container,endpoint,job,namespace,service)\n\
-              \    sum(mapi_machine_set_status_replicas{name=~\".*upgrade$\"}) > 0\n\
-              \  )\n  * on (node)\n  group_right ()group by (node)\n    (pods_preventing_node_drain)\n\
-              )\n* on (node)\ngroup_left ()group by (node)\n  (kube_node_role{role!~\"\
-              infra|control-plane|master\"})\nunless group by(node)\n  (kube_node_role{role=~\"\
-              infra|control-plane|master\"})"
+            expr: "sum((\n  (\n    kube_node_spec_unschedulable > 0\n    unless\n\
+              \    ignoring(node,container,endpoint,job,namespace,service)\n    sum(mapi_machine_set_status_replicas{name=~\"\
+              .*upgrade$\"}) > 0\n  )\n  * on (node)\n  group_right ()group by (node)\n\
+              \    (pods_preventing_node_drain)\n)\n* on (node)\ngroup_left ()group\
+              \ by (node)\n  (kube_node_role{role!~\"infra|control-plane|master\"\
+              })\nunless group by(node)\n  (kube_node_role{role=~\"infra|control-plane|master\"\
+              })) without(node)"
             for: 30m
             labels:
               severity: critical
