@@ -1,0 +1,15 @@
+apiVersion: managed.openshift.io/v1alpha1
+kind: SubjectPermission
+metadata:
+  name: backplane-mcs-tier-two
+  namespace: openshift-rbac-permissions
+spec:
+  clusterPermissions:
+  - backplane-mcs-tier-two-readers-cluster
+  - backplane-readers-cluster
+  permissions:
+  - clusterRoleName: dedicated-readers
+    namespacesAllowedRegex: "(^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*|^rhacs$|^rhacs-*)"
+    namespacesDeniedRegex: openshift-backplane-cluster-admin
+  subjectKind: Group
+  subjectName: system:serviceaccounts:openshift-backplane-mcs-tier-two
