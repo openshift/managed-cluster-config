@@ -25804,6 +25804,144 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: osd-25821-capa-annotator
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: ext-hypershift.openshift.io/cluster-type
+        operator: In
+        values:
+        - service-cluster
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: openshift-capa-annotator
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: capa-annotator
+      rules:
+      - apiGroups:
+        - work.open-cluster-management.io
+        resources:
+        - manifestworks
+        verbs:
+        - get
+        - patch
+      - apiGroups:
+        - cluster.open-cluster-management.io
+        resources:
+        - managedclusters
+        verbs:
+        - get
+        - list
+      - apiGroups:
+        - ''
+        resources:
+        - namespaces
+        verbs:
+        - get
+        - list
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: capa-annotator
+        namespace: openshift-capa-annotator
+    - kind: ClusterRoleBinding
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        name: capa-annotator
+      subjects:
+      - kind: ServiceAccount
+        name: capa-annotator
+        namespace: openshift-capa-annotator
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: capa-annotator
+    - https://issues.redhat.com/browse/OSD-25821
+    - apiVersion: batch/v1
+      kind: CronJob
+      metadata:
+        name: capa-annotator
+        namespace: openshift-capa-annotator
+        annotations:
+          kubernetes.io/description: Patches 4.17 Manifest works to fixed CAPI version
+            https://issues.redhat.com/browse/OSD-25821
+      spec:
+        schedule: '*/2 * * * *'
+        concurrencyPolicy: Replace
+        jobTemplate:
+          spec:
+            template:
+              metadata:
+                name: capa-annotator
+                namespace: openshift-capa-annotator
+                annotations:
+                  kubernetes.io/description: Patches 4.17 Manifest works to fixed
+                    CAPI version https://issues.redhat.com/browse/OSD-25821
+              spec:
+                affinity:
+                  nodeAffinity:
+                    preferredDuringSchedulingIgnoredDuringExecution:
+                    - preference:
+                        matchExpressions:
+                        - key: node-role.kubernetes.io/infra
+                          operator: Exists
+                      weight: 1
+                tolerations:
+                - effect: NoSchedule
+                  key: node-role.kubernetes.io/infra
+                  operator: Exists
+                containers:
+                - name: capa-annotator
+                  image: image-registry.openshift-image-registry.svc:5000/openshift/tools:latest
+                  imagePullPolicy: Always
+                  securityContext:
+                    allowPrivilegeEscalation: false
+                    capabilities:
+                      drop:
+                      - ALL
+                    runAsNonRoot: true
+                  command:
+                  - /bin/bash
+                  args:
+                  - -c
+                  - "# Get all manifestwork objects and extract their names\nmanagedclusters=$(oc\
+                    \ get managedclusters -l openshiftVersion-major-minor=4.17 -o\
+                    \ jsonpath='{range .items[*]}{.metadata.name}{\"\\n\"}{end}')\n\
+                    # Loop through each manifestwork object\nfor clusterID in ${managedclusters[@]};do\
+                    \ \n    # Extract namespace and name\n    namespace=$(oc get managedclusters\
+                    \ $clusterID -o json | jq -r '.metadata.labels[\"api.openshift.com/management-cluster\"\
+                    ]')\n    kinds=$(oc get manifestwork -n $namespace $clusterID\
+                    \ -o json | jq -r '.spec.workload.manifests[].kind')\n    num=0\
+                    \ \n    for kind in $kinds;do \n     if [[ $kind == \"HostedCluster\"\
+                    \ ]]; then\n         echo $clusterID\n         #~1 escapes / in\
+                    \ bash\n         json_payload='[{\"op\":\"replace\",\"path\":\"\
+                    /spec/workload/manifests/'\"$num\"'/metadata/annotations/hypershift.openshift.io~1capi-provider-aws-image\"\
+                    ,\"value\":\"quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:6a9fe6f7fedaae423b0ebe78b2a8ae53ad477fd25d8039951dfbf671223eba06\"\
+                    }]'\n         echo \"oc patch manifestwork $clusterID -n $namespace\
+                    \ --type='json' -p \"$json_payload\"\"\n         oc patch manifestwork\
+                    \ $clusterID -n $namespace --type='json' -p \"$json_payload\"\n\
+                    \     fi\n    (( num++))\n    done\ndone\n"
+                serviceAccountName: capa-annotator
+                automountServiceAccountToken: true
+                restartPolicy: Never
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: osd-aquasec-operator
   spec:
     clusterDeploymentSelector:
