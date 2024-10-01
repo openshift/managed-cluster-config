@@ -58,9 +58,10 @@ spec:
                   if [[ $kind == "HostedCluster" ]]; then
                       echo $clusterID
                       #~1 escapes / in bash
-                      json_payload='[{"op":"replace","path":"/spec/workload/manifests/'"$num"'/metadata/annotations/hypershift.openshift.io~1capi-provider-aws-image","value":$IMAGE}]'
+                      json_payload='[{"op":"replace","path":"/spec/workload/manifests/'"$num"'/metadata/annotations/hypershift.openshift.io~1capi-provider-aws-image","value":"'"$IMAGE"'"}]'
                       echo "oc patch manifestwork $clusterID -n $namespace --type='json' -p "$json_payload""
                       oc patch manifestwork $clusterID -n $namespace --type='json' -p "$json_payload"
+                      echo "-------------------------------------------------------------------------"
                       break
                   fi
                 (( num++))
