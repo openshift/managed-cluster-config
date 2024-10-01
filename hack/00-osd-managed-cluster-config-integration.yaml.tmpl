@@ -25914,23 +25914,24 @@ objects:
                   - /bin/bash
                   args:
                   - -c
-                  - "# Get all manifestwork objects and extract their names\nmanagedclusters=$(oc\
+                  - "# CAPI IMAGE \nIMAGE=\"quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:6a9fe6f7fedaae423b0ebe78b2a8ae53ad477fd25d8039951dfbf671223eba06\"\
+                    \n# Get all manifestwork objects and extract their names\nmanagedclusters=$(oc\
                     \ get managedclusters -l openshiftVersion-major-minor=4.17 -o\
                     \ jsonpath='{range .items[*]}{.metadata.name}{\"\\n\"}{end}')\n\
                     # Loop through each manifestwork object\nfor clusterID in ${managedclusters[@]};do\
-                    \ \n    # Extract namespace and name\n    namespace=$(oc get managedclusters\
+                    \ \n  # Extract namespace and name\n  namespace=$(oc get managedclusters\
                     \ $clusterID -o json | jq -r '.metadata.labels[\"api.openshift.com/management-cluster\"\
-                    ]')\n    kinds=$(oc get manifestwork -n $namespace $clusterID\
-                    \ -o json | jq -r '.spec.workload.manifests[].kind')\n    num=0\
-                    \ \n    for kind in $kinds;do \n     if [[ $kind == \"HostedCluster\"\
-                    \ ]]; then\n         echo $clusterID\n         #~1 escapes / in\
-                    \ bash\n         json_payload='[{\"op\":\"replace\",\"path\":\"\
+                    ]')\n  kinds=$(oc get manifestwork -n $namespace $clusterID -o\
+                    \ json | jq -r '.spec.workload.manifests[].kind')\n  num=0 \n\
+                    \  for kind in $kinds;do \n    if [[ $kind == \"HostedCluster\"\
+                    \ ]]; then\n        echo $clusterID\n        #~1 escapes / in\
+                    \ bash\n        json_payload='[{\"op\":\"replace\",\"path\":\"\
                     /spec/workload/manifests/'\"$num\"'/metadata/annotations/hypershift.openshift.io~1capi-provider-aws-image\"\
-                    ,\"value\":\"quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:6a9fe6f7fedaae423b0ebe78b2a8ae53ad477fd25d8039951dfbf671223eba06\"\
-                    }]'\n         echo \"oc patch manifestwork $clusterID -n $namespace\
-                    \ --type='json' -p \"$json_payload\"\"\n         oc patch manifestwork\
-                    \ $clusterID -n $namespace --type='json' -p \"$json_payload\"\n\
-                    \     fi\n    (( num++))\n    done\ndone\n"
+                    ,\"value\":$IMAGE}]'\n        echo \"oc patch manifestwork $clusterID\
+                    \ -n $namespace --type='json' -p \"$json_payload\"\"\n       \
+                    \ oc patch manifestwork $clusterID -n $namespace --type='json'\
+                    \ -p \"$json_payload\"\n        break\n    fi\n  (( num++))\n\
+                    \  done\ndone\n"
                 serviceAccountName: capa-annotator
                 automountServiceAccountToken: true
                 restartPolicy: Never
