@@ -25927,11 +25927,11 @@ objects:
                     \ ]]; then\n        echo $clusterID\n        #~1 escapes / in\
                     \ bash\n        json_payload='[{\"op\":\"replace\",\"path\":\"\
                     /spec/workload/manifests/'\"$num\"'/metadata/annotations/hypershift.openshift.io~1capi-provider-aws-image\"\
-                    ,\"value\":$IMAGE}]'\n        echo \"oc patch manifestwork $clusterID\
-                    \ -n $namespace --type='json' -p \"$json_payload\"\"\n       \
-                    \ oc patch manifestwork $clusterID -n $namespace --type='json'\
-                    \ -p \"$json_payload\"\n        break\n    fi\n  (( num++))\n\
-                    \  done\ndone\n"
+                    ,\"value\":\"'\"$IMAGE\"'\"}]'\n        echo \"oc patch manifestwork\
+                    \ $clusterID -n $namespace --type='json' -p \"$json_payload\"\"\
+                    \n        oc patch manifestwork $clusterID -n $namespace --type='json'\
+                    \ -p \"$json_payload\"\n        echo \"-------------------------------------------------------------------------\"\
+                    \n        break\n    fi\n  (( num++))\n  done\ndone\n"
                 serviceAccountName: capa-annotator
                 automountServiceAccountToken: true
                 restartPolicy: Never
