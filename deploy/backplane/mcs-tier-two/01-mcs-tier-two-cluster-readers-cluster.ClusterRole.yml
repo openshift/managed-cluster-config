@@ -1,0 +1,41 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: backplane-mcs-tier-two-readers-cluster
+rules:
+# MCS Tier Two Support Engineers can view machineconfigs, machineconfigpools, kubeletconfigs,controllerconfigs
+- apiGroups:
+  - machineconfiguration.openshift.io
+  resources:
+  - '*'
+  verbs:
+  - get
+  - list
+  - watch
+# MCS Tier Two Support Engineers can view machines, machinehealthchecks, machinesets
+- apiGroups:
+  - machine.openshift.io
+  resources:
+  - '*'
+  verbs:
+  - get
+  - list
+  - watch
+# MCS Tier Two Support Engineers can view api request counts
+- apiGroups:
+  - apiserver.openshift.io
+  resources:
+  - apirequestcounts
+  verbs:
+  - get
+  - list
+  - watch
+# MCS Tier Two Support Engineers can view egressIP 
+- apiGroups:
+  - 'k8s.ovn.org'
+  resources:
+  - egressips
+  verbs:
+  - get
+  - list
+  - watch
