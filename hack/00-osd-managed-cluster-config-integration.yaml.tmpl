@@ -26146,7 +26146,7 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: osd-25526-oao-olm-dance
+    name: osd-25349-oao-olm-dance
   spec:
     clusterDeploymentSelector:
       matchLabels:
@@ -26280,9 +26280,7 @@ objects:
                     \  oc -n \"$NAMESPACE\" get catsrc ocm-agent-operator-registry\
                     \ -oyaml > /tmp/02-ocm-agent-operator-registry.yaml\n  oc -n \"\
                     $NAMESPACE\" get og ocm-agent-operator-og -oyaml > /tmp/03-ocm-agent-operator-og.yaml\n\
-                    \n  oc -n \"$NAMESPACE\" delete managednotification --all\n  oc\
-                    \ -n \"$NAMESPACE\" delete managedfleetnotifications --all\n \
-                    \ oc -n \"$NAMESPACE\" delete clusterserviceversions.operators.coreos.com\
+                    \n  oc -n \"$NAMESPACE\" delete clusterserviceversions.operators.coreos.com\
                     \ $(oc -n \"$NAMESPACE\" get clusterserviceversions.operators.coreos.com\
                     \ -ojsonpath='{.items[?(@.spec.displayName==\"ocm-agent-operator\"\
                     )].metadata.name}') || true\n  oc -n \"$NAMESPACE\" delete installplan.operators.coreos.com\
