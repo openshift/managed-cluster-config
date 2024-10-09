@@ -1,0 +1,64 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: sre-operator-reinstall
+  namespace: openshift-ocm-agent-operator
+spec:
+  ttlSecondsAfterFinished: 100
+  failedJobsHistoryLimit: 1
+  successfulJobsHistoryLimit: 3
+  concurrencyPolicy: Replace
+  schedule: "* * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: sre-operator-reinstall-sa
+          restartPolicy: Never
+          containers:
+          - name: operator-reinstaller
+            image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+            imagePullPolicy: Always
+            command:
+            - sh
+            - -c
+            - |
+              #!/bin/bash
+              set -euxo pipefail
+              NAMESPACE=openshift-ocm-agent-operator
+
+              # Check for the status OAO v0.1.278 version (previous version:
+              # ocm-agent-operator.v0.1.276-g09f3778). If we it's not succeeded,
+              # do OLM dance The resources will be re-created with the latest
+              # version
+              CSV_PHASE=$(oc -n openshift-ocm-agent-operator get csv ocm-agent-operator.v0.1.289-g742e13a -ojsonpath='{.status.phase}{"\n"}') || true
+              #CSV_STATUS=$(oc -n openshift-ocm-agent-operator get csv -l operators.coreos.com/ocm-agent-operator.openshift-ocm-agent-operator= -oname;echo $?)
+              # This does nothing if the expected CSV is not found.
+              if [[ -n ${CSV_PHASE} && ${CSV_PHASE} != "Succeeded" ]]; then
+                # Take backup of the files to be recreated (subscription, catalogsource and operatorgroup)
+                oc -n "$NAMESPACE" get subs ocm-agent-operator -oyaml > /tmp/01-ocm-agent-operator-subs.yaml
+                oc -n "$NAMESPACE" get catsrc ocm-agent-operator-registry -oyaml > /tmp/02-ocm-agent-operator-registry.yaml
+                oc -n "$NAMESPACE" get og ocm-agent-operator-og -oyaml > /tmp/03-ocm-agent-operator-og.yaml
+
+                oc -n "$NAMESPACE" delete managednotification --all
+                oc -n "$NAMESPACE" delete managedfleetnotifications --all
+                oc -n "$NAMESPACE" delete clusterserviceversions.operators.coreos.com $(oc -n "$NAMESPACE" get clusterserviceversions.operators.coreos.com -ojsonpath='{.items[?(@.spec.displayName=="ocm-agent-operator")].metadata.name}') || true
+                oc -n "$NAMESPACE" delete installplan.operators.coreos.com -l operators.coreos.com/ocm-agent-operator.openshift-ocm-agent-operator=""
+                oc -n "$NAMESPACE" delete subs ocm-agent-operator
+                oc -n "$NAMESPACE" delete catsrc ocm-agent-operator-registry
+                oc -n "$NAMESPACE" delete og ocm-agent-operator-og
+
+                # Recreate the resources to re-install the operator
+                oc -n "$NAMESPACE" create -f /tmp/01-ocm-agent-operator-subs.yaml
+                oc -n "$NAMESPACE" create -f /tmp/02-ocm-agent-operator-registry.yaml
+                oc -n "$NAMESPACE" create -f /tmp/03-ocm-agent-operator-og.yaml
+              else
+                echo "Skipping OLM dance as OAO already successully installed with latest version or expected version was not found."
+              fi
+
+              # Prevent the job from -rerunning
+              oc -n "$NAMESPACE" delete cronjob sre-operator-reinstall || true
+              oc -n "$NAMESPACE" delete serviceaccount sre-operator-reinstall-sa || true
+              oc -n "$NAMESPACE" delete rolebinding/sre-operator-reinstall-rb role/sre-operator-reinstall-role || true
+              exit 0
