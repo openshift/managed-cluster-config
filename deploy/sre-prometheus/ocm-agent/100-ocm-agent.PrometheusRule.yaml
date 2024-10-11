@@ -98,9 +98,9 @@ spec:
       # This alert will fire when a node is unscheduleable and is failing to drain for an extended period of time based on a customer workload that's failing to drain
       # This alert will NOT fire if there is an ongoing upgrade, or if the node is not deleting.
       expr: |-
-        count((
+        (
           (
-            (avg_over_time(kube_node_spec_unschedulable[30m])) == 1 
+            kube_node_spec_unschedulable > 0
             unless
             ignoring(node,container,endpoint,job,namespace,service)
             sum(mapi_machine_set_status_replicas{name=~".*upgrade$"}) > 0
@@ -113,7 +113,7 @@ spec:
         group_left ()group by (node)
           (kube_node_role{role!~"infra|control-plane|master"})
         unless group by(node)
-          (kube_node_role{role=~"infra|control-plane|master"}))
+          (kube_node_role{role=~"infra|control-plane|master"})
       for: 30m # KubeNodeUnscheduleableSRE fires at 1h, but since this is specific to customer workloads we can shorten the feedback loop here.
       labels:
         severity: critical
