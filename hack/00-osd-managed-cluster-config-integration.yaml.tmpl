@@ -26265,18 +26265,16 @@ objects:
                   - sh
                   - -c
                   - "#!/bin/bash\nset -euxo pipefail\nNAMESPACE=openshift-ocm-agent-operator\n\
-                    \n# Check for the status OAO v0.1.289 version (previous version:\n\
-                    # ocm-agent-operator.v0.1.289-g742e13a). If we it's not succeeded,\n\
+                    \n# Check for the status OAO v0.1.291 version (previous version:\n\
+                    # ocm-agent-operator.v0.1.291-g57048ad). If we it's not succeeded,\n\
                     # do OLM dance The resources will be re-created with the latest\n\
                     # version\nCSV_PHASE=$(oc -n openshift-ocm-agent-operator get\
-                    \ csv ocm-agent-operator.v0.1.289-g742e13a -ojsonpath='{.status.phase}{\"\
-                    \\n\"}') || true\n#CSV_STATUS=$(oc -n openshift-ocm-agent-operator\
-                    \ get csv -l operators.coreos.com/ocm-agent-operator.openshift-ocm-agent-operator=\
-                    \ -oname;echo $?)\n# This does nothing if the expected CSV is\
-                    \ not found.\nif [[ -n ${CSV_PHASE} && ${CSV_PHASE} != \"Succeeded\"\
-                    \ ]]; then\n  # Take backup of the files to be recreated (subscription,\
-                    \ catalogsource and operatorgroup)\n  oc -n \"$NAMESPACE\" get\
-                    \ subs ocm-agent-operator -oyaml > /tmp/01-ocm-agent-operator-subs.yaml\n\
+                    \ csv ocm-agent-operator.v0.1.291-g57048ad -ojsonpath='{.status.phase}{\"\
+                    \\n\"}') || true\n# This does nothing if the expected CSV is not\
+                    \ found.\necho \"CSV_PHASE is $CSV_PHASE\"\nif [[ -z ${CSV_PHASE}\
+                    \ || ${CSV_PHASE} != \"Succeeded\" ]]; then\n  # Take backup of\
+                    \ the files to be recreated (subscription, catalogsource and operatorgroup)\n\
+                    \  oc -n \"$NAMESPACE\" get subs ocm-agent-operator -oyaml > /tmp/01-ocm-agent-operator-subs.yaml\n\
                     \  oc -n \"$NAMESPACE\" get catsrc ocm-agent-operator-registry\
                     \ -oyaml > /tmp/02-ocm-agent-operator-registry.yaml\n  oc -n \"\
                     $NAMESPACE\" get og ocm-agent-operator-og -oyaml > /tmp/03-ocm-agent-operator-og.yaml\n\
