@@ -1,0 +1,52 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: sre-network-live-migration
+    role: alert-rules
+  name: sre-network-live-migration
+  namespace: openshift-monitoring
+spec:
+  groups:
+  - name: sre-network-live-migration
+    rules:
+    # Alert if live migration from SDN to OVN is in-progress for more than 
+    - alert: NetworkMigrationDelayedSRE
+      expr:
+          (
+            (
+              max(
+                max_over_time(
+                  timestamp(
+                    openshift_network_operator_live_migration_condition{type="NetworkTypeMigrationInProgress"} == 1
+                  )[5d:]
+                )
+              )
+              -
+              min(
+                min_over_time(
+                  timestamp(
+                    openshift_network_operator_live_migration_condition{type="NetworkTypeMigrationInProgress"} == 1
+                  )[5d:]
+                )
+              )
+            )
+            >
+            count(cluster:nodes_roles) * 1800
+          )
+          and
+          openshift_network_operator_live_migration_condition{type="NetworkTypeMigrationInProgress"} == 1
+      for: 1m
+      labels:
+        severity: critical
+        namespace: openshift-network-operator
+      annotations:
+        message: Live migration from SDN to OVN is taking much longer than expected to complete.
+    - alert: NetworkMigrationBlocked
+      expr: openshift_network_operator_live_migration_blocked == 1
+      for: 5m
+      labels:
+        severity: warning
+        namespace: openshift-network-operator
+      annotations:
+        message: Network operator cannot start the requested migration from SDN to OVN due to {{ $labels.reason }}.
