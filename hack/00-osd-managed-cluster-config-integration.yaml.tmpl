@@ -23082,6 +23082,11 @@ objects:
         operator: NotIn
         values:
         - '4.5'
+        - '4.6'
+        - '4.7'
+        - '4.8'
+        - '4.9'
+        - '4.10'
       - key: ext-managed.openshift.io/uwm-disabled
         operator: NotIn
         values:
@@ -23124,8 +23129,6 @@ objects:
           \    key: node-role.kubernetes.io/infra\n    operator: Exists\n  telemeterServerURL:\
           \ ${TELEMETER_SERVER_URL}\nprometheusOperator:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
           \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
-          \    operator: Exists\ngrafana:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
-          \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
           \    operator: Exists\nk8sPrometheusAdapter:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
           \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
           \    operator: Exists\nkubeStateMetrics:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
@@ -23154,6 +23157,11 @@ objects:
         operator: NotIn
         values:
         - '4.5'
+        - '4.6'
+        - '4.7'
+        - '4.8'
+        - '4.9'
+        - '4.10'
       - key: ext-managed.openshift.io/uwm-disabled
         operator: In
         values:
@@ -23191,8 +23199,6 @@ objects:
           \    node-role.kubernetes.io/infra: ''\n  tolerations:\n  - effect: NoSchedule\n\
           \    key: node-role.kubernetes.io/infra\n    operator: Exists\n  telemeterServerURL:\
           \ ${TELEMETER_SERVER_URL}\nprometheusOperator:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
-          \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
-          \    operator: Exists\ngrafana:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
           \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
           \    operator: Exists\nk8sPrometheusAdapter:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
           \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
@@ -23252,8 +23258,6 @@ objects:
           \    key: node-role.kubernetes.io/infra\n    operator: Exists\n  telemeterServerURL:\
           \ ${TELEMETER_SERVER_URL}\nprometheusOperator:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
           \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
-          \    operator: Exists\ngrafana:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
-          \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
           \    operator: Exists\nk8sPrometheusAdapter:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
           \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
           \    operator: Exists\nkubeStateMetrics:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
@@ -23263,6 +23267,8 @@ objects:
           \    operator: Exists\nthanosQuerier:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
           \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
           \    operator: Exists\nmonitoringPlugin:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
+          \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
+          \    operator: Exists\ngrafana:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
           \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
           \    operator: Exists\n"
 - apiVersion: hive.openshift.io/v1
@@ -23320,7 +23326,75 @@ objects:
           \    key: node-role.kubernetes.io/infra\n    operator: Exists\n  telemeterServerURL:\
           \ ${TELEMETER_SERVER_URL}\nprometheusOperator:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
           \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
-          \    operator: Exists\ngrafana:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
+          \    operator: Exists\nk8sPrometheusAdapter:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
+          \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
+          \    operator: Exists\nkubeStateMetrics:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
+          \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
+          \    operator: Exists\nopenshiftStateMetrics:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
+          \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
+          \    operator: Exists\nthanosQuerier:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
+          \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
+          \    operator: Exists\nmonitoringPlugin:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
+          \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
+          \    operator: Exists\n"
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: cluster-monitoring-config-non-uwm-pre-4.11
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.6'
+        - '4.7'
+        - '4.8'
+        - '4.9'
+        - '4.10'
+      - key: ext-managed.openshift.io/uwm-disabled
+        operator: In
+        values:
+        - 'true'
+      - key: ext-hypershift.openshift.io/cluster-type
+        operator: NotIn
+        values:
+        - management-cluster
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: cluster-monitoring-config
+        namespace: openshift-monitoring
+      data:
+        config.yaml: "enableUserWorkload: false\nprometheusK8s:\n  remoteWrite:\n\
+          \  - url: ${OBSERVATORIUM_URL}\n    oauth2:\n      clientId:\n        secret:\n\
+          \          key: client-id\n          name: observatorium-credentials\n \
+          \     clientSecret:\n        key: client-secret\n        name: observatorium-credentials\n\
+          \      tokenUrl: https://sso.redhat.com/auth/realms/redhat-external/protocol/openid-connect/token\n\
+          \    remoteTimeout: 30s\n    writeRelabelConfigs:\n    - sourceLabels:\n\
+          \      - __name__\n      action: keep\n      regex: (addon_operator_addons_count|addon_operator_reconcile_error|addon_operator_addon_health_info|addon_operator_ocm_api_requests_durations|addon_operator_ocm_api_requests_durations_sum|addon_operator_ocm_api_requests_durations_count|addon_operator_paused|cluster_admin_enabled|limited_support_enabled|identity_provider|cpms_enabled|ingress_canary_route_reachable|ocm_agent_service_log_sent_total|sre:slo:probe_success_api|sre:slo:probe_success_console|sre:slo:upgradeoperator_upgrade_result|sre:slo:imageregistry_http_requests_total|sre:slo:oauth_server_requests_total|sre:sla:outage_5_minutes|sre:slo:apiserver_28d_slo|sre:slo:console_28d_slo|sre:error_budget_burn:apiserver_28d_slo|sre:error_budget_burn:console_28d_slo|sre:operators:succeeded|sre:record:upgradeoperator_upgrade_healthcheck_result)\n\
+          \    queueConfig:\n      capacity: 2500\n      maxShards: 1000\n      minShards:\
+          \ 1\n      maxSamplesPerSend: 2000\n      batchSendDeadline: 60s\n     \
+          \ minBackoff: 30ms\n      maxBackoff: 1m\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
+          \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
+          \    operator: Exists\n  retention: 7d\n  retentionSize: 90GB\n  volumeClaimTemplate:\n\
+          \    metadata:\n      name: prometheus-data\n    spec:\n      resources:\n\
+          \        requests:\n          storage: 100Gi\nalertmanagerMain:\n  nodeSelector:\n\
+          \    node-role.kubernetes.io/infra: ''\n  tolerations:\n  - effect: NoSchedule\n\
+          \    key: node-role.kubernetes.io/infra\n    operator: Exists\n  volumeClaimTemplate:\n\
+          \    metadata:\n      name: alertmanager-data\n    spec:\n      resources:\n\
+          \        requests:\n          storage: 10Gi\ntelemeterClient:\n  nodeSelector:\n\
+          \    node-role.kubernetes.io/infra: ''\n  tolerations:\n  - effect: NoSchedule\n\
+          \    key: node-role.kubernetes.io/infra\n    operator: Exists\n  telemeterServerURL:\
+          \ ${TELEMETER_SERVER_URL}\nprometheusOperator:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
           \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
           \    operator: Exists\nk8sPrometheusAdapter:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
           \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
@@ -23331,6 +23405,8 @@ objects:
           \    operator: Exists\nthanosQuerier:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
           \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
           \    operator: Exists\nmonitoringPlugin:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
+          \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
+          \    operator: Exists\ngrafana:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
           \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
           \    operator: Exists\n"
 - apiVersion: hive.openshift.io/v1
@@ -23392,7 +23468,80 @@ objects:
           \    key: node-role.kubernetes.io/infra\n    operator: Exists\n  telemeterServerURL:\
           \ ${TELEMETER_SERVER_URL}\nprometheusOperator:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
           \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
-          \    operator: Exists\ngrafana:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
+          \    operator: Exists\nk8sPrometheusAdapter:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
+          \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
+          \    operator: Exists\nkubeStateMetrics:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
+          \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
+          \    operator: Exists\nopenshiftStateMetrics:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
+          \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
+          \    operator: Exists\nthanosQuerier:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
+          \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
+          \    operator: Exists\nmonitoringPlugin:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
+          \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
+          \    operator: Exists\n"
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: cluster-monitoring-config-pre-4.11
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.5'
+        - '4.6'
+        - '4.7'
+        - '4.8'
+        - '4.9'
+        - '4.10'
+      - key: ext-managed.openshift.io/uwm-disabled
+        operator: NotIn
+        values:
+        - 'true'
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+      - key: ext-hypershift.openshift.io/cluster-type
+        operator: NotIn
+        values:
+        - management-cluster
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: cluster-monitoring-config
+        namespace: openshift-monitoring
+      data:
+        config.yaml: "enableUserWorkload: true\nprometheusK8s:\n  remoteWrite:\n \
+          \ - url: ${OBSERVATORIUM_URL}\n    oauth2:\n      clientId:\n        secret:\n\
+          \          key: client-id\n          name: observatorium-credentials\n \
+          \     clientSecret:\n        key: client-secret\n        name: observatorium-credentials\n\
+          \      tokenUrl: https://sso.redhat.com/auth/realms/redhat-external/protocol/openid-connect/token\n\
+          \    remoteTimeout: 30s\n    writeRelabelConfigs:\n    - sourceLabels:\n\
+          \      - __name__\n      action: keep\n      regex: (addon_operator_addons_count|addon_operator_reconcile_error|addon_operator_addon_health_info|addon_operator_ocm_api_requests_durations|addon_operator_ocm_api_requests_durations_sum|addon_operator_ocm_api_requests_durations_count|addon_operator_paused|cluster_admin_enabled|limited_support_enabled|identity_provider|cpms_enabled|ingress_canary_route_reachable|ocm_agent_service_log_sent_total|sre:slo:probe_success_api|sre:slo:probe_success_console|sre:slo:upgradeoperator_upgrade_result|sre:slo:imageregistry_http_requests_total|sre:slo:oauth_server_requests_total|sre:sla:outage_5_minutes|sre:slo:apiserver_28d_slo|sre:slo:console_28d_slo|sre:error_budget_burn:apiserver_28d_slo|sre:error_budget_burn:console_28d_slo|sre:operators:succeeded|sre:record:upgradeoperator_upgrade_healthcheck_result)\n\
+          \    queueConfig:\n      capacity: 2500\n      maxShards: 1000\n      minShards:\
+          \ 1\n      maxSamplesPerSend: 2000\n      batchSendDeadline: 60s\n     \
+          \ minBackoff: 30ms\n      maxBackoff: 1m\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
+          \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
+          \    operator: Exists\n  retention: 7d\n  retentionSize: 90GB\n  volumeClaimTemplate:\n\
+          \    metadata:\n      name: prometheus-data\n    spec:\n      resources:\n\
+          \        requests:\n          storage: 100Gi\nalertmanagerMain:\n  nodeSelector:\n\
+          \    node-role.kubernetes.io/infra: ''\n  tolerations:\n  - effect: NoSchedule\n\
+          \    key: node-role.kubernetes.io/infra\n    operator: Exists\n  volumeClaimTemplate:\n\
+          \    metadata:\n      name: alertmanager-data\n    spec:\n      resources:\n\
+          \        requests:\n          storage: 10Gi\ntelemeterClient:\n  nodeSelector:\n\
+          \    node-role.kubernetes.io/infra: ''\n  tolerations:\n  - effect: NoSchedule\n\
+          \    key: node-role.kubernetes.io/infra\n    operator: Exists\n  telemeterServerURL:\
+          \ ${TELEMETER_SERVER_URL}\nprometheusOperator:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
           \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
           \    operator: Exists\nk8sPrometheusAdapter:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
           \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
@@ -23403,6 +23552,8 @@ objects:
           \    operator: Exists\nthanosQuerier:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
           \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
           \    operator: Exists\nmonitoringPlugin:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
+          \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
+          \    operator: Exists\ngrafana:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
           \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
           \    operator: Exists\n"
 - apiVersion: hive.openshift.io/v1
@@ -30426,9 +30577,7 @@ objects:
           \    operator: Exists\n  telemeterServerURL: ${TELEMETER_SERVER_URL}\nprometheusOperator:\n\
           \  nodeSelector:\n    node-role.kubernetes.io/infra: ''\n  tolerations:\n\
           \  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n    operator:\
-          \ Exists\ngrafana:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
-          \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
-          \    operator: Exists\nk8sPrometheusAdapter:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
+          \ Exists\nk8sPrometheusAdapter:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
           \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
           \    operator: Exists\nkubeStateMetrics:\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
           \ ''\n  tolerations:\n  - effect: NoSchedule\n    key: node-role.kubernetes.io/infra\n\
