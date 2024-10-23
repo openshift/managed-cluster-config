@@ -30586,6 +30586,10 @@ objects:
         operator: NotIn
         values:
         - 'true'
+      - key: app-interface-managed
+        operator: In
+        values:
+        - 'true'
     resourceApplyMode: Upsert
     resources:
     - apiVersion: v1
@@ -30632,6 +30636,70 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: osd-fedramp-managed-upgrade-operator-config-customer-clusters
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/fedramp
+        operator: In
+        values:
+        - 'true'
+      - key: hive-prod01
+        operator: NotIn
+        values:
+        - 'true'
+      - key: app-interface-managed
+        operator: In
+        values:
+        - 'false'
+    resourceApplyMode: Upsert
+    resources:
+    - apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: managed-upgrade-operator-config
+        namespace: openshift-managed-upgrade-operator
+      data:
+        config.yaml: "upgradeType: OSD\nconfigManager:\n  source: OCM\n  ocmBaseUrl:\
+          \ ${OCM_BASE_URL}\n  watchInterval: 60\nmaintenance:\n  controlPlaneTime:\
+          \ 130\n  ignoredAlerts:\n    controlPlaneCriticals:\n    - ClusterOperatorDown\n\
+          scale:\n  timeOut: 30\nupgradeWindow:\n  delayTrigger: 30\n  timeOut: 120\n\
+          nodeDrain:\n  timeOut: 45\n  expectedNodeDrainTime: 8\nhealthCheck:\n  ignoredCriticals:\n\
+          \  - MetricsClientSendFailingSRE\n  - PruningCronjobErrorSRE\n  - etcdGRPCRequestsSlow\n\
+          \  # OSD-22494\n  - AlertmanagerFailedReload\n  - CloudIngressOperatorOfflineSRE\n\
+          \  - ClusterMonitoringErrorBudgetBurnSRE\n  - ConfigureAlertmanagerOperatorOfflineSRE\n\
+          \  - console-ErrorBudgetBurn\n  - ControlPlaneNodeFileDescriptorLimitSRE\n\
+          \  - ControlPlaneNodeFilesystemAlmostOutOfFiles\n  - ControlPlaneNodeFilesystemSpaceFillingUp\n\
+          \  - CustomerWorkloadPreventingDrainSRE\n  - EbsVolumeBurstBalanceLT20PctSRE\n\
+          \  - EbsVolumeStuckAttaching10MinSRE\n  - EbsVolumeStuckDetaching10MinSRE\n\
+          \  - etcdHighNumberOfFailedGRPCRequests\n  - ExcessiveContainerMemoryCriticalSRE\n\
+          \  - ExtremelyHighIndividualControlPlaneCPU\n  - ExtremelyHighIndividualControlPlaneMemory\n\
+          \  - HAProxyDown\n  - InsightsOperatorDownSRE\n  - KubePersistentVolumeFillingUp\n\
+          \  - KubePersistentVolumeInodesFillingUp\n  - KubePersistentVolumeUsageCriticalCustomer\n\
+          \  - KubePersistentVolumeUsageCriticalLayeredProduct\n  - MCDRebootError\n\
+          \  - MultipleVersionsOfEFSCSIDriverInstalled\n  - NodeClockNotSynchronising\n\
+          \  - NodeFileDescriptorLimit\n  - NodeFilesystemAlmostOutOfSpace\n  - NodeFilesystemAlmostOutOfFiles\n\
+          \  - NodeFilesystemSpaceFillingUp\n  - NodeFilesystemFilesFillingUp\n  -\
+          \ NodeRAIDDegraded\n  - NorthboundStale\n  - OCMAgentResponseFailureServiceLogsSRE\n\
+          \  - PodDisruptionBudgetLimit\n  - PrometheusTargetSyncFailure\n  - RouterAvailabilityLT30PctSRE\n\
+          \  - RunawaySDNPreventingContainerCreationSRE\n  - SouthboundStale\n  -\
+          \ ThanosRuleQueueIsDroppingAlerts\n  - WorkerNodeFileDescriptorLimitSRE\n\
+          \  - WorkerNodeFilesystemAlmostOutOfFiles\n  - WorkerNodeFilesystemSpaceFillingUp\n\
+          \  ignoredNamespaces:\n  - openshift-logging\n  - openshift-redhat-marketplace\n\
+          \  - openshift-operators\n  - openshift-customer-monitoring\n  - openshift-cnv\n\
+          \  - openshift-route-monitoring-operator\n  - openshift-user-workload-monitoring\n\
+          \  - openshift-pipelines\nextDependencyAvailabilityChecks:\n  http:\n  \
+          \  timeout: 10\n    urls:\n      - ${OCM_BASE_URL}/api/clusters_mgmt/v1\
+          \      \nenvironment:\n  fedramp: false\n"
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: osd-fedramp-managed-upgrade-operator-config-hive-prod01
   spec:
     clusterDeploymentSelector:
@@ -30643,6 +30711,10 @@ objects:
         values:
         - 'true'
       - key: hive-prod01
+        operator: In
+        values:
+        - 'true'
+      - key: app-interface-managed
         operator: In
         values:
         - 'true'
