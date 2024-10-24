@@ -14,7 +14,7 @@ spec:
       expr: |-
         count(
           (avg_over_time(kube_node_spec_unschedulable[1h])) == 1  
-          and on(node) kube_node_role{role=~"master|worker|control-plane"} 
+          and on(node) kube_node_role{role="worker"} 
           unless 
           ignoring(node,container,endpoint,job,namespace,service) 
           sum(mapi_machine_set_status_replicas{name=~".*upgrade$"}) > 0
