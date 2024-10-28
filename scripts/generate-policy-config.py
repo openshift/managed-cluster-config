@@ -22,6 +22,7 @@ directories = [
         'backplane/lpsre',
         'backplane/mobb',
         'backplane/srep',
+        'backplane/mcs-tier-two',
         'backplane/tam',
         'ccs-dedicated-admins',
         'customer-registry-cas',
