@@ -13,13 +13,13 @@ spec:
     - alert: KubeNodeUnschedulableSRE
       expr: |-
         count(
-          (avg_over_time(kube_node_spec_unschedulable[1h])) == 1  
+          (avg_over_time(kube_node_spec_unschedulable[30m])) == 1  
           and on(node) kube_node_role{role="worker"} 
           unless 
           ignoring(node,container,endpoint,job,namespace,service) 
           sum(mapi_machine_set_status_replicas{name=~".*upgrade$"}) > 0
         ) 
-      for: 61m
+      for: 31m
       labels:
         severity: Warning
         namespace: openshift-monitoring

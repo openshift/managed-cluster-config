@@ -36734,11 +36734,11 @@ objects:
         - name: sre-node-unschedulable
           rules:
           - alert: KubeNodeUnschedulableSRE
-            expr: "count(\n  (avg_over_time(kube_node_spec_unschedulable[1h])) ==\
+            expr: "count(\n  (avg_over_time(kube_node_spec_unschedulable[30m])) ==\
               \ 1  \n  and on(node) kube_node_role{role=\"worker\"} \n  unless \n\
               \  ignoring(node,container,endpoint,job,namespace,service) \n  sum(mapi_machine_set_status_replicas{name=~\"\
               .*upgrade$\"}) > 0\n) "
-            for: 61m
+            for: 31m
             labels:
               severity: Warning
               namespace: openshift-monitoring
