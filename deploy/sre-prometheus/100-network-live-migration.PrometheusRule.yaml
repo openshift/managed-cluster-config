@@ -31,10 +31,10 @@ spec:
                 )
               )
             )
-            >
-            count(cluster:nodes_roles) * 1800
+            >bool
+            sum(cluster:nodes_roles) * 1800
           )
-          and
+          and on()
           openshift_network_operator_live_migration_condition{type="NetworkTypeMigrationInProgress"} == 1
       for: 1m
       labels:
