@@ -37245,7 +37245,7 @@ objects:
           - alert: NetworkMigrationDelayedSRE
             expr: ( ( max( max_over_time( timestamp( openshift_network_operator_live_migration_condition{type="NetworkTypeMigrationInProgress"}
               == 1 )[5d:] ) ) - min( min_over_time( timestamp( openshift_network_operator_live_migration_condition{type="NetworkTypeMigrationInProgress"}
-              == 1 )[5d:] ) ) ) > count(cluster:nodes_roles) * 1800 ) and openshift_network_operator_live_migration_condition{type="NetworkTypeMigrationInProgress"}
+              == 1 )[5d:] ) ) ) >bool sum(cluster:nodes_roles) * 1800 ) and on() openshift_network_operator_live_migration_condition{type="NetworkTypeMigrationInProgress"}
               == 1
             for: 1m
             labels:
