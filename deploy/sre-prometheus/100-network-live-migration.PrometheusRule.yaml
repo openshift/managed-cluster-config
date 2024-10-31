@@ -1,0 +1,56 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: sre-network-live-migration
+    role: alert-rules
+  name: sre-network-live-migration
+  namespace: openshift-monitoring
+spec:
+  groups:
+  - name: sre-network-live-migration
+    rules:
+    #Expression to check if live migration from SDN to OVN is in-progress for more than
+      - expr:
+            (
+              max(
+                max_over_time(
+                  timestamp(
+                    openshift_network_operator_live_migration_condition{type="NetworkTypeMigrationInProgress"} == 1
+                  )[5d:]
+                )
+              )
+              -
+              min(
+                min_over_time(
+                  timestamp(
+                    openshift_network_operator_live_migration_condition{type="NetworkTypeMigrationInProgress"} == 1
+                  )[5d:]
+                )
+              )
+            )
+          )
+          and on()
+          openshift_network_operator_live_migration_condition{type="NetworkTypeMigrationInProgress"} == 1
+        record: sre:network-live-migration:condition
+        #Expression to check if SDN to OVN migration is blocked
+      - expr: openshift_network_operator_live_migration_blocked == 1
+        record: sre:network-live-migration:blocked
+  - name: sre-network-live-migration-alerts
+    rules:
+      - alert: NetworkMigrationDelayedSRE
+        expr: (sre:network-live-migration:condition > (sum(cluster:node_roles) * 1800))
+        for: 1m
+        labels:
+          severity: critical
+          namespace: openshift-network-operator
+        annotations:
+          message: Live migration from SDN to OVN is taking much longer than expected to complete.
+      - alert: NetworkMigrationBlocked
+        expr: sre:network-live-migration:blocked == 1
+        for: 5m
+        labels:
+          severity: warning
+          namespace: openshift-network-operator
+        annotations:
+          message: Network operator cannot start the requested migration from SDN to OVN due to {{ $labels.reason }}.
