@@ -32,10 +32,10 @@ spec:
           )
           and on()
           openshift_network_operator_live_migration_condition{type="NetworkTypeMigrationInProgress"} == 1
-        record: sre:network-live-migration:condition
+        record: cluster:usage:network-live-migration:duration
         #Expression to check if SDN to OVN migration is blocked
-      - expr: openshift_network_operator_live_migration_blocked == 1
-        record: sre:network-live-migration:blocked
+      - expr: openshift_network_operator_live_migration_blocked
+        record: cluster:usage:network-live-migration:blocked
   - name: sre-network-live-migration-alerts
     rules:
       - alert: NetworkMigrationDelayedSRE
@@ -54,4 +54,3 @@ spec:
           namespace: openshift-network-operator
         annotations:
           message: Network operator cannot start the requested migration from SDN to OVN due to {{ $labels.reason }}.
-          
