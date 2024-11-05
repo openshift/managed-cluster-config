@@ -39,7 +39,7 @@ spec:
   - name: sre-network-live-migration-alerts
     rules:
       - alert: NetworkMigrationDelayedSRE
-        expr: (sre:network-live-migration:condition > (sum(cluster:node_roles) * 1800))
+        expr: (cluster:usage:network-live-migration:duration > (sum(cluster:node_roles) * 1800))
         for: 1m
         labels:
           severity: critical
@@ -47,7 +47,7 @@ spec:
         annotations:
           message: Live migration from SDN to OVN is taking much longer than expected to complete.
       - alert: NetworkMigrationBlocked
-        expr: sre:network-live-migration:blocked == 1
+        expr: cluster:usage:network-live-migration:blocked == 1
         for: 5m
         labels:
           severity: warning
