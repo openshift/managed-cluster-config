@@ -6277,137 +6277,52 @@ objects:
                 metadataComplianceType: musthave
                 objectDefinition:
                   apiVersion: rbac.authorization.k8s.io/v1
+                  applyMode: AlwaysApply
                   kind: Role
-                  metadata:
-                    name: dedicated-admins-openshift-logging
-                    namespace: openshift-logging
-                  rules:
-                  - apiGroups:
-                    - ''
-                    resources:
-                    - events
-                    - namespaces
-                    - persistentvolumeclaims
-                    - persistentvolumes
-                    - pods
-                    - pods/log
-                    verbs:
-                    - list
-                    - get
-                    - watch
-                  - apiGroups:
-                    - ''
-                    resources:
-                    - secrets
-                    verbs:
-                    - '*'
-                  - apiGroups:
-                    - logging.openshift.io
-                    resources:
-                    - clusterloggings
-                    verbs:
-                    - create
-                    - delete
-                    - deletecollection
-                    - get
-                    - list
-                    - patch
-                    - update
-                    - watch
-                  - apiGroups:
-                    - operators.coreos.com
-                    resources:
-                    - subscriptions
-                    - clusterserviceversions
-                    verbs:
-                    - '*'
-                  - apiGroups:
-                    - operators.coreos.com
-                    resources:
-                    - installplans
-                    verbs:
-                    - update
-                  - apiGroups:
-                    - ''
-                    resources:
-                    - persistentvolumeclaims
-                    verbs:
-                    - '*'
-                  - apiGroups:
-                    - apps
-                    - extensions
-                    resources:
-                    - daemonsets
-                    verbs:
-                    - get
-                    - list
-                    - patch
-                    - update
-                    - watch
+                  name: dedicated-admins-openshift-logging
+                  namespace: openshift-logging
+                  patch: '{"rules":[{"apiGroups":[""],"resources":["events","namespaces","persistentvolumeclaims","persistentvolumes","pods","pods/log"],"verbs":["list","get","watch"]},{"apiGroups":[""],"resources":["secrets"],"verbs":["*"]},{"apiGroups":["logging.openshift.io"],"resources":["clusterloggings"],"verbs":["create","delete","deletecollection","get","list","patch","update","watch"]},{"apiGroups":["operators.coreos.com"],"resources":["subscriptions","clusterserviceversions"],"verbs":["*"]},{"apiGroups":["operators.coreos.com"],"resources":["installplans"],"verbs":["update"]},{"apiGroups":[""],"resources":["persistentvolumeclaims"],"verbs":["*"]},{"apiGroups":["apps","extensions"],"resources":["daemonsets"],"verbs":["get","list","patch","update","watch"]}]}'
+                  patchType: merge
               - complianceType: mustonlyhave
                 metadataComplianceType: musthave
                 objectDefinition:
                   apiVersion: rbac.authorization.k8s.io/v1
+                  applyMode: AlwaysApply
                   kind: RoleBinding
-                  metadata:
-                    name: admin-dedicated-admins
-                    namespace: openshift-logging
-                  roleRef:
-                    apiGroup: rbac.authorization.k8s.io
-                    kind: ClusterRole
-                    name: admin
-                  subjects:
-                  - apiGroup: rbac.authorization.k8s.io
-                    kind: Group
-                    name: dedicated-admins
+                  name: admin-dedicated-admins
+                  namespace: openshift-logging
+                  patch: '{"roleRef":{"apiGroup":"rbac.authorization.k8s.io","kind":"ClusterRole","name":"admin"},"subjects":[{"apiGroup":"rbac.authorization.k8s.io","kind":"Group","name":"dedicated-admins"}]}'
+                  patchType: merge
               - complianceType: mustonlyhave
                 metadataComplianceType: musthave
                 objectDefinition:
                   apiVersion: rbac.authorization.k8s.io/v1
+                  applyMode: AlwaysApply
                   kind: RoleBinding
-                  metadata:
-                    name: admin-system:serviceaccounts:dedicated-admin
-                    namespace: openshift-logging
-                  roleRef:
-                    apiGroup: rbac.authorization.k8s.io
-                    kind: ClusterRole
-                    name: admin
-                  subjects:
-                  - apiGroup: rbac.authorization.k8s.io
-                    kind: Group
-                    name: system:serviceaccounts:dedicated-admin
+                  name: admin-system:serviceaccounts:dedicated-admin
+                  namespace: openshift-logging
+                  patch: '{"roleRef":{"apiGroup":"rbac.authorization.k8s.io","kind":"ClusterRole","name":"admin"},"subjects":[{"apiGroup":"rbac.authorization.k8s.io","kind":"Group"}]}'
+                  patchType: merge
               - complianceType: mustonlyhave
                 metadataComplianceType: musthave
                 objectDefinition:
                   apiVersion: rbac.authorization.k8s.io/v1
+                  applyMode: AlwaysApply
                   kind: RoleBinding
-                  metadata:
-                    name: openshift-logging-dedicated-admins
-                    namespace: openshift-logging
-                  roleRef:
-                    apiGroup: rbac.authorization.k8s.io
-                    kind: ClusterRole
-                    name: dedicated-admins-project
-                  subjects:
-                  - apiGroup: rbac.authorization.k8s.io
-                    kind: Group
-                    name: dedicated-admins
+                  name: openshift-logging-dedicated-admins
+                  namespace: openshift-logging
+                  patch: '{"roleRef":{"apiGroup":"rbac.authorization.k8s.io","kind":"ClusterRole","name":"dedicated-admins-project"},"subjects":[{"apiGroup":"rbac.authorization.k8s.io","kind":"Group","name":"dedicated-admins"}]}'
+                  patchType: merge
               - complianceType: mustonlyhave
                 metadataComplianceType: musthave
                 objectDefinition:
                   apiVersion: rbac.authorization.k8s.io/v1
+                  applyMode: AlwaysApply
                   kind: RoleBinding
-                  metadata:
-                    name: openshift-logging:serviceaccounts:dedicated-admin
-                    namespace: openshift-logging
-                  roleRef:
-                    apiGroup: rbac.authorization.k8s.io
-                    kind: ClusterRole
-                    name: dedicated-admins-project
-                  subjects:
-                  - apiGroup: rbac.authorization.k8s.io
-                    kind: Group
-                    name: system:serviceaccounts:dedicated-admin
+                  name: openshift-logging:serviceaccounts:dedicated-admin
+                  namespace: openshift-logging
+                  patch: '{"roleRef":{"apiGroup":"rbac.authorization.k8s.io","kind":"ClusterRole","name":"dedicated-admins-project"},"subjects":[{"apiGroup":"rbac.authorization.k8s.io","kind":"Group","name":"system:serviceaccounts:dedicated-admin"}]}'
+                  patchType: merge
               pruneObjectBehavior: DeleteIfCreated
               remediationAction: enforce
               severity: low
@@ -31520,110 +31435,44 @@ objects:
           managed.openshift.io/storage-pv-quota-exempt: 'true'
           openshift.io/cluster-logging: 'true'
           openshift.io/cluster-monitoring: 'true'
+    patches:
     - apiVersion: operators.coreos.com/v1
+      applyMode: AlwaysApply
       kind: OperatorGroup
-      metadata:
-        annotations:
-          olm.providedAPIs: ClusterLogging.v1.logging.openshift.io
-        name: openshift-logging
-        namespace: openshift-logging
-      spec:
-        targetNamespaces:
-        - openshift-logging
+      name: openshift-logging
+      namespace: openshift-logging
+      patchType: merge
+      patch: '{"annotations":{"olm.providedAPIs": "ClusterLogging.v1.logging.openshift.io"},"spec":{"targetNamespaces":["openshift-logging"]}}'
     - apiVersion: v1
-      data:
-        actions.yaml: '# ---
-
-          # Remember, leave a key empty if there is no value.  None will be a string,
-
-          # not a Python "NoneType"
-
-          #
-
-          # Also remember that all examples have ''disable_action'' set to True.  If
-          you
-
-          # want to use this action as a template, be sure to set this to False after
-
-          # copying it.
-
-          # actions:
-
-          #   1:
-
-          #     action: delete_indices
-
-          #     description: >-
-
-          #       Delete .operations indices older than 30 days.
-
-          #       Ignore the error if the filter does not
-
-          #       result in an actionable list of indices (ignore_empty_list).
-
-          #       See https://www.elastic.co/guide/en/elasticsearch/client/curator/5.2/ex_delete_indices.html
-
-          #     options:
-
-          #       # Swallow curator.exception.NoIndices exception
-
-          #       ignore_empty_list: True
-
-          #       # In seconds, default is 300
-
-          #       timeout_override: ${CURATOR_TIMEOUT}
-
-          #       # Don''t swallow any other exceptions
-
-          #       continue_if_exception: False
-
-          #       # Optionally disable action, useful for debugging
-
-          #       disable_action: False
-
-          #     # All filters are bound by logical AND
-
-          #     filters:
-
-          #     - filtertype: pattern
-
-          #       kind: regex
-
-          #       value: ''^\.operations\..*$''
-
-          #       exclude: False
-
-          #     - filtertype: age
-
-          #       # Parse timestamp from index name
-
-          #       source: name
-
-          #       direction: older
-
-          #       timestring: ''%Y.%m.%d''
-
-          #       unit: days
-
-          #       unit_count: 30
-
-          #       exclude: False
-
-          '
-        config.yaml: "# Logging example curator config file\n\n# uncomment and use\
-          \ this to override the defaults from env vars\n#.defaults:\n#  delete:\n\
-          #    days: 30\n.defaults:\n  delete:\n    days: 7\n\n# to keep ops logs\
-          \ for a different duration:\n.operations:\n  delete:\n    days: 0\n\n# example\
-          \ for a normal project\n#myapp:\n#  delete:\n#    weeks: 1\n"
-        curator5.yaml: "---\nclient:\n  hosts:\n  - ${ES_HOST}\n  port: ${ES_PORT}\n\
-          \  use_ssl: True\n  certificate: ${ES_CA}\n  client_cert: ${ES_CLIENT_CERT}\n\
-          \  client_key: ${ES_CLIENT_KEY}\n  ssl_no_validate: False\n  timeout: ${CURATOR_TIMEOUT}\n\
-          \  master_only: False\nlogging:\n  loglevel: ${CURATOR_LOG_LEVEL}\n  logformat:\
-          \ default\n  blacklist: ['elasticsearch', 'urllib3']\n  \n"
       kind: ConfigMap
-      metadata:
-        name: curator
-        namespace: openshift-logging
+      name: curator
+      namespace: openshift-logging
+      patchType: merge
+      patch: '{"data":{"actions.yaml":"# ---\n# Remember, leave a key empty if there
+        is no value.  None will be a string,\n# not a Python \"NoneType\"\n#\n# Also
+        remember that all examples have \"disable_action\" set to True.  If you\n#
+        want to use this action as a template, be sure to set this to False after\n#
+        copying it.\n# actions:\n#   1:\n#     action: delete_indices\n#     description:
+        >-\n#       Delete .operations indices older than 30 days.\n#       Ignore
+        the error if the filter does not\n#       result in an actionable list of
+        indices (ignore_empty_list).\n#       See https://www.elastic.co/guide/en/elasticsearch/client/curator/5.2/ex_delete_indices.html\n#     options:\n#       #
+        Swallow curator.exception.NoIndices exception\n#       ignore_empty_list:
+        True\n#       # In seconds, default is 300\n#       timeout_override: ${CURATOR_TIMEOUT}\n#       #
+        Don not swallow any other exceptions\n#       continue_if_exception: False\n#       #
+        Optionally disable action, useful for debugging\n#       disable_action: False\n#     #
+        All filters are bound by logical AND\n#     filters:\n#     - filtertype:
+        pattern\n#       kind: regex\n#       value: \"^\\.operations\\..*$\"\n#       exclude:
+        False\n#     - filtertype: age\n#       # Parse timestamp from index name\n#       source:
+        name\n#       direction: older\n#       timestring: \"%Y.%m.%d\"\n#       unit:
+        days\n#       unit_count: 30\n#       exclude: False\n","config.yaml":"# Logging
+        example curator config file\n\n# uncomment and use this to override the defaults
+        from env vars\n#.defaults:\n#  delete:\n#    days: 30\n.defaults:\n  delete:\n    days:
+        7\n\n# to keep ops logs for a different duration:\n.operations:\n  delete:\n    days:
+        0\n\n# example for a normal project\n#myapp:\n#  delete:\n#    weeks: 1\n","curator5.yaml":"---\nclient:\n  hosts:\n  -
+        ${ES_HOST}\n  port: ${ES_PORT}\n  use_ssl: True\n  certificate: ${ES_CA}\n  client_cert:
+        ${ES_CLIENT_CERT}\n  client_key: ${ES_CLIENT_KEY}\n  ssl_no_validate: False\n  timeout:
+        ${CURATOR_TIMEOUT}\n  master_only: False\nlogging:\n  loglevel: ${CURATOR_LOG_LEVEL}\n  logformat:
+        default\n  blacklist: ["elasticsearch", "urllib3"]\n  \n"}}'
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -31642,99 +31491,28 @@ objects:
         values:
         - 'true'
     resourceApplyMode: Sync
-    resources:
+    patches:
     - apiVersion: v1
       kind: ResourceQuota
-      metadata:
-        name: logging-storage-quota
-        namespace: openshift-logging
-      spec:
-        hard:
-          requests.storage: 1500Gi
+      name: logging-storage-quota
+      namespace: openshift-logging
+      applyMode: AlwaysApply
+      patchType: merge
+      patch: '{"spec":{"hard":{"requests.storage":"1500Gi"}}}'
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: Role
-      metadata:
-        name: dedicated-admins-openshift-logging
-        namespace: openshift-logging
-      rules:
-      - apiGroups:
-        - ''
-        resources:
-        - events
-        - namespaces
-        - persistentvolumeclaims
-        - persistentvolumes
-        - pods
-        - pods/log
-        verbs:
-        - list
-        - get
-        - watch
-      - apiGroups:
-        - ''
-        resources:
-        - secrets
-        verbs:
-        - '*'
-      - apiGroups:
-        - logging.openshift.io
-        resources:
-        - clusterloggings
-        verbs:
-        - create
-        - delete
-        - deletecollection
-        - get
-        - list
-        - patch
-        - update
-        - watch
-      - apiGroups:
-        - operators.coreos.com
-        resources:
-        - subscriptions
-        - clusterserviceversions
-        verbs:
-        - '*'
-      - apiGroups:
-        - operators.coreos.com
-        resources:
-        - installplans
-        verbs:
-        - update
-      - apiGroups:
-        - ''
-        resources:
-        - persistentvolumeclaims
-        verbs:
-        - '*'
-      - apiGroups:
-        - apps
-        - extensions
-        resources:
-        - daemonsets
-        verbs:
-        - get
-        - list
-        - patch
-        - update
-        - watch
+      name: dedicated-admins-openshift-logging
+      namespace: openshift-logging
+      applyMode: AlwaysApply
+      patchType: merge
+      patch: '{"rules":[{"apiGroups":[""],"resources":["events","namespaces","persistentvolumeclaims","persistentvolumes","pods","pods/log"],"verbs":["list","get","watch"]},{"apiGroups":[""],"resources":["secrets"],"verbs":["*"]},{"apiGroups":["logging.openshift.io"],"resources":["clusterloggings"],"verbs":["create","delete","deletecollection","get","list","patch","update","watch"]},{"apiGroups":["operators.coreos.com"],"resources":["subscriptions","clusterserviceversions"],"verbs":["*"]},{"apiGroups":["operators.coreos.com"],"resources":["installplans"],"verbs":["update"]},{"apiGroups":[""],"resources":["persistentvolumeclaims"],"verbs":["*"]},{"apiGroups":["apps","extensions"],"resources":["daemonsets"],"verbs":["get","list","patch","update","watch"]}]}'
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: RoleBinding
-      metadata:
-        name: dedicated-admins-openshift-logging
-        namespace: openshift-logging
-      subjects:
-      - apiGroup: rbac.authorization.k8s.io
-        kind: Group
-        name: dedicated-admins
-      - apiGroup: rbac.authorization.k8s.io
-        kind: Group
-        name: system:serviceaccounts:dedicated-admin
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: Role
-        name: dedicated-admins-openshift-logging
+      name: dedicated-admins-openshift-logging
+      namespace: openshift-logging
+      applyMode: AlwaysApply
+      patchType: merge
+      patch: '{"subjects":[{"apiGroup":"rbac.authorization.k8s.io","kind":"Group","name":"dedicated-admins"},{"apiGroup":"rbac.authorization.k8s.io","kind":"Group","name":"system:serviceaccounts:dedicated-admin"}],"roleRef":{"apiGroup":"rbac.authorization.k8s.io","kind":"Role","name":"dedicated-admins-openshift-logging"}}'
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -31762,126 +31540,42 @@ objects:
           openshift.io/node-selector: ''
         labels:
           openshift.io/cluster-logging: 'true'
+    patches:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: Role
-      metadata:
-        name: dedicated-admins-openshift-logging
-        namespace: openshift-logging
-      rules:
-      - apiGroups:
-        - ''
-        resources:
-        - events
-        - namespaces
-        - persistentvolumeclaims
-        - persistentvolumes
-        - pods
-        - pods/log
-        verbs:
-        - list
-        - get
-        - watch
-      - apiGroups:
-        - ''
-        resources:
-        - secrets
-        verbs:
-        - '*'
-      - apiGroups:
-        - logging.openshift.io
-        resources:
-        - clusterloggings
-        verbs:
-        - create
-        - delete
-        - deletecollection
-        - get
-        - list
-        - patch
-        - update
-        - watch
-      - apiGroups:
-        - operators.coreos.com
-        resources:
-        - subscriptions
-        - clusterserviceversions
-        verbs:
-        - '*'
-      - apiGroups:
-        - operators.coreos.com
-        resources:
-        - installplans
-        verbs:
-        - update
-      - apiGroups:
-        - ''
-        resources:
-        - persistentvolumeclaims
-        verbs:
-        - '*'
-      - apiGroups:
-        - apps
-        - extensions
-        resources:
-        - daemonsets
-        verbs:
-        - get
-        - list
-        - patch
-        - update
-        - watch
+      name: dedicated-admins-openshift-logging
+      namespace: openshift-logging
+      applyMode: AlwaysApply
+      patchType: merge
+      patch: '{"rules":[{"apiGroups":[""],"resources":["events","namespaces","persistentvolumeclaims","persistentvolumes","pods","pods/log"],"verbs":["list","get","watch"]},{"apiGroups":[""],"resources":["secrets"],"verbs":["*"]},{"apiGroups":["logging.openshift.io"],"resources":["clusterloggings"],"verbs":["create","delete","deletecollection","get","list","patch","update","watch"]},{"apiGroups":["operators.coreos.com"],"resources":["subscriptions","clusterserviceversions"],"verbs":["*"]},{"apiGroups":["operators.coreos.com"],"resources":["installplans"],"verbs":["update"]},{"apiGroups":[""],"resources":["persistentvolumeclaims"],"verbs":["*"]},{"apiGroups":["apps","extensions"],"resources":["daemonsets"],"verbs":["get","list","patch","update","watch"]}]}'
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: RoleBinding
-      metadata:
-        name: admin-dedicated-admins
-        namespace: openshift-logging
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: ClusterRole
-        name: admin
-      subjects:
-      - apiGroup: rbac.authorization.k8s.io
-        kind: Group
-        name: dedicated-admins
+      name: admin-dedicated-admins
+      namespace: openshift-logging
+      applyMode: AlwaysApply
+      patchType: merge
+      patch: '{"roleRef":{"apiGroup":"rbac.authorization.k8s.io","kind":"ClusterRole","name":"admin"},"subjects":[{"apiGroup":"rbac.authorization.k8s.io","kind":"Group","name":"dedicated-admins"}]}'
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: RoleBinding
-      metadata:
-        name: admin-system:serviceaccounts:dedicated-admin
-        namespace: openshift-logging
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: ClusterRole
-        name: admin
-      subjects:
-      - apiGroup: rbac.authorization.k8s.io
-        kind: Group
-        name: system:serviceaccounts:dedicated-admin
+      name: admin-system:serviceaccounts:dedicated-admin
+      namespace: openshift-logging
+      applyMode: AlwaysApply
+      patchType: merge
+      patch: '{"roleRef":{"apiGroup":"rbac.authorization.k8s.io","kind":"ClusterRole","name":"admin"},"subjects":[{"apiGroup":"rbac.authorization.k8s.io","kind":"Group"}]}'
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: RoleBinding
-      metadata:
-        name: openshift-logging-dedicated-admins
-        namespace: openshift-logging
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: ClusterRole
-        name: dedicated-admins-project
-      subjects:
-      - apiGroup: rbac.authorization.k8s.io
-        kind: Group
-        name: dedicated-admins
+      name: openshift-logging-dedicated-admins
+      namespace: openshift-logging
+      applyMode: AlwaysApply
+      patchType: merge
+      patch: '{"roleRef":{"apiGroup":"rbac.authorization.k8s.io","kind":"ClusterRole","name":"dedicated-admins-project"},"subjects":[{"apiGroup":"rbac.authorization.k8s.io","kind":"Group","name":"dedicated-admins"}]}'
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: RoleBinding
-      metadata:
-        name: openshift-logging:serviceaccounts:dedicated-admin
-        namespace: openshift-logging
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: ClusterRole
-        name: dedicated-admins-project
-      subjects:
-      - apiGroup: rbac.authorization.k8s.io
-        kind: Group
-        name: system:serviceaccounts:dedicated-admin
+      name: openshift-logging:serviceaccounts:dedicated-admin
+      namespace: openshift-logging
+      applyMode: AlwaysApply
+      patchType: merge
+      patch: '{"roleRef":{"apiGroup":"rbac.authorization.k8s.io","kind":"ClusterRole","name":"dedicated-admins-project"},"subjects":[{"apiGroup":"rbac.authorization.k8s.io","kind":"Group","name":"system:serviceaccounts:dedicated-admin"}]}'
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
