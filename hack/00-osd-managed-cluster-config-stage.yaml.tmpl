@@ -38164,11 +38164,13 @@ objects:
         groups:
         - name: sre-slo.rules
           rules:
-          - expr: sre:telemetry:managed_labels * on (sre) group_left(probe_url) label_replace(probe_success{probe_url=~"^https://api.+"},
-              "sre", "true", "", "")
+          - expr: "sre:telemetry:managed_labels\n* on (sre) group_left(probe_url)\n\
+              bottomk by (sre) (1,\n  label_replace(probe_success{probe_url=~\"^https://api.+\"\
+              }, \"sre\", \"true\", \"\", \"\")\n)\n"
             record: sre:slo:probe_success_api
-          - expr: sre:telemetry:managed_labels * on (sre) group_left(probe_url) label_replace(probe_success{probe_url=~"^https://console.+"},
-              "sre", "true", "", "")
+          - expr: "sre:telemetry:managed_labels\n* on (sre) group_left(probe_url)\n\
+              bottomk by (sre) (1,\n  label_replace(probe_success{probe_url=~\"^https://console.+\"\
+              }, \"sre\", \"true\", \"\", \"\")\n)\n"
             record: sre:slo:probe_success_console
           - expr: label_replace(sum by (code, method) (imageregistry_http_requests_total),
               "sre", "true", "", "") * on (sre) group_left(_id,provider,region,version)
