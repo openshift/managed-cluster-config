@@ -10,7 +10,6 @@ spec:
   groups:
   - name: sre-network-live-migration
     rules:
-    #Expression to check if live migration from SDN to OVN is in-progress for more than
       - expr:
             (
               max(
@@ -29,17 +28,15 @@ spec:
                 )
               )
             )
-          )
-          and on()
-          openshift_network_operator_live_migration_condition{type="NetworkTypeMigrationInProgress"} == 1
-        record: cluster:usage:network-live-migration:duration
-        #Expression to check if SDN to OVN migration is blocked
+            and on()
+            openshift_network_operator_live_migration_condition{type="NetworkTypeMigrationInProgress"} == 1
+        record: cluster:usage:network_live_migration_duration
       - expr: openshift_network_operator_live_migration_blocked
-        record: cluster:usage:network-live-migration:blocked
+        record: cluster:usage:network_live_migration_blocked
   - name: sre-network-live-migration-alerts
     rules:
       - alert: NetworkMigrationDelayedSRE
-        expr: (cluster:usage:network-live-migration:duration > (sum(cluster:node_roles) * 1800))
+        expr: (cluster:usage:network_live_migration_duration > (sum(cluster:node_roles) * 1800))
         for: 1m
         labels:
           severity: critical
@@ -47,7 +44,7 @@ spec:
         annotations:
           message: Live migration from SDN to OVN is taking much longer than expected to complete.
       - alert: NetworkMigrationBlocked
-        expr: cluster:usage:network-live-migration:blocked == 1
+        expr: cluster:usage:network_live_migration_blocked == 1
         for: 5m
         labels:
           severity: warning
