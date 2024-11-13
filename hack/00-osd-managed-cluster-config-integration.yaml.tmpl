@@ -23133,6 +23133,10 @@ objects:
         operator: NotIn
         values:
         - 'true'
+      - key: api.openshift.com/private-service-connect
+        operator: NotIn
+        values:
+        - 'true'
       - key: api.openshift.com/fedramp
         operator: NotIn
         values:
@@ -26613,7 +26617,7 @@ objects:
                   - /bin/bash
                   args:
                   - -c
-                  - "# CAPI IMAGE \nIMAGE=\"quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:6a9fe6f7fedaae423b0ebe78b2a8ae53ad477fd25d8039951dfbf671223eba06\"\
+                  - "# CAPI IMAGE - 4.17.4\nIMAGE=\"quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:f614ef855220f2381217c31b8cb94c05ef20edf3ca23b5efa0be1b957cdde3a4\"\
                     \n# Get all manifestwork objects and extract their names\nmanagedclusters=$(oc\
                     \ get managedclusters -l openshiftVersion-major-minor=4.17 -o\
                     \ jsonpath='{range .items[*]}{.metadata.name}{\"\\n\"}{end}')\n\
@@ -30698,7 +30702,7 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: osd-fedramp-machineconfig-int-pre-4.13
+    name: osd-fedramp-machineconfig-int-pre-4.15
   spec:
     clusterDeploymentSelector:
       matchLabels:
@@ -30717,6 +30721,8 @@ objects:
         values:
         - '4.11'
         - '4.12'
+        - '4.13'
+        - '4.14'
     resourceApplyMode: Sync
     resources:
     - apiVersion: machineconfiguration.openshift.io/v1
@@ -30774,7 +30780,7 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: osd-fedramp-machineconfig-prod-pre-4.13
+    name: osd-fedramp-machineconfig-prod-pre-4.15
   spec:
     clusterDeploymentSelector:
       matchLabels:
@@ -30793,6 +30799,8 @@ objects:
         values:
         - '4.11'
         - '4.12'
+        - '4.13'
+        - '4.14'
     resourceApplyMode: Sync
     resources:
     - apiVersion: machineconfiguration.openshift.io/v1
@@ -30850,7 +30858,7 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: osd-fedramp-machineconfig-stg-pre-4.13
+    name: osd-fedramp-machineconfig-stg-pre-4.15
   spec:
     clusterDeploymentSelector:
       matchLabels:
@@ -30870,6 +30878,8 @@ objects:
         values:
         - '4.11'
         - '4.12'
+        - '4.13'
+        - '4.14'
     resourceApplyMode: Sync
     resources:
     - apiVersion: machineconfiguration.openshift.io/v1
@@ -31006,9 +31016,7 @@ objects:
         values:
         - 'true'
       - key: app-interface-managed
-        operator: In
-        values:
-        - 'false'
+        operator: DoesNotExist
     resourceApplyMode: Upsert
     resources:
     - apiVersion: v1
@@ -33284,6 +33292,10 @@ objects:
         operator: NotIn
         values:
         - 'true'
+      - key: api.openshift.com/private-service-connect
+        operator: NotIn
+        values:
+        - 'true'
       - key: api.openshift.com/fedramp
         operator: NotIn
         values:
@@ -33510,6 +33522,10 @@ objects:
         operator: NotIn
         values:
         - 'true'
+      - key: api.openshift.com/private-service-connect
+        operator: NotIn
+        values:
+        - 'true'
       - key: api.openshift.com/fedramp
         operator: NotIn
         values:
@@ -33669,7 +33685,7 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: osd-serviceaccounts-nonsts-private-link
+    name: osd-serviceaccounts-nonsts-nonwif-private-link-psc
   spec:
     clusterDeploymentSelector:
       matchLabels:
@@ -33681,6 +33697,10 @@ objects:
         - 'true'
       - key: api.openshift.com/private-link
         operator: In
+        values:
+        - 'true'
+      - key: api.openshift.com/private-service-connect
+        operator: NotIn
         values:
         - 'true'
       - key: api.openshift.com/fedramp
@@ -38200,11 +38220,13 @@ objects:
         groups:
         - name: sre-slo.rules
           rules:
-          - expr: sre:telemetry:managed_labels * on (sre) group_left(probe_url) label_replace(probe_success{probe_url=~"^https://api.+"},
-              "sre", "true", "", "")
+          - expr: "sre:telemetry:managed_labels\n* on (sre) group_left(probe_url)\n\
+              bottomk by (sre) (1,\n  label_replace(probe_success{probe_url=~\"^https://api.+\"\
+              }, \"sre\", \"true\", \"\", \"\")\n)\n"
             record: sre:slo:probe_success_api
-          - expr: sre:telemetry:managed_labels * on (sre) group_left(probe_url) label_replace(probe_success{probe_url=~"^https://console.+"},
-              "sre", "true", "", "")
+          - expr: "sre:telemetry:managed_labels\n* on (sre) group_left(probe_url)\n\
+              bottomk by (sre) (1,\n  label_replace(probe_success{probe_url=~\"^https://console.+\"\
+              }, \"sre\", \"true\", \"\", \"\")\n)\n"
             record: sre:slo:probe_success_console
           - expr: label_replace(sum by (code, method) (imageregistry_http_requests_total),
               "sre", "true", "", "") * on (sre) group_left(_id,provider,region,version)
