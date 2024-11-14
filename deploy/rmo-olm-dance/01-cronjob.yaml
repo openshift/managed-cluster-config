@@ -28,11 +28,10 @@ spec:
               set -euxo pipefail
               NAMESPACE=openshift-route-monitor-operator
 
-              # Check for the status OAO v0.1.291 version (previous version:
-              # route-monitor-operator.v0.1.291-g57048ad). If we it's not succeeded,
+              # Check for the status route-monitor-operator.v0.1.700-g504ef15 version:
               # do OLM dance The resources will be re-created with the latest
               # version
-              CSV_PHASE=$(oc -n openshift-route-monitor-operator get csv route-monitor-operator.v0.1.291-g57048ad -ojsonpath='{.status.phase}{"\n"}') || true
+              CSV_PHASE=$(oc -n openshift-route-monitor-operator get csv route-monitor-operator.v0.1.700-g504ef15 -ojsonpath='{.status.phase}{"\n"}') || true
               # This does nothing if the expected CSV is not found.
               echo "CSV_PHASE is $CSV_PHASE"
               if [[ -z ${CSV_PHASE} || ${CSV_PHASE} != "Succeeded" ]]; then
