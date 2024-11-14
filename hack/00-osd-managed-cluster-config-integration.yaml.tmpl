@@ -36348,34 +36348,30 @@ objects:
                   - sh
                   - -c
                   - "#!/bin/bash\nset -euxo pipefail\nNAMESPACE=openshift-route-monitor-operator\n\
-                    \n# Check for the status route-monitor-operator.v0.1.700-g504ef15\
-                    \ version:\n# do OLM dance The resources will be re-created with\
-                    \ the latest\n# version\nCSV_PHASE=$(oc -n openshift-route-monitor-operator\
-                    \ get csv route-monitor-operator.v0.1.700-g504ef15 -ojsonpath='{.status.phase}{\"\
-                    \\n\"}') || true\n# This does nothing if the expected CSV is not\
-                    \ found.\necho \"CSV_PHASE is $CSV_PHASE\"\nif [[ -z ${CSV_PHASE}\
-                    \ || ${CSV_PHASE} != \"Succeeded\" ]]; then\n  # Take backup of\
-                    \ the files to be recreated (subscription, catalogsource and operatorgroup)\n\
-                    \  oc -n \"$NAMESPACE\" get subs route-monitor-operator -oyaml\
-                    \ > /tmp/01-route-monitor-operator-subs.yaml\n  oc -n \"$NAMESPACE\"\
-                    \ get catsrc route-monitor-operator-registry -oyaml > /tmp/02-route-monitor-operator-registry.yaml\n\
-                    \  oc -n \"$NAMESPACE\" get og route-monitor-operator-og -oyaml\
-                    \ > /tmp/03-route-monitor-operator-og.yaml\n\n  oc -n \"$NAMESPACE\"\
-                    \ delete clusterserviceversions.operators.coreos.com $(oc -n \"\
-                    $NAMESPACE\" get clusterserviceversions.operators.coreos.com -ojsonpath='{.items[?(@.spec.displayName==\"\
-                    route-monitor-operator\")].metadata.name}') || true\n  oc -n \"\
-                    $NAMESPACE\" delete installplan.operators.coreos.com -l operators.coreos.com/route-monitor-operator.openshift-route-monitor-operator=\"\
-                    \"\n  oc -n \"$NAMESPACE\" delete subs route-monitor-operator\n\
-                    \  oc -n \"$NAMESPACE\" delete catsrc route-monitor-operator-registry\n\
-                    \  oc -n \"$NAMESPACE\" delete og route-monitor-operator-og\n\n\
-                    \  # Recreate the resources to re-install the operator\n  oc -n\
-                    \ \"$NAMESPACE\" create -f /tmp/01-route-monitor-operator-subs.yaml\n\
+                    \nCSV_FOUND=$(oc -n \"$NAMESPACE\" get clusterserviceversions.operators.coreos.com\
+                    \ -o name | grep route-monitor-operator) || true\nif [[ ! -z \"\
+                    $CSV_FOUND\" ]]; then\n  # Take backup of the files to be recreated\n\
+                    \  oc -n \"$NAMESPACE\" get subscriptions.operators.coreos.com\
+                    \ route-monitor-operator -oyaml > /tmp/01-route-monitor-operator-subs.yaml\n\
+                    \  oc -n \"$NAMESPACE\" get catalogsources.operators.coreos.com\
+                    \ route-monitor-operator-registry -oyaml > /tmp/02-route-monitor-operator-registry.yaml\n\
+                    \  oc -n \"$NAMESPACE\" get operatorgroups.operators.coreos.com\
+                    \ route-monitor-operator -oyaml > /tmp/03-route-monitor-operator-og.yaml\n\
+                    \n  oc -n \"$NAMESPACE\" get clusterserviceversions.operators.coreos.com\
+                    \ | grep route-monitor-operator | awk '{print $1}' | xargs oc\
+                    \ delete clusterserviceversions.operators.coreos.com -n $NAMESPACE\n\
+                    \  oc -n \"$NAMESPACE\" delete installplan.operators.coreos.com\
+                    \ -l operators.coreos.com/route-monitor-operator.openshift-route-monitor-operator=\"\
+                    \"\n  oc -n \"$NAMESPACE\" delete subscriptions.operators.coreos.com\
+                    \ route-monitor-operator\n  oc -n \"$NAMESPACE\" delete catalogsources.operators.coreos.com\
+                    \ route-monitor-operator-registry\n  oc -n \"$NAMESPACE\" delete\
+                    \ operatorgroups.operators.coreos.com route-monitor-operator\n\
+                    \n  # Recreate the resources to re-install the operator\n  oc\
+                    \ -n \"$NAMESPACE\" create -f /tmp/01-route-monitor-operator-subs.yaml\n\
                     \  oc -n \"$NAMESPACE\" create -f /tmp/02-route-monitor-operator-registry.yaml\n\
                     \  oc -n \"$NAMESPACE\" create -f /tmp/03-route-monitor-operator-og.yaml\n\
-                    else\n  echo \"Skipping OLM dance as OAO already successully installed\
-                    \ with latest version or expected version was not found.\"\nfi\n\
-                    \n# Prevent the job from -rerunning\noc -n \"$NAMESPACE\" delete\
-                    \ cronjob sre-operator-reinstall || true\noc -n \"$NAMESPACE\"\
+                    fi\n\n# Prevent the job from -rerunning\noc -n \"$NAMESPACE\"\
+                    \ delete cronjob sre-operator-reinstall || true\noc -n \"$NAMESPACE\"\
                     \ delete serviceaccount sre-operator-reinstall-sa || true\noc\
                     \ -n \"$NAMESPACE\" delete rolebinding/sre-operator-reinstall-rb\
                     \ role/sre-operator-reinstall-role || true\nexit 0\n"
