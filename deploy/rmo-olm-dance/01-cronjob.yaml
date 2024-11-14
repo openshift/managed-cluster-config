@@ -1,0 +1,62 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: sre-operator-reinstall
+  namespace: openshift-route-monitor-operator
+spec:
+  ttlSecondsAfterFinished: 100
+  failedJobsHistoryLimit: 1
+  successfulJobsHistoryLimit: 3
+  concurrencyPolicy: Replace
+  schedule: "* * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: sre-operator-reinstall-sa
+          restartPolicy: Never
+          containers:
+          - name: operator-reinstaller
+            image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+            imagePullPolicy: Always
+            command:
+            - sh
+            - -c
+            - |
+              #!/bin/bash
+              set -euxo pipefail
+              NAMESPACE=openshift-route-monitor-operator
+
+              # Check for the status OAO v0.1.291 version (previous version:
+              # route-monitor-operator.v0.1.291-g57048ad). If we it's not succeeded,
+              # do OLM dance The resources will be re-created with the latest
+              # version
+              CSV_PHASE=$(oc -n openshift-route-monitor-operator get csv route-monitor-operator.v0.1.291-g57048ad -ojsonpath='{.status.phase}{"\n"}') || true
+              # This does nothing if the expected CSV is not found.
+              echo "CSV_PHASE is $CSV_PHASE"
+              if [[ -z ${CSV_PHASE} || ${CSV_PHASE} != "Succeeded" ]]; then
+                # Take backup of the files to be recreated (subscription, catalogsource and operatorgroup)
+                oc -n "$NAMESPACE" get subs route-monitor-operator -oyaml > /tmp/01-route-monitor-operator-subs.yaml
+                oc -n "$NAMESPACE" get catsrc route-monitor-operator-registry -oyaml > /tmp/02-route-monitor-operator-registry.yaml
+                oc -n "$NAMESPACE" get og route-monitor-operator-og -oyaml > /tmp/03-route-monitor-operator-og.yaml
+
+                oc -n "$NAMESPACE" delete clusterserviceversions.operators.coreos.com $(oc -n "$NAMESPACE" get clusterserviceversions.operators.coreos.com -ojsonpath='{.items[?(@.spec.displayName=="route-monitor-operator")].metadata.name}') || true
+                oc -n "$NAMESPACE" delete installplan.operators.coreos.com -l operators.coreos.com/route-monitor-operator.openshift-route-monitor-operator=""
+                oc -n "$NAMESPACE" delete subs route-monitor-operator
+                oc -n "$NAMESPACE" delete catsrc route-monitor-operator-registry
+                oc -n "$NAMESPACE" delete og route-monitor-operator-og
+
+                # Recreate the resources to re-install the operator
+                oc -n "$NAMESPACE" create -f /tmp/01-route-monitor-operator-subs.yaml
+                oc -n "$NAMESPACE" create -f /tmp/02-route-monitor-operator-registry.yaml
+                oc -n "$NAMESPACE" create -f /tmp/03-route-monitor-operator-og.yaml
+              else
+                echo "Skipping OLM dance as OAO already successully installed with latest version or expected version was not found."
+              fi
+
+              # Prevent the job from -rerunning
+              oc -n "$NAMESPACE" delete cronjob sre-operator-reinstall || true
+              oc -n "$NAMESPACE" delete serviceaccount sre-operator-reinstall-sa || true
+              oc -n "$NAMESPACE" delete rolebinding/sre-operator-reinstall-rb role/sre-operator-reinstall-role || true
+              exit 0
