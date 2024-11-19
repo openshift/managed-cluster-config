@@ -1,0 +1,76 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: capa-annotator-4-14
+  namespace: openshift-capa-annotator
+  annotations:
+    kubernetes.io/description: "Patches 4.14 Manifest works to fixed CAPI version https://issues.redhat.com/browse/OSD-25821"
+spec:
+  schedule: "*/5 * * * *" # Every five minutes
+  concurrencyPolicy: Replace
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          name: capa-annotator
+          namespace: openshift-capa-annotator
+          annotations:
+            kubernetes.io/description: "Patches 4.14 Manifest works to fixed CAPI version https://issues.redhat.com/browse/OSD-25821"
+        spec:
+          affinity:
+            nodeAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+                - preference:
+                    matchExpressions:
+                      - key: node-role.kubernetes.io/infra
+                        operator: Exists
+                  weight: 1
+          tolerations:
+            - effect: NoSchedule
+              key: node-role.kubernetes.io/infra
+              operator: Exists
+          containers:
+            - name: capa-annotator
+              image: image-registry.openshift-image-registry.svc:5000/openshift/tools:latest
+              imagePullPolicy: Always
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                    - ALL
+                runAsNonRoot: true
+              env:
+                - name: IMAGE
+                  # 4.14.41
+                  value: quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:8ef2860fe69648046ee92a0d5b272fe17ec1a0bee000c27af21bc4a7dade8394
+                - name: MAJOR_MINOR_VER
+                  value: "4.14"
+              command:
+                - /bin/bash
+              args:
+                - -c
+                - |
+                  # Get all manifestwork objects and extract their names
+                  managedclusters=$(oc get managedclusters -l openshiftVersion-major-minor=${MAJOR_MINOR_VER} -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}')
+                  # Loop through each manifestwork object
+                  for clusterID in ${managedclusters[@]};do 
+                    # Extract namespace and name
+                    namespace=$(oc get managedclusters $clusterID -o json | jq -r '.metadata.labels["api.openshift.com/management-cluster"]')
+                    kinds=$(oc get manifestwork -n $namespace $clusterID -o json | jq -r '.spec.workload.manifests[].kind')
+                    num=0 
+                    for kind in $kinds;do 
+                      if [[ $kind == "HostedCluster" ]]; then
+                          echo $clusterID
+                          #~1 escapes / in bash
+                          json_payload='[{"op":"replace","path":"/spec/workload/manifests/'"$num"'/metadata/annotations/hypershift.openshift.io~1capi-provider-aws-image","value":"'"$IMAGE"'"}]'
+                          echo "oc patch manifestwork $clusterID -n $namespace --type='json' -p "$json_payload""
+                          oc patch manifestwork $clusterID -n $namespace --type='json' -p "$json_payload"
+                          echo "-------------------------------------------------------------------------"
+                          break
+                      fi
+                    (( num++))
+                    done
+                  done
+          serviceAccountName: capa-annotator
+          automountServiceAccountToken: true
+          restartPolicy: Never
