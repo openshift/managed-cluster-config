@@ -24363,6 +24363,38 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: itn-2024-00255_camo-unsafefailforward
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.11'
+        - '4.12'
+        - '4.13'
+        - '4.14'
+        - '4.15'
+        - '4.16'
+        - '4.17'
+    resourceApplyMode: Sync
+    patches:
+    - apiVersion: operators.coreos.com/v1
+      kind: OperatorGroup
+      name: openshift-cluster-monitoring
+      namespace: openshift-monitoring
+      applyMode: AlwaysApply
+      patch: '{"spec":{"upgradeStrategy":"TechPreviewUnsafeFailForward"}}'
+      patchType: merge
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: kubelet-config
   spec:
     clusterDeploymentSelector:
