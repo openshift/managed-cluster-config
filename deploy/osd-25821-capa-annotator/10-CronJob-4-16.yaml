@@ -1,10 +1,10 @@
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: capa-annotator
+  name: capa-annotator-4-16
   namespace: openshift-capa-annotator
   annotations:
-    kubernetes.io/description: "Patches 4.17 Manifest works to fixed CAPI version https://issues.redhat.com/browse/OSD-25821"
+    kubernetes.io/description: "Patches 4.16 Manifest works to fixed CAPI version https://issues.redhat.com/browse/OSD-25821"
 spec:
   schedule: "*/5 * * * *" # Every five minutes
   concurrencyPolicy: Replace
@@ -15,7 +15,7 @@ spec:
           name: capa-annotator
           namespace: openshift-capa-annotator
           annotations:
-            kubernetes.io/description: "Patches 4.17 Manifest works to fixed CAPI version https://issues.redhat.com/browse/OSD-25821"
+            kubernetes.io/description: "Patches 4.16 Manifest works to fixed CAPI version https://issues.redhat.com/browse/OSD-25821"
         spec:
           affinity:
             nodeAffinity:
@@ -39,15 +39,19 @@ spec:
                 drop:
                 - ALL
               runAsNonRoot: true
+            env:
+              - name: IMAGE
+                # 4.16.23
+                value: quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:fbad492113bbe9763af4b04be533473dea08ffdd759a288a697b41c7aafa4d5e
+              - name: MAJOR_MINOR_VER
+                value: "4.16"
             command:
             - /bin/bash
             args:
             - -c
             - |
-              # CAPI IMAGE - 4.17.4
-              IMAGE="quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:f614ef855220f2381217c31b8cb94c05ef20edf3ca23b5efa0be1b957cdde3a4"
               # Get all manifestwork objects and extract their names
-              managedclusters=$(oc get managedclusters -l openshiftVersion-major-minor=4.17 -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}')
+              managedclusters=$(oc get managedclusters -l openshiftVersion-major-minor=${MAJOR_MINOR_VER} -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}')
               # Loop through each manifestwork object
               for clusterID in ${managedclusters[@]};do 
                 # Extract namespace and name
