@@ -1,0 +1,1 @@
+This cronjob is a fix for MUO promotion to the version v0.1.1182-g7c27f16
