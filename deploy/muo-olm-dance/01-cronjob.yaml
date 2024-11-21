@@ -31,13 +31,13 @@ spec:
               if [[ ! -z "$CSV_FOUND" ]]; then
                 # Take backup of the files to be recreated
                 oc -n "$NAMESPACE" get subscriptions.operators.coreos.com managed-upgrade-operator -oyaml > /tmp/01-managed-upgrade-operator-subs.yaml
-                oc -n "$NAMESPACE" get catalogsources.operators.coreos.com managed-upgrade-operator-registry -oyaml > /tmp/02-managed-upgrade-operator-registry.yaml
-                oc -n "$NAMESPACE" get operatorgroups.operators.coreos.com managed-upgrade-operator -oyaml > /tmp/03-managed-upgrade-operator-og.yaml
+                oc -n "$NAMESPACE" get catalogsources.operators.coreos.com managed-upgrade-operator-catalog -oyaml > /tmp/02-managed-upgrade-operator-registry.yaml
+                oc -n "$NAMESPACE" get operatorgroups.operators.coreos.com managed-upgrade-operator-og -oyaml > /tmp/03-managed-upgrade-operator-og.yaml
                 oc -n "$NAMESPACE" get clusterserviceversions.operators.coreos.com | grep managed-upgrade-operator | awk '{print $1}' | xargs oc delete clusterserviceversions.operators.coreos.com -n $NAMESPACE
                 oc -n "$NAMESPACE" delete installplan.operators.coreos.com -l operators.coreos.com/managed-upgrade-operator.openshift-managed-upgrade-operator=""
                 oc -n "$NAMESPACE" delete subscriptions.operators.coreos.com managed-upgrade-operator
-                oc -n "$NAMESPACE" delete catalogsources.operators.coreos.com managed-upgrade-operator-registry
-                oc -n "$NAMESPACE" delete operatorgroups.operators.coreos.com managed-upgrade-operator
+                oc -n "$NAMESPACE" delete catalogsources.operators.coreos.com managed-upgrade-operator-catalog
+                oc -n "$NAMESPACE" delete operatorgroups.operators.coreos.com managed-upgrade-operator-og
                 # Recreate the resources to re-install the operator
                 oc -n "$NAMESPACE" create -f /tmp/01-managed-upgrade-operator-subs.yaml
                 oc -n "$NAMESPACE" create -f /tmp/02-managed-upgrade-operator-registry.yaml
