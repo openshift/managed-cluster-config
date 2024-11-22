@@ -1,0 +1,17 @@
+deploymentMode: "SelectorSyncSet"
+selectorSyncSet:
+  matchExpressions:
+    # Exclusions
+    - key: api.openshift.com/limited-support
+      operator: NotIn
+      values: ["true"]
+    - key: api.openshift.com/fedramp
+      operator: NotIn
+      values: ["true"]
+    # Inclusions
+    - key: hive.openshift.io/version-major-minor
+      operator: In
+      values: ["4.16"]
+    # Only apply the SyncSet if this label has a value, thus kicking off the migration
+    - key: api.openshift.com/sdn-migration-start
+      operator: Exists

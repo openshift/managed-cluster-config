@@ -1,0 +1,20 @@
+apiVersion: operator.openshift.io/v1
+applyMode: AlwaysApply
+enableResourceTemplates: true
+kind: Network
+name: cluster
+patch: |-
+  {
+    "spec": {
+      "defaultNetwork": {
+        "ovnKubernetesConfig": {
+          "ipv4": {
+            "internalJoinSubnet": {{ fromCDLabel "api.openshift.com/sdn-migration-join-ipv4" }}, 
+            "internalMasqueradeSubnet": {{ fromCDLabel "api.openshift.com/sdn-migration-masquerade-ipv4" }},
+            "internalTransitSwitchSubnet": {{ fromCDLabel "api.openshift.com/sdn-migration-transit-ipv4" }}
+          }
+        }
+      }
+    }
+  }
+patchType: merge

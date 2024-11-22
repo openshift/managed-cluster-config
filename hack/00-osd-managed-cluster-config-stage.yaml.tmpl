@@ -33684,6 +33684,47 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: osd-sdn-to-ovn-migration
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/limited-support
+        operator: NotIn
+        values:
+        - 'true'
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.16'
+      - key: api.openshift.com/sdn-migration-start
+        operator: Exists
+    resourceApplyMode: Sync
+    patches:
+    - apiVersion: operator.openshift.io/v1
+      applyMode: AlwaysApply
+      enableResourceTemplates: true
+      kind: Network
+      name: cluster
+      patch: "{\n  \"spec\": {\n    \"defaultNetwork\": {\n      \"ovnKubernetesConfig\"\
+        : {\n        \"ipv4\": {\n          \"internalJoinSubnet\": {{ fromCDLabel\
+        \ \"api.openshift.com/sdn-migration-join-ipv4\" }}, \n          \"internalMasqueradeSubnet\"\
+        : {{ fromCDLabel \"api.openshift.com/sdn-migration-masquerade-ipv4\" }},\n\
+        \          \"internalTransitSwitchSubnet\": {{ fromCDLabel \"api.openshift.com/sdn-migration-transit-ipv4\"\
+        \ }}\n        }\n      }\n    }\n  }\n}"
+      patchType: merge
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: osd-serviceaccounts
   spec:
     clusterDeploymentSelector:
