@@ -1,0 +1,50 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: sre-operator-reinstall
+  namespace: openshift-route-monitor-operator
+spec:
+  ttlSecondsAfterFinished: 100
+  failedJobsHistoryLimit: 1
+  successfulJobsHistoryLimit: 3
+  concurrencyPolicy: Replace
+  schedule: "* * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: sre-operator-reinstall-sa
+          restartPolicy: Never
+          containers:
+          - name: operator-reinstaller
+            image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+            imagePullPolicy: Always
+            command:
+            - sh
+            - -c
+            - |
+              #!/bin/bash
+              set -euxo pipefail
+              NAMESPACE=openshift-route-monitor-operator
+              CSV_FOUND=$(oc -n "$NAMESPACE" get clusterserviceversions.operators.coreos.com -o name | grep route-monitor-operator) || true
+              if [[ ! -z "$CSV_FOUND" ]]; then
+                # Take backup of the files to be recreated
+                oc -n "$NAMESPACE" get subscriptions.operators.coreos.com route-monitor-operator -oyaml > /tmp/01-route-monitor-operator-subs.yaml
+                oc -n "$NAMESPACE" get catalogsources.operators.coreos.com route-monitor-operator-registry -oyaml > /tmp/02-route-monitor-operator-registry.yaml
+                oc -n "$NAMESPACE" get operatorgroups.operators.coreos.com route-monitor-operator -oyaml > /tmp/03-route-monitor-operator-og.yaml
+                oc -n "$NAMESPACE" get clusterserviceversions.operators.coreos.com | grep route-monitor-operator | awk '{print $1}' | xargs oc delete clusterserviceversions.operators.coreos.com -n $NAMESPACE
+                oc -n "$NAMESPACE" delete installplan.operators.coreos.com -l operators.coreos.com/route-monitor-operator.openshift-route-monitor-operator=""
+                oc -n "$NAMESPACE" delete subscriptions.operators.coreos.com route-monitor-operator
+                oc -n "$NAMESPACE" delete catalogsources.operators.coreos.com route-monitor-operator-registry
+                oc -n "$NAMESPACE" delete operatorgroups.operators.coreos.com route-monitor-operator
+                # Recreate the resources to re-install the operator
+                oc -n "$NAMESPACE" create -f /tmp/01-route-monitor-operator-subs.yaml
+                oc -n "$NAMESPACE" create -f /tmp/02-route-monitor-operator-registry.yaml
+                oc -n "$NAMESPACE" create -f /tmp/03-route-monitor-operator-og.yaml
+              fi
+              # Prevent the job from -rerunning
+              oc -n "$NAMESPACE" delete cronjob sre-operator-reinstall || true
+              oc -n "$NAMESPACE" delete serviceaccount sre-operator-reinstall-sa || true
+              oc -n "$NAMESPACE" delete rolebinding/sre-operator-reinstall-rb role/sre-operator-reinstall-role || true
+              exit 0
