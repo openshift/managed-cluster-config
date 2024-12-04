@@ -20,7 +20,7 @@ spec:
           # that the cluster is not rolling out in our expression (= hypershift_cluster_initial_rolling_out_duration_seconds does not exist)
           # hypershift_cluster_initial_rolling_out_duration_seconds stops being emitted once the cluster is rolled out
           expr: sum by (mc_name, _mc_id, sector, region, env, namespace, exported_namespace, source, _id) (last_over_time(hypershift_cluster_invalid_aws_creds[10m])) > 0 unless on (exported_namespace) hypershift_cluster_initial_rolling_out_duration_seconds unless on (exported_namespace) last_over_time(hypershift_cluster_deleting_duration_seconds[10m])
-          for: 10m
+          for: 4m # api-ErrorBudgetBurn is our highest SLA and triggers after 5 minutes of CrashLooping kube-apiserver pods. KAS pods can CrashLoop due to missing OIDC/invalid AWS permissions. To reduce self-resolving alerts, we need the limited support to be in place before the alert triggers.
           labels:
             severity: warning
             send_managed_notification: "true"
