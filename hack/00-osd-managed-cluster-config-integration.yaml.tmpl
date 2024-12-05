@@ -24907,12 +24907,11 @@ objects:
           name: oidc-deleted-notification
           summary: Cluster is in Limited Support due to unsupported cloud provider
             configuration
-          notificationMessage: 'Your cluster requires you to take action because Red
-            Hat is not able to access the infrastructure with the provided credentials.
-            Please restore the credentials and permissions provided during install.
-            If you have deleted the associated OpenIDConnectProvider, please recreate
-            it by executing the command: rosa create oidc-provider --mode manual --cluster
-            $CLUSTER'
+          notificationMessage: 'Your cluster requires action because Red Hat is either
+            unable to access the infrastructure with the provided credentials or the
+            credentials lack the necessary permissions to perform required actions.
+            Please restore the credentials and permissions configured during the installation.
+            For more details, refer to https://access.redhat.com/solutions/7098558 '
           resendWait: 0
           severity: Info
           limitedSupport: true
@@ -39956,7 +39955,7 @@ objects:
               source, _id) (last_over_time(hypershift_cluster_invalid_aws_creds[10m]))
               > 0 unless on (exported_namespace) hypershift_cluster_initial_rolling_out_duration_seconds
               unless on (exported_namespace) last_over_time(hypershift_cluster_deleting_duration_seconds[10m])
-            for: 10m
+            for: 4m
             labels:
               severity: warning
               send_managed_notification: 'true'
