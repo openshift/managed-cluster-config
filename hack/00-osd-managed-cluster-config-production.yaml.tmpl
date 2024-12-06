@@ -24871,6 +24871,144 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: ocm-12870
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: ext-hypershift.openshift.io/cluster-type
+        operator: In
+        values:
+        - management-cluster
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: sre-operator-reinstall-sa
+        namespace: openshift-adp-operator
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: sre-operator-reinstall-role
+        namespace: openshift-adp-operator
+      rules:
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - clusterserviceversions
+        - subscriptions
+        - installplans
+        - catalogsources
+        - operatorgroups
+        verbs:
+        - list
+        - get
+        - delete
+        - create
+      - apiGroups:
+        - batch
+        resources:
+        - cronjobs
+        verbs:
+        - list
+        - get
+        - delete
+      - apiGroups:
+        - ''
+        resources:
+        - serviceaccounts
+        verbs:
+        - list
+        - get
+        - delete
+      - apiGroups:
+        - rbac.authorization.k8s.io
+        resources:
+        - roles
+        - rolebindings
+        verbs:
+        - list
+        - get
+        - delete
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: sre-operator-reinstall-rb
+        namespace: openshift-adp-operator
+      roleRef:
+        kind: Role
+        name: sre-operator-reinstall-role
+        apiGroup: rbac.authorization.k8s.io
+        namespace: openshift-adp-operator
+      subjects:
+      - kind: ServiceAccount
+        name: sre-operator-reinstall-sa
+        namespace: openshift-adp-operator
+    - apiVersion: batch/v1
+      kind: CronJob
+      metadata:
+        name: sre-operator-reinstall
+        namespace: openshift-adp-operator
+      spec:
+        ttlSecondsAfterFinished: 100
+        failedJobsHistoryLimit: 1
+        successfulJobsHistoryLimit: 3
+        concurrencyPolicy: Replace
+        schedule: '* * * * *'
+        jobTemplate:
+          spec:
+            template:
+              spec:
+                serviceAccountName: sre-operator-reinstall-sa
+                restartPolicy: Never
+                containers:
+                - name: operator-reinstaller
+                  image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+                  imagePullPolicy: Always
+                  command:
+                  - sh
+                  - -c
+                  - "#!/bin/bash\nset -euxo pipefail\nNAMESPACE=openshift-adp-operator\n\
+                    \n# Check for the status OADP v1.3.4 version \n# (previous version:\
+                    \ ocm-agent-operator.v1.2.x). \n# If we it's not succeeded, do\
+                    \ OLM dance The resources will be re-created \n# with the latest\
+                    \ version\n\nCSV_PHASE=$(oc -n openshift-adp-operator get csv\
+                    \ oadp-operator.v1.3.4 -ojsonpath='{.status.phase}{\"\\n\"}')\
+                    \ || true\n# This does nothing if the expected CSV is not found.\n\
+                    echo \"CSV_PHASE is $CSV_PHASE\"\nif [[ -z ${CSV_PHASE} || ${CSV_PHASE}\
+                    \ != \"Succeeded\" ]]; then\n  # Take backup of the files to be\
+                    \ recreated (subscription, catalogsource and operatorgroup)\n\
+                    \  oc -n \"$NAMESPACE\" get subs redhat-oadp-operator -oyaml >\
+                    \ /tmp/01-subs.yaml\n  oc -n \"$NAMESPACE\" get og openshift-adp-operator\
+                    \ -oyaml > /tmp/03-og.yaml\n\n  # Delete bits\n  oc -n \"$NAMESPACE\"\
+                    \ delete clusterserviceversions.operators.coreos.com $(oc -n \"\
+                    $NAMESPACE\" get clusterserviceversions.operators.coreos.com -ojsonpath='{.items[?(@.spec.displayName==\"\
+                    \"OADP Operator\")\")].metadata.name}') || true\n  oc -n \"$NAMESPACE\"\
+                    \ delete installplan.operators.coreos.com -l operators.coreos.com/redhat-oadp-operator.openshift-adp-operator=\"\
+                    \"\n  oc -n \"$NAMESPACE\" delete subs redhat-oadp-operator\n\
+                    \  oc -n \"$NAMESPACE\" delete og openshift-adp-operator\n\n \
+                    \ # Recreate the resources to re-install the operator\n  oc -n\
+                    \ \"$NAMESPACE\" create -f /tmp/01-subs.yaml\n  oc -n \"$NAMESPACE\"\
+                    \ create -f /tmp/03-og.yaml\nelse\n  echo \"Skipping OLM dance\
+                    \ as OADP already successully installed with latest version or\
+                    \ expected version was not found.\"\nfi\n\n# Prevent the job from\
+                    \ -rerunning\noc -n \"$NAMESPACE\" delete cronjob sre-operator-reinstall\
+                    \ || true\noc -n \"$NAMESPACE\" delete serviceaccount sre-operator-reinstall-sa\
+                    \ || true\noc -n \"$NAMESPACE\" delete rolebinding/sre-operator-reinstall-rb\
+                    \ role/sre-operator-reinstall-role || true\nexit 0\n"
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: ocm-agent-operator-managedfleetnotifications
   spec:
     clusterDeploymentSelector:
