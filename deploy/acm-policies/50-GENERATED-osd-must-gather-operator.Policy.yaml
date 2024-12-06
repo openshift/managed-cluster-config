@@ -25,6 +25,127 @@ spec:
                       metadataComplianceType: musthave
                       objectDefinition:
                         apiVersion: v1
+                        kind: ServiceAccount
+                        metadata:
+                            name: sre-operator-reinstall-sa
+                            namespace: openshift-must-gather-operator
+                    - complianceType: mustonlyhave
+                      metadataComplianceType: musthave
+                      objectDefinition:
+                        apiVersion: rbac.authorization.k8s.io/v1
+                        kind: Role
+                        metadata:
+                            name: sre-operator-reinstall-role
+                            namespace: openshift-must-gather-operator
+                        rules:
+                            - apiGroups:
+                                - operators.coreos.com
+                              resources:
+                                - clusterserviceversions
+                                - subscriptions
+                                - installplans
+                              verbs:
+                                - list
+                                - get
+                                - delete
+                                - create
+                            - apiGroups:
+                                - batch
+                              resources:
+                                - cronjobs
+                              verbs:
+                                - list
+                                - get
+                                - delete
+                            - apiGroups:
+                                - ""
+                              resources:
+                                - serviceaccounts
+                              verbs:
+                                - list
+                                - get
+                                - delete
+                            - apiGroups:
+                                - rbac.authorization.k8s.io
+                              resources:
+                                - roles
+                                - rolebindings
+                              verbs:
+                                - list
+                                - get
+                                - delete
+                    - complianceType: mustonlyhave
+                      metadataComplianceType: musthave
+                      objectDefinition:
+                        apiVersion: rbac.authorization.k8s.io/v1
+                        kind: RoleBinding
+                        metadata:
+                            name: sre-operator-reinstall-rb
+                            namespace: openshift-must-gather-operator
+                        roleRef:
+                            apiGroup: rbac.authorization.k8s.io
+                            kind: Role
+                            name: sre-operator-reinstall-role
+                            namespace: openshift-must-gather-operator
+                        subjects:
+                            - kind: ServiceAccount
+                              name: sre-operator-reinstall-sa
+                              namespace: openshift-must-gather-operator
+                    - complianceType: mustonlyhave
+                      metadataComplianceType: musthave
+                      objectDefinition:
+                        apiVersion: batch/v1beta1
+                        kind: CronJob
+                        metadata:
+                            name: sre-operator-reinstall
+                            namespace: openshift-must-gather-operator
+                        spec:
+                            concurrencyPolicy: Replace
+                            failedJobsHistoryLimit: 1
+                            jobTemplate:
+                                spec:
+                                    template:
+                                        spec:
+                                            containers:
+                                                - command:
+                                                    - sh
+                                                    - -c
+                                                    - |-
+                                                      #!/bin/bash
+                                                      set -euxo pipefail
+                                                      NAMESPACE=openshift-must-gather-operator
+                                                      OPERATOR=must-gather-operator
+                                                      COUNT_CSV=$(oc -n "$NAMESPACE" get csv  | grep $OPERATOR | wc -l) || true
+                                                      if [[ $COUNT_CSV -ge 2 ]]; then
+                                                        # The OLM dance
+                                                        # delete all CSVs
+                                                        oc get csv -n $NAMESPACE | grep $OPERATOR | awk '{print $1}' | xargs oc delete csv -n $NAMESPACE
+                                                        # delete all installplans
+                                                        oc get installplans -n $NAMESPACE | grep $OPERATOR | awk '{print $1}' | xargs oc delete installplan -n $NAMESPACE
+                                                        # get subscription
+                                                        oc get subscription -n $NAMESPACE $OPERATOR -o json | jq 'del(.status) | del(.metadata.creationTimestamp) | del(.metadata.generation) | del(.metadata.resourceVersion) | del(.metadata.uid)' > /tmp/sub.json
+                                                        # delete subscription
+                                                        oc delete subscriptions -n $NAMESPACE $OPERATOR
+                                                        # create subscription using the following json
+                                                        oc create -f /tmp/sub.json
+                                                      fi
+                                                      oc -n "$NAMESPACE" delete cronjob sre-operator-reinstall || true
+                                                      oc -n "$NAMESPACE" delete role sre-operator-reinstall-role || true
+                                                      oc -n "$NAMESPACE" delete rolebinding sre-operator-reinstall-rb || true
+                                                      oc -n "$NAMESPACE" delete serviceaccount sre-operator-reinstall-sa || true
+                                                      exit 0
+                                                  image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+                                                  imagePullPolicy: Always
+                                                  name: operator-reinstaller
+                                            restartPolicy: Never
+                                            serviceAccountName: sre-operator-reinstall-sa
+                            schedule: '*/30 * * * *'
+                            successfulJobsHistoryLimit: 3
+                            ttlSecondsAfterFinished: 100
+                    - complianceType: mustonlyhave
+                      metadataComplianceType: musthave
+                      objectDefinition:
+                        apiVersion: v1
                         kind: Namespace
                         metadata:
                             annotations:
