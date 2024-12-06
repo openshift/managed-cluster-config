@@ -934,6 +934,26 @@ objects:
                     - list
                     - watch
                   - apiGroups:
+                    - monitoring.rhobs
+                    resources:
+                    - alertmanagerconfigs
+                    - alertmanagers
+                    - monitoringstacks
+                    - podmonitors
+                    - probes
+                    - prometheusagents
+                    - prometheuses
+                    - prometheusrules
+                    - scrapeconfigs
+                    - servicemonitors
+                    - thanosqueriers
+                    - thanosrulers
+                    - uiplugins
+                    verbs:
+                    - get
+                    - list
+                    - watch
+                  - apiGroups:
                     - config.openshift.io
                     resources:
                     - clusteroperators
@@ -1367,34 +1387,35 @@ objects:
                     namespace: rhacs-observability
                   rules:
                   - apiGroups:
-                    - monitoring.coreos.com
+                    - monitoring.rhobs
                     resources:
                     - alertmanagerconfigs
                     - alertmanagers
+                    - monitoringstacks
                     - podmonitors
                     - probes
+                    - prometheusagents
                     - prometheuses
                     - prometheusrules
+                    - scrapeconfigs
                     - servicemonitors
+                    - thanosqueriers
                     - thanosrulers
+                    - uiplugins
                     verbs:
                     - get
                     - list
                     - watch
                   - apiGroups:
-                    - observability.redhat.com
+                    - grafana.integreatly.org
                     resources:
-                    - observabilities
-                    verbs:
-                    - get
-                    - list
-                    - watch
-                  - apiGroups:
-                    - integreatly.org
-                    resources:
-                    - grafanas
-                    - grafanadatasources
+                    - grafanaalertrulegroups
+                    - grafanacontactpoints
                     - grafanadashboards
+                    - grafanadatasources
+                    - grafanafolders
+                    - grafananotificationpolicies
+                    - grafanas
                     verbs:
                     - get
                     - list
@@ -1423,6 +1444,49 @@ objects:
                     apiGroup: rbac.authorization.k8s.io
                     kind: Role
                     name: backplane-acs-rhacs-observability
+                  subjects:
+                  - apiGroup: rbac.authorization.k8s.io
+                    kind: Group
+                    name: system:serviceaccounts:openshift-backplane-addon-acs-fleet-shard
+              - complianceType: mustonlyhave
+                metadataComplianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: Role
+                  metadata:
+                    name: backplane-acs-openshift-gitops
+                    namespace: openshift-gitops
+                  rules:
+                  - apiGroups:
+                    - argoproj.io
+                    resources:
+                    - argocds
+                    - analysisruns
+                    - analysistemplates
+                    - applications
+                    - applicationsets
+                    - appprojects
+                    - clusteranalysistemplates
+                    - experiments
+                    - notificationsconfigurations
+                    - rolloutmanagers
+                    - rollouts
+                    verbs:
+                    - get
+                    - list
+                    - watch
+              - complianceType: mustonlyhave
+                metadataComplianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: RoleBinding
+                  metadata:
+                    name: backplane-acs-openshift-gitops
+                    namespace: openshift-gitops
+                  roleRef:
+                    apiGroup: rbac.authorization.k8s.io
+                    kind: Role
+                    name: backplane-acs-openshift-gitops
                   subjects:
                   - apiGroup: rbac.authorization.k8s.io
                     kind: Group
@@ -9247,6 +9311,26 @@ objects:
         - list
         - watch
       - apiGroups:
+        - monitoring.rhobs
+        resources:
+        - alertmanagerconfigs
+        - alertmanagers
+        - monitoringstacks
+        - podmonitors
+        - probes
+        - prometheusagents
+        - prometheuses
+        - prometheusrules
+        - scrapeconfigs
+        - servicemonitors
+        - thanosqueriers
+        - thanosrulers
+        - uiplugins
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
         - config.openshift.io
         resources:
         - clusteroperators
@@ -9673,34 +9757,35 @@ objects:
         namespace: rhacs-observability
       rules:
       - apiGroups:
-        - monitoring.coreos.com
+        - monitoring.rhobs
         resources:
         - alertmanagerconfigs
         - alertmanagers
+        - monitoringstacks
         - podmonitors
         - probes
+        - prometheusagents
         - prometheuses
         - prometheusrules
+        - scrapeconfigs
         - servicemonitors
+        - thanosqueriers
         - thanosrulers
+        - uiplugins
         verbs:
         - get
         - list
         - watch
       - apiGroups:
-        - observability.redhat.com
+        - grafana.integreatly.org
         resources:
-        - observabilities
-        verbs:
-        - get
-        - list
-        - watch
-      - apiGroups:
-        - integreatly.org
-        resources:
-        - grafanas
-        - grafanadatasources
+        - grafanaalertrulegroups
+        - grafanacontactpoints
         - grafanadashboards
+        - grafanadatasources
+        - grafanafolders
+        - grafananotificationpolicies
+        - grafanas
         verbs:
         - get
         - list
@@ -9730,6 +9815,43 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-acs-rhacs-observability
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: backplane-acs-openshift-gitops
+        namespace: openshift-gitops
+      rules:
+      - apiGroups:
+        - argoproj.io
+        resources:
+        - argocds
+        - analysisruns
+        - analysistemplates
+        - applications
+        - applicationsets
+        - appprojects
+        - clusteranalysistemplates
+        - experiments
+        - notificationsconfigurations
+        - rolloutmanagers
+        - rollouts
+        verbs:
+        - get
+        - list
+        - watch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: backplane-acs-openshift-gitops
+        namespace: openshift-gitops
+      subjects:
+      - apiGroup: rbac.authorization.k8s.io
+        kind: Group
+        name: system:serviceaccounts:openshift-backplane-addon-acs-fleet-shard
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: backplane-acs-openshift-gitops
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -10021,6 +10143,26 @@ objects:
         - list
         - watch
       - apiGroups:
+        - monitoring.rhobs
+        resources:
+        - alertmanagerconfigs
+        - alertmanagers
+        - monitoringstacks
+        - podmonitors
+        - probes
+        - prometheusagents
+        - prometheuses
+        - prometheusrules
+        - scrapeconfigs
+        - servicemonitors
+        - thanosqueriers
+        - thanosrulers
+        - uiplugins
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
         - config.openshift.io
         resources:
         - clusteroperators
@@ -10447,34 +10589,35 @@ objects:
         namespace: rhacs-observability
       rules:
       - apiGroups:
-        - monitoring.coreos.com
+        - monitoring.rhobs
         resources:
         - alertmanagerconfigs
         - alertmanagers
+        - monitoringstacks
         - podmonitors
         - probes
+        - prometheusagents
         - prometheuses
         - prometheusrules
+        - scrapeconfigs
         - servicemonitors
+        - thanosqueriers
         - thanosrulers
+        - uiplugins
         verbs:
         - get
         - list
         - watch
       - apiGroups:
-        - observability.redhat.com
+        - grafana.integreatly.org
         resources:
-        - observabilities
-        verbs:
-        - get
-        - list
-        - watch
-      - apiGroups:
-        - integreatly.org
-        resources:
-        - grafanas
-        - grafanadatasources
+        - grafanaalertrulegroups
+        - grafanacontactpoints
         - grafanadashboards
+        - grafanadatasources
+        - grafanafolders
+        - grafananotificationpolicies
+        - grafanas
         verbs:
         - get
         - list
@@ -10504,6 +10647,43 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-acs-rhacs-observability
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: backplane-acs-openshift-gitops
+        namespace: openshift-gitops
+      rules:
+      - apiGroups:
+        - argoproj.io
+        resources:
+        - argocds
+        - analysisruns
+        - analysistemplates
+        - applications
+        - applicationsets
+        - appprojects
+        - clusteranalysistemplates
+        - experiments
+        - notificationsconfigurations
+        - rolloutmanagers
+        - rollouts
+        verbs:
+        - get
+        - list
+        - watch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: backplane-acs-openshift-gitops
+        namespace: openshift-gitops
+      subjects:
+      - apiGroup: rbac.authorization.k8s.io
+        kind: Group
+        name: system:serviceaccounts:openshift-backplane-addon-acs-fleet-shard
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: backplane-acs-openshift-gitops
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -10795,6 +10975,26 @@ objects:
         - list
         - watch
       - apiGroups:
+        - monitoring.rhobs
+        resources:
+        - alertmanagerconfigs
+        - alertmanagers
+        - monitoringstacks
+        - podmonitors
+        - probes
+        - prometheusagents
+        - prometheuses
+        - prometheusrules
+        - scrapeconfigs
+        - servicemonitors
+        - thanosqueriers
+        - thanosrulers
+        - uiplugins
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
         - config.openshift.io
         resources:
         - clusteroperators
@@ -11221,34 +11421,35 @@ objects:
         namespace: rhacs-observability
       rules:
       - apiGroups:
-        - monitoring.coreos.com
+        - monitoring.rhobs
         resources:
         - alertmanagerconfigs
         - alertmanagers
+        - monitoringstacks
         - podmonitors
         - probes
+        - prometheusagents
         - prometheuses
         - prometheusrules
+        - scrapeconfigs
         - servicemonitors
+        - thanosqueriers
         - thanosrulers
+        - uiplugins
         verbs:
         - get
         - list
         - watch
       - apiGroups:
-        - observability.redhat.com
+        - grafana.integreatly.org
         resources:
-        - observabilities
-        verbs:
-        - get
-        - list
-        - watch
-      - apiGroups:
-        - integreatly.org
-        resources:
-        - grafanas
-        - grafanadatasources
+        - grafanaalertrulegroups
+        - grafanacontactpoints
         - grafanadashboards
+        - grafanadatasources
+        - grafanafolders
+        - grafananotificationpolicies
+        - grafanas
         verbs:
         - get
         - list
@@ -11278,6 +11479,43 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: backplane-acs-rhacs-observability
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: backplane-acs-openshift-gitops
+        namespace: openshift-gitops
+      rules:
+      - apiGroups:
+        - argoproj.io
+        resources:
+        - argocds
+        - analysisruns
+        - analysistemplates
+        - applications
+        - applicationsets
+        - appprojects
+        - clusteranalysistemplates
+        - experiments
+        - notificationsconfigurations
+        - rolloutmanagers
+        - rollouts
+        verbs:
+        - get
+        - list
+        - watch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: backplane-acs-openshift-gitops
+        namespace: openshift-gitops
+      subjects:
+      - apiGroup: rbac.authorization.k8s.io
+        kind: Group
+        name: system:serviceaccounts:openshift-backplane-addon-acs-fleet-shard
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: backplane-acs-openshift-gitops
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:

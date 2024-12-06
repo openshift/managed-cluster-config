@@ -1,0 +1,25 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: backplane-acs-openshift-gitops
+  namespace: openshift-gitops
+rules:
+# ACS SRE can view gitops resources
+- apiGroups:
+  - argoproj.io
+  resources:
+  - argocds
+  - analysisruns
+  - analysistemplates
+  - applications
+  - applicationsets
+  - appprojects
+  - clusteranalysistemplates
+  - experiments
+  - notificationsconfigurations
+  - rolloutmanagers
+  - rollouts
+  verbs:
+  - get
+  - list
+  - watch
