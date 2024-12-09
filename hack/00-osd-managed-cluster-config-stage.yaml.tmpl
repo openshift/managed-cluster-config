@@ -31135,7 +31135,7 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: osd-fedramp-machineconfig
+    name: osd-fedramp-machineconfig-chrony
   spec:
     clusterDeploymentSelector:
       matchLabels:
@@ -31145,6 +31145,72 @@ objects:
         operator: In
         values:
         - 'true'
+      - key: hive.openshift.io/version-major-minor
+        operator: NotIn
+        values:
+        - '4.11'
+        - '4.12'
+        - '4.13'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: machineconfiguration.openshift.io/v1
+      kind: MachineConfig
+      metadata:
+        labels:
+          machineconfiguration.openshift.io/role: master
+        name: 00-master-chrony
+      spec:
+        config:
+          ignition:
+            version: 3.4.0
+          storage:
+            files:
+            - contents:
+                compression: gzip
+                source: data:;base64,H4sIAAAAAAAC/yzLwYqDMBSF4X2e4sCsNSY6gsth9sMs+gJqbuylMZGbVOrbl4qrc+Dn+/q7/eM3Rc8Lqgo/zpFDijBWd9o2tlOZZCeB6Yfafnf1Z41tsQl5EvD0lFywctxSCOixjq/zDcoJ++I5EPQ+ig486fkuKR76LErKnI84q3V8UC60wTRoVUiLY7lIWi6i3gEAAP//aaLeYagAAAA=
+              mode: 420
+              overwrite: true
+              path: /etc/chrony.conf
+    - apiVersion: machineconfiguration.openshift.io/v1
+      kind: MachineConfig
+      metadata:
+        labels:
+          machineconfiguration.openshift.io/role: worker
+        name: 00-worker-chrony
+      spec:
+        config:
+          ignition:
+            version: 3.4.0
+          storage:
+            files:
+            - contents:
+                compression: gzip
+                source: data:;base64,H4sIAAAAAAAC/yzLwYqDMBSF4X2e4sCsNSY6gsth9sMs+gJqbuylMZGbVOrbl4qrc+Dn+/q7/eM3Rc8Lqgo/zpFDijBWd9o2tlOZZCeB6Yfafnf1Z41tsQl5EvD0lFywctxSCOixjq/zDcoJ++I5EPQ+ig486fkuKR76LErKnI84q3V8UC60wTRoVUiLY7lIWi6i3gEAAP//aaLeYagAAAA=
+              mode: 420
+              overwrite: true
+              path: /etc/chrony.conf
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-fedramp-machineconfig-chrony-pre-4.14
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/fedramp
+        operator: In
+        values:
+        - 'true'
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.12'
+        - '4.13'
     resourceApplyMode: Sync
     resources:
     - apiVersion: machineconfiguration.openshift.io/v1
