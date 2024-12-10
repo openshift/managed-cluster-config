@@ -1,0 +1,58 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: sre-cluster-version-operator
+    role: alert-rules
+  name: sre-cluster-version-operator
+  namespace: openshift-monitoring
+spec:
+  groups:
+    - name: oauthOperatorDegraded
+      rules:
+        - alert: OauthOperatorDegradedSRE
+          annotations:
+            summary: Oauth operator is degraded.
+            description: The Oauth operator and the components that utilize it may have
+              reduced quality of service.  Cluster upgrades may not complete.
+              For more information refer to 'oc get -o yaml clusteroperator oauth'{{ "{{ with $console_url :=
+              \"console_url\" | query }}{{ if ne (len (label \"url\" (first
+              $console_url ) ) ) 0}} or {{ label \"url\" (first $console_url )
+              }}/settings/cluster/{{ end }}{{ end }}" }}.
+          expr: >
+            max by (namespace, name, reason)
+
+            (
+              (
+                cluster_operator_conditions{job="cluster-version-operator", condition="Degraded", name = "oauth"}
+                or on (namespace, name)
+                group by (namespace, name) (cluster_operator_up{job="cluster-version-operator", name = "oauth"})
+              ) == 1
+            )
+          for: 20m
+          labels:
+            namespace: openshift-monitoring
+            severity: warning
+        - alert: OauthOperatorDegradedCriticalSRE
+          annotations:
+            summary: Oauth operator is degraded.
+            description: The Oauth operator and the components that utilize it may have
+              reduced quality of service.  Cluster upgrades may not complete.
+              For more information refer to 'oc get -o yaml clusteroperator oauth'.
+          expr: >
+            max by (namespace, name, reason)
+
+            (
+              (
+                cluster_operator_conditions{job="cluster-version-operator", condition="Degraded", name = "oauth"}
+                or on (namespace, name)
+                group by (namespace, name) (cluster_operator_up{job="cluster-version-operator", name = "oauth"})
+              ) == 1
+            )
+          for: 2h
+          labels:
+            namespace: openshift-monitoring
+            severity: critical
+            send_managed_notification: "true"
+            managed_notification_template: OauthOperatorDegraded
