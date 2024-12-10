@@ -1,0 +1,61 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: sre-operator-reinstall
+  namespace: openshift-adp-operator
+spec:
+  ttlSecondsAfterFinished: 100
+  failedJobsHistoryLimit: 1
+  successfulJobsHistoryLimit: 3
+  concurrencyPolicy: Replace
+  schedule: "* * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: sre-operator-reinstall-sa
+          restartPolicy: Never
+          containers:
+          - name: operator-reinstaller
+            image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+            imagePullPolicy: Always
+            command:
+            - sh
+            - -c
+            - |
+              #!/bin/bash
+              set -euxo pipefail
+              NAMESPACE=openshift-adp-operator
+
+              # Check for the status OADP v1.3.4 version 
+              # (previous version: ocm-agent-operator.v1.2.x). 
+              # If we it's not succeeded, do OLM dance The resources will be re-created 
+              # with the latest version
+
+              CSV_PHASE=$(oc -n openshift-adp-operator get csv oadp-operator.v1.3.4 -ojsonpath='{.status.phase}{"\n"}') || true
+              # This does nothing if the expected CSV is not found.
+              echo "CSV_PHASE is $CSV_PHASE"
+              if [[ -z ${CSV_PHASE} || ${CSV_PHASE} != "Succeeded" ]]; then
+                # Take backup of the files to be recreated (subscription, catalogsource and operatorgroup)
+                oc -n "$NAMESPACE" get subs redhat-oadp-operator -oyaml > /tmp/01-subs.yaml
+                oc -n "$NAMESPACE" get og openshift-adp-operator -oyaml > /tmp/03-og.yaml
+
+                # Delete bits
+                oc -n "$NAMESPACE" delete clusterserviceversions.operators.coreos.com $(oc -n "$NAMESPACE" get clusterserviceversions.operators.coreos.com -ojsonpath='{.items[?(@.spec.displayName==""OADP Operator")")].metadata.name}') || true
+                oc -n "$NAMESPACE" delete installplan.operators.coreos.com -l operators.coreos.com/redhat-oadp-operator.openshift-adp-operator=""
+                oc -n "$NAMESPACE" delete subs redhat-oadp-operator
+                oc -n "$NAMESPACE" delete og openshift-adp-operator
+
+                # Recreate the resources to re-install the operator
+                oc -n "$NAMESPACE" create -f /tmp/01-subs.yaml
+                oc -n "$NAMESPACE" create -f /tmp/03-og.yaml
+              else
+                echo "Skipping OLM dance as OADP already successully installed with latest version or expected version was not found."
+              fi
+
+              # Prevent the job from -rerunning
+              oc -n "$NAMESPACE" delete cronjob sre-operator-reinstall || true
+              oc -n "$NAMESPACE" delete serviceaccount sre-operator-reinstall-sa || true
+              oc -n "$NAMESPACE" delete rolebinding/sre-operator-reinstall-rb role/sre-operator-reinstall-role || true
+              exit 0
