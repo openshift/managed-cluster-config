@@ -27218,19 +27218,19 @@ objects:
       - kind: ServiceAccount
         name: sre-operator-reinstall-sa
         namespace: openshift-ocm-agent-operator
-    - apiVersion: batch/v1beta1
+    - apiVersion: batch/v1
       kind: CronJob
       metadata:
         name: sre-operator-reinstall
         namespace: openshift-ocm-agent-operator
       spec:
-        ttlSecondsAfterFinished: 100
         failedJobsHistoryLimit: 1
         successfulJobsHistoryLimit: 3
         concurrencyPolicy: Replace
         schedule: '*/30 * * * *'
         jobTemplate:
           spec:
+            ttlSecondsAfterFinished: 100
             template:
               spec:
                 serviceAccountName: sre-operator-reinstall-sa
