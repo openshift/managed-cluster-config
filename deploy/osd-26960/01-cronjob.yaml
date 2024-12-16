@@ -31,11 +31,10 @@ spec:
 
                   # Path for temporary subscription JSON backup
                   SUB_JSON_PATH="/tmp/sub.json"
-    
-                  # The OLM dance
 
+                  # The OLM dance
                   # Delete CSVs if they exist
-                  CSV_LIST=$(oc get clusterserviceversions.operators.coreos.com -n "$NAMESPACE" | grep "$OPERATOR" || true | awk '{print $1}')
+                  CSV_LIST=$(oc get clusterserviceversions.operators.coreos.com -n "$NAMESPACE" --no-headers | grep "$OPERATOR" | awk '{print $1}' || echo "")
                   if [[ -n "$CSV_LIST" ]]; then
                     echo "Deleting CSVs for operator $OPERATOR in namespace $NAMESPACE..."
                     echo "$CSV_LIST" | xargs -r -I {} oc delete clusterserviceversions.operators.coreos.com -n "$NAMESPACE" {}
@@ -44,7 +43,7 @@ spec:
                   fi
 
                   # Delete InstallPlans if they exist
-                  INSTALLPLAN_LIST=$(oc get installplans.operators.coreos.com -n "$NAMESPACE" | grep "$OPERATOR" || true | awk '{print $1}')
+                  INSTALLPLAN_LIST=$(oc get installplans.operators.coreos.com -n "$NAMESPACE" --no-headers | grep "$OPERATOR" | awk '{print $1}' || echo "")
                   if [[ -n "$INSTALLPLAN_LIST" ]]; then
                     echo "Deleting InstallPlans for operator $OPERATOR in namespace $NAMESPACE..."
                     echo "$INSTALLPLAN_LIST" | xargs -r -I {} oc delete installplans.operators.coreos.com -n "$NAMESPACE" {}
@@ -64,6 +63,7 @@ spec:
                     echo "No subscription found for operator $OPERATOR in namespace $NAMESPACE. Skipping re-creation."
                   fi
 
+                  # Clean up associated resources
                   oc -n "$NAMESPACE" delete cronjob.batch sre-operator-reinstall || true
                   oc -n "$NAMESPACE" delete roles.authorization.openshift.io sre-operator-reinstall-role || true
                   oc -n "$NAMESPACE" delete rolebindings.authorization.openshift.io sre-operator-reinstall-rb || true
