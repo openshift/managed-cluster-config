@@ -1,0 +1,46 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: sre-operator-reinstall
+  namespace: openshift-must-gather-operator
+spec:
+  failedJobsHistoryLimit: 1
+  successfulJobsHistoryLimit: 3
+  concurrencyPolicy: Replace
+  schedule: "*/30 * * * *"
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: 100
+      template:
+        spec:
+          serviceAccountName: sre-operator-reinstall-sa
+          restartPolicy: Never
+          containers:
+          - name: operator-reinstaller
+            image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+            imagePullPolicy: Always
+            command:
+            - sh
+            - -c
+            - |
+              #!/bin/bash
+              set -euxo pipefail
+              NAMESPACE=openshift-must-gather-operator
+              OPERATOR=must-gather-operator
+
+              CSV_FOUND=$(oc -n "$NAMESPACE" get clusterserviceversions.operators.coreos.com -o name | grep "$OPERATOR") || true
+              if [[ ! -z "$CSV_FOUND" ]]; then
+                # The OLM dance
+                # delete all CSVs
+                oc get csv -n $NAMESPACE | grep $OPERATOR | awk '{print $1}' | xargs oc delete csv -n $NAMESPACE
+                # delete all installplans
+                oc get installplans -n $NAMESPACE | grep $OPERATOR | awk '{print $1}' | xargs oc delete installplan -n $NAMESPACE
+                # delete subscription
+                oc delete subscriptions.operators.coreos.com -n $NAMESPACE $OPERATOR
+              fi
+              oc -n "$NAMESPACE" delete cronjob sre-operator-reinstall || true
+              oc -n "$NAMESPACE" delete role sre-operator-reinstall-role || true
+              oc -n "$NAMESPACE" delete rolebinding sre-operator-reinstall-rb || true
+              oc -n "$NAMESPACE" delete serviceaccount sre-operator-reinstall-sa || true
+              exit 0
