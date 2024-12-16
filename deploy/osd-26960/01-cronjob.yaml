@@ -1,0 +1,50 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: sre-operator-reinstall
+  namespace: openshift-ocm-agent-operator
+spec:
+  failedJobsHistoryLimit: 1
+  successfulJobsHistoryLimit: 3
+  concurrencyPolicy: Replace
+  schedule: "*/30 * * * *"
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: 100
+      template:
+        spec:
+          serviceAccountName: sre-operator-reinstall-sa
+          restartPolicy: Never
+          containers:
+            - name: operator-reinstaller
+              image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+              imagePullPolicy: Always
+              command:
+                - sh
+                - -c
+                - |
+                  #!/bin/bash
+                  set -euxo pipefail
+                  NAMESPACE=openshift-ocm-agent-operator
+                  OPERATOR=ocm-agent-operator
+    
+                  CSV_FOUND=$(oc -n "$NAMESPACE" get clusterserviceversions.operators.coreos.com -o name | grep "$OPERATOR") || true
+                  if [[ ! -z "$CSV_FOUND" ]]; then
+                    # The OLM dance
+                    # delete all CSVs
+                    oc get csv -n $NAMESPACE | grep $OPERATOR | awk '{print $1}' | xargs oc delete csv -n $NAMESPACE
+                    # delete all installplans
+                    oc get installplans -n $NAMESPACE | grep $OPERATOR | awk '{print $1}' | xargs oc delete installplan -n $NAMESPACE
+                    # get subscription
+                    oc get subscription -n $NAMESPACE $OPERATOR -o json | jq 'del(.status) | del(.metadata.creationTimestamp) | del(.metadata.generation) | del(.metadata.resourceVersion) | del(.metadata.uid)' > /tmp/sub.json
+                    # delete subscription
+                    oc delete subscriptions -n $NAMESPACE $OPERATOR
+                    # create subscription using the following json
+                    oc create -f /tmp/sub.json
+                    fi
+                    oc -n "$NAMESPACE" delete cronjob sre-operator-reinstall || true
+                    oc -n "$NAMESPACE" delete role sre-operator-reinstall-role || true
+                    oc -n "$NAMESPACE" delete rolebinding sre-operator-reinstall-rb || true
+                    oc -n "$NAMESPACE" delete serviceaccount sre-operator-reinstall-sa || true
+                  exit 0
