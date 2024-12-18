@@ -39479,9 +39479,9 @@ objects:
               description: '{{$value}} replicas are not running out of total required
                 replicas for the Dynatrace Webhook'
               SOP: https://github.com/openshift/ops-sop/blob/master/dynatrace/alerts/DynatraceWebhookDegradedSRE.md
-          - alert: DynatraceOpenTelemetryCollectorDegradedSRE
+          - alert: DynatraceOpenTelemetryCollectorDownSRE
             expr: kube_deployment_status_replicas_unavailable{namespace="dynatrace",
-              deployment="custom-opentelemetry-dynatrace-collector"}  > 0
+              deployment="opentelemetry-dynatrace-collector"}  > 0
             for: 5m
             labels:
               namespace: dynatrace
@@ -39490,7 +39490,7 @@ objects:
               summary: Dynatrace OTEL Collector is Degraded
               description: '{{$value}} replicas are not running out of total required
                 replicas for the OpenTelemetry Dynatrace Collector'
-              SOP: https://github.com/openshift/ops-sop/blob/master/dynatrace/alerts/DynatraceOpenTelemetryCollectorDegradedSRE.md
+              SOP: https://github.com/openshift/ops-sop/blob/master/dynatrace/alerts/DynatraceOpenTelemetryCollectorDownSRE.md
           - alert: DynatracePodRestartsStuckSRE
             expr: kube_pod_container_status_restarts_total{namespace="dynatrace"}
               > 0 and increase(kube_pod_container_status_restarts_total{namespace="dynatrace"}[15m])
