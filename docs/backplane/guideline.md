@@ -96,3 +96,9 @@ Note to be in this list the `Secret` must not contain any secret data (see [Defi
 | Persona | Namespace | Secret | Reason |
 | --- | --- | --- | --- |
 | SREP | openshift-monitoring | alertmanager-main | Platform SRE have access to the PagerDuty API and DMS Webhook from other systems. The ability to review the configuration of alertmanager is important for SRE to understand how monitoring has been configured and if there are issues with the routing of alerts. |
+
+# Deployment
+
+When updating existing roles, this section will most likely not apply.
+
+When creating new roles for HCP backplane, you will potentially need to manually update the `scripts/generate-policy-config.py` and `scripts/generate-subjectpermissions-policy-config.py` files to add the directory names in order to have the policies built for those roles.
