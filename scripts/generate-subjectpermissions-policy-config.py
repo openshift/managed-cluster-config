@@ -15,6 +15,7 @@ directories = [
         'backplane/cse',
         'backplane/csm',
         'backplane/lpsre',
+        'backplane/mcs-tier-two',
         'backplane/mobb',
         'backplane/srep',
         'backplane/tam',
