@@ -105,3 +105,9 @@ spec:
       references:
         - "https://docs.openshift.com/rosa/rosa_cluster_admin/rosa_nodes/rosa-managing-worker-nodes.html"
         - "https://docs.openshift.com/rosa/observability/monitoring/configuring-the-monitoring-stack.html"
+    - activeBody: |-
+        Your cluster requires your attention because a webhook that you have installed is negatively impacting successful API requests on your cluster. The ${type} webhook named ${webhook_name} is taking more than ${duration_threshold} on ${operation} operations. Check '${service_name}' service in '${service_namespace}' namespace; this is the service targeted by the webhook or, if not applicable, check the service behind the URL set in the webhook config. Without action, your cluster's SLA may be impacted, along with your ability to upgrade. For more information, review the documentation: https://docs.openshift.com/rosa/architecture/admission-plug-ins.html.
+      name: SlowCustomerWebhook
+      resendWait: 2
+      severity: Major
+      summary: "Action required: ${webhook_name} webhook slow to process ${operation} operations"
