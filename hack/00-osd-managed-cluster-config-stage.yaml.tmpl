@@ -26005,6 +26005,20 @@ objects:
           references:
           - https://docs.openshift.com/rosa/rosa_cluster_admin/rosa_nodes/rosa-managing-worker-nodes.html
           - https://docs.openshift.com/rosa/observability/monitoring/configuring-the-monitoring-stack.html
+        - activeBody: 'Your cluster requires your attention because a webhook that
+            you have installed is negatively impacting successful API requests on
+            your cluster. The ${type} webhook named ${webhook_name} is taking more
+            than ${duration_threshold} on ${operation} operations. Check ''${service_name}''
+            service in ''${service_namespace}'' namespace; this is the service targeted
+            by the webhook or, if not applicable, check the service behind the URL
+            set in the webhook config. Without action, your cluster''s SLA may be
+            impacted, along with your ability to upgrade. For more information, review
+            the documentation: https://docs.openshift.com/rosa/architecture/admission-plug-ins.html.'
+          name: SlowCustomerWebhook
+          resendWait: 2
+          severity: Major
+          summary: 'Action required: ${webhook_name} webhook slow to process ${operation}
+            operations'
     - apiVersion: ocmagent.managed.openshift.io/v1alpha1
       kind: ManagedNotification
       metadata:
@@ -40517,6 +40531,36 @@ objects:
         api.openshift.com/managed: 'true'
     resourceApplyMode: Sync
     resources:
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
+          prometheus: sre-managed-notification-alerts-for-customer-webhooks
+          role: alert-rules
+        name: sre-managed-notification-alerts-for-customer-webhooks
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: customer-webhooks
+          rules:
+          - alert: SlowCustomerWebhookSRE
+            expr: "(\n  label_replace(\n    label_replace(\n      increase(apiserver_admission_webhook_admission_duration_seconds_sum[5m])\
+              \ /\n        increase(apiserver_admission_webhook_admission_duration_seconds_count[5m]),\n\
+              \    \"type\", \"mutating\", \"type\", \"admit\"),\n  \"webhook_name\"\
+              , \"$0\", \"name\", \".*\")\n) * on(webhook_name) group_left(service_namespace,\
+              \ service_name) (\n  kube_validatingwebhookconfiguration_webhook_clientconfig_service{service_namespace\
+              \ !~ \"openshift-.*\"} or\n  kube_mutatingwebhookconfiguration_webhook_clientconfig_service{service_namespace\
+              \ !~ \"openshift-.*\"}\n) > 1"
+            for: 15m
+            labels:
+              severity: warning
+              namespace: openshift-monitoring
+              send_managed_notification: 'true'
+              managed_notification_template: SlowCustomerWebhook
+              duration_threshold: 1 second
+            annotations:
+              message: '{{ labels.webhook_name }} webhook is slow on {{ labels.operation
+                }} operations'
     - apiVersion: monitoring.coreos.com/v1
       kind: PrometheusRule
       metadata:
