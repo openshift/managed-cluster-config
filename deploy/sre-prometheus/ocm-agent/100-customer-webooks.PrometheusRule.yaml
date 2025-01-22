@@ -13,12 +13,14 @@ spec:
     - alert: SlowCustomerWebhookSRE
       expr: |-
         (
-          label_replace(
+          max by (webhook_name, operation, type) (
             label_replace(
-              increase(apiserver_admission_webhook_admission_duration_seconds_sum[5m]) /
-                increase(apiserver_admission_webhook_admission_duration_seconds_count[5m]),
-            "type", "mutating", "type", "admit"),
-          "webhook_name", "$0", "name", ".*")
+              label_replace(
+                increase(apiserver_admission_webhook_admission_duration_seconds_sum[5m]) /
+                  increase(apiserver_admission_webhook_admission_duration_seconds_count[5m]),
+              "type", "mutating", "type", "admit"),
+            "webhook_name", "$0", "name", ".*")
+          )
         ) * on(webhook_name) group_left(service_namespace, service_name) (
           kube_validatingwebhookconfiguration_webhook_clientconfig_service{service_namespace !~ "openshift-.*"} or on(webhook_name)
           kube_mutatingwebhookconfiguration_webhook_clientconfig_service{service_namespace !~ "openshift-.*"}
