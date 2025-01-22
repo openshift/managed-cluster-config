@@ -20,15 +20,14 @@ spec:
             "type", "mutating", "type", "admit"),
           "webhook_name", "$0", "name", ".*")
         ) * on(webhook_name) group_left(service_namespace, service_name) (
-          kube_validatingwebhookconfiguration_webhook_clientconfig_service{service_namespace !~ "openshift-.*"} or
+          kube_validatingwebhookconfiguration_webhook_clientconfig_service{service_namespace !~ "openshift-.*"} or on(webhook_name)
           kube_mutatingwebhookconfiguration_webhook_clientconfig_service{service_namespace !~ "openshift-.*"}
         ) > 1
       for: 15m
       labels:
         severity: warning
-        namespace: openshift-monitoring
         send_managed_notification: "true"
         managed_notification_template: "SlowCustomerWebhook"
         duration_threshold: "1 second"
       annotations:
-        message: "{{ labels.webhook_name }} webhook is slow on {{ labels.operation }} operations"
+        message: "{{ $labels.webhook_name }} webhook is slow on {{ $labels.operation }} operations"

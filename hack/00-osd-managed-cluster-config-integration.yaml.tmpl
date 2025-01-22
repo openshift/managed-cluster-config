@@ -40549,17 +40549,16 @@ objects:
               \    \"type\", \"mutating\", \"type\", \"admit\"),\n  \"webhook_name\"\
               , \"$0\", \"name\", \".*\")\n) * on(webhook_name) group_left(service_namespace,\
               \ service_name) (\n  kube_validatingwebhookconfiguration_webhook_clientconfig_service{service_namespace\
-              \ !~ \"openshift-.*\"} or\n  kube_mutatingwebhookconfiguration_webhook_clientconfig_service{service_namespace\
+              \ !~ \"openshift-.*\"} or on(webhook_name)\n  kube_mutatingwebhookconfiguration_webhook_clientconfig_service{service_namespace\
               \ !~ \"openshift-.*\"}\n) > 1"
             for: 15m
             labels:
               severity: warning
-              namespace: openshift-monitoring
               send_managed_notification: 'true'
               managed_notification_template: SlowCustomerWebhook
               duration_threshold: 1 second
             annotations:
-              message: '{{ labels.webhook_name }} webhook is slow on {{ labels.operation
+              message: '{{ $labels.webhook_name }} webhook is slow on {{ $labels.operation
                 }} operations'
     - apiVersion: monitoring.coreos.com/v1
       kind: PrometheusRule
