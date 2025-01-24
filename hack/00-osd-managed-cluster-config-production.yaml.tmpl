@@ -26759,6 +26759,262 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: network-observability-operator-hypershift-mc
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/id
+        operator: In
+        values:
+        - 2f1jfel0o7h687v2ellmepa1tbsgf7mq
+      - key: api.openshift.com/environment
+        operator: In
+        values:
+        - staging
+      - key: ext-hypershift.openshift.io/cluster-type
+        operator: In
+        values:
+        - management-cluster
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: Namespace
+      metadata:
+        labels:
+          hypershift.openshift.io/monitoring: 'true'
+        name: netobserv
+    - apiVersion: operators.coreos.com/v1alpha1
+      kind: Subscription
+      metadata:
+        name: netobserv-operator
+      spec:
+        channel: stable
+        installPlanApproval: Automatic
+        name: netobserv-operator
+        source: redhat-operators
+        sourceNamespace: openshift-marketplace
+    - apiVersion: networking.k8s.io/v1
+      kind: NetworkPolicy
+      metadata:
+        name: allow-from-hostnetwork
+      spec:
+        ingress:
+        - from:
+          - namespaceSelector:
+              matchLabels:
+                policy-group.network.openshift.io/host-network: ''
+        podSelector: {}
+        policyTypes:
+        - Ingress
+    - kind: NetworkPolicy
+      apiVersion: networking.k8s.io/v1
+      metadata:
+        name: allow-from-netobserv-privileged-namespace
+      spec:
+        ingress:
+        - from:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: netobserv-privileged
+        podSelector: {}
+        policyTypes:
+        - Ingress
+    - kind: NetworkPolicy
+      apiVersion: networking.k8s.io/v1
+      metadata:
+        name: allow-from-openshift-console-namespace
+      spec:
+        ingress:
+        - from:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: openshift-console
+        podSelector: {}
+        policyTypes:
+        - Ingress
+    - kind: NetworkPolicy
+      apiVersion: networking.k8s.io/v1
+      metadata:
+        name: allow-from-openshift-monitoring-namespace
+      spec:
+        ingress:
+        - from:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: openshift-monitoring
+        podSelector: {}
+        policyTypes:
+        - Ingress
+    - apiVersion: flows.netobserv.io/v1beta2
+      kind: FlowCollector
+      metadata:
+        name: cluster
+      spec:
+        agent:
+          ebpf:
+            logLevel: info
+            metrics:
+              server:
+                tls:
+                  insecureSkipVerify: false
+                  type: Disabled
+                port: 9400
+            cacheMaxFlows: 100000
+            resources:
+              limits:
+                memory: 1Gi
+              requests:
+                cpu: 50m
+                memory: 100Mi
+            sampling: 50
+            imagePullPolicy: IfNotPresent
+            excludeInterfaces:
+            - lo
+            kafkaBatchSize: 10485760
+            cacheActiveTimeout: 5s
+            interfaces: []
+            features:
+            - PacketDrop
+            - DNSTracking
+            - FlowRTT
+            privileged: true
+          ipfix:
+            cacheActiveTimeout: 20s
+            cacheMaxFlows: 400
+            clusterNetworkOperator:
+              namespace: openshift-network-operator
+            forceSampleAll: false
+            ovnKubernetes:
+              containerName: ovnkube-node
+              daemonSetName: ovnkube-node
+              namespace: ovn-kubernetes
+            sampling: 400
+          type: eBPF
+        consolePlugin:
+          logLevel: info
+          advanced:
+            port: 9001
+            register: true
+          enable: false
+          resources:
+            limits:
+              memory: 100Mi
+            requests:
+              cpu: 10m
+              memory: 50Mi
+          portNaming:
+            enable: true
+            portNames:
+              '3100': loki
+          quickFilters:
+          - default: true
+            filter:
+              flow_layer: '"app"'
+            name: Applications
+          - filter:
+              flow_layer: '"infra"'
+            name: Infrastructure
+          - default: true
+            filter:
+              dst_kind: '"Pod"'
+              src_kind: '"Pod"'
+            name: Pods network
+          - filter:
+              dst_kind: '"Service"'
+            name: Services network
+          imagePullPolicy: IfNotPresent
+          autoscaler:
+            maxReplicas: 3
+            metrics:
+            - resource:
+                target:
+                  averageUtilization: 50
+                  type: Utilization
+                name: cpu
+              type: Resource
+            minReplicas: 1
+            status: Disabled
+          replicas: 3
+        deploymentModel: Direct
+        exporters: []
+        loki:
+          enable: false
+        processor:
+          logLevel: info
+          advanced:
+            port: 2055
+            conversationTerminatingTimeout: 5s
+            conversationEndTimeout: 10s
+            profilePort: 6060
+            enableKubeProbes: true
+            healthPort: 8080
+            dropUnusedFields: true
+            conversationHeartbeatInterval: 30s
+          metrics:
+            disableAlerts: []
+            server:
+              tls:
+                insecureSkipVerify: false
+                type: Disabled
+              port: 9401
+          resources:
+            limits:
+              memory: 1Gi
+            requests:
+              cpu: 50m
+              memory: 100Mi
+          multiClusterDeployment: false
+          kafkaConsumerQueueCapacity: 1000
+          imagePullPolicy: IfNotPresent
+          kafkaConsumerAutoscaler:
+            maxReplicas: 3
+            status: Disabled
+          logTypes: Flows
+          kafkaConsumerReplicas: 3
+          kafkaConsumerBatchSize: 10485760
+          addZone: false
+        prometheus:
+          querier:
+            manual:
+              tls:
+                enable: false
+                insecureSkipVerify: false
+              url: http://prometheus:9090
+            mode: Auto
+            timeout: 30s
+            enable: true
+        namespace: netobserv
+    - apiVersion: monitoring.rhobs/v1
+      kind: ServiceMonitor
+      metadata:
+        name: netobserv-metrics-monitor-dynatrace
+        namespace: netobserv
+      spec:
+        endpoints:
+        - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+          interval: 30s
+          path: /metrics
+          port: https
+          scheme: https
+          tlsConfig:
+            caFile: /etc/prometheus/certs/configmap_openshift-monitoring_serving-certs-ca-bundle_service-ca.crt
+            serverName: netobserv-metrics-service.netobserv.svc
+        selector:
+          matchLabels:
+            control-plane: controller-manager
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: ocm-agent-operator-managedfleetnotifications
   spec:
     clusterDeploymentSelector:
