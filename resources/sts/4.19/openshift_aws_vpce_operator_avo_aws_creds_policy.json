@@ -1,0 +1,55 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ec2:CreateTags",
+        "ec2:DeleteTags",
+        "ec2:DescribeTags",
+        "ec2:DescribeSubnets",
+        "ec2:CreateSecurityGroup",
+        "ec2:DeleteSecurityGroup",
+        "ec2:DescribeSecurityGroups",
+        "ec2:AuthorizeSecurityGroupIngress",
+        "ec2:AuthorizeSecurityGroupEgress",
+        "ec2:DescribeSecurityGroupRules",
+        "ec2:CreateVpcEndpoint",
+        "ec2:DeleteVpcEndpoints",
+        "ec2:DescribeVpcEndpoints",
+        "ec2:DescribeVpcs",
+        "ec2:ModifyVpcEndpoint",
+        "ec2:DescribeVpcEndpointServices",
+        "route53:ListHostedZonesByVPC",
+        "route53:ListTagsForResource",
+        "route53:GetHostedZone",
+        "route53:CreateHostedZone",
+        "route53:DeleteHostedZone",
+        "route53:ChangeTagsForResource",
+        "route53:ChangeResourceRecordSets",
+        "route53:ListHostedZonesByName",
+        "route53:ListResourceRecordSets"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "Route53ManageRecords",
+      "Effect": "Allow",
+      "Action": [
+          "route53:ChangeResourceRecordSets"
+      ],
+      "Resource": "*",
+      "Condition": {
+          "ForAllValues:StringLike": {
+              "route53:ChangeResourceRecordSetsNormalizedRecordNames": [
+                  "*.openshiftapps.com",
+                  "*.devshift.org",
+                  "*.hypershift.local",
+                  "*.openshiftusgov.com",
+                  "*.devshiftusgov.com"
+              ]
+          }
+      }
+    }
+  ]
+}
