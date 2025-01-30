@@ -27,5 +27,9 @@ spec:
                   #!/bin/bash
                   set -euxo pipefail
                   NAMESPACE=openshift-observability-operator
-                  oc -n "$NAMESPACE" get clusterserviceversions.operators.coreos.com | grep "^observability-operator" | awk '{print $1}' | xargs oc delete clusterserviceversions.operators.coreos.com -n $NAMESPACE
+                  CSV_FOUND=$(oc -n "$NAMESPACE" get clusterserviceversions.operators.coreos.com | grep "^observability-operator") || true
+                  if [[ ! -z "$CSV_FOUND" ]]
+                  then
+                    echo $CSV_FOUND | awk '{print $1}' | xargs oc delete clusterserviceversions.operators.coreos.com -n $NAMESPACE
+                  fi
                   exit 0
