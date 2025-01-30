@@ -26866,17 +26866,12 @@ objects:
                   command:
                   - sh
                   - -c
-                  - '#!/bin/bash
-
-                    set -euxo pipefail
-
-                    NAMESPACE=openshift-observability-operator
-
-                    oc -n "$NAMESPACE" get clusterserviceversions.operators.coreos.com
-                    | grep "^observability-operator" | awk ''{print $1}'' | xargs
-                    oc delete clusterserviceversions.operators.coreos.com -n $NAMESPACE
-
-                    exit 0'
+                  - "#!/bin/bash\nset -euxo pipefail\nNAMESPACE=openshift-observability-operator\n\
+                    CSV_FOUND=$(oc -n \"$NAMESPACE\" get clusterserviceversions.operators.coreos.com\
+                    \ | grep \"^observability-operator\") || true\nif [[ ! -z \"$CSV_FOUND\"\
+                    \ ]]\nthen\n  echo $CSV_FOUND | awk '{print $1}' | xargs oc delete\
+                    \ clusterserviceversions.operators.coreos.com -n $NAMESPACE\n\
+                    fi\nexit 0"
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
