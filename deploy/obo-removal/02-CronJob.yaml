@@ -1,0 +1,31 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: sre-obo-uninstall
+  namespace: openshift-observability-operator
+spec:
+  ttlSecondsAfterFinished: 100
+  failedJobsHistoryLimit: 1
+  successfulJobsHistoryLimit: 3
+  concurrencyPolicy: Replace
+  schedule: "* * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: sre-operator-reinstall-sa
+          restartPolicy: Never
+          containers:
+            - name: operator-reinstaller
+              image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+              imagePullPolicy: Always
+              command:
+                - sh
+                - -c
+                - |
+                  #!/bin/bash
+                  set -euxo pipefail
+                  NAMESPACE=openshift-observability-operator
+                  oc -n "$NAMESPACE" get clusterserviceversions.operators.coreos.com | grep "^observability-operator" | awk '{print $1}' | xargs oc delete clusterserviceversions.operators.coreos.com -n $NAMESPACE
+                  exit 0
