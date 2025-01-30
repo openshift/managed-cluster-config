@@ -26118,6 +26118,73 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: hypershift-obo-installation
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: ext-hypershift.openshift.io/cluster-type
+        operator: In
+        values:
+        - management-cluster
+        - service-cluster
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: operators.coreos.com/v1alpha1
+      kind: CatalogSource
+      metadata:
+        name: observability-operator-catalog
+        namespace: openshift-observability-operator
+      spec:
+        displayName: Red Hat Observability Operator
+        image: quay.io/rhobs/observability-operator-catalog@sha256:e648be80d3ec35fc128c7396d9c052bd1f615d5b4465e07497779398f2eab845
+        publisher: OSD Red Hat Addons
+        sourceType: grpc
+        grpcPodConfig:
+          securityContextConfig: restricted
+          nodeSelector:
+            node-role.kubernetes.io: infra
+          tolerations:
+          - effect: NoSchedule
+            key: node-role.kubernetes.io/infra
+            operator: Exists
+    - apiVersion: v1
+      kind: Namespace
+      metadata:
+        annotations:
+          openshift.io/node-selector: ''
+        name: openshift-observability-operator
+    - apiVersion: operators.coreos.com/v1alpha2
+      kind: OperatorGroup
+      metadata:
+        name: observability-operator-og
+        namespace: openshift-observability-operator
+    - apiVersion: operators.coreos.com/v1alpha1
+      kind: Subscription
+      metadata:
+        name: observability-operator
+        namespace: openshift-observability-operator
+      spec:
+        channel: stable
+        name: observability-operator
+        source: observability-operator-catalog
+        sourceNamespace: openshift-observability-operator
+        config:
+          resources:
+            limits:
+              cpu: 200m
+              memory: 3072Mi
+            requests:
+              cpu: 100m
+              memory: 1024Mi
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: hypershift-obo-nodeselector-tolerations
   spec:
     clusterDeploymentSelector:
