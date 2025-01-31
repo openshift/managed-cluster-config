@@ -323,6 +323,26 @@
             }
         },
         {
+            "Sid": "DeleteTagsK8sSubnet",
+            "Effect": "Allow",
+            "Action": [
+                "ec2:DeleteTags"
+            ],
+            "Resource": [
+                "arn:aws:ec2:*:*:subnet/*"
+            ],
+            "Condition": {
+                "Null": {
+                    "aws:TagKeys": "false"
+                },
+                "ForAllValues:StringLike": {
+                    "aws:TagKeys": [
+                        "kubernetes.io/cluster/*"
+                    ]
+                }
+            }
+        },
+        {
             "Sid": "ListPoliciesAttachedToRoles",
             "Effect": "Allow",
             "Action": [
