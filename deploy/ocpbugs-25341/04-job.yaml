@@ -7,8 +7,12 @@ metadata:
 spec:
   ttlSecondsAfterFinish: 100
   template:
+    metadata:
+      annotations:
+          openshift.io/required-scc: restricted-v2
     spec:
       serviceAccountName: "sre-replace-packageserver-csv"
+      priorityClassName: openshift-user-critical
       restartPolicy: Never
       containers:
       - name: delete-csv
@@ -21,3 +25,7 @@ spec:
           #!/bin/sh
           set -euxo pipefail
           oc -n openshift-operator-lifecycle-manager delete csv packageserver
+        resources:
+          requests:
+            cpu: 100m
+            memory: 100Mi
