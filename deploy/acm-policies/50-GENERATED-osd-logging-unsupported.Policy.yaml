@@ -25,12 +25,25 @@ spec:
                       metadataComplianceType: musthave
                       objectDefinition:
                         apiVersion: v1
+                        applyMode: AlwaysApply
+                        kind: Namespace
+                        name: openshift-logging
+                        patch: |-
+                            {
+                              "annotations": {
+                                "openshift.io/node-selector": ""
+                              },
+                              "labels": {
+                                "openshift.io/cluster-logging": "true"
+                              }
+                            }
+                        patchType: merge
+                    - complianceType: mustonlyhave
+                      metadataComplianceType: musthave
+                      objectDefinition:
+                        apiVersion: v1
                         kind: Namespace
                         metadata:
-                            annotations:
-                                openshift.io/node-selector: ""
-                            labels:
-                                openshift.io/cluster-logging: "true"
                             name: openshift-logging
                     - complianceType: mustonlyhave
                       metadataComplianceType: musthave
