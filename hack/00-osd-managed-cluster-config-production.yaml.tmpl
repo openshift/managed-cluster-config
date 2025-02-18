@@ -39636,6 +39636,16 @@ objects:
               summary: UpgradeConfig has not successfully synced in 4 hours.
               description: This clusters UpgradeConfig has not been synced in 4 hours
                 and may be out of date
+          - alert: UpgradeStateNotificationFailureSRE
+            expr: upgrade_notification_failed == 1
+            for: 30m
+            labels:
+              severity: critical
+              namespace: openshift-monitoring
+            annotations:
+              summary: Cluster failed to notify {{ $labels.event }}
+              description: Cluster has not able to notify {{ $labels.event }} state
+                for more than 30 minutes
     - apiVersion: monitoring.coreos.com/v1
       kind: PrometheusRule
       metadata:
