@@ -9129,6 +9129,14 @@ objects:
                     - get
                     - create
                     - update
+                  - apiGroups:
+                    - certificates.k8s.io
+                    resources:
+                    - certificatesigningrequests
+                    verbs:
+                    - get
+                    - list
+                    - watch
               - complianceType: mustonlyhave
                 metadataComplianceType: musthave
                 objectDefinition:
@@ -27924,8 +27932,12 @@ objects:
       spec:
         ttlSecondsAfterFinish: 100
         template:
+          metadata:
+            annotations:
+              openshift.io/required-scc: restricted-v2
           spec:
             serviceAccountName: sre-replace-packageserver-csv
+            priorityClassName: openshift-user-critical
             restartPolicy: Never
             containers:
             - name: delete-csv
@@ -27941,6 +27953,10 @@ objects:
                 oc -n openshift-operator-lifecycle-manager delete csv packageserver
 
                 '
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 100Mi
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -31562,6 +31578,39 @@ objects:
       name: cluster
       applyMode: AlwaysApply
       patch: '{"metadata":{"annotations":{"cloudcredential.openshift.io/upgradeable-to":"v4.9"}}}'
+      patchType: merge
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-cluster-acks-wif-4.18
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.17'
+      - key: api.openshift.com/gate-wif
+        operator: In
+        values:
+        - '4.18'
+      - key: api.openshift.com/wif
+        operator: In
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    patches:
+    - apiVersion: operator.openshift.io/v1
+      kind: CloudCredential
+      name: cluster
+      applyMode: AlwaysApply
+      patch: '{"metadata":{"annotations":{"cloudcredential.openshift.io/upgradeable-to":"v4.18"}}}'
       patchType: merge
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
@@ -38420,6 +38469,14 @@ objects:
         - get
         - create
         - update
+      - apiGroups:
+        - certificates.k8s.io
+        resources:
+        - certificatesigningrequests
+        verbs:
+        - get
+        - list
+        - watch
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRoleBinding
       metadata:
@@ -39213,7 +39270,7 @@ objects:
         - name: sre-network-live-migration-alerts
           rules:
           - alert: NetworkMigrationDelayedSRE
-            expr: (cluster:usage:network_live_migration_duration > (sum(cluster:node_roles)
+            expr: (sum(cluster:usage:network_live_migration_duration) > (sum(cluster:nodes_roles)
               * 1800))
             for: 1m
             labels:
