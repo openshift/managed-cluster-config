@@ -27808,6 +27808,70 @@ objects:
     - apiVersion: batch/v1
       kind: CronJob
       metadata:
+        name: pki-operator-annotator-4-16
+        namespace: openshift-pki-operator-annotator
+        annotations:
+          kubernetes.io/description: Patches 4.16 ManifestWork to fixed pki-operator
+            version https://issues.redhat.com/browse/OSD-27987
+      spec:
+        schedule: '*/5 * * * *'
+        concurrencyPolicy: Replace
+        jobTemplate:
+          spec:
+            template:
+              metadata:
+                name: pki-operator-annotator
+                namespace: openshift-pki-operator-annotator
+                annotations:
+                  kubernetes.io/description: Patches 4.16 ManifestWork to fixed pki-operator
+                    version https://issues.redhat.com/browse/OSD-27987
+              spec:
+                affinity:
+                  nodeAffinity:
+                    preferredDuringSchedulingIgnoredDuringExecution:
+                    - preference:
+                        matchExpressions:
+                        - key: node-role.kubernetes.io/infra
+                          operator: Exists
+                      weight: 1
+                tolerations:
+                - effect: NoSchedule
+                  key: node-role.kubernetes.io/infra
+                  operator: Exists
+                containers:
+                - name: pki-operator-annotator
+                  image: image-registry.openshift-image-registry.svc:5000/openshift/tools:latest
+                  imagePullPolicy: Always
+                  securityContext:
+                    allowPrivilegeEscalation: false
+                    capabilities:
+                      drop:
+                      - ALL
+                    runAsNonRoot: true
+                  env:
+                  - name: IMAGE
+                    value: quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:9c417743007bbefa3909e95284113b1e9a43be9124464f6bbb62676009546da5
+                  - name: MAJOR_MINOR_VER
+                    value: '4.16'
+                  - name: Z_STREAM_FIXED_VER
+                    value: '34'
+                  volumeMounts:
+                  - name: scripts
+                    mountPath: /tmp/scripts
+                  command:
+                  - /bin/bash
+                  args:
+                  - /tmp/scripts/patch.sh
+                volumes:
+                - name: scripts
+                  configMap:
+                    name: pki-operator-annotator
+                serviceAccountName: pki-operator-annotator
+                automountServiceAccountToken: true
+                restartPolicy: Never
+    - apiVersion: batch/v1
+      kind: CronJob
+      metadata:
         name: pki-operator-annotator-4-17
         namespace: openshift-pki-operator-annotator
         annotations:
