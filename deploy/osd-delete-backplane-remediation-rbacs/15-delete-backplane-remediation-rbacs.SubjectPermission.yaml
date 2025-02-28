@@ -1,0 +1,14 @@
+apiVersion: managed.openshift.io/v1alpha1
+kind: SubjectPermission
+metadata:
+  name: osd-delete-backplane-remediation-rbacs
+  namespace: openshift-rbac-permissions
+spec:
+  clusterPermissions:
+    - osd-get-namespace
+    - osd-delete-backplane-remediation-cluster-roles-and-bindings
+  permissions:
+    - clusterRoleName: osd-delete-backplane-remediation-roles-and-bindings
+      namespacesAllowedRegex: "(^openshift-.*)"
+  subjectKind: User
+  subjectName: system:serviceaccount:openshift-backplane:osd-delete-backplane-remediation-rbacs
