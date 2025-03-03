@@ -1,0 +1,18 @@
+apiVersion: monitoring.rhobs/v1
+kind: ServiceMonitor
+metadata:
+  name: netobserv-metrics-monitor-dynatrace
+  namespace: netobserv
+spec:
+  endpoints:
+  - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+    interval: 30s
+    path: /metrics
+    port: https
+    scheme: https
+    tlsConfig:
+      caFile: /etc/prometheus/certs/configmap_openshift-monitoring_serving-certs-ca-bundle_service-ca.crt
+      serverName: netobserv-metrics-service.netobserv.svc
+  selector:
+    matchLabels:
+      control-plane: controller-manager
