@@ -41628,15 +41628,29 @@ objects:
         groups:
         - name: customer-webhooks
           rules:
+          - record: webhook:max_duration
+            expr: "max by (webhook_name, operation, type) (\n  label_replace(\n  \
+              \  label_replace(\n      increase(apiserver_admission_webhook_admission_duration_seconds_sum[5m])\
+              \ /\n        increase(apiserver_admission_webhook_admission_duration_seconds_count[5m]),\n\
+              \    \"type\", \"mutating\", \"type\", \"admit\"),\n  \"webhook_name\"\
+              , \"$0\", \"name\", \".*\")\n)"
+          - record: webhook:configuration_service:raw
+            expr: "label_replace(\n  kube_validatingwebhookconfiguration_webhook_clientconfig_service,\n\
+              \  \"type\", \"validating\", \"\", \"\"\n) or label_replace(\n  kube_mutatingwebhookconfiguration_webhook_clientconfig_service,\n\
+              \  \"type\", \"mutating\", \"\", \"\"\n)"
+          - record: webhook:configuration_service
+            expr: "(\n  sgn(count by (type, webhook_name) (webhook:configuration_service:raw)\
+              \ > 1)\n) or on (type, webhook_name) (\n  webhook:configuration_service:raw\n\
+              )"
           - alert: SlowCustomerWebhookSRE
-            expr: "(\n  max by (webhook_name, operation, type) (\n    label_replace(\n\
-              \      label_replace(\n        increase(apiserver_admission_webhook_admission_duration_seconds_sum[5m])\
-              \ /\n          increase(apiserver_admission_webhook_admission_duration_seconds_count[5m]),\n\
-              \      \"type\", \"mutating\", \"type\", \"admit\"),\n    \"webhook_name\"\
-              , \"$0\", \"name\", \".*\")\n  )\n) * on(webhook_name) group_left(service_namespace,\
-              \ service_name) (\n  kube_validatingwebhookconfiguration_webhook_clientconfig_service{service_namespace\
-              \ !~ \"openshift-.*\"} or on(webhook_name)\n  kube_mutatingwebhookconfiguration_webhook_clientconfig_service{service_namespace\
-              \ !~ \"openshift-.*\"}\n) > 1"
+            expr: 'webhook:max_duration
+
+              * on(type, webhook_name) group_left(service_namespace, service_name)
+
+              webhook:configuration_service{webhook_name !~ ".*\\.openshift\\.io",
+              service_namespace !~ "openshift-.*"}
+
+              > 1'
             for: 15m
             labels:
               severity: warning
