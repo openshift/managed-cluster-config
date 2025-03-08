@@ -63,31 +63,19 @@ data:
     
     # Loop through each manifestwork object
     for clusterID in ${managedclusters[@]};do
-      # Extract full version, namespace and name
-      version=$(oc get managedclusters $clusterID -o json | jq -r '.metadata.labels.openshiftVersion')
-    
-      # Only patch the image if the clusters Z stream version is < $Z_STREAM_FIXED_VER
-      # This also handles any case where the script exits non-zero for any other reason, opting to patch as a result.
-      cleanup="false"
-      if python /tmp/scripts/should_patch.py "${version}" "${Z_STREAM_FIXED_VER}"; then
-        echo "cluster ${clusterID} does not need the override because it's Z stream is >= ${Z_STREAM_FIXED_VER}"
-        echo "removing hypershift.openshift.io/control-plane-operator-image annotation"
-        cleanup="true"
-      fi
+      # Clean up annotation due to upgrade bug in OCPBUGS-52819
+      # Removing annotation for all versions as kube apiserver arguments prevent control plane operator image from comming up
+      # after upgrade has started, this causes pods to crashloop see incident #itn-2025-00060
     
       namespace=$(oc get managedclusters "$clusterID" -o json | jq -r '.metadata.labels["api.openshift.com/management-cluster"]')
       kinds=$(oc get manifestwork -n "$namespace" "$clusterID" -o json | jq -r '.spec.workload.manifests[].kind')
       num=0
       for kind in $kinds;do
         if [[ $kind == "HostedCluster" ]]; then
-            echo "patching cluster: $clusterID"
+            echo "removing annotation for cluster: $clusterID"
+
+            json_payload='[{"op":"remove","path":"/spec/workload/manifests/'"$num"'/metadata/annotations/hypershift.openshift.io~1control-plane-operator-image"}]'
     
-            if [[ $cleanup = "true" ]]; then
-              json_payload='[{"op":"remove","path":"/spec/workload/manifests/'"$num"'/metadata/annotations/hypershift.openshift.io~1control-plane-operator-image"}]'
-            else 
-              json_payload='[{"op":"replace","path":"/spec/workload/manifests/'"$num"'/metadata/annotations/hypershift.openshift.io~1control-plane-operator-image","value":"'"$IMAGE"'"}]'
-            fi
-            
             echo "oc patch manifestwork $clusterID -n $namespace --type='json' -p "$json_payload""
             oc patch manifestwork "$clusterID" -n "$namespace" --type='json' -p "$json_payload"
             echo "-------------------------------------------------------------------------"
@@ -96,6 +84,3 @@ data:
       (( num++))
       done
     done
-    
-    
-    

@@ -27789,29 +27789,21 @@ objects:
           \ and extract their names\nmanagedclusters=$(oc get managedclusters -l openshiftVersion-major-minor=${MAJOR_MINOR_VER}\
           \ -o jsonpath='{range .items[*]}{.metadata.name}{\"\\n\"}{end}')\n\n# Loop\
           \ through each manifestwork object\nfor clusterID in ${managedclusters[@]};do\n\
-          \  # Extract full version, namespace and name\n  version=$(oc get managedclusters\
-          \ $clusterID -o json | jq -r '.metadata.labels.openshiftVersion')\n\n  #\
-          \ Only patch the image if the clusters Z stream version is < $Z_STREAM_FIXED_VER\n\
-          \  # This also handles any case where the script exits non-zero for any\
-          \ other reason, opting to patch as a result.\n  cleanup=\"false\"\n  if\
-          \ python /tmp/scripts/should_patch.py \"${version}\" \"${Z_STREAM_FIXED_VER}\"\
-          ; then\n    echo \"cluster ${clusterID} does not need the override because\
-          \ it's Z stream is >= ${Z_STREAM_FIXED_VER}\"\n    echo \"removing hypershift.openshift.io/control-plane-operator-image\
-          \ annotation\"\n    cleanup=\"true\"\n  fi\n\n  namespace=$(oc get managedclusters\
-          \ \"$clusterID\" -o json | jq -r '.metadata.labels[\"api.openshift.com/management-cluster\"\
-          ]')\n  kinds=$(oc get manifestwork -n \"$namespace\" \"$clusterID\" -o json\
-          \ | jq -r '.spec.workload.manifests[].kind')\n  num=0\n  for kind in $kinds;do\n\
-          \    if [[ $kind == \"HostedCluster\" ]]; then\n        echo \"patching\
-          \ cluster: $clusterID\"\n\n        if [[ $cleanup = \"true\" ]]; then\n\
-          \          json_payload='[{\"op\":\"remove\",\"path\":\"/spec/workload/manifests/'\"\
+          \  # Clean up annotation due to upgrade bug in OCPBUGS-52819\n  # Removing\
+          \ annotation for all versions as kube apiserver arguments prevent control\
+          \ plane operator image from comming up\n  # after upgrade has started, this\
+          \ causes pods to crashloop see incident #itn-2025-00060\n\n  namespace=$(oc\
+          \ get managedclusters \"$clusterID\" -o json | jq -r '.metadata.labels[\"\
+          api.openshift.com/management-cluster\"]')\n  kinds=$(oc get manifestwork\
+          \ -n \"$namespace\" \"$clusterID\" -o json | jq -r '.spec.workload.manifests[].kind')\n\
+          \  num=0\n  for kind in $kinds;do\n    if [[ $kind == \"HostedCluster\"\
+          \ ]]; then\n        echo \"removing annotation for cluster: $clusterID\"\
+          \n\n        json_payload='[{\"op\":\"remove\",\"path\":\"/spec/workload/manifests/'\"\
           $num\"'/metadata/annotations/hypershift.openshift.io~1control-plane-operator-image\"\
-          }]'\n        else \n          json_payload='[{\"op\":\"replace\",\"path\"\
-          :\"/spec/workload/manifests/'\"$num\"'/metadata/annotations/hypershift.openshift.io~1control-plane-operator-image\"\
-          ,\"value\":\"'\"$IMAGE\"'\"}]'\n        fi\n        \n        echo \"oc\
-          \ patch manifestwork $clusterID -n $namespace --type='json' -p \"$json_payload\"\
-          \"\n        oc patch manifestwork \"$clusterID\" -n \"$namespace\" --type='json'\
-          \ -p \"$json_payload\"\n        echo \"-------------------------------------------------------------------------\"\
-          \n        break\n    fi\n  (( num++))\n  done\ndone\n"
+          }]'\n\n        echo \"oc patch manifestwork $clusterID -n $namespace --type='json'\
+          \ -p \"$json_payload\"\"\n        oc patch manifestwork \"$clusterID\" -n\
+          \ \"$namespace\" --type='json' -p \"$json_payload\"\n        echo \"-------------------------------------------------------------------------\"\
+          \n        break\n    fi\n  (( num++))\n  done\ndone"
     - apiVersion: batch/v1
       kind: CronJob
       metadata:
