@@ -15,6 +15,12 @@ for clusterID in ${managedclusters[@]};do
   # after upgrade has started, this causes pods to crashloop see incident #itn-2025-00060
 
   namespace=$(oc get managedclusters "$clusterID" -o json | jq -r '.metadata.labels["api.openshift.com/management-cluster"]')
+  # On a service clusters api.openshift.com/management-cluster will be null for management clusters and local-cluster
+  # skip these
+  if [[ $namespace == "null" ]]; then
+    continue
+  fi
+
   kinds=$(oc get manifestwork -n "$namespace" "$clusterID" -o json | jq -r '.spec.workload.manifests[].kind')
   num=0
   for kind in $kinds;do
