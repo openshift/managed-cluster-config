@@ -32604,6 +32604,144 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: osd-delete-backplane-remediation-rbacs
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: openshift-backplane
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: osd-delete-backplane-remediation-rbacs
+        namespace: openshift-backplane
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: osd-delete-backplane-remediation-roles-and-bindings
+      rules:
+      - apiGroups:
+        - rbac.authorization.k8s.io
+        resources:
+        - roles
+        - rolebindings
+        verbs:
+        - get
+        - list
+        - delete
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: osd-delete-backplane-remediation-cluster-roles-and-bindings
+      rules:
+      - apiGroups:
+        - rbac.authorization.k8s.io
+        resources:
+        - clusterroles
+        - clusterrolebindings
+        verbs:
+        - get
+        - list
+        - delete
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: osd-get-namespace
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - namespaces
+        verbs:
+        - get
+        - list
+    - apiVersion: managed.openshift.io/v1alpha1
+      kind: SubjectPermission
+      metadata:
+        name: osd-delete-backplane-remediation-rbacs
+        namespace: openshift-rbac-permissions
+      spec:
+        clusterPermissions:
+        - osd-get-namespace
+        - osd-delete-backplane-remediation-cluster-roles-and-bindings
+        permissions:
+        - clusterRoleName: osd-delete-backplane-remediation-roles-and-bindings
+          namespacesAllowedRegex: (^openshift-.*)
+        subjectKind: User
+        subjectName: system:serviceaccount:openshift-backplane:osd-delete-backplane-remediation-rbacs
+    - apiVersion: batch/v1
+      kind: CronJob
+      metadata:
+        name: osd-delete-backplane-remediation-rbacs
+        namespace: openshift-backplane
+      spec:
+        failedJobsHistoryLimit: 5
+        successfulJobsHistoryLimit: 3
+        concurrencyPolicy: Replace
+        schedule: '*/10 * * * *'
+        jobTemplate:
+          spec:
+            ttlSecondsAfterFinished: 86400
+            backoffLimit: 12
+            template:
+              spec:
+                affinity:
+                  nodeAffinity:
+                    preferredDuringSchedulingIgnoredDuringExecution:
+                    - preference:
+                        matchExpressions:
+                        - key: node-role.kubernetes.io/infra
+                          operator: Exists
+                      weight: 1
+                tolerations:
+                - effect: NoSchedule
+                  key: node-role.kubernetes.io/infra
+                  operator: Exists
+                restartPolicy: Never
+                serviceAccountName: osd-delete-backplane-remediation-rbacs
+                containers:
+                - name: osd-delete-backplane-remediation-rbacs
+                  imagePullPolicy: Always
+                  image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+                  args:
+                  - /bin/bash
+                  - -c
+                  - "now=$(date +%s);\nexpiryMins=720;\nfor ns in $(oc get ns --no-headers\
+                    \ | grep -e ^openshift-.* | awk '{print $1}');do\n  for rolebinding\
+                    \ in $(oc get rolebinding -n $ns -l managed.openshift.io/remediation\
+                    \ --no-headers | awk '{print $1}');do\n    creation=$(date -d\
+                    \ $(oc get rolebinding $rolebinding -n $ns -o jsonpath='{.metadata.creationTimestamp}')\
+                    \ '+%s');\n    if [[ $(expr $((now-creation)) \\> $expiryMins\
+                    \ \\* 60) == 1 ]]; then\n      oc delete rolebinding $rolebinding\
+                    \ -n $ns\n    fi\n  done;\n  for role in $(oc get role -n $ns\
+                    \ -l managed.openshift.io/remediation --no-headers | awk '{print\
+                    \ $1}');do\n    creation=$(date -d $(oc get role $role -n $ns\
+                    \ -o jsonpath='{.metadata.creationTimestamp}') '+%s');\n    if\
+                    \ [[ $(expr $((now-creation)) \\> $expiryMins \\* 60) == 1 ]];\
+                    \ then\n      oc delete role $role -n $ns\n    fi\n  done;\ndone;\n\
+                    for clusterrolebinding in $(oc get clusterrolebinding -l managed.openshift.io/remediation\
+                    \ --no-headers | awk '{print $1}');do\n  creation=$(date -d $(oc\
+                    \ get clusterrolebinding $clusterrolebinding -o jsonpath='{.metadata.creationTimestamp}')\
+                    \ '+%s');\n  if [[ $(expr $((now-creation)) \\> $expiryMins \\\
+                    * 60) == 1 ]]; then\n    oc delete clusterrolebinding $clusterrolebinding\n\
+                    \  fi\ndone;\nfor clusterrole in $(oc get clusterrole -l managed.openshift.io/remediation\
+                    \ --no-headers | awk '{print $1}');do\n  creation=$(date -d $(oc\
+                    \ get clusterrole $clusterrole -o jsonpath='{.metadata.creationTimestamp}')\
+                    \ '+%s');\n  if [[ $(expr $((now-creation)) \\> $expiryMins \\\
+                    * 60) == 1 ]]; then\n    oc delete clusterrole $clusterrole\n\
+                    \  fi\ndone;\n"
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: osd-delete-backplane-script-resources
   spec:
     clusterDeploymentSelector:
