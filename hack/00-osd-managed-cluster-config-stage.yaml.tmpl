@@ -7083,12 +7083,19 @@ objects:
                 metadataComplianceType: musthave
                 objectDefinition:
                   apiVersion: v1
+                  applyMode: AlwaysApply
+                  kind: Namespace
+                  name: openshift-logging
+                  patch: "{\n  \"annotations\": {\n    \"openshift.io/node-selector\"\
+                    : \"\"\n  },\n  \"labels\": {\n    \"openshift.io/cluster-logging\"\
+                    : \"true\"\n  }\n}"
+                  patchType: merge
+              - complianceType: mustonlyhave
+                metadataComplianceType: musthave
+                objectDefinition:
+                  apiVersion: v1
                   kind: Namespace
                   metadata:
-                    annotations:
-                      openshift.io/node-selector: ''
-                    labels:
-                      openshift.io/cluster-logging: 'true'
                     name: openshift-logging
               - complianceType: mustonlyhave
                 metadataComplianceType: musthave
@@ -33858,18 +33865,23 @@ objects:
         values:
         - 'true'
     resourceApplyMode: Upsert
+    applyBehavior: CreateOnly
+    patches:
+    - apiVersion: v1
+      kind: Namespace
+      name: openshift-logging
+      applyMode: AlwaysApply
+      patchType: merge
+      patch: "{\n  \"annotations\": {\n    \"openshift.io/node-selector\": \"\"\n\
+        \  },\n  \"labels\": {\n    \"managed.openshift.io/service-lb-quota-exempt\"\
+        : \"true\"\n    \"managed.openshift.io/storage-pv-quota-exempt\": \"true\"\
+        \n    \"openshift.io/cluster-logging\": \"true\"\n    \"openshift.io/cluster-monitoring\"\
+        : 'true'\n  }\n}"
     resources:
     - apiVersion: v1
       kind: Namespace
       metadata:
         name: openshift-logging
-        annotations:
-          openshift.io/node-selector: ''
-        labels:
-          managed.openshift.io/service-lb-quota-exempt: 'true'
-          managed.openshift.io/storage-pv-quota-exempt: 'true'
-          openshift.io/cluster-logging: 'true'
-          openshift.io/cluster-monitoring: 'true'
     - apiVersion: operators.coreos.com/v1
       kind: OperatorGroup
       metadata:
@@ -33890,7 +33902,7 @@ objects:
 
           #
 
-          # Also remember that all examples have ''disable_action'' set to True.  If
+          # Also remember that all examples have "disable_action" set to True.  If
           you
 
           # want to use this action as a template, be sure to set this to False after
@@ -33939,7 +33951,7 @@ objects:
 
           #       kind: regex
 
-          #       value: ''^\.operations\..*$''
+          #       value: "^\.operations\..*$"
 
           #       exclude: False
 
@@ -33951,7 +33963,7 @@ objects:
 
           #       direction: older
 
-          #       timestring: ''%Y.%m.%d''
+          #       timestring: "%Y.%m.%d"
 
           #       unit: days
 
@@ -34103,15 +34115,21 @@ objects:
         values:
         - 'true'
     resourceApplyMode: Upsert
+    applyBehavior: CreateOnly
+    patches:
+    - apiVersion: v1
+      kind: Namespace
+      name: openshift-logging
+      applyMode: AlwaysApply
+      patchType: merge
+      patch: "{\n  \"annotations\": {\n    \"openshift.io/node-selector\": \"\"\n\
+        \  },\n  \"labels\": {\n    \"openshift.io/cluster-logging\": \"true\"\n \
+        \ }\n}"
     resources:
     - apiVersion: v1
       kind: Namespace
       metadata:
         name: openshift-logging
-        annotations:
-          openshift.io/node-selector: ''
-        labels:
-          openshift.io/cluster-logging: 'true'
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: Role
       metadata:
