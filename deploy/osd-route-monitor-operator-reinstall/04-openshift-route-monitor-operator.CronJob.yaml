@@ -8,14 +8,16 @@ spec:
   backoffLimit: 6
   completions: 1
   parallelism: 1
+  ttlSecondsAfterFinished: 600 # Cleanup job after 10 minutes
+  activeDeadlineSeconds: 300 # Kill the job pod if it runs for longer than 5 minutes
   template:
     spec:
       restartPolicy: OnFailure
+      serviceAccount: sre-operator-reinstall-sa
+      serviceAccountName: sre-operator-reinstall-sa
       containers:
       - name: sre-operator-reinstall
         image: image-registry.openshift-image-registry.svc:5000/openshift/tools:latest
-        serviceAccount: sre-operator-reinstall-sa
-        serviceAccountName: sre-operator-reinstall-sa
         command:
         - sh
         - -c
