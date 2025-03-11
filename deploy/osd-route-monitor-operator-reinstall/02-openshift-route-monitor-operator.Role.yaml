@@ -1,0 +1,43 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: sre-operator-reinstall-role
+  namespace: openshift-route-monitor-operator
+rules:
+- apiGroups:
+  - "operators.coreos.com"
+  resources:
+  - clusterserviceversions
+  - subscriptions
+  - installplans
+  verbs:
+  - list
+  - get
+  - delete
+  - create
+- apiGroups:
+  - "batch"
+  resources:
+  - cronjobs
+  verbs:
+  - list
+  - get
+  - delete
+- apiGroups:
+  - ""
+  resources:
+  - serviceaccounts
+  verbs:
+  - list
+  - get
+  - delete
+- apiGroups:
+  - "rbac.authorization.k8s.io"
+  resources:
+  - roles
+  - rolebindings
+  verbs:
+  - list
+  - get
+  - delete
