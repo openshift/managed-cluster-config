@@ -35833,10 +35833,12 @@ objects:
                     \ this check and just keep the logic inside the \"if\"\nCSV_FOUND=$(oc\
                     \ -n \"$NAMESPACE\" get clusterserviceversions.operators.coreos.com\
                     \ -o name | grep \"$OPERATOR\")\nif [[ ! -z \"$CSV_FOUND\" ]];\
-                    \ then\n  # The OLM dance\n  # delete all installplans\n  oc get\
-                    \ installplans.operators.coreos.com -n $NAMESPACE | grep $OPERATOR\
-                    \ | awk '{print $1}' | xargs oc delete installplan.operators.coreos.com\
-                    \ -n $NAMESPACE\n  # get subscription\n  oc get subscription.operators.coreos.com\
+                    \ then\n  # The OLM dance\n  # delete all installplans (if found)\
+                    \ (the true is so we don't fail set -e)\n  installplans=$(oc get\
+                    \ installplans.operators.coreos.com -n \"$NAMESPACE\" | grep \"\
+                    $OPERATOR\" || true | awk '{print $1}')\n  if [[ -n \"$installplans\"\
+                    \ ]]; then\n    echo \"$installplans\" | xargs oc delete installplan.operators.coreos.com\
+                    \ -n \"$NAMESPACE\"\n  fi\n  # get subscription\n  oc get subscription.operators.coreos.com\
                     \ -n $NAMESPACE $OPERATOR -o json | jq 'del(.status) | del(.metadata.creationTimestamp)\
                     \ | del(.metadata.generation) | del(.metadata.resourceVersion)\
                     \ | del(.metadata.uid)' > /tmp/sub.json\n  # delete subscription\n\
