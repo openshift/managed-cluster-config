@@ -1,30 +1,26 @@
 ---
 apiVersion: batch/v1
-kind: CronJob
+kind: Job
 metadata:
   name: sre-operator-reinstall
   namespace: openshift-route-monitor-operator
 spec:
-  failedJobsHistoryLimit: 1
-  successfulJobsHistoryLimit: 3
-  concurrencyPolicy: Replace
-  schedule: "*/30 * * * *"
-  jobTemplate:
+  backoffLimit: 6
+  completions: 1
+  parallelism: 1
+  template:
     spec:
-      ttlSecondsAfterFinished: 100
-      template:
-        spec:
-          serviceAccountName: sre-operator-reinstall-sa
-          restartPolicy: Never
-          containers:
-          - name: operator-reinstaller
-            image: image-registry.openshift-image-registry.svc:5000/openshift/tools:latest
-            imagePullPolicy: Always
-            command:
-            - sh
-            - -c
-            - |
-              #!/bin/bash
+      restartPolicy: OnFailure
+      containers:
+      - name: sre-operator-reinstall
+        image: image-registry.openshift-image-registry.svc:5000/openshift/tools:latest
+        serviceAccount: sre-operator-reinstall-sa
+        serviceAccountName: sre-operator-reinstall-sa
+        command:
+        - sh
+        - -c
+        - |
+          #!/bin/bash
               set -euxo pipefail
               NAMESPACE=openshift-route-monitor-operator
               OPERATOR=route-monitor-operator
@@ -34,7 +30,7 @@ spec:
               if [[ ! -z "$CSV_FOUND" ]]; then
                 # The OLM dance
                 # delete all installplans (if found) (the true is so we don't fail set -e)
-                installplans=$(oc get installplans.operators.coreos.com -n "$NAMESPACE" | grep "$OPERATOR" || true | awk '{print $1}')
+                installplans=$(oc get installplans.operators.coreos.com -n "$NAMESPACE" --no-headers | awk '{print $1}' | grep "$OPERATOR" || true | awk '{print $1}')
                 if [[ -n "$installplans" ]]; then
                   echo "$installplans" | xargs oc delete installplan.operators.coreos.com -n "$NAMESPACE"
                 fi
@@ -45,10 +41,6 @@ spec:
                 # create subscription using the following json
                 oc create -f /tmp/sub.json
                 # delete all CSVs
-                oc get clusterserviceversions.operators.coreos.com -n $NAMESPACE | grep $OPERATOR | awk '{print $1}' | xargs oc delete clusterserviceversions.operators.coreos.com -n $NAMESPACE
+                oc get clusterserviceversions.operators.coreos.com -n $NAMESPACE | grep $OPERATOR | awk '{print $1}' | xargs oc delete clusterserviceversions.operators.coreos.com -n $NAMESPACE --wait=false
               fi
-              oc -n "$NAMESPACE" delete cronjob sre-operator-reinstall || true
-              oc -n "$NAMESPACE" delete role sre-operator-reinstall-role || true
-              oc -n "$NAMESPACE" delete rolebinding sre-operator-reinstall-rb || true
-              oc -n "$NAMESPACE" delete serviceaccount sre-operator-reinstall-sa || true
               exit 0
