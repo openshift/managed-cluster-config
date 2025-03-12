@@ -26499,29 +26499,16 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: obo-removal
+    name: obo-removal-for-sc-clusters
   spec:
     clusterDeploymentSelector:
       matchLabels:
         api.openshift.com/managed: 'true'
       matchExpressions:
       - key: ext-hypershift.openshift.io/cluster-type
-        operator: NotIn
+        operator: In
         values:
-        - management-cluster
         - service-cluster
-      - key: api.openshift.com/fedramp
-        operator: NotIn
-        values:
-        - 'true'
-      - key: api.openshift.com/addon-managed-api-service-internal
-        operator: NotIn
-        values:
-        - 'true'
-      - key: api.openshift.com/addon-managed-api-service
-        operator: NotIn
-        values:
-        - 'true'
     resourceApplyMode: Sync
     resources:
     - apiVersion: v1
