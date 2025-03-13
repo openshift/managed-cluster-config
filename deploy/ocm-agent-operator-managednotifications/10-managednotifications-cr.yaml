@@ -65,13 +65,6 @@ spec:
       summary: "Multiple EFS CSI drivers detected"
       logType: Cluster Configuration
     - activeBody: |-
-        Your cluster requires you to take action. The file system usage for a worker node is currently at or above 90% and is predicted to be fully exhausted soon. Without action, this could impact the usability of this node. Please reduce the amount of space used on this mountpoint, either by adjusting application configuration or by moving some applications to other nodes.
-      name: WorkerNodeFilesystemSpaceFillingUp
-      resendWait: 24
-      severity: Info
-      summary: Worker node is predicted to run out of inodes in 4 hours
-      logType: Cluster Configuration
-    - activeBody: |-
         Your cluster requires you to take action. A workload is been preventing a machine from deleting. The name of the workload can be found by looking at the 'pods_preventing_node_drain' metric in Prometheus. Not taking action can result in higher compute costs as the instance won't terminate until the workload has been moved.
       name: CustomerWorkloadPreventingDrain
       resendWait: 1
@@ -80,13 +73,6 @@ spec:
       logType: Cluster Configuration
       references:
         - "https://access.redhat.com/documentation/en-us/red_hat_openshift_service_on_aws/4/html/nodes/working-with-pods#nodes-pods-pod-distruption-about_nodes-pods-configuring"
-    - activeBody: |-
-        Your cluster requires you to take action. The available file system inodes for a worker node are currently at or below 3% and are predicted to be fully exhausted soon. Without action, this could impact the usability of this node. Please reduce the amount of inodes used on this mountpoint, either by adjusting application configuration or by moving some applications to other nodes.
-      name: WorkerNodeFilesystemAlmostOutOfFiles
-      resendWait: 24
-      severity: Major
-      summary: "Filesystem has less than 3% inodes left"
-      logType: Cluster Configuration
     - activeBody: |-
         Your cluster currently has at least one unschedulable worker node. This may reduce cluster's effective capacity to schedule pods.
       name: KubeNodeUnschedulableSRE
@@ -111,3 +97,31 @@ spec:
       resendWait: 2
       severity: Major
       summary: "Action required: ${webhook_name} webhook slow to process ${operation} operations"
+    - activeBody: |-
+        Your cluster requires you to take action. The file system space usage for a worker node is currently at or above 90% and is predicted to be fully exhausted soon. Without action, this could impact the usability of this node. Please reduce the amount of space used on this mountpoint, either by adjusting application configuration or by moving some applications to other nodes.
+      name: WorkerNodeFilesystemSpaceFillingUp
+      resendWait: 24
+      severity: Info
+      summary: "Filesystem is predicted to run out of space within the next 4 hours."
+      logType: Cluster Configuration
+    - activeBody: |-
+        Your cluster requires you to take action. The available file system space for a worker node are currently at or below 3% and are predicted to be fully exhausted soon. Without action, this could impact the usability of this node. Please reduce the amount of inodes used on this mountpoint, either by adjusting application configuration or by moving some applications to other nodes.
+      name: WorkerNodeFilesystemAlmostOutOfSpace
+      resendWait: 24
+      severity: Major
+      summary: "FFilesystem has less than 3% space left."
+      logType: Cluster Configuration
+    - activeBody: |-
+        Your cluster requires you to take action. The file system inode usage for a worker node is currently at or above 90% and is predicted to be fully exhausted soon. Without action, this could impact the usability of this node. Please reduce the amount of inode used on this mountpoint, either by adjusting application configuration or by moving some applications to other nodes.
+      name: WorkerNodeFilesystemFilesFillingUp
+      resendWait: 24
+      severity: Info
+      summary: "Worker node is predicted to run out of inodes in 4 hours"
+      logType: Cluster Configuration
+    - activeBody: |-
+        Your cluster requires you to take action. The available file system inodes for a worker node are currently at or below 3% and are predicted to be fully exhausted soon. Without action, this could impact the usability of this node. Please reduce the amount of inodes used on this mountpoint, either by adjusting application configuration or by moving some applications to other nodes.
+      name: WorkerNodeFilesystemAlmostOutOfFiles
+      resendWait: 24
+      severity: Major
+      summary: "Filesystem has less than 3% inodes left"
+      logType: Cluster Configuration
