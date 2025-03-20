@@ -46,7 +46,7 @@ spec:
                       oc delete rolebinding $rolebinding -n $ns
                     fi
                   done;
-                  for line in $(oc get role oc get role -A -l managed.openshift.io/remediation -o custom-columns=:.metadata.namespace,:.metadata.name --no-headers);do
+                  for line in $(oc get role -A -l managed.openshift.io/remediation -o custom-columns=:.metadata.namespace,:.metadata.name --no-headers);do
                     ns=$(echo "$line" | awk '{print $1}')
                     role=$(echo "$line" | awk '{print $2}')
                     creation=$(date -d $(oc get role $role -n $ns -o jsonpath='{.metadata.creationTimestamp}') '+%s');
