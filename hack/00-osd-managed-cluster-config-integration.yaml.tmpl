@@ -32356,31 +32356,33 @@ objects:
                   args:
                   - /bin/bash
                   - -c
-                  - "now=$(date +%s);\nexpiryMins=720;\nfor line in $(oc get rolebinding\
-                    \ -A -l managed.openshift.io/remediation -o custom-columns=:.metadata.namespace,:.metadata.name\
-                    \ --no-headers);do\n  ns=$(echo \"$line\" | awk '{print $1}')\n\
-                    \  rolebinding=$(echo \"$line\" | awk '{print $2}')\n  creation=$(date\
-                    \ -d $(oc get rolebinding $rolebinding -n $ns -o jsonpath='{.metadata.creationTimestamp}')\
-                    \ '+%s');\n  if [[ $(expr $((now-creation)) \\> $expiryMins \\\
+                  - "now=$(date +%s)\nexpiryMins=720\nlines=$(oc get rolebinding -A\
+                    \ -l managed.openshift.io/remediation -o custom-columns=:.metadata.namespace,:.metadata.name\
+                    \ --no-headers)\n[[ -z \"$lines\" ]] || while read line\ndo\n\
+                    \  ns=$(echo \"$line\" | awk '{print $1}')\n  rolebinding=$(echo\
+                    \ \"$line\" | awk '{print $2}')\n  creation=$(date -d $(oc get\
+                    \ rolebinding $rolebinding -n $ns -o jsonpath='{.metadata.creationTimestamp}')\
+                    \ '+%s')\n  if [[ $(expr $((now-creation)) \\> $expiryMins \\\
                     * 60) == 1 ]]; then\n    oc delete rolebinding $rolebinding -n\
-                    \ $ns\n  fi\ndone;\nfor line in $(oc get role -A -l managed.openshift.io/remediation\
-                    \ -o custom-columns=:.metadata.namespace,:.metadata.name --no-headers);do\n\
-                    \  ns=$(echo \"$line\" | awk '{print $1}')\n  role=$(echo \"$line\"\
-                    \ | awk '{print $2}')\n  creation=$(date -d $(oc get role $role\
-                    \ -n $ns -o jsonpath='{.metadata.creationTimestamp}') '+%s');\n\
-                    \  if [[ $(expr $((now-creation)) \\> $expiryMins \\* 60) == 1\
-                    \ ]]; then\n    oc delete role $role -n $ns\n  fi\ndone;\nfor\
-                    \ clusterrolebinding in $(oc get clusterrolebinding -l managed.openshift.io/remediation\
-                    \ --no-headers | awk '{print $1}');do\n  creation=$(date -d $(oc\
-                    \ get clusterrolebinding $clusterrolebinding -o jsonpath='{.metadata.creationTimestamp}')\
-                    \ '+%s');\n  if [[ $(expr $((now-creation)) \\> $expiryMins \\\
+                    \ $ns\n  fi\ndone <<< \"$lines\"\nlines=$(oc get role -A -l managed.openshift.io/remediation\
+                    \ -o custom-columns=:.metadata.namespace,:.metadata.name --no-headers)\n\
+                    [[ -z \"$lines\" ]] || while read line\ndo\n  ns=$(echo \"$line\"\
+                    \ | awk '{print $1}')\n  role=$(echo \"$line\" | awk '{print $2}')\n\
+                    \  creation=$(date -d $(oc get role $role -n $ns -o jsonpath='{.metadata.creationTimestamp}')\
+                    \ '+%s')\n  if [[ $(expr $((now-creation)) \\> $expiryMins \\\
+                    * 60) == 1 ]]; then\n    oc delete role $role -n $ns\n  fi\ndone\
+                    \ <<< \"$lines\"\nfor clusterrolebinding in $(oc get clusterrolebinding\
+                    \ -l managed.openshift.io/remediation -o custom-columns=:.metadata.name\
+                    \ --no-headers);do\n  creation=$(date -d $(oc get clusterrolebinding\
+                    \ $clusterrolebinding -o jsonpath='{.metadata.creationTimestamp}')\
+                    \ '+%s')\n  if [[ $(expr $((now-creation)) \\> $expiryMins \\\
                     * 60) == 1 ]]; then\n    oc delete clusterrolebinding $clusterrolebinding\n\
-                    \  fi\ndone;\nfor clusterrole in $(oc get clusterrole -l managed.openshift.io/remediation\
-                    \ --no-headers | awk '{print $1}');do\n  creation=$(date -d $(oc\
-                    \ get clusterrole $clusterrole -o jsonpath='{.metadata.creationTimestamp}')\
-                    \ '+%s');\n  if [[ $(expr $((now-creation)) \\> $expiryMins \\\
+                    \  fi\ndone\nfor clusterrole in $(oc get clusterrole -l managed.openshift.io/remediation\
+                    \ -o custom-columns=:.metadata.name --no-headers);do\n  creation=$(date\
+                    \ -d $(oc get clusterrole $clusterrole -o jsonpath='{.metadata.creationTimestamp}')\
+                    \ '+%s')\n  if [[ $(expr $((now-creation)) \\> $expiryMins \\\
                     * 60) == 1 ]]; then\n    oc delete clusterrole $clusterrole\n\
-                    \  fi\ndone;\n"
+                    \  fi\ndone\n"
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
