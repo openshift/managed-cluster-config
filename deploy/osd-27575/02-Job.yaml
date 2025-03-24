@@ -1,4 +1,3 @@
----
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -32,8 +31,7 @@ spec:
 
               # Export a clean version of the Subscription then delete it, if it exists
               recreate_subscription=true
-              SUBSCRIPTION=$(oc get subscription.operators.coreos.com -n $NAMESPACE $OPERATOR --ignore-not-found=true -oname)
-              if [[ ${SUBSCRIPTION} == "subscription.operators.coreos.com/ocm-agent-operator" ]]; then
+              if $(oc get subscription.operators.coreos.com -n $NAMESPACE $OPERATOR); then
                 oc get subscription.operators.coreos.com -n $NAMESPACE $OPERATOR -o json | jq 'del(.status) | del(.metadata.creationTimestamp) | del(.metadata.generation) | del(.metadata.resourceVersion) | del(.metadata.uid)' > /tmp/sub.json
                 oc delete subscription.operators.coreos.com -n $NAMESPACE $OPERATOR
               else
@@ -41,10 +39,10 @@ spec:
               fi
 
               # Delete all ClusterServiceVersions
-              oc delete --ignore-not-found=true clusterserviceversions.operators.coreos.com -n $NAMESPACE -l operators.coreos.com/ocm-agent-operator.openshift-ocm-agent-operator= --wait=false
+              oc get clusterserviceversions.operators.coreos.com -n "$NAMESPACE" --no-headers | grep $OPERATOR | awk '{print $1}' | xargs oc delete clusterserviceversions.operators.coreos.com -n $NAMESPACE --wait=false
 
               # Delete all InstallPlans
-              oc delete --ignore-not-found=true installplan.operators.coreos.com -n "$NAMESPACE" -l operators.coreos.com/ocm-agent-operator.openshift-ocm-agent-operator=
+              oc get installplans.operators.coreos.com -n "$NAMESPACE" --no-headers | grep $OPERATOR | awk '{print $1}' | xargs oc delete installplan.operators.coreos.com -n "$NAMESPACE"
 
               # Recreate the subscription that was exported earlier, if it exists
               if [ $recreate_subscription == "true" ]; then
