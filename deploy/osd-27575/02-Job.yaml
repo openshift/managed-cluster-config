@@ -20,7 +20,7 @@ spec:
             - -c
             - |
               #!/bin/bash
-              set -euxo pipefail
+              set -uxo pipefail
               NAMESPACE=openshift-ocm-agent-operator
               OPERATOR=ocm-agent-operator
 
@@ -31,7 +31,7 @@ spec:
 
               # Export a clean version of the Subscription then delete it, if it exists
               recreate_subscription=true
-              if $(oc get subscription.operators.coreos.com -n $NAMESPACE $OPERATOR); then
+              if oc get subscription.operators.coreos.com -n "$NAMESPACE" "$OPERATOR"; then
                 oc get subscription.operators.coreos.com -n $NAMESPACE $OPERATOR -o json | jq 'del(.status) | del(.metadata.creationTimestamp) | del(.metadata.generation) | del(.metadata.resourceVersion) | del(.metadata.uid)' > /tmp/sub.json
                 oc delete subscription.operators.coreos.com -n $NAMESPACE $OPERATOR
               else
