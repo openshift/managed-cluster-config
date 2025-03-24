@@ -41,7 +41,6 @@ spec:
               fi
 
               # Delete all ClusterServiceVersions
-              #oc get --ignore-not-found=true clusterserviceversions.operators.coreos.com -n "$NAMESPACE" --no-headers | grep $OPERATOR | awk '{print $1}' | xargs oc delete --ignore-not-found=true clusterserviceversions.operators.coreos.com -n $NAMESPACE --wait=false
               oc delete --ignore-not-found=true clusterserviceversions.operators.coreos.com -n $NAMESPACE -l operators.coreos.com/ocm-agent-operator.openshift-ocm-agent-operator= --wait=false
 
               # Delete all InstallPlans
@@ -51,10 +50,5 @@ spec:
               if [ $recreate_subscription == "true" ]; then
                 oc create -f /tmp/sub.json
               fi
-
-              # Prevent the job from -rerunning
-              oc -n "$NAMESPACE" delete job sre-operator-reinstall || true
-              oc -n "$NAMESPACE" delete serviceaccount sre-operator-reinstall-sa || true
-              oc -n "$NAMESPACE" delete rolebinding/sre-operator-reinstall-rb role/sre-operator-reinstall-role || true
 
               exit 0
