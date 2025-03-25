@@ -1,0 +1,52 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: sre-operator-reinstall
+  namespace: openshift-managed-upgrade-operator
+spec:
+  backoffLimit: 6
+  completions: 1
+  parallelism: 1
+  activeDeadlineSeconds: 300 # Kill the job pod if it runs for longer than 5 minutes
+  template:
+    spec:
+      restartPolicy: OnFailure
+      serviceAccountName: sre-operator-reinstall-sa
+      containers:
+      - name: sre-operator-reinstall
+        image: image-registry.openshift-image-registry.svc:5000/openshift/tools:latest
+        command:
+            - sh
+            - -c
+            - |
+              #!/bin/bash
+              set -uxo pipefail
+              NAMESPACE=openshift-managed-upgrade-operator
+              OPERATOR=managed-upgrade-operator
+
+              # This process is cribbed from the following documentation. The exception is we re-create the Subscription to trigger a reinstall of the operator.
+              # https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/operators/administrator-tasks#olm-deleting-operator-from-a-cluster-using-cli_olm-deleting-operators-from-a-cluster
+
+              # TODO: Add gate to check if the operator version in question is already installed
+
+              # Export a clean version of the Subscription then delete it, if it exists
+              recreate_subscription=true
+              if oc get subscription.operators.coreos.com -n "$NAMESPACE" "$OPERATOR"; then
+                oc get subscription.operators.coreos.com -n $NAMESPACE $OPERATOR -o json | jq 'del(.status) | del(.metadata.creationTimestamp) | del(.metadata.generation) | del(.metadata.resourceVersion) | del(.metadata.uid)' > /tmp/sub.json
+                oc delete subscription.operators.coreos.com -n $NAMESPACE $OPERATOR
+              else
+                recreate_subscription=false
+              fi
+
+              # Delete all ClusterServiceVersions
+              oc get clusterserviceversions.operators.coreos.com -n "$NAMESPACE" --no-headers | grep $OPERATOR | awk '{print $1}' | xargs oc delete clusterserviceversions.operators.coreos.com -n $NAMESPACE --wait=false
+
+              # Delete all InstallPlans
+              oc get installplans.operators.coreos.com -n "$NAMESPACE" --no-headers | grep $OPERATOR | awk '{print $1}' | xargs oc delete installplan.operators.coreos.com -n "$NAMESPACE"
+
+              # Recreate the subscription that was exported earlier, if it exists
+              if [ $recreate_subscription == "true" ]; then
+                oc create -f /tmp/sub.json
+              fi
+
+              exit 0
