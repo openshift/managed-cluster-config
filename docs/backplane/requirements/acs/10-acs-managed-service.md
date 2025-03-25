@@ -193,4 +193,8 @@ Permissions at cluster scope.
 * patch persistentvolumeclaims
 * patch statefulsets
 
+## backplane-acs-rhacs-secured-cluster: `rhacs-secured-cluster`
+
+* view secrets (required for operating ACS secured cluster)
+
 **Note** Please update this document as addional permisions are requested, thank you.
