@@ -22,4 +22,10 @@ spec:
                   subscription_sync_total{name=~"addon-operator|aws-vpce-operator|custom-domains-operator|managed-node-metadata-operator|managed-upgrade-operator|must-gather-operator|ocm-agent-operator|osd-metrics-exporter|rbac-permissions-operator|openshift-splunk-forwarder-operator|aws-account-operator|certman-operator|cloud-ingress-operator|configure-alertmanager-operator|deadmanssnitch-operator|deployment-validation-operator|dynatrace-operator|gcp-project-operator|managed-velero-operator|observability-operator|opentelemetry-operator|pagerduty-operator|route-monitor-operator"}
               )
           record:
-            sre:operators:succeeded
+            sre:operators:succeeded:raw
+        - expr:
+            # making sure that operators installed in user workload namespaces are ignored in case the same operator is installed in an openshift namespace
+            sre:operators:succeeded:raw{exported_namespace =~ "openshift-.*"}
+            or on(_id, name)
+            sre:operators:succeeded:raw{exported_namespace !~ "openshift-.*"}
+          record: sre:operators:succeeded
