@@ -38,3 +38,15 @@ spec:
           record: sre:error_budget_burn:apiserver_28d_slo
         - expr: sre:telemetry:managed_labels * on (sre) group_left(probe_url) label_replace(((sum by(_id) (count_over_time(sre:slo:probe_success_console{}[4w])) - sum by(_id) (sum_over_time(sre:slo:probe_success_console{}[4w]))) / ((1-0.9995) * 80640)), "sre", "true", "", "")
           record: sre:error_budget_burn:console_28d_slo
+        - expr: upgradeoperator_upgrade_started_timestamp
+          record: sre:slo:upgradeoperator_upgrade_started_timestamp
+        - expr: upgradeoperator_upgrade_completed_timestamp
+          record: sre:slo:upgradeoperator_upgrade_completed_timestamp
+        - expr: upgradeoperator_controlplane_upgrade_started_timestamp
+          record: sre:slo:upgradeoperator_controlplane_upgrade_started_timestamp
+        - expr: upgradeoperator_controlplane_upgrade_completed_timestamp
+          record: sre:slo:upgradeoperator_controlplane_upgrade_completed_timestamp
+        - expr: upgradeoperator_workernode_upgrade_started_timestamp
+          record: sre:slo:upgradeoperator_workernode_upgrade_started_timestamp
+        - expr: upgradeoperator_workernode_upgrade_completed_timestamp
+          record: sre:slo:upgradeoperator_workernode_upgrade_completed_timestamp
