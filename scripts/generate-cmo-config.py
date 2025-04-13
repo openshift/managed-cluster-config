@@ -35,12 +35,6 @@ def dump_configmap(input_path, configmap_path, enableUserWorkload,
             # Grafana config was removed in 4.11, pre-4.11, put it back
             config["grafana"] = copy.deepcopy(config["prometheusOperator"])
 
-        if "/management-clusters/" in configmap_path and config['prometheusK8s']['remoteWrite']:
-            express = config['prometheusK8s']['remoteWrite'][0]['writeRelabelConfigs'][0]['regex']
-            express = express[:-1]
-            express += "|sre:slo:upgradeoperator_upgrade_started_timestamp|sre:slo:upgradeoperator_upgrade_completed_timestamp|sre:slo:upgradeoperator_controlplane_upgrade_started_timestamp|sre:slo:upgradeoperator_controlplane_upgrade_completed_timestamp|sre:slo:upgradeoperator_workernode_upgrade_started_timestamp|sre:slo:upgradeoperator_workernode_upgrade_completed_timestamp)"
-            config['prometheusK8s']['remoteWrite'][0]['writeRelabelConfigs'][0]['regex'] = express
-
         cmo_config = {
             "apiVersion": "v1",
             "kind": "ConfigMap",
