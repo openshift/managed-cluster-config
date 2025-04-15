@@ -40602,6 +40602,30 @@ objects:
               preceding_version, stream) label_replace(upgradeoperator_upgrade_result,
               "sre", "true", "", "")
             record: sre:slo:upgradeoperator_upgrade_result
+          - expr: sre:telemetry:managed_labels * on (_id) group_left(namespace, service,
+              version, upgradeconfig_name) label_replace(upgradeoperator_upgrade_started_timestamp,
+              "sre", "true", "", "")
+            record: sre:slo:upgradeoperator_upgrade_started_timestamp
+          - expr: sre:telemetry:managed_labels * on (_id) group_left(alerts, upgradeconfig_name,
+              preceding_version, stream) label_replace(upgradeoperator_upgrade_completed_timestamp,
+              "sre", "true", "", "")
+            record: sre:slo:upgradeoperator_upgrade_completed_timestamp
+          - expr: sre:telemetry:managed_labels * on (_id) group_left(alerts, upgradeconfig_name,
+              preceding_version, stream) label_replace(upgradeoperator_controlplane_upgrade_started_timestamp,
+              "sre", "true", "", "")
+            record: sre:slo:upgradeoperator_controlplane_upgrade_started_timestamp
+          - expr: sre:telemetry:managed_labels * on (_id) group_left(alerts, upgradeconfig_name,
+              preceding_version, stream) label_replace(upgradeoperator_controlplane_upgrade_completed_timestamp,
+              "sre", "true", "", "")
+            record: sre:slo:upgradeoperator_controlplane_upgrade_completed_timestamp
+          - expr: sre:telemetry:managed_labels * on (_id) group_left(alerts, upgradeconfig_name,
+              preceding_version, stream) label_replace(upgradeoperator_workernode_upgrade_started_timestamp,
+              "sre", "true", "", "")
+            record: sre:slo:upgradeoperator_workernode_upgrade_started_timestamp
+          - expr: sre:telemetry:managed_labels * on (_id) group_left(alerts, upgradeconfig_name,
+              preceding_version, stream) label_replace(upgradeoperator_workernode_upgrade_completed_timestamp,
+              "sre", "true", "", "")
+            record: sre:slo:upgradeoperator_workernode_upgrade_completed_timestamp
     - apiVersion: monitoring.coreos.com/v1
       kind: PrometheusRule
       metadata:
@@ -40677,18 +40701,6 @@ objects:
               by(_id) (sum_over_time(sre:slo:probe_success_console{}[4w]))) / ((1-0.9995)
               * 80640)), "sre", "true", "", "")
             record: sre:error_budget_burn:console_28d_slo
-          - expr: upgradeoperator_upgrade_started_timestamp
-            record: sre:slo:upgradeoperator_upgrade_started_timestamp
-          - expr: upgradeoperator_upgrade_completed_timestamp
-            record: sre:slo:upgradeoperator_upgrade_completed_timestamp
-          - expr: upgradeoperator_controlplane_upgrade_started_timestamp
-            record: sre:slo:upgradeoperator_controlplane_upgrade_started_timestamp
-          - expr: upgradeoperator_controlplane_upgrade_completed_timestamp
-            record: sre:slo:upgradeoperator_controlplane_upgrade_completed_timestamp
-          - expr: upgradeoperator_workernode_upgrade_started_timestamp
-            record: sre:slo:upgradeoperator_workernode_upgrade_started_timestamp
-          - expr: upgradeoperator_workernode_upgrade_completed_timestamp
-            record: sre:slo:upgradeoperator_workernode_upgrade_completed_timestamp
     - apiVersion: monitoring.coreos.com/v1
       kind: PrometheusRule
       metadata:
