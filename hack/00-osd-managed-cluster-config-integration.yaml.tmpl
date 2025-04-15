@@ -25381,6 +25381,99 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: configure-alertmanager-operator-reinstall
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: sre-operator-reinstall-sa
+        namespace: openshift-monitoring
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: sre-operator-reinstall-role
+        namespace: openshift-monitoring
+      rules:
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - clusterserviceversions
+        - subscriptions
+        - installplans
+        verbs:
+        - list
+        - get
+        - delete
+        - create
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: sre-operator-reinstall-rb
+        namespace: openshift-monitoring
+      roleRef:
+        kind: Role
+        name: sre-operator-reinstall-role
+        apiGroup: rbac.authorization.k8s.io
+      subjects:
+      - kind: ServiceAccount
+        name: sre-operator-reinstall-sa
+        namespace: openshift-monitoring
+    - apiVersion: batch/v1
+      kind: Job
+      metadata:
+        name: sre-operator-reinstall
+        namespace: openshift-monitoring
+      spec:
+        backoffLimit: 6
+        completions: 1
+        parallelism: 1
+        activeDeadlineSeconds: 300
+        template:
+          spec:
+            restartPolicy: OnFailure
+            serviceAccountName: sre-operator-reinstall-sa
+            containers:
+            - name: sre-operator-reinstall
+              image: image-registry.openshift-image-registry.svc:5000/openshift/tools:latest
+              command:
+              - sh
+              - -c
+              - '#!/bin/bash
+
+                set -uxo pipefail
+
+                NAMESPACE="openshift-monitoring"
+
+                OPERATOR="configure-alertmanager-operator"
+
+
+                # Delete all ClusterServiceVersions
+
+                oc get clusterserviceversions.operators.coreos.com -n "$NAMESPACE"
+                --no-headers | grep $OPERATOR | awk ''{print $1}'' | xargs oc delete
+                clusterserviceversions.operators.coreos.com -n $NAMESPACE --wait=false
+
+
+                exit 0
+
+                '
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: crio-config
   spec:
     clusterDeploymentSelector:
