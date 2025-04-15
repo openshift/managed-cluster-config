@@ -47,6 +47,7 @@ def dump_configmap(input_path, configmap_path, enableUserWorkload,
             }
         }
 
+
         with open(configmap_path, 'w') as outfile:
             yaml.dump(cmo_config, outfile)
 
