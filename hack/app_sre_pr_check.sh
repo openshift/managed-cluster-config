@@ -5,14 +5,17 @@ set -exv
 trap "rm -f sorted-before*.yaml.tmpl sorted-after*.yaml.tmpl" EXIT
 
 PROMTOOL_IMAGE=quay.io/prometheus/prometheus
-CONTAINER_ENGINE=docker
+
+# Image that contains python, yaml & co
+PYTHON_IMAGE=quay.io/redhat-services-prod/openshift/boilerplate:latest
+CONTAINER_ENGINE=podman
 
 # all custom alerts must have a namespace label
 MISSING_NS="false"
 for F in $(find ./deploy/sre-prometheus -type f -iname '*prometheusrule.yaml')
 do
     # requires yq
-    MISSING_NS_COUNT=$(cat $F | python -c 'import json, sys, yaml ; y=yaml.safe_load(sys.stdin.read()) ; print(json.dumps(y))' | jq -r '.spec.groups[].rules[] | select(.alert != null) | select(.namespace == null) and select(.labels.namespace == null)' | wc -l)
+    MISSING_NS_COUNT=$(cat $F | $CONTAINER_ENGINE run -i --rm --entrypoint python3 $PYTHON_IMAGE -c 'import json, sys, yaml ; y=yaml.safe_load(sys.stdin.read()) ; print(json.dumps(y))' | jq -r '.spec.groups[].rules[] | select(.alert != null) | select(.namespace == null) and select(.labels.namespace == null)' | wc -l)
 
     if [ "$MISSING_NS_COUNT" != "0" ]
     then
@@ -20,7 +23,7 @@ do
         MISSING_NS="true"
     fi
 
-    JSON_RULESFILE="$(cat "$F" | python -c 'import json, sys, yaml ; y=yaml.safe_load(sys.stdin.read()) ; print(json.dumps(y))' | jq -r '.spec')"
+    JSON_RULESFILE="$(cat "$F" | $CONTAINER_ENGINE run -i --rm --entrypoint python3 $PYTHON_IMAGE -c 'import json, sys, yaml ; y=yaml.safe_load(sys.stdin.read()) ; print(json.dumps(y))' | jq -r '.spec')"
     if ! echo "$JSON_RULESFILE" | $CONTAINER_ENGINE run -i --rm --entrypoint promtool $PROMTOOL_IMAGE check rules --lint="all" --lint-fatal; then
       echo "Invalid rules file: '$F'" 
       exit 1
@@ -57,8 +60,8 @@ do
   if cat ${fl} | grep -i "RoleBinding" | grep -q "kind:" ; then
     # NOTE Remove 'namespace' from roleRef as this is not part of the specification and has not impact on the resource.
     #      Excluding 'namespace' from the PR check allows us to remove it and therefore get ACM Policy validation to work correctly.
-    ROLEREF_MASTER=$(git show origin/master:${fl} | python -c 'import json, sys, yaml ; y=yaml.safe_load(sys.stdin.read()) ; print(json.dumps(y))' | jq -r 'del(.roleRef.namespace) | .roleRef' )
-    ROLEREF_PR=$(cat ${fl} | python -c 'import json, sys, yaml ; y=yaml.safe_load(sys.stdin.read()) ; print(json.dumps(y))' | jq -r '.roleRef' )
+    ROLEREF_MASTER=$(git show origin/master:${fl} | $CONTAINER_ENGINE run -i --rm --entrypoint python3 $PYTHON_IMAGE -c 'import json, sys, yaml ; y=yaml.safe_load(sys.stdin.read()) ; print(json.dumps(y))' | jq -r 'del(.roleRef.namespace) | .roleRef' )
+    ROLEREF_PR=$(cat ${fl} | $CONTAINER_ENGINE run -i --rm --entrypoint python3 $PYTHON_IMAGE -c 'import json, sys, yaml ; y=yaml.safe_load(sys.stdin.read()) ; print(json.dumps(y))' | jq -r '.roleRef' )
     # see if roleref has changed compared to master
     if ! jq -ne --argjson a "$ROLEREF_MASTER" --argjson b "$ROLEREF_PR" '$a == $b'; then
       echo "ERROR: roleref modification is not supported. Please create a new ClusterRoleBinding/RoleBinding instead. See https://github.com/openshift/ops-sop/blob/master/v4/knowledge_base/mcc-modify-roleref.md"
