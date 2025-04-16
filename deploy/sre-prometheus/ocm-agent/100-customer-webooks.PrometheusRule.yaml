@@ -40,7 +40,7 @@ spec:
       expr: |-
         webhook:max_duration
         * on(type, webhook_name) group_left(service_namespace, service_name)
-        webhook:configuration_service{webhook_name !~ ".*\\.openshift\\.io", service_namespace !~ "openshift-.*"}
+        webhook:configuration_service{webhook_name !~ ".*\\.openshift\\.io", service_namespace !~ "openshift-.*", service_name !~ ""}
         > 1
       for: 15m
       labels:
