@@ -12,3 +12,15 @@ spec:
       rules:
         - expr: sre:telemetry:managed_labels * on (version) group_left(alerts, upgradeconfig_name, preceding_version, stream) label_replace(upgradeoperator_upgrade_result, "sre", "true", "", "")
           record: sre:slo:upgradeoperator_upgrade_result
+        - expr: sre:telemetry:managed_labels * on (_id) group_left(upgradeconfig_name) upgradeoperator_upgrade_started_timestamp
+          record: sre:slo:upgradeoperator_upgrade_started_timestamp
+        - expr: sre:telemetry:managed_labels * on (_id) group_left(upgradeconfig_name) upgradeoperator_upgrade_completed_timestamp
+          record: sre:slo:upgradeoperator_upgrade_completed_timestamp
+        - expr: sre:telemetry:managed_labels * on (_id) group_left(upgradeconfig_name) upgradeoperator_controlplane_upgrade_started_timestamp
+          record: sre:slo:upgradeoperator_controlplane_upgrade_started_timestamp
+        - expr: sre:telemetry:managed_labels * on (_id) group_left(upgradeconfig_name) upgradeoperator_controlplane_upgrade_completed_timestamp
+          record: sre:slo:upgradeoperator_controlplane_upgrade_completed_timestamp
+        - expr: sre:telemetry:managed_labels * on (_id) group_left(upgradeconfig_name) upgradeoperator_workernode_upgrade_started_timestamp
+          record: sre:slo:upgradeoperator_workernode_upgrade_started_timestamp
+        - expr: sre:telemetry:managed_labels * on (_id) group_left(upgradeconfig_name) upgradeoperator_workernode_upgrade_completed_timestamp
+          record: sre:slo:upgradeoperator_workernode_upgrade_completed_timestamp
