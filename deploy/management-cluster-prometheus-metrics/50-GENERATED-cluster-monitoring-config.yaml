@@ -1,0 +1,113 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cluster-monitoring-config
+  namespace: openshift-monitoring
+data:
+  config.yaml: |
+    enableUserWorkload: true
+    prometheusK8s:
+      remoteWrite:
+      - url: ${OBSERVATORIUM_URL}
+        oauth2:
+          clientId:
+            secret:
+              key: client-id
+              name: observatorium-credentials
+          clientSecret:
+            key: client-secret
+            name: observatorium-credentials
+          tokenUrl: https://sso.redhat.com/auth/realms/redhat-external/protocol/openid-connect/token
+        remoteTimeout: 30s
+        writeRelabelConfigs:
+        - sourceLabels:
+          - __name__
+          action: keep
+          regex: (package_operator_package_availability|addon_operator_addons_count|addon_operator_reconcile_error|addon_operator_addon_health_info|addon_operator_ocm_api_requests_durations|addon_operator_ocm_api_requests_durations_sum|addon_operator_ocm_api_requests_durations_count|addon_operator_paused|cluster_admin_enabled|limited_support_enabled|identity_provider|cpms_enabled|ingress_canary_route_reachable|ocm_agent_service_log_sent_total|sre:slo:probe_success_api|sre:slo:probe_success_console|sre:slo:upgradeoperator_upgrade_result|sre:slo:imageregistry_http_requests_total|sre:slo:oauth_server_requests_total|sre:sla:outage_5_minutes|sre:slo:apiserver_28d_slo|sre:slo:console_28d_slo|sre:error_budget_burn:apiserver_28d_slo|sre:error_budget_burn:console_28d_slo|sre:operators:succeeded|sre:record:upgradeoperator_upgrade_healthcheck_result|sre:slo:upgradeoperator_upgrade_started_timestamp|sre:slo:upgradeoperator_upgrade_completed_timestamp|sre:slo:upgradeoperator_controlplane_upgrade_started_timestamp|sre:slo:upgradeoperator_controlplane_upgrade_completed_timestamp|sre:slo:upgradeoperator_workernode_upgrade_started_timestamp|sre:slo:upgradeoperator_workernode_upgrade_completed_timestamp)
+        queueConfig:
+          capacity: 2500
+          maxShards: 1000
+          minShards: 1
+          maxSamplesPerSend: 2000
+          batchSendDeadline: 60s
+          minBackoff: 30ms
+          maxBackoff: 1m
+      nodeSelector:
+        node-role.kubernetes.io/infra: ''
+      tolerations:
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/infra
+        operator: Exists
+      retention: 11d
+      retentionSize: 90GB
+      volumeClaimTemplate:
+        metadata:
+          name: prometheus-data
+        spec:
+          resources:
+            requests:
+              storage: 100Gi
+    alertmanagerMain:
+      nodeSelector:
+        node-role.kubernetes.io/infra: ''
+      tolerations:
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/infra
+        operator: Exists
+      volumeClaimTemplate:
+        metadata:
+          name: alertmanager-data
+        spec:
+          resources:
+            requests:
+              storage: 10Gi
+    telemeterClient:
+      nodeSelector:
+        node-role.kubernetes.io/infra: ''
+      tolerations:
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/infra
+        operator: Exists
+      telemeterServerURL: ${TELEMETER_SERVER_URL}
+    prometheusOperator:
+      nodeSelector:
+        node-role.kubernetes.io/infra: ''
+      tolerations:
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/infra
+        operator: Exists
+    k8sPrometheusAdapter:
+      nodeSelector:
+        node-role.kubernetes.io/infra: ''
+      tolerations:
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/infra
+        operator: Exists
+    kubeStateMetrics:
+      nodeSelector:
+        node-role.kubernetes.io/infra: ''
+      tolerations:
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/infra
+        operator: Exists
+    openshiftStateMetrics:
+      nodeSelector:
+        node-role.kubernetes.io/infra: ''
+      tolerations:
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/infra
+        operator: Exists
+    thanosQuerier:
+      nodeSelector:
+        node-role.kubernetes.io/infra: ''
+      tolerations:
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/infra
+        operator: Exists
+    monitoringPlugin:
+      nodeSelector:
+        node-role.kubernetes.io/infra: ''
+      tolerations:
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/infra
+        operator: Exists
