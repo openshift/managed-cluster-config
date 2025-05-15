@@ -58,7 +58,7 @@ OC := $(CONTAINER_ENGINE) run $(CONTAINER_RUN_FLAGS) quay.io/openshift/origin-cl
 endif
 
 .PHONY: default
-default: enforce-backplane-rules generate-oauth-templates generate-rosa-brand-logo generate-hive-templates
+default: enforce-backplane-rules generate-oauth-templates generate-hive-templates
 
 .PHONY: generate-oauth-templates
 generate-oauth-templates:
@@ -69,10 +69,6 @@ generate-oauth-templates:
 		$(OC) create secret generic osd-oauth-templates-$$TYPE -n openshift-config --from-file=$$TYPE.html=source/html/osd/$$TYPE.html -o yaml > deploy/osd-oauth-templates-$$TYPE/osd-oauth-templates-$$TYPE.secret.yaml; \
 		$(OC) create secret generic rosa-oauth-templates-$$TYPE -n openshift-config --from-file=$$TYPE.html=source/html/rosa/$$TYPE.html -o yaml > deploy/rosa-oauth-templates-$$TYPE/rosa-oauth-templates-$$TYPE.secret.yaml; \
 	done
-
-.PHONY: generate-rosa-brand-logo
-generate-rosa-brand-logo:
-	$(OC) create configmap rosa-brand-logo -n openshift-config --from-file source/html/rosa/rosa-brand-logo.svg -o yaml > deploy/rosa-console-branding-configmap/rosa-brand-logo.yaml
 
 .PHONY: generate-hive-templates
 generate-hive-templates: generate-oauth-templates
