@@ -72,7 +72,7 @@ generate-oauth-templates:
 
 .PHONY: generate-rosa-brand-logo
 generate-rosa-brand-logo:
-	$(OC) create configmap rosa-brand-logo -n openshift-config --from-file source/html/rosa/rosa-brand-logo.svg -o yaml > deploy/rosa-console-branding-configmap/rosa-brand-logo.yaml
+	$(OC) create configmap rosa-brand-logo -n openshift-config --from-file source/html/rosa/rosa-brand-logo.svg -o yaml > deploy/rosa-console-legacy-branding-configmap/rosa-brand-logo.yaml
 
 .PHONY: generate-hive-templates
 generate-hive-templates: generate-oauth-templates
