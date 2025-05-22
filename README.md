@@ -97,7 +97,7 @@ In OSD, managed-cluster-config sets a [key named `branding` to `dedicated`](http
 
 ## OAuth Templates
 
-Docs TBA.
+The OAuth templates are HTML files that are used to customize the login page of the OpenShift web console. These templates are built from the [oauth-templates](https://github.com/openshift/oauth-templates/) repository. managed-cluster-config overrides the default templates with custom ones that are stored in this repository. To update the templates, refer to the REAMDE in the [OSD](./source/html/osd/README.md) and [ROSA](./source/html/rosa/README.md) directories for more information.
 
 ## Resource Quotas
 
