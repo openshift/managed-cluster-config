@@ -9870,7 +9870,7 @@ objects:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
           policy.open-cluster-management.io/standards: NIST SP 800-53
-        name: rosa-console-branding-configmap
+        name: rosa-console-branding
         namespace: openshift-acm-policies
       spec:
         disabled: false
@@ -9879,7 +9879,71 @@ objects:
             apiVersion: policy.open-cluster-management.io/v1
             kind: ConfigurationPolicy
             metadata:
-              name: rosa-console-branding-configmap
+              name: rosa-console-branding
+            spec:
+              evaluationInterval:
+                compliant: 2h
+                noncompliant: 45s
+              object-templates:
+              - complianceType: musthave
+                metadataComplianceType: musthave
+                objectDefinition:
+                  apiVersion: operator.openshift.io/v1
+                  kind: Console
+                  metadata:
+                    name: cluster
+                  spec:
+                    customization:
+                      brand: ROSA
+                      documentationBaseURL: https://docs.openshift.com/rosa/
+                    managementState: Managed
+                    route: null
+              pruneObjectBehavior: DeleteIfCreated
+              remediationAction: enforce
+              severity: low
+        remediationAction: enforce
+    - apiVersion: apps.open-cluster-management.io/v1
+      kind: PlacementRule
+      metadata:
+        name: placement-rosa-console-branding
+        namespace: openshift-acm-policies
+      spec:
+        clusterSelector:
+          matchExpressions:
+          - key: hypershift.open-cluster-management.io/hosted-cluster
+            operator: In
+            values:
+            - 'true'
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: PlacementBinding
+      metadata:
+        name: binding-rosa-console-branding
+        namespace: openshift-acm-policies
+      placementRef:
+        apiGroup: apps.open-cluster-management.io
+        kind: PlacementRule
+        name: placement-rosa-console-branding
+      subjects:
+      - apiGroup: policy.open-cluster-management.io
+        kind: Policy
+        name: rosa-console-branding
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: Policy
+      metadata:
+        annotations:
+          policy.open-cluster-management.io/categories: CM Configuration Management
+          policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/standards: NIST SP 800-53
+        name: rosa-console-legacy-branding-configmap
+        namespace: openshift-acm-policies
+      spec:
+        disabled: false
+        policy-templates:
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+              name: rosa-console-legacy-branding-configmap
             spec:
               evaluationInterval:
                 compliant: 2h
@@ -10002,7 +10066,7 @@ objects:
     - apiVersion: apps.open-cluster-management.io/v1
       kind: PlacementRule
       metadata:
-        name: placement-rosa-console-branding-configmap
+        name: placement-rosa-console-legacy-branding-configmap
         namespace: openshift-acm-policies
       spec:
         clusterSelector:
@@ -10014,16 +10078,16 @@ objects:
     - apiVersion: policy.open-cluster-management.io/v1
       kind: PlacementBinding
       metadata:
-        name: binding-rosa-console-branding-configmap
+        name: binding-rosa-console-legacy-branding-configmap
         namespace: openshift-acm-policies
       placementRef:
         apiGroup: apps.open-cluster-management.io
         kind: PlacementRule
-        name: placement-rosa-console-branding-configmap
+        name: placement-rosa-console-legacy-branding-configmap
       subjects:
       - apiGroup: policy.open-cluster-management.io
         kind: Policy
-        name: rosa-console-branding-configmap
+        name: rosa-console-legacy-branding-configmap
     - apiVersion: policy.open-cluster-management.io/v1
       kind: Policy
       metadata:
@@ -10031,7 +10095,7 @@ objects:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
           policy.open-cluster-management.io/standards: NIST SP 800-53
-        name: rosa-console-branding
+        name: rosa-console-legacy-branding
         namespace: openshift-acm-policies
       spec:
         disabled: false
@@ -10040,7 +10104,7 @@ objects:
             apiVersion: policy.open-cluster-management.io/v1
             kind: ConfigurationPolicy
             metadata:
-              name: rosa-console-branding
+              name: rosa-console-legacy-branding
             spec:
               evaluationInterval:
                 compliant: 2h
@@ -10055,7 +10119,11 @@ objects:
                     name: cluster
                   spec:
                     customization:
-                      brand: ROSA
+                      brand: null
+                      customLogoFile:
+                        key: rosa-brand-logo.svg
+                        name: rosa-brand-logo
+                      customProductName: Red Hat OpenShift Service on AWS
                       documentationBaseURL: https://docs.openshift.com/rosa/
                     managementState: Managed
                     route: null
@@ -10066,7 +10134,7 @@ objects:
     - apiVersion: apps.open-cluster-management.io/v1
       kind: PlacementRule
       metadata:
-        name: placement-rosa-console-branding
+        name: placement-rosa-console-legacy-branding
         namespace: openshift-acm-policies
       spec:
         clusterSelector:
@@ -10078,16 +10146,16 @@ objects:
     - apiVersion: policy.open-cluster-management.io/v1
       kind: PlacementBinding
       metadata:
-        name: binding-rosa-console-branding
+        name: binding-rosa-console-legacy-branding
         namespace: openshift-acm-policies
       placementRef:
         apiGroup: apps.open-cluster-management.io
         kind: PlacementRule
-        name: placement-rosa-console-branding
+        name: placement-rosa-console-legacy-branding
       subjects:
       - apiGroup: policy.open-cluster-management.io
         kind: Policy
-        name: rosa-console-branding
+        name: rosa-console-legacy-branding
     - apiVersion: policy.open-cluster-management.io/v1
       kind: Policy
       metadata:
