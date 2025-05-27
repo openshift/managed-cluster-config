@@ -28944,12 +28944,16 @@ objects:
           \ it's Z stream is >= ${Z_STREAM_FIXED_VER}\"\n    echo \"removing hypershift.openshift.io/capi-provider-aws-image\
           \ annotation\"\n    cleanup=\"true\"\n  fi\n\n  namespace=$(oc get managedclusters\
           \ \"$clusterID\" -o json | jq -r '.metadata.labels[\"api.openshift.com/management-cluster\"\
-          ]')\n  kinds=$(oc get manifestwork -n \"$namespace\" \"$clusterID\" -o json\
-          \ | jq -r '.spec.workload.manifests[].kind')\n  num=0\n  for kind in $kinds;do\n\
-          \    if [[ $kind == \"HostedCluster\" ]]; then\n        echo \"patching\
-          \ cluster: $clusterID\"\n\n        if [[ $cleanup = \"true\" ]]; then\n\
-          \          json_payload='[{\"op\":\"remove\",\"path\":\"/spec/workload/manifests/'\"\
-          $num\"'/metadata/annotations/hypershift.openshift.io~1capi-provider-aws-image\"\
+          ]')\n\n  # If the managedcluster does not have a api.openshift.io/management-cluster\
+          \ label, then it should be skipped. This is\n  # usually because the local\
+          \ cluster + service cluster are registered as \"managedcluster\"s.\n  if\
+          \ [ \"$namespace\" = \"null\" ]; then\n    echo \"skipping cluster $clusterID\
+          \ because it is a management or local cluster\"\n    break\n  fi\n\n  kinds=$(oc\
+          \ get manifestwork -n \"$namespace\" \"$clusterID\" -o json | jq -r '.spec.workload.manifests[].kind')\n\
+          \  num=0\n  for kind in $kinds;do\n    if [[ $kind == \"HostedCluster\"\
+          \ ]]; then\n        echo \"patching cluster: $clusterID\"\n\n        if\
+          \ [[ $cleanup = \"true\" ]]; then\n          json_payload='[{\"op\":\"remove\"\
+          ,\"path\":\"/spec/workload/manifests/'\"$num\"'/metadata/annotations/hypershift.openshift.io~1capi-provider-aws-image\"\
           }]'\n        else\n          json_payload='[{\"op\":\"replace\",\"path\"\
           :\"/spec/workload/manifests/'\"$num\"'/metadata/annotations/hypershift.openshift.io~1capi-provider-aws-image\"\
           ,\"value\":\"'\"$IMAGE\"'\"}]'\n        fi\n\n        echo \"oc patch manifestwork\

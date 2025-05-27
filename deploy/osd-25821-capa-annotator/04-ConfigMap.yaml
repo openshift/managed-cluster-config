@@ -74,6 +74,14 @@ data:
       fi
     
       namespace=$(oc get managedclusters "$clusterID" -o json | jq -r '.metadata.labels["api.openshift.com/management-cluster"]')
+
+      # If the managedcluster does not have a api.openshift.io/management-cluster label, then it should be skipped. This is
+      # usually because the local cluster + service cluster are registered as "managedcluster"s.
+      if [ "$namespace" = "null" ]; then
+        echo "skipping cluster $clusterID because it is a management or local cluster"
+        break
+      fi
+
       kinds=$(oc get manifestwork -n "$namespace" "$clusterID" -o json | jq -r '.spec.workload.manifests[].kind')
       num=0
       for kind in $kinds;do
