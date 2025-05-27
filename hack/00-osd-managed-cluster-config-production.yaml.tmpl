@@ -28903,6 +28903,60 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: ClusterRole
         name: capa-annotator
+    - apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: capa-annotator
+        namespace: openshift-capa-annotator
+      data:
+        should_patch.py: "import sys\n# should_patch.py takes two arguments: version\
+          \ and compare_version.\n# It will then compare the Z stream of version to\
+          \ see if it's >= compare_version,\n# exiting non-zero if it's not. Exiting\
+          \ non-zero means we need to patch.\n#\n# Example:\n#   # This exits non-zero\
+          \ as the Z stream (10) is not >= 11\n#   python should_patch.py 4.17.10\
+          \ 11\n#\n#   # This exits zero as the Z stream (10) is >= 9\n#   python\
+          \ should_patch.py 4.17.10 9\n\nusage = \"\"\"usage: python should_patch.py\
+          \ $version $compare_version\nexample: python should_patch.py 4.17.15 14\
+          \ # exits 0 \n  \"\"\"\n\ndef should_patch(version, compare_version):\n\
+          \    try:\n        x, y, z = version.split('.')\n        if int(z) >= int(compare_version):\n\
+          \            print(f\"don't patch: version {version} is >= x.y.{compare_version}\"\
+          )\n            return False\n        else:\n            print(f\"should\
+          \ patch: version {version} is not >= x.y.{compare_version}\")\n        \
+          \    return True\n    except ValueError:\n        print(f\"could not compare\
+          \ version {version} to {compare_version}, defaulting to should patch\")\n\
+          \        return True\n\ndef main():\n    if len(sys.argv) != 3:\n      \
+          \  print(usage)\n        sys.exit(1)\n    \n    version = sys.argv[1].rstrip()\n\
+          \    compare_version = sys.argv[2].rstrip()\n    \n    if should_patch(version,\
+          \ compare_version):\n        sys.exit(1)\n\nif __name__==\"__main__\":\n\
+          \    main()\n"
+        patch.sh: "#!/bin/bash\n\n# Required Environment Variables:\n# - IMAGE\n#\
+          \ - MAJOR_MINOR_VER\n# - Z_STREAM_FIXED_VER\n\n# Get all manifestwork objects\
+          \ and extract their names\nmanagedclusters=$(oc get managedclusters -l openshiftVersion-major-minor=${MAJOR_MINOR_VER}\
+          \ -o jsonpath='{range .items[*]}{.metadata.name}{\"\\n\"}{end}')\n\n# Loop\
+          \ through each manifestwork object\nfor clusterID in ${managedclusters[@]};do\n\
+          \  # Extract full version, namespace and name\n  version=$(oc get managedclusters\
+          \ $clusterID -o json | jq -r '.metadata.labels.openshiftVersion')\n\n  #\
+          \ Only patch the image if the clusters Z stream version is < $Z_STREAM_FIXED_VER\n\
+          \  # This also handles any case where the script exits non-zero for any\
+          \ other reason, opting to patch as a result.\n  cleanup=\"false\"\n  if\
+          \ python /tmp/scripts/should_patch.py \"${version}\" \"${Z_STREAM_FIXED_VER}\"\
+          ; then\n    echo \"cluster ${clusterID} does not need the override because\
+          \ it's Z stream is >= ${Z_STREAM_FIXED_VER}\"\n    echo \"removing hypershift.openshift.io/capi-provider-aws-image\
+          \ annotation\"\n    cleanup=\"true\"\n  fi\n\n  namespace=$(oc get managedclusters\
+          \ \"$clusterID\" -o json | jq -r '.metadata.labels[\"api.openshift.com/management-cluster\"\
+          ]')\n  kinds=$(oc get manifestwork -n \"$namespace\" \"$clusterID\" -o json\
+          \ | jq -r '.spec.workload.manifests[].kind')\n  num=0\n  for kind in $kinds;do\n\
+          \    if [[ $kind == \"HostedCluster\" ]]; then\n        echo \"patching\
+          \ cluster: $clusterID\"\n\n        if [[ $cleanup = \"true\" ]]; then\n\
+          \          json_payload='[{\"op\":\"remove\",\"path\":\"/spec/workload/manifests/'\"\
+          $num\"'/metadata/annotations/hypershift.openshift.io~1capi-provider-aws-image\"\
+          }]'\n        else\n          json_payload='[{\"op\":\"replace\",\"path\"\
+          :\"/spec/workload/manifests/'\"$num\"'/metadata/annotations/hypershift.openshift.io~1capi-provider-aws-image\"\
+          ,\"value\":\"'\"$IMAGE\"'\"}]'\n        fi\n\n        echo \"oc patch manifestwork\
+          \ $clusterID -n $namespace --type='json' -p \"$json_payload\"\"\n      \
+          \  oc patch manifestwork \"$clusterID\" -n \"$namespace\" --type='json'\
+          \ -p \"$json_payload\"\n        echo \"-------------------------------------------------------------------------\"\
+          \n        break\n    fi\n  (( num++))\n  done\ndone\n"
     - apiVersion: batch/v1
       kind: CronJob
       metadata:
@@ -28939,7 +28993,7 @@ objects:
                 containers:
                 - name: capa-annotator
                   image: image-registry.openshift-image-registry.svc:5000/openshift/tools:latest
-                  imagePullPolicy: Always
+                  imagePullPolicy: IfNotPresent
                   securityContext:
                     allowPrivilegeEscalation: false
                     capabilities:
@@ -28951,27 +29005,19 @@ objects:
                     value: quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:8ef2860fe69648046ee92a0d5b272fe17ec1a0bee000c27af21bc4a7dade8394
                   - name: MAJOR_MINOR_VER
                     value: '4.14'
+                  - name: Z_STREAM_FIXED_VER
+                    value: 4.14.41
+                  volumeMounts:
+                  - name: scripts
+                    mountPath: /tmp/scripts
                   command:
                   - /bin/bash
                   args:
-                  - -c
-                  - "# Get all manifestwork objects and extract their names\nmanagedclusters=$(oc\
-                    \ get managedclusters -l openshiftVersion-major-minor=${MAJOR_MINOR_VER}\
-                    \ -o jsonpath='{range .items[*]}{.metadata.name}{\"\\n\"}{end}')\n\
-                    # Loop through each manifestwork object\nfor clusterID in ${managedclusters[@]};do\
-                    \ \n  # Extract namespace and name\n  namespace=$(oc get managedclusters\
-                    \ $clusterID -o json | jq -r '.metadata.labels[\"api.openshift.com/management-cluster\"\
-                    ]')\n  kinds=$(oc get manifestwork -n $namespace $clusterID -o\
-                    \ json | jq -r '.spec.workload.manifests[].kind')\n  num=0 \n\
-                    \  for kind in $kinds;do \n    if [[ $kind == \"HostedCluster\"\
-                    \ ]]; then\n        echo $clusterID\n        #~1 escapes / in\
-                    \ bash\n        json_payload='[{\"op\":\"replace\",\"path\":\"\
-                    /spec/workload/manifests/'\"$num\"'/metadata/annotations/hypershift.openshift.io~1capi-provider-aws-image\"\
-                    ,\"value\":\"'\"$IMAGE\"'\"}]'\n        echo \"oc patch manifestwork\
-                    \ $clusterID -n $namespace --type='json' -p \"$json_payload\"\"\
-                    \n        oc patch manifestwork $clusterID -n $namespace --type='json'\
-                    \ -p \"$json_payload\"\n        echo \"-------------------------------------------------------------------------\"\
-                    \n        break\n    fi\n  (( num++))\n  done\ndone\n"
+                  - /tmp/scripts/patch.sh
+                volumes:
+                - name: scripts
+                  configMap:
+                    name: capa-annotator
                 serviceAccountName: capa-annotator
                 automountServiceAccountToken: true
                 restartPolicy: Never
@@ -29011,7 +29057,7 @@ objects:
                 containers:
                 - name: capa-annotator
                   image: image-registry.openshift-image-registry.svc:5000/openshift/tools:latest
-                  imagePullPolicy: Always
+                  imagePullPolicy: IfNotPresent
                   securityContext:
                     allowPrivilegeEscalation: false
                     capabilities:
@@ -29023,27 +29069,19 @@ objects:
                     value: quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:4a7be4ea33b2321f0f5302cd2664cc99dc1fa1e02db7d9aa979247f1b8826039
                   - name: MAJOR_MINOR_VER
                     value: '4.15'
+                  - name: Z_STREAM_FIXED_VER
+                    value: 4.15.39
+                  volumeMounts:
+                  - name: scripts
+                    mountPath: /tmp/scripts
                   command:
                   - /bin/bash
                   args:
-                  - -c
-                  - "# Get all manifestwork objects and extract their names\nmanagedclusters=$(oc\
-                    \ get managedclusters -l openshiftVersion-major-minor=${MAJOR_MINOR_VER}\
-                    \ -o jsonpath='{range .items[*]}{.metadata.name}{\"\\n\"}{end}')\n\
-                    # Loop through each manifestwork object\nfor clusterID in ${managedclusters[@]};do\
-                    \ \n  # Extract namespace and name\n  namespace=$(oc get managedclusters\
-                    \ $clusterID -o json | jq -r '.metadata.labels[\"api.openshift.com/management-cluster\"\
-                    ]')\n  kinds=$(oc get manifestwork -n $namespace $clusterID -o\
-                    \ json | jq -r '.spec.workload.manifests[].kind')\n  num=0 \n\
-                    \  for kind in $kinds;do \n    if [[ $kind == \"HostedCluster\"\
-                    \ ]]; then\n        echo $clusterID\n        #~1 escapes / in\
-                    \ bash\n        json_payload='[{\"op\":\"replace\",\"path\":\"\
-                    /spec/workload/manifests/'\"$num\"'/metadata/annotations/hypershift.openshift.io~1capi-provider-aws-image\"\
-                    ,\"value\":\"'\"$IMAGE\"'\"}]'\n        echo \"oc patch manifestwork\
-                    \ $clusterID -n $namespace --type='json' -p \"$json_payload\"\"\
-                    \n        oc patch manifestwork $clusterID -n $namespace --type='json'\
-                    \ -p \"$json_payload\"\n        echo \"-------------------------------------------------------------------------\"\
-                    \n        break\n    fi\n  (( num++))\n  done\ndone\n"
+                  - /tmp/scripts/patch.sh
+                volumes:
+                - name: scripts
+                  configMap:
+                    name: capa-annotator
                 serviceAccountName: capa-annotator
                 automountServiceAccountToken: true
                 restartPolicy: Never
@@ -29083,7 +29121,7 @@ objects:
                 containers:
                 - name: capa-annotator
                   image: image-registry.openshift-image-registry.svc:5000/openshift/tools:latest
-                  imagePullPolicy: Always
+                  imagePullPolicy: IfNotPresent
                   securityContext:
                     allowPrivilegeEscalation: false
                     capabilities:
@@ -29095,27 +29133,19 @@ objects:
                     value: quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:fbad492113bbe9763af4b04be533473dea08ffdd759a288a697b41c7aafa4d5e
                   - name: MAJOR_MINOR_VER
                     value: '4.16'
+                  - name: Z_STREAM_FIXED_VER
+                    value: 4.16.23
+                  volumeMounts:
+                  - name: scripts
+                    mountPath: /tmp/scripts
                   command:
                   - /bin/bash
                   args:
-                  - -c
-                  - "# Get all manifestwork objects and extract their names\nmanagedclusters=$(oc\
-                    \ get managedclusters -l openshiftVersion-major-minor=${MAJOR_MINOR_VER}\
-                    \ -o jsonpath='{range .items[*]}{.metadata.name}{\"\\n\"}{end}')\n\
-                    # Loop through each manifestwork object\nfor clusterID in ${managedclusters[@]};do\
-                    \ \n  # Extract namespace and name\n  namespace=$(oc get managedclusters\
-                    \ $clusterID -o json | jq -r '.metadata.labels[\"api.openshift.com/management-cluster\"\
-                    ]')\n  kinds=$(oc get manifestwork -n $namespace $clusterID -o\
-                    \ json | jq -r '.spec.workload.manifests[].kind')\n  num=0 \n\
-                    \  for kind in $kinds;do \n    if [[ $kind == \"HostedCluster\"\
-                    \ ]]; then\n        echo $clusterID\n        #~1 escapes / in\
-                    \ bash\n        json_payload='[{\"op\":\"replace\",\"path\":\"\
-                    /spec/workload/manifests/'\"$num\"'/metadata/annotations/hypershift.openshift.io~1capi-provider-aws-image\"\
-                    ,\"value\":\"'\"$IMAGE\"'\"}]'\n        echo \"oc patch manifestwork\
-                    \ $clusterID -n $namespace --type='json' -p \"$json_payload\"\"\
-                    \n        oc patch manifestwork $clusterID -n $namespace --type='json'\
-                    \ -p \"$json_payload\"\n        echo \"-------------------------------------------------------------------------\"\
-                    \n        break\n    fi\n  (( num++))\n  done\ndone\n"
+                  - /tmp/scripts/patch.sh
+                volumes:
+                - name: scripts
+                  configMap:
+                    name: capa-annotator
                 serviceAccountName: capa-annotator
                 automountServiceAccountToken: true
                 restartPolicy: Never
@@ -29155,7 +29185,7 @@ objects:
                 containers:
                 - name: capa-annotator
                   image: image-registry.openshift-image-registry.svc:5000/openshift/tools:latest
-                  imagePullPolicy: Always
+                  imagePullPolicy: IfNotPresent
                   securityContext:
                     allowPrivilegeEscalation: false
                     capabilities:
@@ -29167,27 +29197,19 @@ objects:
                     value: quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:f614ef855220f2381217c31b8cb94c05ef20edf3ca23b5efa0be1b957cdde3a4
                   - name: MAJOR_MINOR_VER
                     value: '4.17'
+                  - name: Z_STREAM_FIXED_VER
+                    value: 4.17.4
+                  volumeMounts:
+                  - name: scripts
+                    mountPath: /tmp/scripts
                   command:
                   - /bin/bash
                   args:
-                  - -c
-                  - "# Get all manifestwork objects and extract their names\nmanagedclusters=$(oc\
-                    \ get managedclusters -l openshiftVersion-major-minor=${MAJOR_MINOR_VER}\
-                    \ -o jsonpath='{range .items[*]}{.metadata.name}{\"\\n\"}{end}')\n\
-                    # Loop through each manifestwork object\nfor clusterID in ${managedclusters[@]};do\
-                    \ \n  # Extract namespace and name\n  namespace=$(oc get managedclusters\
-                    \ $clusterID -o json | jq -r '.metadata.labels[\"api.openshift.com/management-cluster\"\
-                    ]')\n  kinds=$(oc get manifestwork -n $namespace $clusterID -o\
-                    \ json | jq -r '.spec.workload.manifests[].kind')\n  num=0 \n\
-                    \  for kind in $kinds;do \n    if [[ $kind == \"HostedCluster\"\
-                    \ ]]; then\n        echo $clusterID\n        #~1 escapes / in\
-                    \ bash\n        json_payload='[{\"op\":\"replace\",\"path\":\"\
-                    /spec/workload/manifests/'\"$num\"'/metadata/annotations/hypershift.openshift.io~1capi-provider-aws-image\"\
-                    ,\"value\":\"'\"$IMAGE\"'\"}]'\n        echo \"oc patch manifestwork\
-                    \ $clusterID -n $namespace --type='json' -p \"$json_payload\"\"\
-                    \n        oc patch manifestwork $clusterID -n $namespace --type='json'\
-                    \ -p \"$json_payload\"\n        echo \"-------------------------------------------------------------------------\"\
-                    \n        break\n    fi\n  (( num++))\n  done\ndone\n"
+                  - /tmp/scripts/patch.sh
+                volumes:
+                - name: scripts
+                  configMap:
+                    name: capa-annotator
                 serviceAccountName: capa-annotator
                 automountServiceAccountToken: true
                 restartPolicy: Never
