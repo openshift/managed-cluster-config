@@ -1,0 +1,87 @@
+apiVersion: v1
+data:
+  patch.sh: |
+    #!/usr/bin/env bash
+
+    # NOTE: If you update this script, run `./generate_configmap.sh`
+
+    # Required Environment Variables:
+    # - IMAGE
+    # - MAJOR_MINOR_VER
+    # - Z_STREAM_FIXED_VER
+
+    # Ensure we have python available before running further logic
+    if ! command -v python &>/dev/null; then
+      echo "ERROR: python not found, required for this script to run"
+      exit 1
+    fi
+
+    # Get all manifestwork objects and extract their names
+    managedclusters=$(oc get managedclusters -l openshiftVersion-major-minor=${MAJOR_MINOR_VER} -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}')
+
+    # Loop through each manifestwork object
+    for clusterID in ${managedclusters[@]};do
+      # Extract full version, namespace and name
+      version=$(oc get managedclusters $clusterID -o json | jq -r '.metadata.labels.openshiftVersion')
+
+      # Only patch the image if the clusters Z stream version is < $Z_STREAM_FIXED_VER
+      # This also handles any case where the script exits non-zero for any other reason, opting to patch as a result.
+      cleanup="false"
+      if python /tmp/scripts/should_patch.py "${version}" "${Z_STREAM_FIXED_VER}"; then
+        echo "cluster ${clusterID} does not need the override because it's Z stream is >= ${Z_STREAM_FIXED_VER}"
+        echo "removing hypershift.openshift.io/capi-provider-aws-image annotation"
+        cleanup="true"
+      fi
+
+      namespace=$(oc get managedclusters "$clusterID" -o json | jq -r '.metadata.labels["api.openshift.com/management-cluster"]')
+
+      # If the managedcluster does not have a api.openshift.io/management-cluster label, then it should be skipped. This is
+      # usually because the local cluster + service cluster are registered as "managedcluster"s.
+      if [ "$namespace" == "null" ] || [ "$namespace" == "" ]; then
+        echo "skipping cluster $clusterID because it is a management or local cluster"
+        break
+      fi
+
+      kinds=$(oc get manifestwork -n "$namespace" "$clusterID" -o json | jq -r '.spec.workload.manifests[].kind')
+      num=0
+      for kind in $kinds;do
+        if [[ $kind == "HostedCluster" ]]; then
+            echo "patching cluster: $clusterID"
+
+            if [[ $cleanup = "true" ]]; then
+              json_payload='[{"op":"remove","path":"/spec/workload/manifests/'"$num"'/metadata/annotations/hypershift.openshift.io~1capi-provider-aws-image"}]'
+            else
+              json_payload='[{"op":"replace","path":"/spec/workload/manifests/'"$num"'/metadata/annotations/hypershift.openshift.io~1capi-provider-aws-image","value":"'"$IMAGE"'"}]'
+            fi
+
+            echo "oc patch manifestwork $clusterID -n $namespace --type='json' -p "$json_payload""
+            oc patch manifestwork "$clusterID" -n "$namespace" --type='json' -p "$json_payload"
+            echo "-------------------------------------------------------------------------"
+            break
+        fi
+      (( num++))
+      done
+    done
+  should_patch.py: "#!/usr/bin/env python3\n\n# NOTE: If you update this script, run
+    `./generate_configmap.sh`\n\nimport sys\n\n# should_patch.py takes two arguments:
+    version and compare_version.\n# It will then compare the Z stream of version to
+    see if it's >= compare_version,\n# exiting non-zero if it's not. Exiting non-zero
+    means we need to patch.\n#\n# Example:\n#   # This exits non-zero as the Z stream
+    (10) is not >= 11\n#   python should_patch.py 4.17.10 11\n#\n#   # This exits
+    zero as the Z stream (10) is >= 9\n#   python should_patch.py 4.17.10 9\n\nusage
+    = \"\"\"usage: python should_patch.py $version $compare_version\nexample: python
+    should_patch.py 4.17.15 14 # exits 0 \n\"\"\"\n\ndef should_patch(version, compare_version):\n
+    \   try:\n        x, y, z = version.split('.')\n        if int(z) >= int(compare_version):\n
+    \           print(f\"don't patch: version {version} is >= x.y.{compare_version}\")\n
+    \           return False\n        else:\n            print(f\"should patch: version
+    {version} is not >= x.y.{compare_version}\")\n            return True\n    except
+    ValueError:\n        print(f\"could not compare version {version} to {compare_version},
+    defaulting to should patch\")\n        return True\n\ndef main():\n    if len(sys.argv)
+    != 3:\n        print(usage)\n        sys.exit(1)\n\n    version = sys.argv[1].rstrip()\n
+    \   compare_version = sys.argv[2].rstrip()\n\n    if should_patch(version, compare_version):\n
+    \       sys.exit(1)\n\nif __name__==\"__main__\":\n    main()\n"
+kind: ConfigMap
+metadata:
+  creationTimestamp: null
+  name: capa-annotator
+  namespace: openshift-capa-annotator
