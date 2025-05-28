@@ -7,14 +7,19 @@ to run a custom version of the `capi-provider` for AWS.
 
 The primary logic is nested in a `CronJob` that runs periodically, enumerating clusters and deciding
 if it should patch or not. This logic includes a Python script `should_patch.py` that does a `semver` comparison
-to only patch clusters where the Z stream is not patched.
+to only patch clusters where the Z stream is not patched, as well as a shell script `patch.sh`.
 
 Any cluster `>=` the patched version will _not_ be patched. In addition, the job will then remove any override annotation,
 allowing the `control-plane-operator` to match the version of the cluster as normal.
 
 The Python script is bundled in a single `ConfigMap` that is referenced across each `CronJob`.
 
-The source is `should_patch.py`, so if changes are made there, **ensure to update the `ConfigMap` as well.**
+## Making Changes to Scripts
+
+If you make a change to either `should_patch.py` or `patch.sh`, run the included generator script to update the ConfigMap.
+
+    ./generate_configmap.sh
+    make
 
 ## Testing
 

@@ -1,4 +1,6 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+# NOTE: If you update this script, run `./generate_configmap.sh`
 
 # Required Environment Variables:
 # - IMAGE
@@ -26,7 +28,7 @@ for clusterID in ${managedclusters[@]};do
 
   # If the managedcluster does not have a api.openshift.io/management-cluster label, then it should be skipped. This is
   # usually because the local cluster + service cluster are registered as "managedcluster"s.
-  if [ "$namespace" = "null" ]; then
+  if [ "$namespace" == "null" ]; then
     echo "skipping cluster $clusterID because it is a management or local cluster"
     break
   fi

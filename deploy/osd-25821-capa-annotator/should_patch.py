@@ -1,3 +1,7 @@
+#!/usr/bin/env python3
+
+# NOTE: If you update this script, run `./generate_configmap.sh`
+
 import sys
 
 # should_patch.py takes two arguments: version and compare_version.
