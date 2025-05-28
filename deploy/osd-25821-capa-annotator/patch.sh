@@ -7,6 +7,12 @@
 # - MAJOR_MINOR_VER
 # - Z_STREAM_FIXED_VER
 
+# Ensure we have python available before running further logic
+if ! command -v python &>/dev/null; then
+  echo "ERROR: python not found, required for this script to run"
+  exit 1
+fi
+
 # Get all manifestwork objects and extract their names
 managedclusters=$(oc get managedclusters -l openshiftVersion-major-minor=${MAJOR_MINOR_VER} -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}')
 
@@ -28,7 +34,7 @@ for clusterID in ${managedclusters[@]};do
 
   # If the managedcluster does not have a api.openshift.io/management-cluster label, then it should be skipped. This is
   # usually because the local cluster + service cluster are registered as "managedcluster"s.
-  if [ "$namespace" == "null" ]; then
+  if [ "$namespace" == "null" ] || [ "$namespace" == "" ]; then
     echo "skipping cluster $clusterID because it is a management or local cluster"
     break
   fi

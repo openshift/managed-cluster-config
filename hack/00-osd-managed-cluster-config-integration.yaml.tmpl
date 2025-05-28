@@ -28907,8 +28907,11 @@ objects:
       data:
         patch.sh: "#!/usr/bin/env bash\n\n# NOTE: If you update this script, run `./generate_configmap.sh`\n\
           \n# Required Environment Variables:\n# - IMAGE\n# - MAJOR_MINOR_VER\n# -\
-          \ Z_STREAM_FIXED_VER\n\n# Get all manifestwork objects and extract their\
-          \ names\nmanagedclusters=$(oc get managedclusters -l openshiftVersion-major-minor=${MAJOR_MINOR_VER}\
+          \ Z_STREAM_FIXED_VER\n\n# Ensure we have python available before running\
+          \ further logic\nif ! command -v python &>/dev/null; then\n  echo \"ERROR:\
+          \ python not found, required for this script to run\"\n  exit 1\nfi\n\n\
+          # Get all manifestwork objects and extract their names\nmanagedclusters=$(oc\
+          \ get managedclusters -l openshiftVersion-major-minor=${MAJOR_MINOR_VER}\
           \ -o jsonpath='{range .items[*]}{.metadata.name}{\"\\n\"}{end}')\n\n# Loop\
           \ through each manifestwork object\nfor clusterID in ${managedclusters[@]};do\n\
           \  # Extract full version, namespace and name\n  version=$(oc get managedclusters\
@@ -28924,13 +28927,14 @@ objects:
           ]')\n\n  # If the managedcluster does not have a api.openshift.io/management-cluster\
           \ label, then it should be skipped. This is\n  # usually because the local\
           \ cluster + service cluster are registered as \"managedcluster\"s.\n  if\
-          \ [ \"$namespace\" == \"null\" ]; then\n    echo \"skipping cluster $clusterID\
-          \ because it is a management or local cluster\"\n    break\n  fi\n\n  kinds=$(oc\
-          \ get manifestwork -n \"$namespace\" \"$clusterID\" -o json | jq -r '.spec.workload.manifests[].kind')\n\
-          \  num=0\n  for kind in $kinds;do\n    if [[ $kind == \"HostedCluster\"\
-          \ ]]; then\n        echo \"patching cluster: $clusterID\"\n\n        if\
-          \ [[ $cleanup = \"true\" ]]; then\n          json_payload='[{\"op\":\"remove\"\
-          ,\"path\":\"/spec/workload/manifests/'\"$num\"'/metadata/annotations/hypershift.openshift.io~1capi-provider-aws-image\"\
+          \ [ \"$namespace\" == \"null\" ] || [ \"$namespace\" == \"\" ]; then\n \
+          \   echo \"skipping cluster $clusterID because it is a management or local\
+          \ cluster\"\n    break\n  fi\n\n  kinds=$(oc get manifestwork -n \"$namespace\"\
+          \ \"$clusterID\" -o json | jq -r '.spec.workload.manifests[].kind')\n  num=0\n\
+          \  for kind in $kinds;do\n    if [[ $kind == \"HostedCluster\" ]]; then\n\
+          \        echo \"patching cluster: $clusterID\"\n\n        if [[ $cleanup\
+          \ = \"true\" ]]; then\n          json_payload='[{\"op\":\"remove\",\"path\"\
+          :\"/spec/workload/manifests/'\"$num\"'/metadata/annotations/hypershift.openshift.io~1capi-provider-aws-image\"\
           }]'\n        else\n          json_payload='[{\"op\":\"replace\",\"path\"\
           :\"/spec/workload/manifests/'\"$num\"'/metadata/annotations/hypershift.openshift.io~1capi-provider-aws-image\"\
           ,\"value\":\"'\"$IMAGE\"'\"}]'\n        fi\n\n        echo \"oc patch manifestwork\
