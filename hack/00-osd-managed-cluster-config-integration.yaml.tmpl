@@ -4959,6 +4959,23 @@ objects:
                   apiVersion: rbac.authorization.k8s.io/v1
                   kind: Role
                   metadata:
+                    name: backplane-srep-muo
+                    namespace: openshift-managed-upgrade-operator
+                  rules:
+                  - apiGroups:
+                    - coordination.k8s.io
+                    resources:
+                    - leases
+                    verbs:
+                    - get
+                    - list
+                    - watch
+              - complianceType: mustonlyhave
+                metadataComplianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: Role
+                  metadata:
                     name: backplane-srep-mustgather
                     namespace: openshift-must-gather-operator
                   rules:
@@ -4975,6 +4992,22 @@ objects:
                     verbs:
                     - create
                     - delete
+              - complianceType: mustonlyhave
+                metadataComplianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: RoleBinding
+                  metadata:
+                    name: backplane-srep-muo
+                    namespace: openshift-managed-upgrade-operator
+                  roleRef:
+                    apiGroup: rbac.authorization.k8s.io
+                    kind: Role
+                    name: backplane-srep-muo
+                  subjects:
+                  - apiGroup: rbac.authorization.k8s.io
+                    kind: Group
+                    name: system:serviceaccounts:openshift-backplane-srep
               - complianceType: mustonlyhave
                 metadataComplianceType: musthave
                 objectDefinition:
@@ -24323,6 +24356,20 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: Role
       metadata:
+        name: backplane-srep-muo
+        namespace: openshift-managed-upgrade-operator
+      rules:
+      - apiGroups:
+        - coordination.k8s.io
+        resources:
+        - leases
+        verbs:
+        - get
+        - list
+        - watch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
         name: backplane-srep-mustgather
         namespace: openshift-must-gather-operator
       rules:
@@ -24339,6 +24386,19 @@ objects:
         verbs:
         - create
         - delete
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: backplane-srep-muo
+        namespace: openshift-managed-upgrade-operator
+      subjects:
+      - apiGroup: rbac.authorization.k8s.io
+        kind: Group
+        name: system:serviceaccounts:openshift-backplane-srep
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: backplane-srep-muo
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: RoleBinding
       metadata:
