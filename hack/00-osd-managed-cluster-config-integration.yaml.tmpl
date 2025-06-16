@@ -31936,15 +31936,13 @@ objects:
           metadata:
             name: osd-cluster-ready
             labels:
-              managed.openshift.io/version: v0.1.134-0659320
+              managed.openshift.io/version: v0.1.175-41579df
             annotations:
               openshift.io/required-scc: restricted-v2
           spec:
             containers:
             - name: osd-cluster-ready
-              image: quay.io/app-sre/osd-cluster-ready@sha256:1457b7562479dff8b0fa61999f002a80199c3ebf811b3564a48a11a06ecefd65
-              command:
-              - /root/main
+              image: quay.io/app-sre/osd-cluster-ready@sha256:c447146572e955a73ccd08320851a2488c3e0c3b6ae661e40dd47ed91ce4532e
             restartPolicy: OnFailure
             serviceAccountName: osd-cluster-ready
 - apiVersion: hive.openshift.io/v1
@@ -40763,7 +40761,8 @@ objects:
               openshift-.*\"} )\nunless on(namespace)\n  kube_poddisruptionbudget_labels{namespace=~\"\
               openshift-(logging|user-workload-monitoring|operators|kyverno|cnv|observability-operator|mtv|cluster-observability-operator)\"\
               }\nunless on(poddisruptionbudget)\n  kube_poddisruptionbudget_labels{poddisruptionbudget=~\"\
-              gcp-filestore-csi-driver-controller-pdb\"}"
+              gcp-filestore-csi-driver-controller-pdb|aws-efs-csi-driver-controller-pdb\"\
+              }"
             for: 15m
             labels:
               severity: critical
