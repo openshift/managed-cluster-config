@@ -1,20 +1,15 @@
 apiVersion: managed.openshift.io/v1alpha1
 kind: SubjectPermission
 metadata:
-  name: backplane-lpsre-management-cluster
+  name: backplane-lpsre-service-cluster
   namespace: openshift-rbac-permissions
 spec:
   clusterPermissions:
-  # Some Package Operator APIs are cluster scoped,
-  # so access must be granted on the whole cluster.
-  - backplane-lpsre-management-cluster-cluster
+  - backplane-lpsre-service-cluster-cluster
   # permit get at global scope https://issues.redhat.com/browse/OSD-15997
   - view
   permissions:
-  - clusterRoleName: admin
-    namespacesAllowedRegex: '(^openshift-package-operator$)'
-    namespacesDeniedRegex: openshift-backplane-cluster-admin
-  - clusterRoleName: backplane-lpsre-management-cluster-project
+  - clusterRoleName: backplane-lpsre-service-cluster-project
     namespacesAllowedRegex: "(^uhc.*|^ocm.*|^klusterlet.*)"
     namespacesDeniedRegex: openshift-backplane-cluster-admin
   - clusterRoleName: dedicated-readers
