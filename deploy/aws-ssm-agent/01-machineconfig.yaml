@@ -7,7 +7,7 @@ metadata:
 spec:
   config:
     ignition:
-      version:  3.2.0
+      version: 3.2.0
     systemd:
       units:
       - name: 99-install-ssm-agent.service
@@ -24,6 +24,10 @@ spec:
           ExecStart=/usr/bin/rpm-ostree install --apply-live --assumeyes --idempotent https://s3.us-east-1.amazonaws.com/amazon-ssm-us-east-1/latest/linux_amd64/amazon-ssm-agent.rpm
           ExecStart=/usr/sbin/restorecon /etc/systemd/system/amazon-ssm-agent.service
           ExecStart=/usr/bin/systemctl enable amazon-ssm-agent --now
+          Restart=on-failure
+          RestartSec=30s
+          StartLimitBurst=5
+          StartLimitIntervalSec=300s
 
           [Install]
           WantedBy=multi-user.target
