@@ -3666,6 +3666,158 @@ objects:
                   apiVersion: rbac.authorization.k8s.io/v1
                   kind: ClusterRole
                   metadata:
+                    name: backplane-lpsre-admins-project
+                  rules:
+                  - apiGroups:
+                    - ''
+                    resources:
+                    - pods/eviction
+                    verbs:
+                    - create
+                  - apiGroups:
+                    - ''
+                    resources:
+                    - pods/portforward
+                    verbs:
+                    - create
+                  - apiGroups:
+                    - batch
+                    resources:
+                    - jobs
+                    verbs:
+                    - delete
+                    - deletecollection
+                    - create
+                  - apiGroups:
+                    - build.openshift.io
+                    resources:
+                    - builds
+                    verbs:
+                    - delete
+                    - deletecollection
+                  - apiGroups:
+                    - ''
+                    resources:
+                    - pods
+                    verbs:
+                    - delete
+                    - deletecollection
+                  - apiGroups:
+                    - security.openshift.io
+                    resources:
+                    - podsecuritypolicyreviews
+                    - podsecuritypolicyselfsubjectreviews
+                    - podsecuritypolicysubjectreviews
+                    verbs:
+                    - create
+                  - apiGroups:
+                    - logging.openshift.io
+                    resources:
+                    - '*'
+                    verbs:
+                    - '*'
+                  - apiGroups:
+                    - velero.io
+                    resources:
+                    - backups
+                    verbs:
+                    - create
+                  - apiGroups:
+                    - velero.io
+                    resources:
+                    - deletebackuprequests
+                    - downloadrequests
+                    - serverstatusrequests
+                    verbs:
+                    - '*'
+                  - apiGroups:
+                    - velero.io
+                    resources:
+                    - '*'
+                    verbs:
+                    - get
+                    - list
+                    - watch
+                  - apiGroups:
+                    - ''
+                    resources:
+                    - persistentvolumeclaims
+                    verbs:
+                    - delete
+                    - patch
+                  - apiGroups:
+                    - ''
+                    resources:
+                    - replicationcontrollers/scale
+                    verbs:
+                    - patch
+                  - apiGroups:
+                    - apps
+                    resources:
+                    - deployments/scale
+                    - replicasets/scale
+                    - statefulsets/scale
+                    verbs:
+                    - patch
+                  - apiGroups:
+                    - apps.openshift.io
+                    resources:
+                    - deploymentconfigs/scale
+                    verbs:
+                    - patch
+                  - apiGroups:
+                    - ''
+                    resources:
+                    - replicasets
+                    verbs:
+                    - delete
+                    - deletecollection
+                  - apiGroups:
+                    - machine.openshift.io
+                    resources:
+                    - machinehealthchecks
+                    verbs:
+                    - patch
+                  - apiGroups:
+                    - machine.openshift.io
+                    resources:
+                    - machinesets/scale
+                    verbs:
+                    - patch
+                  - apiGroups:
+                    - monitoring.coreos.com
+                    resources:
+                    - prometheuses
+                    verbs:
+                    - patch
+                  - apiGroups:
+                    - upgrade.managed.openshift.io
+                    resources:
+                    - upgradeconfigs
+                    verbs:
+                    - delete
+                  - apiGroups:
+                    - operators.coreos.com
+                    resources:
+                    - clusterserviceversions
+                    - installplans
+                    - subscriptions
+                    verbs:
+                    - delete
+                  - apiGroups:
+                    - monitoring.coreos.com
+                    resources:
+                    - '*'
+                    verbs:
+                    - get
+                    - list
+                    - watch
+              - complianceType: mustonlyhave
+                metadataComplianceType: musthave
+                objectDefinition:
+                  apiVersion: rbac.authorization.k8s.io/v1
+                  kind: ClusterRole
+                  metadata:
                     name: backplane-lpsre-monitoring-project
                   rules:
                   - apiGroups:
@@ -14137,6 +14289,155 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
+        name: backplane-lpsre-admins-project
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods/eviction
+        verbs:
+        - create
+      - apiGroups:
+        - ''
+        resources:
+        - pods/portforward
+        verbs:
+        - create
+      - apiGroups:
+        - batch
+        resources:
+        - jobs
+        verbs:
+        - delete
+        - deletecollection
+        - create
+      - apiGroups:
+        - build.openshift.io
+        resources:
+        - builds
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - security.openshift.io
+        resources:
+        - podsecuritypolicyreviews
+        - podsecuritypolicyselfsubjectreviews
+        - podsecuritypolicysubjectreviews
+        verbs:
+        - create
+      - apiGroups:
+        - logging.openshift.io
+        resources:
+        - '*'
+        verbs:
+        - '*'
+      - apiGroups:
+        - velero.io
+        resources:
+        - backups
+        verbs:
+        - create
+      - apiGroups:
+        - velero.io
+        resources:
+        - deletebackuprequests
+        - downloadrequests
+        - serverstatusrequests
+        verbs:
+        - '*'
+      - apiGroups:
+        - velero.io
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - persistentvolumeclaims
+        verbs:
+        - delete
+        - patch
+      - apiGroups:
+        - ''
+        resources:
+        - replicationcontrollers/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - apps
+        resources:
+        - deployments/scale
+        - replicasets/scale
+        - statefulsets/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - apps.openshift.io
+        resources:
+        - deploymentconfigs/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - ''
+        resources:
+        - replicasets
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machinehealthchecks
+        verbs:
+        - patch
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machinesets/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - prometheuses
+        verbs:
+        - patch
+      - apiGroups:
+        - upgrade.managed.openshift.io
+        resources:
+        - upgradeconfigs
+        verbs:
+        - delete
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - clusterserviceversions
+        - installplans
+        - subscriptions
+        verbs:
+        - delete
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
         name: backplane-lpsre-monitoring-project
       rules:
       - apiGroups:
@@ -14361,6 +14662,155 @@ objects:
         - operators.coreos.com
         resources:
         - operators
+        verbs:
+        - get
+        - list
+        - watch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-lpsre-admins-project
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods/eviction
+        verbs:
+        - create
+      - apiGroups:
+        - ''
+        resources:
+        - pods/portforward
+        verbs:
+        - create
+      - apiGroups:
+        - batch
+        resources:
+        - jobs
+        verbs:
+        - delete
+        - deletecollection
+        - create
+      - apiGroups:
+        - build.openshift.io
+        resources:
+        - builds
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - security.openshift.io
+        resources:
+        - podsecuritypolicyreviews
+        - podsecuritypolicyselfsubjectreviews
+        - podsecuritypolicysubjectreviews
+        verbs:
+        - create
+      - apiGroups:
+        - logging.openshift.io
+        resources:
+        - '*'
+        verbs:
+        - '*'
+      - apiGroups:
+        - velero.io
+        resources:
+        - backups
+        verbs:
+        - create
+      - apiGroups:
+        - velero.io
+        resources:
+        - deletebackuprequests
+        - downloadrequests
+        - serverstatusrequests
+        verbs:
+        - '*'
+      - apiGroups:
+        - velero.io
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - persistentvolumeclaims
+        verbs:
+        - delete
+        - patch
+      - apiGroups:
+        - ''
+        resources:
+        - replicationcontrollers/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - apps
+        resources:
+        - deployments/scale
+        - replicasets/scale
+        - statefulsets/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - apps.openshift.io
+        resources:
+        - deploymentconfigs/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - ''
+        resources:
+        - replicasets
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machinehealthchecks
+        verbs:
+        - patch
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machinesets/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - prometheuses
+        verbs:
+        - patch
+      - apiGroups:
+        - upgrade.managed.openshift.io
+        resources:
+        - upgradeconfigs
+        verbs:
+        - delete
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - clusterserviceversions
+        - installplans
+        - subscriptions
+        verbs:
+        - delete
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - '*'
         verbs:
         - get
         - list
@@ -14599,6 +15049,155 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
+        name: backplane-lpsre-admins-project
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods/eviction
+        verbs:
+        - create
+      - apiGroups:
+        - ''
+        resources:
+        - pods/portforward
+        verbs:
+        - create
+      - apiGroups:
+        - batch
+        resources:
+        - jobs
+        verbs:
+        - delete
+        - deletecollection
+        - create
+      - apiGroups:
+        - build.openshift.io
+        resources:
+        - builds
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - security.openshift.io
+        resources:
+        - podsecuritypolicyreviews
+        - podsecuritypolicyselfsubjectreviews
+        - podsecuritypolicysubjectreviews
+        verbs:
+        - create
+      - apiGroups:
+        - logging.openshift.io
+        resources:
+        - '*'
+        verbs:
+        - '*'
+      - apiGroups:
+        - velero.io
+        resources:
+        - backups
+        verbs:
+        - create
+      - apiGroups:
+        - velero.io
+        resources:
+        - deletebackuprequests
+        - downloadrequests
+        - serverstatusrequests
+        verbs:
+        - '*'
+      - apiGroups:
+        - velero.io
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - persistentvolumeclaims
+        verbs:
+        - delete
+        - patch
+      - apiGroups:
+        - ''
+        resources:
+        - replicationcontrollers/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - apps
+        resources:
+        - deployments/scale
+        - replicasets/scale
+        - statefulsets/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - apps.openshift.io
+        resources:
+        - deploymentconfigs/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - ''
+        resources:
+        - replicasets
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machinehealthchecks
+        verbs:
+        - patch
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machinesets/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - prometheuses
+        verbs:
+        - patch
+      - apiGroups:
+        - upgrade.managed.openshift.io
+        resources:
+        - upgradeconfigs
+        verbs:
+        - delete
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - clusterserviceversions
+        - installplans
+        - subscriptions
+        verbs:
+        - delete
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
         name: backplane-lpsre-monitoring-project
       rules:
       - apiGroups:
@@ -14823,6 +15422,155 @@ objects:
         - operators.coreos.com
         resources:
         - operators
+        verbs:
+        - get
+        - list
+        - watch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-lpsre-admins-project
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods/eviction
+        verbs:
+        - create
+      - apiGroups:
+        - ''
+        resources:
+        - pods/portforward
+        verbs:
+        - create
+      - apiGroups:
+        - batch
+        resources:
+        - jobs
+        verbs:
+        - delete
+        - deletecollection
+        - create
+      - apiGroups:
+        - build.openshift.io
+        resources:
+        - builds
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - security.openshift.io
+        resources:
+        - podsecuritypolicyreviews
+        - podsecuritypolicyselfsubjectreviews
+        - podsecuritypolicysubjectreviews
+        verbs:
+        - create
+      - apiGroups:
+        - logging.openshift.io
+        resources:
+        - '*'
+        verbs:
+        - '*'
+      - apiGroups:
+        - velero.io
+        resources:
+        - backups
+        verbs:
+        - create
+      - apiGroups:
+        - velero.io
+        resources:
+        - deletebackuprequests
+        - downloadrequests
+        - serverstatusrequests
+        verbs:
+        - '*'
+      - apiGroups:
+        - velero.io
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - persistentvolumeclaims
+        verbs:
+        - delete
+        - patch
+      - apiGroups:
+        - ''
+        resources:
+        - replicationcontrollers/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - apps
+        resources:
+        - deployments/scale
+        - replicasets/scale
+        - statefulsets/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - apps.openshift.io
+        resources:
+        - deploymentconfigs/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - ''
+        resources:
+        - replicasets
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machinehealthchecks
+        verbs:
+        - patch
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machinesets/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - prometheuses
+        verbs:
+        - patch
+      - apiGroups:
+        - upgrade.managed.openshift.io
+        resources:
+        - upgradeconfigs
+        verbs:
+        - delete
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - clusterserviceversions
+        - installplans
+        - subscriptions
+        verbs:
+        - delete
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - '*'
         verbs:
         - get
         - list
@@ -15061,6 +15809,155 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
+        name: backplane-lpsre-admins-project
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods/eviction
+        verbs:
+        - create
+      - apiGroups:
+        - ''
+        resources:
+        - pods/portforward
+        verbs:
+        - create
+      - apiGroups:
+        - batch
+        resources:
+        - jobs
+        verbs:
+        - delete
+        - deletecollection
+        - create
+      - apiGroups:
+        - build.openshift.io
+        resources:
+        - builds
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - security.openshift.io
+        resources:
+        - podsecuritypolicyreviews
+        - podsecuritypolicyselfsubjectreviews
+        - podsecuritypolicysubjectreviews
+        verbs:
+        - create
+      - apiGroups:
+        - logging.openshift.io
+        resources:
+        - '*'
+        verbs:
+        - '*'
+      - apiGroups:
+        - velero.io
+        resources:
+        - backups
+        verbs:
+        - create
+      - apiGroups:
+        - velero.io
+        resources:
+        - deletebackuprequests
+        - downloadrequests
+        - serverstatusrequests
+        verbs:
+        - '*'
+      - apiGroups:
+        - velero.io
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - persistentvolumeclaims
+        verbs:
+        - delete
+        - patch
+      - apiGroups:
+        - ''
+        resources:
+        - replicationcontrollers/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - apps
+        resources:
+        - deployments/scale
+        - replicasets/scale
+        - statefulsets/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - apps.openshift.io
+        resources:
+        - deploymentconfigs/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - ''
+        resources:
+        - replicasets
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machinehealthchecks
+        verbs:
+        - patch
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machinesets/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - prometheuses
+        verbs:
+        - patch
+      - apiGroups:
+        - upgrade.managed.openshift.io
+        resources:
+        - upgradeconfigs
+        verbs:
+        - delete
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - clusterserviceversions
+        - installplans
+        - subscriptions
+        verbs:
+        - delete
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
         name: backplane-lpsre-monitoring-project
       rules:
       - apiGroups:
@@ -15285,6 +16182,155 @@ objects:
         - operators.coreos.com
         resources:
         - operators
+        verbs:
+        - get
+        - list
+        - watch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-lpsre-admins-project
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods/eviction
+        verbs:
+        - create
+      - apiGroups:
+        - ''
+        resources:
+        - pods/portforward
+        verbs:
+        - create
+      - apiGroups:
+        - batch
+        resources:
+        - jobs
+        verbs:
+        - delete
+        - deletecollection
+        - create
+      - apiGroups:
+        - build.openshift.io
+        resources:
+        - builds
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - security.openshift.io
+        resources:
+        - podsecuritypolicyreviews
+        - podsecuritypolicyselfsubjectreviews
+        - podsecuritypolicysubjectreviews
+        verbs:
+        - create
+      - apiGroups:
+        - logging.openshift.io
+        resources:
+        - '*'
+        verbs:
+        - '*'
+      - apiGroups:
+        - velero.io
+        resources:
+        - backups
+        verbs:
+        - create
+      - apiGroups:
+        - velero.io
+        resources:
+        - deletebackuprequests
+        - downloadrequests
+        - serverstatusrequests
+        verbs:
+        - '*'
+      - apiGroups:
+        - velero.io
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - persistentvolumeclaims
+        verbs:
+        - delete
+        - patch
+      - apiGroups:
+        - ''
+        resources:
+        - replicationcontrollers/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - apps
+        resources:
+        - deployments/scale
+        - replicasets/scale
+        - statefulsets/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - apps.openshift.io
+        resources:
+        - deploymentconfigs/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - ''
+        resources:
+        - replicasets
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machinehealthchecks
+        verbs:
+        - patch
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machinesets/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - prometheuses
+        verbs:
+        - patch
+      - apiGroups:
+        - upgrade.managed.openshift.io
+        resources:
+        - upgradeconfigs
+        verbs:
+        - delete
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - clusterserviceversions
+        - installplans
+        - subscriptions
+        verbs:
+        - delete
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - '*'
         verbs:
         - get
         - list
@@ -15523,6 +16569,155 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
+        name: backplane-lpsre-admins-project
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods/eviction
+        verbs:
+        - create
+      - apiGroups:
+        - ''
+        resources:
+        - pods/portforward
+        verbs:
+        - create
+      - apiGroups:
+        - batch
+        resources:
+        - jobs
+        verbs:
+        - delete
+        - deletecollection
+        - create
+      - apiGroups:
+        - build.openshift.io
+        resources:
+        - builds
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - security.openshift.io
+        resources:
+        - podsecuritypolicyreviews
+        - podsecuritypolicyselfsubjectreviews
+        - podsecuritypolicysubjectreviews
+        verbs:
+        - create
+      - apiGroups:
+        - logging.openshift.io
+        resources:
+        - '*'
+        verbs:
+        - '*'
+      - apiGroups:
+        - velero.io
+        resources:
+        - backups
+        verbs:
+        - create
+      - apiGroups:
+        - velero.io
+        resources:
+        - deletebackuprequests
+        - downloadrequests
+        - serverstatusrequests
+        verbs:
+        - '*'
+      - apiGroups:
+        - velero.io
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - persistentvolumeclaims
+        verbs:
+        - delete
+        - patch
+      - apiGroups:
+        - ''
+        resources:
+        - replicationcontrollers/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - apps
+        resources:
+        - deployments/scale
+        - replicasets/scale
+        - statefulsets/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - apps.openshift.io
+        resources:
+        - deploymentconfigs/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - ''
+        resources:
+        - replicasets
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machinehealthchecks
+        verbs:
+        - patch
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machinesets/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - prometheuses
+        verbs:
+        - patch
+      - apiGroups:
+        - upgrade.managed.openshift.io
+        resources:
+        - upgradeconfigs
+        verbs:
+        - delete
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - clusterserviceversions
+        - installplans
+        - subscriptions
+        verbs:
+        - delete
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
         name: backplane-lpsre-monitoring-project
       rules:
       - apiGroups:
@@ -15747,6 +16942,155 @@ objects:
         - operators.coreos.com
         resources:
         - operators
+        verbs:
+        - get
+        - list
+        - watch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-lpsre-admins-project
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods/eviction
+        verbs:
+        - create
+      - apiGroups:
+        - ''
+        resources:
+        - pods/portforward
+        verbs:
+        - create
+      - apiGroups:
+        - batch
+        resources:
+        - jobs
+        verbs:
+        - delete
+        - deletecollection
+        - create
+      - apiGroups:
+        - build.openshift.io
+        resources:
+        - builds
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - security.openshift.io
+        resources:
+        - podsecuritypolicyreviews
+        - podsecuritypolicyselfsubjectreviews
+        - podsecuritypolicysubjectreviews
+        verbs:
+        - create
+      - apiGroups:
+        - logging.openshift.io
+        resources:
+        - '*'
+        verbs:
+        - '*'
+      - apiGroups:
+        - velero.io
+        resources:
+        - backups
+        verbs:
+        - create
+      - apiGroups:
+        - velero.io
+        resources:
+        - deletebackuprequests
+        - downloadrequests
+        - serverstatusrequests
+        verbs:
+        - '*'
+      - apiGroups:
+        - velero.io
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - persistentvolumeclaims
+        verbs:
+        - delete
+        - patch
+      - apiGroups:
+        - ''
+        resources:
+        - replicationcontrollers/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - apps
+        resources:
+        - deployments/scale
+        - replicasets/scale
+        - statefulsets/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - apps.openshift.io
+        resources:
+        - deploymentconfigs/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - ''
+        resources:
+        - replicasets
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machinehealthchecks
+        verbs:
+        - patch
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machinesets/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - prometheuses
+        verbs:
+        - patch
+      - apiGroups:
+        - upgrade.managed.openshift.io
+        resources:
+        - upgradeconfigs
+        verbs:
+        - delete
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - clusterserviceversions
+        - installplans
+        - subscriptions
+        verbs:
+        - delete
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - '*'
         verbs:
         - get
         - list
@@ -15985,6 +17329,155 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
+        name: backplane-lpsre-admins-project
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods/eviction
+        verbs:
+        - create
+      - apiGroups:
+        - ''
+        resources:
+        - pods/portforward
+        verbs:
+        - create
+      - apiGroups:
+        - batch
+        resources:
+        - jobs
+        verbs:
+        - delete
+        - deletecollection
+        - create
+      - apiGroups:
+        - build.openshift.io
+        resources:
+        - builds
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - security.openshift.io
+        resources:
+        - podsecuritypolicyreviews
+        - podsecuritypolicyselfsubjectreviews
+        - podsecuritypolicysubjectreviews
+        verbs:
+        - create
+      - apiGroups:
+        - logging.openshift.io
+        resources:
+        - '*'
+        verbs:
+        - '*'
+      - apiGroups:
+        - velero.io
+        resources:
+        - backups
+        verbs:
+        - create
+      - apiGroups:
+        - velero.io
+        resources:
+        - deletebackuprequests
+        - downloadrequests
+        - serverstatusrequests
+        verbs:
+        - '*'
+      - apiGroups:
+        - velero.io
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - persistentvolumeclaims
+        verbs:
+        - delete
+        - patch
+      - apiGroups:
+        - ''
+        resources:
+        - replicationcontrollers/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - apps
+        resources:
+        - deployments/scale
+        - replicasets/scale
+        - statefulsets/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - apps.openshift.io
+        resources:
+        - deploymentconfigs/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - ''
+        resources:
+        - replicasets
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machinehealthchecks
+        verbs:
+        - patch
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machinesets/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - prometheuses
+        verbs:
+        - patch
+      - apiGroups:
+        - upgrade.managed.openshift.io
+        resources:
+        - upgradeconfigs
+        verbs:
+        - delete
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - clusterserviceversions
+        - installplans
+        - subscriptions
+        verbs:
+        - delete
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
         name: backplane-lpsre-monitoring-project
       rules:
       - apiGroups:
@@ -16209,6 +17702,155 @@ objects:
         - operators.coreos.com
         resources:
         - operators
+        verbs:
+        - get
+        - list
+        - watch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-lpsre-admins-project
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods/eviction
+        verbs:
+        - create
+      - apiGroups:
+        - ''
+        resources:
+        - pods/portforward
+        verbs:
+        - create
+      - apiGroups:
+        - batch
+        resources:
+        - jobs
+        verbs:
+        - delete
+        - deletecollection
+        - create
+      - apiGroups:
+        - build.openshift.io
+        resources:
+        - builds
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - security.openshift.io
+        resources:
+        - podsecuritypolicyreviews
+        - podsecuritypolicyselfsubjectreviews
+        - podsecuritypolicysubjectreviews
+        verbs:
+        - create
+      - apiGroups:
+        - logging.openshift.io
+        resources:
+        - '*'
+        verbs:
+        - '*'
+      - apiGroups:
+        - velero.io
+        resources:
+        - backups
+        verbs:
+        - create
+      - apiGroups:
+        - velero.io
+        resources:
+        - deletebackuprequests
+        - downloadrequests
+        - serverstatusrequests
+        verbs:
+        - '*'
+      - apiGroups:
+        - velero.io
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - persistentvolumeclaims
+        verbs:
+        - delete
+        - patch
+      - apiGroups:
+        - ''
+        resources:
+        - replicationcontrollers/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - apps
+        resources:
+        - deployments/scale
+        - replicasets/scale
+        - statefulsets/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - apps.openshift.io
+        resources:
+        - deploymentconfigs/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - ''
+        resources:
+        - replicasets
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machinehealthchecks
+        verbs:
+        - patch
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machinesets/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - prometheuses
+        verbs:
+        - patch
+      - apiGroups:
+        - upgrade.managed.openshift.io
+        resources:
+        - upgradeconfigs
+        verbs:
+        - delete
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - clusterserviceversions
+        - installplans
+        - subscriptions
+        verbs:
+        - delete
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - '*'
         verbs:
         - get
         - list
@@ -16447,6 +18089,155 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
+        name: backplane-lpsre-admins-project
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods/eviction
+        verbs:
+        - create
+      - apiGroups:
+        - ''
+        resources:
+        - pods/portforward
+        verbs:
+        - create
+      - apiGroups:
+        - batch
+        resources:
+        - jobs
+        verbs:
+        - delete
+        - deletecollection
+        - create
+      - apiGroups:
+        - build.openshift.io
+        resources:
+        - builds
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - security.openshift.io
+        resources:
+        - podsecuritypolicyreviews
+        - podsecuritypolicyselfsubjectreviews
+        - podsecuritypolicysubjectreviews
+        verbs:
+        - create
+      - apiGroups:
+        - logging.openshift.io
+        resources:
+        - '*'
+        verbs:
+        - '*'
+      - apiGroups:
+        - velero.io
+        resources:
+        - backups
+        verbs:
+        - create
+      - apiGroups:
+        - velero.io
+        resources:
+        - deletebackuprequests
+        - downloadrequests
+        - serverstatusrequests
+        verbs:
+        - '*'
+      - apiGroups:
+        - velero.io
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - persistentvolumeclaims
+        verbs:
+        - delete
+        - patch
+      - apiGroups:
+        - ''
+        resources:
+        - replicationcontrollers/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - apps
+        resources:
+        - deployments/scale
+        - replicasets/scale
+        - statefulsets/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - apps.openshift.io
+        resources:
+        - deploymentconfigs/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - ''
+        resources:
+        - replicasets
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machinehealthchecks
+        verbs:
+        - patch
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machinesets/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - prometheuses
+        verbs:
+        - patch
+      - apiGroups:
+        - upgrade.managed.openshift.io
+        resources:
+        - upgradeconfigs
+        verbs:
+        - delete
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - clusterserviceversions
+        - installplans
+        - subscriptions
+        verbs:
+        - delete
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
         name: backplane-lpsre-monitoring-project
       rules:
       - apiGroups:
@@ -16671,6 +18462,155 @@ objects:
         - operators.coreos.com
         resources:
         - operators
+        verbs:
+        - get
+        - list
+        - watch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-lpsre-admins-project
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods/eviction
+        verbs:
+        - create
+      - apiGroups:
+        - ''
+        resources:
+        - pods/portforward
+        verbs:
+        - create
+      - apiGroups:
+        - batch
+        resources:
+        - jobs
+        verbs:
+        - delete
+        - deletecollection
+        - create
+      - apiGroups:
+        - build.openshift.io
+        resources:
+        - builds
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - security.openshift.io
+        resources:
+        - podsecuritypolicyreviews
+        - podsecuritypolicyselfsubjectreviews
+        - podsecuritypolicysubjectreviews
+        verbs:
+        - create
+      - apiGroups:
+        - logging.openshift.io
+        resources:
+        - '*'
+        verbs:
+        - '*'
+      - apiGroups:
+        - velero.io
+        resources:
+        - backups
+        verbs:
+        - create
+      - apiGroups:
+        - velero.io
+        resources:
+        - deletebackuprequests
+        - downloadrequests
+        - serverstatusrequests
+        verbs:
+        - '*'
+      - apiGroups:
+        - velero.io
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - persistentvolumeclaims
+        verbs:
+        - delete
+        - patch
+      - apiGroups:
+        - ''
+        resources:
+        - replicationcontrollers/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - apps
+        resources:
+        - deployments/scale
+        - replicasets/scale
+        - statefulsets/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - apps.openshift.io
+        resources:
+        - deploymentconfigs/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - ''
+        resources:
+        - replicasets
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machinehealthchecks
+        verbs:
+        - patch
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machinesets/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - prometheuses
+        verbs:
+        - patch
+      - apiGroups:
+        - upgrade.managed.openshift.io
+        resources:
+        - upgradeconfigs
+        verbs:
+        - delete
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - clusterserviceversions
+        - installplans
+        - subscriptions
+        verbs:
+        - delete
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - '*'
         verbs:
         - get
         - list
@@ -16909,6 +18849,155 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
+        name: backplane-lpsre-admins-project
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods/eviction
+        verbs:
+        - create
+      - apiGroups:
+        - ''
+        resources:
+        - pods/portforward
+        verbs:
+        - create
+      - apiGroups:
+        - batch
+        resources:
+        - jobs
+        verbs:
+        - delete
+        - deletecollection
+        - create
+      - apiGroups:
+        - build.openshift.io
+        resources:
+        - builds
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - security.openshift.io
+        resources:
+        - podsecuritypolicyreviews
+        - podsecuritypolicyselfsubjectreviews
+        - podsecuritypolicysubjectreviews
+        verbs:
+        - create
+      - apiGroups:
+        - logging.openshift.io
+        resources:
+        - '*'
+        verbs:
+        - '*'
+      - apiGroups:
+        - velero.io
+        resources:
+        - backups
+        verbs:
+        - create
+      - apiGroups:
+        - velero.io
+        resources:
+        - deletebackuprequests
+        - downloadrequests
+        - serverstatusrequests
+        verbs:
+        - '*'
+      - apiGroups:
+        - velero.io
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - persistentvolumeclaims
+        verbs:
+        - delete
+        - patch
+      - apiGroups:
+        - ''
+        resources:
+        - replicationcontrollers/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - apps
+        resources:
+        - deployments/scale
+        - replicasets/scale
+        - statefulsets/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - apps.openshift.io
+        resources:
+        - deploymentconfigs/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - ''
+        resources:
+        - replicasets
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machinehealthchecks
+        verbs:
+        - patch
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machinesets/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - prometheuses
+        verbs:
+        - patch
+      - apiGroups:
+        - upgrade.managed.openshift.io
+        resources:
+        - upgradeconfigs
+        verbs:
+        - delete
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - clusterserviceversions
+        - installplans
+        - subscriptions
+        verbs:
+        - delete
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
         name: backplane-lpsre-monitoring-project
       rules:
       - apiGroups:
@@ -17133,6 +19222,155 @@ objects:
         - operators.coreos.com
         resources:
         - operators
+        verbs:
+        - get
+        - list
+        - watch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-lpsre-admins-project
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods/eviction
+        verbs:
+        - create
+      - apiGroups:
+        - ''
+        resources:
+        - pods/portforward
+        verbs:
+        - create
+      - apiGroups:
+        - batch
+        resources:
+        - jobs
+        verbs:
+        - delete
+        - deletecollection
+        - create
+      - apiGroups:
+        - build.openshift.io
+        resources:
+        - builds
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - security.openshift.io
+        resources:
+        - podsecuritypolicyreviews
+        - podsecuritypolicyselfsubjectreviews
+        - podsecuritypolicysubjectreviews
+        verbs:
+        - create
+      - apiGroups:
+        - logging.openshift.io
+        resources:
+        - '*'
+        verbs:
+        - '*'
+      - apiGroups:
+        - velero.io
+        resources:
+        - backups
+        verbs:
+        - create
+      - apiGroups:
+        - velero.io
+        resources:
+        - deletebackuprequests
+        - downloadrequests
+        - serverstatusrequests
+        verbs:
+        - '*'
+      - apiGroups:
+        - velero.io
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - persistentvolumeclaims
+        verbs:
+        - delete
+        - patch
+      - apiGroups:
+        - ''
+        resources:
+        - replicationcontrollers/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - apps
+        resources:
+        - deployments/scale
+        - replicasets/scale
+        - statefulsets/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - apps.openshift.io
+        resources:
+        - deploymentconfigs/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - ''
+        resources:
+        - replicasets
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machinehealthchecks
+        verbs:
+        - patch
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machinesets/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - prometheuses
+        verbs:
+        - patch
+      - apiGroups:
+        - upgrade.managed.openshift.io
+        resources:
+        - upgradeconfigs
+        verbs:
+        - delete
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - clusterserviceversions
+        - installplans
+        - subscriptions
+        verbs:
+        - delete
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - '*'
         verbs:
         - get
         - list
@@ -17371,6 +19609,155 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
+        name: backplane-lpsre-admins-project
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods/eviction
+        verbs:
+        - create
+      - apiGroups:
+        - ''
+        resources:
+        - pods/portforward
+        verbs:
+        - create
+      - apiGroups:
+        - batch
+        resources:
+        - jobs
+        verbs:
+        - delete
+        - deletecollection
+        - create
+      - apiGroups:
+        - build.openshift.io
+        resources:
+        - builds
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - security.openshift.io
+        resources:
+        - podsecuritypolicyreviews
+        - podsecuritypolicyselfsubjectreviews
+        - podsecuritypolicysubjectreviews
+        verbs:
+        - create
+      - apiGroups:
+        - logging.openshift.io
+        resources:
+        - '*'
+        verbs:
+        - '*'
+      - apiGroups:
+        - velero.io
+        resources:
+        - backups
+        verbs:
+        - create
+      - apiGroups:
+        - velero.io
+        resources:
+        - deletebackuprequests
+        - downloadrequests
+        - serverstatusrequests
+        verbs:
+        - '*'
+      - apiGroups:
+        - velero.io
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - persistentvolumeclaims
+        verbs:
+        - delete
+        - patch
+      - apiGroups:
+        - ''
+        resources:
+        - replicationcontrollers/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - apps
+        resources:
+        - deployments/scale
+        - replicasets/scale
+        - statefulsets/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - apps.openshift.io
+        resources:
+        - deploymentconfigs/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - ''
+        resources:
+        - replicasets
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machinehealthchecks
+        verbs:
+        - patch
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machinesets/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - prometheuses
+        verbs:
+        - patch
+      - apiGroups:
+        - upgrade.managed.openshift.io
+        resources:
+        - upgradeconfigs
+        verbs:
+        - delete
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - clusterserviceversions
+        - installplans
+        - subscriptions
+        verbs:
+        - delete
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
         name: backplane-lpsre-monitoring-project
       rules:
       - apiGroups:
@@ -17595,6 +19982,155 @@ objects:
         - operators.coreos.com
         resources:
         - operators
+        verbs:
+        - get
+        - list
+        - watch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-lpsre-admins-project
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods/eviction
+        verbs:
+        - create
+      - apiGroups:
+        - ''
+        resources:
+        - pods/portforward
+        verbs:
+        - create
+      - apiGroups:
+        - batch
+        resources:
+        - jobs
+        verbs:
+        - delete
+        - deletecollection
+        - create
+      - apiGroups:
+        - build.openshift.io
+        resources:
+        - builds
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - security.openshift.io
+        resources:
+        - podsecuritypolicyreviews
+        - podsecuritypolicyselfsubjectreviews
+        - podsecuritypolicysubjectreviews
+        verbs:
+        - create
+      - apiGroups:
+        - logging.openshift.io
+        resources:
+        - '*'
+        verbs:
+        - '*'
+      - apiGroups:
+        - velero.io
+        resources:
+        - backups
+        verbs:
+        - create
+      - apiGroups:
+        - velero.io
+        resources:
+        - deletebackuprequests
+        - downloadrequests
+        - serverstatusrequests
+        verbs:
+        - '*'
+      - apiGroups:
+        - velero.io
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - persistentvolumeclaims
+        verbs:
+        - delete
+        - patch
+      - apiGroups:
+        - ''
+        resources:
+        - replicationcontrollers/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - apps
+        resources:
+        - deployments/scale
+        - replicasets/scale
+        - statefulsets/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - apps.openshift.io
+        resources:
+        - deploymentconfigs/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - ''
+        resources:
+        - replicasets
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machinehealthchecks
+        verbs:
+        - patch
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machinesets/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - prometheuses
+        verbs:
+        - patch
+      - apiGroups:
+        - upgrade.managed.openshift.io
+        resources:
+        - upgradeconfigs
+        verbs:
+        - delete
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - clusterserviceversions
+        - installplans
+        - subscriptions
+        verbs:
+        - delete
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - '*'
         verbs:
         - get
         - list
@@ -17833,6 +20369,155 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
+        name: backplane-lpsre-admins-project
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods/eviction
+        verbs:
+        - create
+      - apiGroups:
+        - ''
+        resources:
+        - pods/portforward
+        verbs:
+        - create
+      - apiGroups:
+        - batch
+        resources:
+        - jobs
+        verbs:
+        - delete
+        - deletecollection
+        - create
+      - apiGroups:
+        - build.openshift.io
+        resources:
+        - builds
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - security.openshift.io
+        resources:
+        - podsecuritypolicyreviews
+        - podsecuritypolicyselfsubjectreviews
+        - podsecuritypolicysubjectreviews
+        verbs:
+        - create
+      - apiGroups:
+        - logging.openshift.io
+        resources:
+        - '*'
+        verbs:
+        - '*'
+      - apiGroups:
+        - velero.io
+        resources:
+        - backups
+        verbs:
+        - create
+      - apiGroups:
+        - velero.io
+        resources:
+        - deletebackuprequests
+        - downloadrequests
+        - serverstatusrequests
+        verbs:
+        - '*'
+      - apiGroups:
+        - velero.io
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - persistentvolumeclaims
+        verbs:
+        - delete
+        - patch
+      - apiGroups:
+        - ''
+        resources:
+        - replicationcontrollers/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - apps
+        resources:
+        - deployments/scale
+        - replicasets/scale
+        - statefulsets/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - apps.openshift.io
+        resources:
+        - deploymentconfigs/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - ''
+        resources:
+        - replicasets
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machinehealthchecks
+        verbs:
+        - patch
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machinesets/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - prometheuses
+        verbs:
+        - patch
+      - apiGroups:
+        - upgrade.managed.openshift.io
+        resources:
+        - upgradeconfigs
+        verbs:
+        - delete
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - clusterserviceversions
+        - installplans
+        - subscriptions
+        verbs:
+        - delete
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
         name: backplane-lpsre-monitoring-project
       rules:
       - apiGroups:
@@ -18057,6 +20742,155 @@ objects:
         - operators.coreos.com
         resources:
         - operators
+        verbs:
+        - get
+        - list
+        - watch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-lpsre-admins-project
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods/eviction
+        verbs:
+        - create
+      - apiGroups:
+        - ''
+        resources:
+        - pods/portforward
+        verbs:
+        - create
+      - apiGroups:
+        - batch
+        resources:
+        - jobs
+        verbs:
+        - delete
+        - deletecollection
+        - create
+      - apiGroups:
+        - build.openshift.io
+        resources:
+        - builds
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - security.openshift.io
+        resources:
+        - podsecuritypolicyreviews
+        - podsecuritypolicyselfsubjectreviews
+        - podsecuritypolicysubjectreviews
+        verbs:
+        - create
+      - apiGroups:
+        - logging.openshift.io
+        resources:
+        - '*'
+        verbs:
+        - '*'
+      - apiGroups:
+        - velero.io
+        resources:
+        - backups
+        verbs:
+        - create
+      - apiGroups:
+        - velero.io
+        resources:
+        - deletebackuprequests
+        - downloadrequests
+        - serverstatusrequests
+        verbs:
+        - '*'
+      - apiGroups:
+        - velero.io
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - persistentvolumeclaims
+        verbs:
+        - delete
+        - patch
+      - apiGroups:
+        - ''
+        resources:
+        - replicationcontrollers/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - apps
+        resources:
+        - deployments/scale
+        - replicasets/scale
+        - statefulsets/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - apps.openshift.io
+        resources:
+        - deploymentconfigs/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - ''
+        resources:
+        - replicasets
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machinehealthchecks
+        verbs:
+        - patch
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machinesets/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - prometheuses
+        verbs:
+        - patch
+      - apiGroups:
+        - upgrade.managed.openshift.io
+        resources:
+        - upgradeconfigs
+        verbs:
+        - delete
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - clusterserviceversions
+        - installplans
+        - subscriptions
+        verbs:
+        - delete
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - '*'
         verbs:
         - get
         - list
@@ -18295,6 +21129,155 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
+        name: backplane-lpsre-admins-project
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods/eviction
+        verbs:
+        - create
+      - apiGroups:
+        - ''
+        resources:
+        - pods/portforward
+        verbs:
+        - create
+      - apiGroups:
+        - batch
+        resources:
+        - jobs
+        verbs:
+        - delete
+        - deletecollection
+        - create
+      - apiGroups:
+        - build.openshift.io
+        resources:
+        - builds
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - security.openshift.io
+        resources:
+        - podsecuritypolicyreviews
+        - podsecuritypolicyselfsubjectreviews
+        - podsecuritypolicysubjectreviews
+        verbs:
+        - create
+      - apiGroups:
+        - logging.openshift.io
+        resources:
+        - '*'
+        verbs:
+        - '*'
+      - apiGroups:
+        - velero.io
+        resources:
+        - backups
+        verbs:
+        - create
+      - apiGroups:
+        - velero.io
+        resources:
+        - deletebackuprequests
+        - downloadrequests
+        - serverstatusrequests
+        verbs:
+        - '*'
+      - apiGroups:
+        - velero.io
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - persistentvolumeclaims
+        verbs:
+        - delete
+        - patch
+      - apiGroups:
+        - ''
+        resources:
+        - replicationcontrollers/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - apps
+        resources:
+        - deployments/scale
+        - replicasets/scale
+        - statefulsets/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - apps.openshift.io
+        resources:
+        - deploymentconfigs/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - ''
+        resources:
+        - replicasets
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machinehealthchecks
+        verbs:
+        - patch
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machinesets/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - prometheuses
+        verbs:
+        - patch
+      - apiGroups:
+        - upgrade.managed.openshift.io
+        resources:
+        - upgradeconfigs
+        verbs:
+        - delete
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - clusterserviceversions
+        - installplans
+        - subscriptions
+        verbs:
+        - delete
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
         name: backplane-lpsre-monitoring-project
       rules:
       - apiGroups:
@@ -18519,6 +21502,155 @@ objects:
         - operators.coreos.com
         resources:
         - operators
+        verbs:
+        - get
+        - list
+        - watch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-lpsre-admins-project
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods/eviction
+        verbs:
+        - create
+      - apiGroups:
+        - ''
+        resources:
+        - pods/portforward
+        verbs:
+        - create
+      - apiGroups:
+        - batch
+        resources:
+        - jobs
+        verbs:
+        - delete
+        - deletecollection
+        - create
+      - apiGroups:
+        - build.openshift.io
+        resources:
+        - builds
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - security.openshift.io
+        resources:
+        - podsecuritypolicyreviews
+        - podsecuritypolicyselfsubjectreviews
+        - podsecuritypolicysubjectreviews
+        verbs:
+        - create
+      - apiGroups:
+        - logging.openshift.io
+        resources:
+        - '*'
+        verbs:
+        - '*'
+      - apiGroups:
+        - velero.io
+        resources:
+        - backups
+        verbs:
+        - create
+      - apiGroups:
+        - velero.io
+        resources:
+        - deletebackuprequests
+        - downloadrequests
+        - serverstatusrequests
+        verbs:
+        - '*'
+      - apiGroups:
+        - velero.io
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - persistentvolumeclaims
+        verbs:
+        - delete
+        - patch
+      - apiGroups:
+        - ''
+        resources:
+        - replicationcontrollers/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - apps
+        resources:
+        - deployments/scale
+        - replicasets/scale
+        - statefulsets/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - apps.openshift.io
+        resources:
+        - deploymentconfigs/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - ''
+        resources:
+        - replicasets
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machinehealthchecks
+        verbs:
+        - patch
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machinesets/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - prometheuses
+        verbs:
+        - patch
+      - apiGroups:
+        - upgrade.managed.openshift.io
+        resources:
+        - upgradeconfigs
+        verbs:
+        - delete
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - clusterserviceversions
+        - installplans
+        - subscriptions
+        verbs:
+        - delete
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - '*'
         verbs:
         - get
         - list
@@ -18757,6 +21889,155 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
+        name: backplane-lpsre-admins-project
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods/eviction
+        verbs:
+        - create
+      - apiGroups:
+        - ''
+        resources:
+        - pods/portforward
+        verbs:
+        - create
+      - apiGroups:
+        - batch
+        resources:
+        - jobs
+        verbs:
+        - delete
+        - deletecollection
+        - create
+      - apiGroups:
+        - build.openshift.io
+        resources:
+        - builds
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - security.openshift.io
+        resources:
+        - podsecuritypolicyreviews
+        - podsecuritypolicyselfsubjectreviews
+        - podsecuritypolicysubjectreviews
+        verbs:
+        - create
+      - apiGroups:
+        - logging.openshift.io
+        resources:
+        - '*'
+        verbs:
+        - '*'
+      - apiGroups:
+        - velero.io
+        resources:
+        - backups
+        verbs:
+        - create
+      - apiGroups:
+        - velero.io
+        resources:
+        - deletebackuprequests
+        - downloadrequests
+        - serverstatusrequests
+        verbs:
+        - '*'
+      - apiGroups:
+        - velero.io
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - persistentvolumeclaims
+        verbs:
+        - delete
+        - patch
+      - apiGroups:
+        - ''
+        resources:
+        - replicationcontrollers/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - apps
+        resources:
+        - deployments/scale
+        - replicasets/scale
+        - statefulsets/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - apps.openshift.io
+        resources:
+        - deploymentconfigs/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - ''
+        resources:
+        - replicasets
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machinehealthchecks
+        verbs:
+        - patch
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machinesets/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - prometheuses
+        verbs:
+        - patch
+      - apiGroups:
+        - upgrade.managed.openshift.io
+        resources:
+        - upgradeconfigs
+        verbs:
+        - delete
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - clusterserviceversions
+        - installplans
+        - subscriptions
+        verbs:
+        - delete
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
         name: backplane-lpsre-monitoring-project
       rules:
       - apiGroups:
@@ -18981,6 +22262,155 @@ objects:
         - operators.coreos.com
         resources:
         - operators
+        verbs:
+        - get
+        - list
+        - watch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-lpsre-admins-project
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods/eviction
+        verbs:
+        - create
+      - apiGroups:
+        - ''
+        resources:
+        - pods/portforward
+        verbs:
+        - create
+      - apiGroups:
+        - batch
+        resources:
+        - jobs
+        verbs:
+        - delete
+        - deletecollection
+        - create
+      - apiGroups:
+        - build.openshift.io
+        resources:
+        - builds
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - security.openshift.io
+        resources:
+        - podsecuritypolicyreviews
+        - podsecuritypolicyselfsubjectreviews
+        - podsecuritypolicysubjectreviews
+        verbs:
+        - create
+      - apiGroups:
+        - logging.openshift.io
+        resources:
+        - '*'
+        verbs:
+        - '*'
+      - apiGroups:
+        - velero.io
+        resources:
+        - backups
+        verbs:
+        - create
+      - apiGroups:
+        - velero.io
+        resources:
+        - deletebackuprequests
+        - downloadrequests
+        - serverstatusrequests
+        verbs:
+        - '*'
+      - apiGroups:
+        - velero.io
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - persistentvolumeclaims
+        verbs:
+        - delete
+        - patch
+      - apiGroups:
+        - ''
+        resources:
+        - replicationcontrollers/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - apps
+        resources:
+        - deployments/scale
+        - replicasets/scale
+        - statefulsets/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - apps.openshift.io
+        resources:
+        - deploymentconfigs/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - ''
+        resources:
+        - replicasets
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machinehealthchecks
+        verbs:
+        - patch
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machinesets/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - prometheuses
+        verbs:
+        - patch
+      - apiGroups:
+        - upgrade.managed.openshift.io
+        resources:
+        - upgradeconfigs
+        verbs:
+        - delete
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - clusterserviceversions
+        - installplans
+        - subscriptions
+        verbs:
+        - delete
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - '*'
         verbs:
         - get
         - list
@@ -19219,6 +22649,155 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
+        name: backplane-lpsre-admins-project
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods/eviction
+        verbs:
+        - create
+      - apiGroups:
+        - ''
+        resources:
+        - pods/portforward
+        verbs:
+        - create
+      - apiGroups:
+        - batch
+        resources:
+        - jobs
+        verbs:
+        - delete
+        - deletecollection
+        - create
+      - apiGroups:
+        - build.openshift.io
+        resources:
+        - builds
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - security.openshift.io
+        resources:
+        - podsecuritypolicyreviews
+        - podsecuritypolicyselfsubjectreviews
+        - podsecuritypolicysubjectreviews
+        verbs:
+        - create
+      - apiGroups:
+        - logging.openshift.io
+        resources:
+        - '*'
+        verbs:
+        - '*'
+      - apiGroups:
+        - velero.io
+        resources:
+        - backups
+        verbs:
+        - create
+      - apiGroups:
+        - velero.io
+        resources:
+        - deletebackuprequests
+        - downloadrequests
+        - serverstatusrequests
+        verbs:
+        - '*'
+      - apiGroups:
+        - velero.io
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - persistentvolumeclaims
+        verbs:
+        - delete
+        - patch
+      - apiGroups:
+        - ''
+        resources:
+        - replicationcontrollers/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - apps
+        resources:
+        - deployments/scale
+        - replicasets/scale
+        - statefulsets/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - apps.openshift.io
+        resources:
+        - deploymentconfigs/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - ''
+        resources:
+        - replicasets
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machinehealthchecks
+        verbs:
+        - patch
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machinesets/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - prometheuses
+        verbs:
+        - patch
+      - apiGroups:
+        - upgrade.managed.openshift.io
+        resources:
+        - upgradeconfigs
+        verbs:
+        - delete
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - clusterserviceversions
+        - installplans
+        - subscriptions
+        verbs:
+        - delete
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
         name: backplane-lpsre-monitoring-project
       rules:
       - apiGroups:
@@ -19443,6 +23022,155 @@ objects:
         - operators.coreos.com
         resources:
         - operators
+        verbs:
+        - get
+        - list
+        - watch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-lpsre-admins-project
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods/eviction
+        verbs:
+        - create
+      - apiGroups:
+        - ''
+        resources:
+        - pods/portforward
+        verbs:
+        - create
+      - apiGroups:
+        - batch
+        resources:
+        - jobs
+        verbs:
+        - delete
+        - deletecollection
+        - create
+      - apiGroups:
+        - build.openshift.io
+        resources:
+        - builds
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - security.openshift.io
+        resources:
+        - podsecuritypolicyreviews
+        - podsecuritypolicyselfsubjectreviews
+        - podsecuritypolicysubjectreviews
+        verbs:
+        - create
+      - apiGroups:
+        - logging.openshift.io
+        resources:
+        - '*'
+        verbs:
+        - '*'
+      - apiGroups:
+        - velero.io
+        resources:
+        - backups
+        verbs:
+        - create
+      - apiGroups:
+        - velero.io
+        resources:
+        - deletebackuprequests
+        - downloadrequests
+        - serverstatusrequests
+        verbs:
+        - '*'
+      - apiGroups:
+        - velero.io
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - persistentvolumeclaims
+        verbs:
+        - delete
+        - patch
+      - apiGroups:
+        - ''
+        resources:
+        - replicationcontrollers/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - apps
+        resources:
+        - deployments/scale
+        - replicasets/scale
+        - statefulsets/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - apps.openshift.io
+        resources:
+        - deploymentconfigs/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - ''
+        resources:
+        - replicasets
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machinehealthchecks
+        verbs:
+        - patch
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machinesets/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - prometheuses
+        verbs:
+        - patch
+      - apiGroups:
+        - upgrade.managed.openshift.io
+        resources:
+        - upgradeconfigs
+        verbs:
+        - delete
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - clusterserviceversions
+        - installplans
+        - subscriptions
+        verbs:
+        - delete
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - '*'
         verbs:
         - get
         - list
@@ -19681,6 +23409,155 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
+        name: backplane-lpsre-admins-project
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods/eviction
+        verbs:
+        - create
+      - apiGroups:
+        - ''
+        resources:
+        - pods/portforward
+        verbs:
+        - create
+      - apiGroups:
+        - batch
+        resources:
+        - jobs
+        verbs:
+        - delete
+        - deletecollection
+        - create
+      - apiGroups:
+        - build.openshift.io
+        resources:
+        - builds
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - security.openshift.io
+        resources:
+        - podsecuritypolicyreviews
+        - podsecuritypolicyselfsubjectreviews
+        - podsecuritypolicysubjectreviews
+        verbs:
+        - create
+      - apiGroups:
+        - logging.openshift.io
+        resources:
+        - '*'
+        verbs:
+        - '*'
+      - apiGroups:
+        - velero.io
+        resources:
+        - backups
+        verbs:
+        - create
+      - apiGroups:
+        - velero.io
+        resources:
+        - deletebackuprequests
+        - downloadrequests
+        - serverstatusrequests
+        verbs:
+        - '*'
+      - apiGroups:
+        - velero.io
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - persistentvolumeclaims
+        verbs:
+        - delete
+        - patch
+      - apiGroups:
+        - ''
+        resources:
+        - replicationcontrollers/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - apps
+        resources:
+        - deployments/scale
+        - replicasets/scale
+        - statefulsets/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - apps.openshift.io
+        resources:
+        - deploymentconfigs/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - ''
+        resources:
+        - replicasets
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machinehealthchecks
+        verbs:
+        - patch
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machinesets/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - prometheuses
+        verbs:
+        - patch
+      - apiGroups:
+        - upgrade.managed.openshift.io
+        resources:
+        - upgradeconfigs
+        verbs:
+        - delete
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - clusterserviceversions
+        - installplans
+        - subscriptions
+        verbs:
+        - delete
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
         name: backplane-lpsre-monitoring-project
       rules:
       - apiGroups:
@@ -19905,6 +23782,155 @@ objects:
         - operators.coreos.com
         resources:
         - operators
+        verbs:
+        - get
+        - list
+        - watch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-lpsre-admins-project
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods/eviction
+        verbs:
+        - create
+      - apiGroups:
+        - ''
+        resources:
+        - pods/portforward
+        verbs:
+        - create
+      - apiGroups:
+        - batch
+        resources:
+        - jobs
+        verbs:
+        - delete
+        - deletecollection
+        - create
+      - apiGroups:
+        - build.openshift.io
+        resources:
+        - builds
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - security.openshift.io
+        resources:
+        - podsecuritypolicyreviews
+        - podsecuritypolicyselfsubjectreviews
+        - podsecuritypolicysubjectreviews
+        verbs:
+        - create
+      - apiGroups:
+        - logging.openshift.io
+        resources:
+        - '*'
+        verbs:
+        - '*'
+      - apiGroups:
+        - velero.io
+        resources:
+        - backups
+        verbs:
+        - create
+      - apiGroups:
+        - velero.io
+        resources:
+        - deletebackuprequests
+        - downloadrequests
+        - serverstatusrequests
+        verbs:
+        - '*'
+      - apiGroups:
+        - velero.io
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - persistentvolumeclaims
+        verbs:
+        - delete
+        - patch
+      - apiGroups:
+        - ''
+        resources:
+        - replicationcontrollers/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - apps
+        resources:
+        - deployments/scale
+        - replicasets/scale
+        - statefulsets/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - apps.openshift.io
+        resources:
+        - deploymentconfigs/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - ''
+        resources:
+        - replicasets
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machinehealthchecks
+        verbs:
+        - patch
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machinesets/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - prometheuses
+        verbs:
+        - patch
+      - apiGroups:
+        - upgrade.managed.openshift.io
+        resources:
+        - upgradeconfigs
+        verbs:
+        - delete
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - clusterserviceversions
+        - installplans
+        - subscriptions
+        verbs:
+        - delete
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - '*'
         verbs:
         - get
         - list
@@ -20143,6 +24169,155 @@ objects:
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
+        name: backplane-lpsre-admins-project
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods/eviction
+        verbs:
+        - create
+      - apiGroups:
+        - ''
+        resources:
+        - pods/portforward
+        verbs:
+        - create
+      - apiGroups:
+        - batch
+        resources:
+        - jobs
+        verbs:
+        - delete
+        - deletecollection
+        - create
+      - apiGroups:
+        - build.openshift.io
+        resources:
+        - builds
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - security.openshift.io
+        resources:
+        - podsecuritypolicyreviews
+        - podsecuritypolicyselfsubjectreviews
+        - podsecuritypolicysubjectreviews
+        verbs:
+        - create
+      - apiGroups:
+        - logging.openshift.io
+        resources:
+        - '*'
+        verbs:
+        - '*'
+      - apiGroups:
+        - velero.io
+        resources:
+        - backups
+        verbs:
+        - create
+      - apiGroups:
+        - velero.io
+        resources:
+        - deletebackuprequests
+        - downloadrequests
+        - serverstatusrequests
+        verbs:
+        - '*'
+      - apiGroups:
+        - velero.io
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - persistentvolumeclaims
+        verbs:
+        - delete
+        - patch
+      - apiGroups:
+        - ''
+        resources:
+        - replicationcontrollers/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - apps
+        resources:
+        - deployments/scale
+        - replicasets/scale
+        - statefulsets/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - apps.openshift.io
+        resources:
+        - deploymentconfigs/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - ''
+        resources:
+        - replicasets
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machinehealthchecks
+        verbs:
+        - patch
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machinesets/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - prometheuses
+        verbs:
+        - patch
+      - apiGroups:
+        - upgrade.managed.openshift.io
+        resources:
+        - upgradeconfigs
+        verbs:
+        - delete
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - clusterserviceversions
+        - installplans
+        - subscriptions
+        verbs:
+        - delete
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
         name: backplane-lpsre-monitoring-project
       rules:
       - apiGroups:
@@ -20367,6 +24542,155 @@ objects:
         - operators.coreos.com
         resources:
         - operators
+        verbs:
+        - get
+        - list
+        - watch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-lpsre-admins-project
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods/eviction
+        verbs:
+        - create
+      - apiGroups:
+        - ''
+        resources:
+        - pods/portforward
+        verbs:
+        - create
+      - apiGroups:
+        - batch
+        resources:
+        - jobs
+        verbs:
+        - delete
+        - deletecollection
+        - create
+      - apiGroups:
+        - build.openshift.io
+        resources:
+        - builds
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - security.openshift.io
+        resources:
+        - podsecuritypolicyreviews
+        - podsecuritypolicyselfsubjectreviews
+        - podsecuritypolicysubjectreviews
+        verbs:
+        - create
+      - apiGroups:
+        - logging.openshift.io
+        resources:
+        - '*'
+        verbs:
+        - '*'
+      - apiGroups:
+        - velero.io
+        resources:
+        - backups
+        verbs:
+        - create
+      - apiGroups:
+        - velero.io
+        resources:
+        - deletebackuprequests
+        - downloadrequests
+        - serverstatusrequests
+        verbs:
+        - '*'
+      - apiGroups:
+        - velero.io
+        resources:
+        - '*'
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - persistentvolumeclaims
+        verbs:
+        - delete
+        - patch
+      - apiGroups:
+        - ''
+        resources:
+        - replicationcontrollers/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - apps
+        resources:
+        - deployments/scale
+        - replicasets/scale
+        - statefulsets/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - apps.openshift.io
+        resources:
+        - deploymentconfigs/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - ''
+        resources:
+        - replicasets
+        verbs:
+        - delete
+        - deletecollection
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machinehealthchecks
+        verbs:
+        - patch
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machinesets/scale
+        verbs:
+        - patch
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - prometheuses
+        verbs:
+        - patch
+      - apiGroups:
+        - upgrade.managed.openshift.io
+        resources:
+        - upgradeconfigs
+        verbs:
+        - delete
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - clusterserviceversions
+        - installplans
+        - subscriptions
+        verbs:
+        - delete
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - '*'
         verbs:
         - get
         - list
@@ -20972,6 +25296,9 @@ objects:
         - clusterRoleName: dedicated-readers
           namespacesAllowedRegex: (^hypershift.*|^uhc.*|^ocm.*|^klusterlet.*|^open-cluster-management.*)
           namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-admins-project
+          namespacesAllowedRegex: (^cert-manager$|^redhat-cert-manager-operator$|^hypershift.*|^open-cluster-management.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
 - apiVersion: hive.openshift.io/v1
@@ -21120,6 +25447,9 @@ objects:
           namespacesDeniedRegex: openshift-backplane-cluster-admin
         - clusterRoleName: dedicated-readers
           namespacesAllowedRegex: (^hypershift.*|^uhc.*|^ocm.*|^klusterlet.*|^open-cluster-management.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: backplane-lpsre-admins-project
+          namespacesAllowedRegex: (^cert-manager$|^hypershift.*|^multicluster.*$|^open-cluster-management.*|^osdfm$|^redhat-cert-manager-operator$|^uhc-leadership$)
           namespacesDeniedRegex: openshift-backplane-cluster-admin
         subjectKind: Group
         subjectName: system:serviceaccounts:openshift-backplane-lpsre
