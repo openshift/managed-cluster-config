@@ -27406,6 +27406,35 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: management-cluster-node-update-concurrency
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: ext-hypershift.openshift.io/cluster-type
+        operator: In
+        values:
+        - management-cluster
+      - key: ext-hypershift.openshift.io/cluster-sector
+        operator: NotIn
+        values:
+        - ibm-infra
+    resourceApplyMode: Sync
+    patches:
+    - apiVersion: machineconfiguration.openshift.io/v1
+      kind: MachineConfigPool
+      name: worker
+      applyMode: Sync
+      patch: '{"spec":{"maxUnavailable":2}}'
+      patchType: merge
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: management-cluster-prometheus-metrics
   spec:
     clusterDeploymentSelector:
