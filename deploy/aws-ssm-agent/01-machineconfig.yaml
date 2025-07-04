@@ -18,16 +18,16 @@ spec:
           Wants=network-online.target
           After=network-online.target
           ConditionPathExists=!/usr/bin/amazon-ssm-agent
+          StartLimitBurst=5
+          StartLimitIntervalSec=300s
 
           [Service]
           Type=oneshot
-          ExecStart=/usr/bin/rpm-ostree install --apply-live --assumeyes --idempotent https://s3.us-east-1.amazonaws.com/amazon-ssm-us-east-1/latest/linux_amd64/amazon-ssm-agent.rpm
+          ExecStart=/usr/bin/rpm-ostree install --apply-live --assumeyes --idempotent https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
           ExecStart=/usr/sbin/restorecon /etc/systemd/system/amazon-ssm-agent.service
           ExecStart=/usr/bin/systemctl enable amazon-ssm-agent --now
           Restart=on-failure
           RestartSec=30s
-          StartLimitBurst=5
-          StartLimitIntervalSec=300s
 
           [Install]
           WantedBy=multi-user.target
