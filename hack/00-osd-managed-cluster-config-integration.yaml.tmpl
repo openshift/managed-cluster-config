@@ -10074,14 +10074,23 @@ objects:
                 metadataComplianceType: musthave
                 objectDefinition:
                   apiVersion: operator.openshift.io/v1
+                  applyMode: AlwaysApply
+                  kind: Console
+                  name: cluster
+                  patch: '[{''op'': ''replace'', ''path'': ''/spec/customization/customProductName'',
+                    ''value'': null},{''op'': ''replace'', ''path'': ''/spec/customization/customLogoFile'',
+                    ''value'': null}]'
+                  patchType: json
+              - complianceType: musthave
+                metadataComplianceType: musthave
+                objectDefinition:
+                  apiVersion: operator.openshift.io/v1
                   kind: Console
                   metadata:
                     name: cluster
                   spec:
                     customization:
                       brand: ROSA
-                      customLogoFile: null
-                      customProductName: null
                       documentationBaseURL: https://docs.openshift.com/rosa/
                     managementState: Managed
                     route: null
@@ -43767,6 +43776,15 @@ objects:
         - '4.13'
     resourceApplyMode: Upsert
     applyBehavior: CreateOrUpdate
+    patches:
+    - apiVersion: operator.openshift.io/v1
+      applyMode: AlwaysApply
+      kind: Console
+      name: cluster
+      patch: '[{''op'': ''replace'', ''path'': ''/spec/customization/customProductName'',
+        ''value'': null},{''op'': ''replace'', ''path'': ''/spec/customization/customLogoFile'',
+        ''value'': null}]'
+      patchType: json
     resources:
     - apiVersion: operator.openshift.io/v1
       kind: Console
@@ -43778,8 +43796,6 @@ objects:
         customization:
           brand: ROSA
           documentationBaseURL: https://docs.openshift.com/rosa/
-          customProductName: null
-          customLogoFile: null
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
