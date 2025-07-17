@@ -17,6 +17,7 @@ than enough for the current needs.
 - The `AcsFleetShard` addon installs the resources needed to run an ACS-CS DataPlane cluster:
   - It installs `fleetshard` which is responsible for creating the tenant namespaces.
   - It installs supporting resources, such as monitoring, logging.
+  - It installs `gitopsinstallation`, which in turn deploys Openshift Gitops Operator on a cluster
 - The `AcsFleetShard` addon is *only* installed on those clusters. It will *never* be installed on customer clusters.
 - These clusters are *only* accessible by internal staff, such as SRE and ACS-CS team members. Customers will *not* have access to these clusters.
 - Each tenant gets its own namespace, `Central` instance, `Route` and DNS record.
