@@ -1503,6 +1503,105 @@ objects:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
           policy.open-cluster-management.io/standards: NIST SP 800-53
+        name: rosa-ingress-certificate-policies
+        namespace: openshift-acm-policies
+      spec:
+        disabled: false
+        policy-templates:
+        - extraDependencies:
+          - apiVersion: policy.open-cluster-management.io/v1
+            compliance: Compliant
+            kind: Policy
+            name: rosa-ingress-certificate-check
+            namespace: openshift-acm-policies
+          objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+              name: rosa-ingress-controller-policies
+            spec:
+              evaluationInterval:
+                compliant: 2h
+                noncompliant: 45s
+              object-templates-raw: "- complianceType: musthave\n  metadataComplianceType:\
+                \ musthave\n  objectDefinition:\n    apiVersion: operator.openshift.io/v1\n\
+                \    kind: IngressController\n    metadata:\n      name: default\n\
+                \      namespace: openshift-ingress-operator\n      annotations:\n\
+                \        ingress.operator.openshift.io/auto-delete-load-balancer:\
+                \ 'true'\n    spec:\n      {{hub- if ne (fromConfigMap \"openshift-acm-policies\"\
+                \ .ManagedClusterName \"disable-certificates\") \"true\" hub}}\n \
+                \     defaultCertificate:\n        name: '{{hub (printf \"%s-primary-cert-bundle-secret\"\
+                \ .ManagedClusterName) hub}}'\n      {{hub- end hub}}\n      {{hub-\
+                \ if ne (lookup \"v1\" \"ConfigMap\" \"openshift-acm-policies\" .ManagedClusterName).data\
+                \ nil hub}}\n      endpointPublishingStrategy:\n        type: LoadBalancerService\n\
+                \        loadBalancer:\n          dnsManagementPolicy: 'Managed'\n\
+                \          scope: '{{hub- if eq (fromConfigMap \"openshift-acm-policies\"\
+                \ .ManagedClusterName \"endpoint-publishing-strategy\") \"internal\"\
+                \ -hub}} Internal {{hub- else -hub}} External {{hub- end -hub}}'\n\
+                \      {{hub- end hub}}\n"
+              pruneObjectBehavior: None
+              remediationAction: enforce
+              severity: low
+        - extraDependencies:
+          - apiVersion: policy.open-cluster-management.io/v1
+            compliance: Compliant
+            kind: Policy
+            name: rosa-ingress-certificate-check
+            namespace: openshift-acm-policies
+          objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+              name: rosa-ingress-certificate-policies
+            spec:
+              evaluationInterval:
+                compliant: 2h
+                noncompliant: 45s
+              object-templates-raw: "{{hub- if ne (fromConfigMap \"openshift-acm-policies\"\
+                \ .ManagedClusterName \"disable-certificates\") \"true\" hub}}\n-\
+                \ complianceType: musthave\n  metadataComplianceType: musthave\n \
+                \ objectDefinition:\n    apiVersion: v1\n    data:\n      tls.crt:\
+                \ '{{hub fromSecret \"openshift-acm-policies\" .ManagedClusterName\
+                \ \"tls.crt\" hub}}'\n      tls.key: '{{hub fromSecret \"openshift-acm-policies\"\
+                \ .ManagedClusterName \"tls.key\" hub}}'\n    kind: Secret\n    metadata:\n\
+                \      name: '{{hub (printf \"%s-primary-cert-bundle-secret\" .ManagedClusterName)\
+                \ hub}}'\n      namespace: openshift-ingress\n{{hub- end hub}}\n"
+              pruneObjectBehavior: DeleteIfCreated
+              remediationAction: enforce
+              severity: low
+        remediationAction: enforce
+    - apiVersion: apps.open-cluster-management.io/v1
+      kind: PlacementRule
+      metadata:
+        name: placement-rosa-ingress-certificate-policies
+        namespace: openshift-acm-policies
+      spec:
+        clusterSelector:
+          matchExpressions:
+          - key: hypershift.open-cluster-management.io/hosted-cluster
+            operator: In
+            values:
+            - 'true'
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: PlacementBinding
+      metadata:
+        name: binding-rosa-ingress-certificate-policies
+        namespace: openshift-acm-policies
+      placementRef:
+        apiGroup: apps.open-cluster-management.io
+        kind: PlacementRule
+        name: placement-rosa-ingress-certificate-policies
+      subjects:
+      - apiGroup: policy.open-cluster-management.io
+        kind: Policy
+        name: rosa-ingress-certificate-policies
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: Policy
+      metadata:
+        annotations:
+          policy.open-cluster-management.io/categories: CM Configuration Management
+          policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/standards: NIST SP 800-53
         name: backplane-acs
         namespace: openshift-acm-policies
       spec:
@@ -30189,7 +30288,7 @@ objects:
           \     clientSecret:\n        key: client-secret\n        name: observatorium-credentials\n\
           \      tokenUrl: https://sso.redhat.com/auth/realms/redhat-external/protocol/openid-connect/token\n\
           \    remoteTimeout: 30s\n    writeRelabelConfigs:\n    - sourceLabels:\n\
-          \      - __name__\n      action: keep\n      regex: (package_operator_package_availability|package_operator_object_set_succeeded_timestamp_seconds|addon_operator_addons_count|addon_operator_reconcile_error|addon_operator_addon_health_info|addon_operator_ocm_api_requests_durations|addon_operator_ocm_api_requests_durations_sum|addon_operator_ocm_api_requests_durations_count|addon_operator_paused|cluster_admin_enabled|limited_support_enabled|identity_provider|cpms_enabled|ingress_canary_route_reachable|ocm_agent_service_log_sent_total|sre:slo:probe_success_api|sre:slo:probe_success_console|sre:slo:upgradeoperator_upgrade_result|sre:slo:imageregistry_http_requests_total|sre:slo:oauth_server_requests_total|sre:sla:outage_5_minutes|sre:slo:apiserver_28d_slo|sre:slo:console_28d_slo|sre:error_budget_burn:apiserver_28d_slo|sre:error_budget_burn:console_28d_slo|sre:operators:succeeded|sre:record:upgradeoperator_upgrade_healthcheck_result|sre:slo:upgradeoperator_upgrade_started_timestamp|sre:slo:upgradeoperator_upgrade_completed_timestamp|sre:slo:upgradeoperator_controlplane_upgrade_started_timestamp|sre:slo:upgradeoperator_controlplane_upgrade_completed_timestamp|sre:slo:upgradeoperator_workernode_upgrade_started_timestamp|sre:slo:upgradeoperator_workernode_upgrade_completed_timestamp)\n\
+          \      - __name__\n      action: keep\n      regex: (sre:telemetry:package_operator_object_set_succeeded_timestamp_seconds|sre:telemetry:package_operator_package_availability|addon_operator_addons_count|addon_operator_reconcile_error|addon_operator_addon_health_info|addon_operator_ocm_api_requests_durations|addon_operator_ocm_api_requests_durations_sum|addon_operator_ocm_api_requests_durations_count|addon_operator_paused|cluster_admin_enabled|limited_support_enabled|identity_provider|cpms_enabled|ingress_canary_route_reachable|ocm_agent_service_log_sent_total|sre:slo:probe_success_api|sre:slo:probe_success_console|sre:slo:upgradeoperator_upgrade_result|sre:slo:imageregistry_http_requests_total|sre:slo:oauth_server_requests_total|sre:sla:outage_5_minutes|sre:slo:apiserver_28d_slo|sre:slo:console_28d_slo|sre:error_budget_burn:apiserver_28d_slo|sre:error_budget_burn:console_28d_slo|sre:operators:succeeded|sre:record:upgradeoperator_upgrade_healthcheck_result|sre:slo:upgradeoperator_upgrade_started_timestamp|sre:slo:upgradeoperator_upgrade_completed_timestamp|sre:slo:upgradeoperator_controlplane_upgrade_started_timestamp|sre:slo:upgradeoperator_controlplane_upgrade_completed_timestamp|sre:slo:upgradeoperator_workernode_upgrade_started_timestamp|sre:slo:upgradeoperator_workernode_upgrade_completed_timestamp)\n\
           \    queueConfig:\n      capacity: 2500\n      maxShards: 1000\n      minShards:\
           \ 1\n      maxSamplesPerSend: 2000\n      batchSendDeadline: 60s\n     \
           \ minBackoff: 30ms\n      maxBackoff: 1m\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
@@ -30262,7 +30361,7 @@ objects:
           \     clientSecret:\n        key: client-secret\n        name: observatorium-credentials\n\
           \      tokenUrl: https://sso.redhat.com/auth/realms/redhat-external/protocol/openid-connect/token\n\
           \    remoteTimeout: 30s\n    writeRelabelConfigs:\n    - sourceLabels:\n\
-          \      - __name__\n      action: keep\n      regex: (package_operator_package_availability|package_operator_object_set_succeeded_timestamp_seconds|addon_operator_addons_count|addon_operator_reconcile_error|addon_operator_addon_health_info|addon_operator_ocm_api_requests_durations|addon_operator_ocm_api_requests_durations_sum|addon_operator_ocm_api_requests_durations_count|addon_operator_paused|cluster_admin_enabled|limited_support_enabled|identity_provider|cpms_enabled|ingress_canary_route_reachable|ocm_agent_service_log_sent_total|sre:slo:probe_success_api|sre:slo:probe_success_console|sre:slo:upgradeoperator_upgrade_result|sre:slo:imageregistry_http_requests_total|sre:slo:oauth_server_requests_total|sre:sla:outage_5_minutes|sre:slo:apiserver_28d_slo|sre:slo:console_28d_slo|sre:error_budget_burn:apiserver_28d_slo|sre:error_budget_burn:console_28d_slo|sre:operators:succeeded|sre:record:upgradeoperator_upgrade_healthcheck_result|sre:slo:upgradeoperator_upgrade_started_timestamp|sre:slo:upgradeoperator_upgrade_completed_timestamp|sre:slo:upgradeoperator_controlplane_upgrade_started_timestamp|sre:slo:upgradeoperator_controlplane_upgrade_completed_timestamp|sre:slo:upgradeoperator_workernode_upgrade_started_timestamp|sre:slo:upgradeoperator_workernode_upgrade_completed_timestamp)\n\
+          \      - __name__\n      action: keep\n      regex: (sre:telemetry:package_operator_object_set_succeeded_timestamp_seconds|sre:telemetry:package_operator_package_availability|addon_operator_addons_count|addon_operator_reconcile_error|addon_operator_addon_health_info|addon_operator_ocm_api_requests_durations|addon_operator_ocm_api_requests_durations_sum|addon_operator_ocm_api_requests_durations_count|addon_operator_paused|cluster_admin_enabled|limited_support_enabled|identity_provider|cpms_enabled|ingress_canary_route_reachable|ocm_agent_service_log_sent_total|sre:slo:probe_success_api|sre:slo:probe_success_console|sre:slo:upgradeoperator_upgrade_result|sre:slo:imageregistry_http_requests_total|sre:slo:oauth_server_requests_total|sre:sla:outage_5_minutes|sre:slo:apiserver_28d_slo|sre:slo:console_28d_slo|sre:error_budget_burn:apiserver_28d_slo|sre:error_budget_burn:console_28d_slo|sre:operators:succeeded|sre:record:upgradeoperator_upgrade_healthcheck_result|sre:slo:upgradeoperator_upgrade_started_timestamp|sre:slo:upgradeoperator_upgrade_completed_timestamp|sre:slo:upgradeoperator_controlplane_upgrade_started_timestamp|sre:slo:upgradeoperator_controlplane_upgrade_completed_timestamp|sre:slo:upgradeoperator_workernode_upgrade_started_timestamp|sre:slo:upgradeoperator_workernode_upgrade_completed_timestamp)\n\
           \    queueConfig:\n      capacity: 2500\n      maxShards: 1000\n      minShards:\
           \ 1\n      maxSamplesPerSend: 2000\n      batchSendDeadline: 60s\n     \
           \ minBackoff: 30ms\n      maxBackoff: 1m\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
@@ -30322,7 +30421,7 @@ objects:
           \     clientSecret:\n        key: client-secret\n        name: observatorium-credentials\n\
           \      tokenUrl: https://sso.redhat.com/auth/realms/redhat-external/protocol/openid-connect/token\n\
           \    remoteTimeout: 30s\n    writeRelabelConfigs:\n    - sourceLabels:\n\
-          \      - __name__\n      action: keep\n      regex: (package_operator_package_availability|package_operator_object_set_succeeded_timestamp_seconds|addon_operator_addons_count|addon_operator_reconcile_error|addon_operator_addon_health_info|addon_operator_ocm_api_requests_durations|addon_operator_ocm_api_requests_durations_sum|addon_operator_ocm_api_requests_durations_count|addon_operator_paused|cluster_admin_enabled|limited_support_enabled|identity_provider|cpms_enabled|ingress_canary_route_reachable|ocm_agent_service_log_sent_total|sre:slo:probe_success_api|sre:slo:probe_success_console|sre:slo:upgradeoperator_upgrade_result|sre:slo:imageregistry_http_requests_total|sre:slo:oauth_server_requests_total|sre:sla:outage_5_minutes|sre:slo:apiserver_28d_slo|sre:slo:console_28d_slo|sre:error_budget_burn:apiserver_28d_slo|sre:error_budget_burn:console_28d_slo|sre:operators:succeeded|sre:record:upgradeoperator_upgrade_healthcheck_result|sre:slo:upgradeoperator_upgrade_started_timestamp|sre:slo:upgradeoperator_upgrade_completed_timestamp|sre:slo:upgradeoperator_controlplane_upgrade_started_timestamp|sre:slo:upgradeoperator_controlplane_upgrade_completed_timestamp|sre:slo:upgradeoperator_workernode_upgrade_started_timestamp|sre:slo:upgradeoperator_workernode_upgrade_completed_timestamp)\n\
+          \      - __name__\n      action: keep\n      regex: (sre:telemetry:package_operator_object_set_succeeded_timestamp_seconds|sre:telemetry:package_operator_package_availability|addon_operator_addons_count|addon_operator_reconcile_error|addon_operator_addon_health_info|addon_operator_ocm_api_requests_durations|addon_operator_ocm_api_requests_durations_sum|addon_operator_ocm_api_requests_durations_count|addon_operator_paused|cluster_admin_enabled|limited_support_enabled|identity_provider|cpms_enabled|ingress_canary_route_reachable|ocm_agent_service_log_sent_total|sre:slo:probe_success_api|sre:slo:probe_success_console|sre:slo:upgradeoperator_upgrade_result|sre:slo:imageregistry_http_requests_total|sre:slo:oauth_server_requests_total|sre:sla:outage_5_minutes|sre:slo:apiserver_28d_slo|sre:slo:console_28d_slo|sre:error_budget_burn:apiserver_28d_slo|sre:error_budget_burn:console_28d_slo|sre:operators:succeeded|sre:record:upgradeoperator_upgrade_healthcheck_result|sre:slo:upgradeoperator_upgrade_started_timestamp|sre:slo:upgradeoperator_upgrade_completed_timestamp|sre:slo:upgradeoperator_controlplane_upgrade_started_timestamp|sre:slo:upgradeoperator_controlplane_upgrade_completed_timestamp|sre:slo:upgradeoperator_workernode_upgrade_started_timestamp|sre:slo:upgradeoperator_workernode_upgrade_completed_timestamp)\n\
           \    queueConfig:\n      capacity: 2500\n      maxShards: 1000\n      minShards:\
           \ 1\n      maxSamplesPerSend: 2000\n      batchSendDeadline: 60s\n     \
           \ minBackoff: 30ms\n      maxBackoff: 1m\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
@@ -30392,7 +30491,7 @@ objects:
           \     clientSecret:\n        key: client-secret\n        name: observatorium-credentials\n\
           \      tokenUrl: https://sso.redhat.com/auth/realms/redhat-external/protocol/openid-connect/token\n\
           \    remoteTimeout: 30s\n    writeRelabelConfigs:\n    - sourceLabels:\n\
-          \      - __name__\n      action: keep\n      regex: (package_operator_package_availability|package_operator_object_set_succeeded_timestamp_seconds|addon_operator_addons_count|addon_operator_reconcile_error|addon_operator_addon_health_info|addon_operator_ocm_api_requests_durations|addon_operator_ocm_api_requests_durations_sum|addon_operator_ocm_api_requests_durations_count|addon_operator_paused|cluster_admin_enabled|limited_support_enabled|identity_provider|cpms_enabled|ingress_canary_route_reachable|ocm_agent_service_log_sent_total|sre:slo:probe_success_api|sre:slo:probe_success_console|sre:slo:upgradeoperator_upgrade_result|sre:slo:imageregistry_http_requests_total|sre:slo:oauth_server_requests_total|sre:sla:outage_5_minutes|sre:slo:apiserver_28d_slo|sre:slo:console_28d_slo|sre:error_budget_burn:apiserver_28d_slo|sre:error_budget_burn:console_28d_slo|sre:operators:succeeded|sre:record:upgradeoperator_upgrade_healthcheck_result|sre:slo:upgradeoperator_upgrade_started_timestamp|sre:slo:upgradeoperator_upgrade_completed_timestamp|sre:slo:upgradeoperator_controlplane_upgrade_started_timestamp|sre:slo:upgradeoperator_controlplane_upgrade_completed_timestamp|sre:slo:upgradeoperator_workernode_upgrade_started_timestamp|sre:slo:upgradeoperator_workernode_upgrade_completed_timestamp)\n\
+          \      - __name__\n      action: keep\n      regex: (sre:telemetry:package_operator_object_set_succeeded_timestamp_seconds|sre:telemetry:package_operator_package_availability|addon_operator_addons_count|addon_operator_reconcile_error|addon_operator_addon_health_info|addon_operator_ocm_api_requests_durations|addon_operator_ocm_api_requests_durations_sum|addon_operator_ocm_api_requests_durations_count|addon_operator_paused|cluster_admin_enabled|limited_support_enabled|identity_provider|cpms_enabled|ingress_canary_route_reachable|ocm_agent_service_log_sent_total|sre:slo:probe_success_api|sre:slo:probe_success_console|sre:slo:upgradeoperator_upgrade_result|sre:slo:imageregistry_http_requests_total|sre:slo:oauth_server_requests_total|sre:sla:outage_5_minutes|sre:slo:apiserver_28d_slo|sre:slo:console_28d_slo|sre:error_budget_burn:apiserver_28d_slo|sre:error_budget_burn:console_28d_slo|sre:operators:succeeded|sre:record:upgradeoperator_upgrade_healthcheck_result|sre:slo:upgradeoperator_upgrade_started_timestamp|sre:slo:upgradeoperator_upgrade_completed_timestamp|sre:slo:upgradeoperator_controlplane_upgrade_started_timestamp|sre:slo:upgradeoperator_controlplane_upgrade_completed_timestamp|sre:slo:upgradeoperator_workernode_upgrade_started_timestamp|sre:slo:upgradeoperator_workernode_upgrade_completed_timestamp)\n\
           \    queueConfig:\n      capacity: 2500\n      maxShards: 1000\n      minShards:\
           \ 1\n      maxSamplesPerSend: 2000\n      batchSendDeadline: 60s\n     \
           \ minBackoff: 30ms\n      maxBackoff: 1m\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
@@ -30464,7 +30563,7 @@ objects:
           \     clientSecret:\n        key: client-secret\n        name: observatorium-credentials\n\
           \      tokenUrl: https://sso.redhat.com/auth/realms/redhat-external/protocol/openid-connect/token\n\
           \    remoteTimeout: 30s\n    writeRelabelConfigs:\n    - sourceLabels:\n\
-          \      - __name__\n      action: keep\n      regex: (package_operator_package_availability|package_operator_object_set_succeeded_timestamp_seconds|addon_operator_addons_count|addon_operator_reconcile_error|addon_operator_addon_health_info|addon_operator_ocm_api_requests_durations|addon_operator_ocm_api_requests_durations_sum|addon_operator_ocm_api_requests_durations_count|addon_operator_paused|cluster_admin_enabled|limited_support_enabled|identity_provider|cpms_enabled|ingress_canary_route_reachable|ocm_agent_service_log_sent_total|sre:slo:probe_success_api|sre:slo:probe_success_console|sre:slo:upgradeoperator_upgrade_result|sre:slo:imageregistry_http_requests_total|sre:slo:oauth_server_requests_total|sre:sla:outage_5_minutes|sre:slo:apiserver_28d_slo|sre:slo:console_28d_slo|sre:error_budget_burn:apiserver_28d_slo|sre:error_budget_burn:console_28d_slo|sre:operators:succeeded|sre:record:upgradeoperator_upgrade_healthcheck_result|sre:slo:upgradeoperator_upgrade_started_timestamp|sre:slo:upgradeoperator_upgrade_completed_timestamp|sre:slo:upgradeoperator_controlplane_upgrade_started_timestamp|sre:slo:upgradeoperator_controlplane_upgrade_completed_timestamp|sre:slo:upgradeoperator_workernode_upgrade_started_timestamp|sre:slo:upgradeoperator_workernode_upgrade_completed_timestamp)\n\
+          \      - __name__\n      action: keep\n      regex: (sre:telemetry:package_operator_object_set_succeeded_timestamp_seconds|sre:telemetry:package_operator_package_availability|addon_operator_addons_count|addon_operator_reconcile_error|addon_operator_addon_health_info|addon_operator_ocm_api_requests_durations|addon_operator_ocm_api_requests_durations_sum|addon_operator_ocm_api_requests_durations_count|addon_operator_paused|cluster_admin_enabled|limited_support_enabled|identity_provider|cpms_enabled|ingress_canary_route_reachable|ocm_agent_service_log_sent_total|sre:slo:probe_success_api|sre:slo:probe_success_console|sre:slo:upgradeoperator_upgrade_result|sre:slo:imageregistry_http_requests_total|sre:slo:oauth_server_requests_total|sre:sla:outage_5_minutes|sre:slo:apiserver_28d_slo|sre:slo:console_28d_slo|sre:error_budget_burn:apiserver_28d_slo|sre:error_budget_burn:console_28d_slo|sre:operators:succeeded|sre:record:upgradeoperator_upgrade_healthcheck_result|sre:slo:upgradeoperator_upgrade_started_timestamp|sre:slo:upgradeoperator_upgrade_completed_timestamp|sre:slo:upgradeoperator_controlplane_upgrade_started_timestamp|sre:slo:upgradeoperator_controlplane_upgrade_completed_timestamp|sre:slo:upgradeoperator_workernode_upgrade_started_timestamp|sre:slo:upgradeoperator_workernode_upgrade_completed_timestamp)\n\
           \    queueConfig:\n      capacity: 2500\n      maxShards: 1000\n      minShards:\
           \ 1\n      maxSamplesPerSend: 2000\n      batchSendDeadline: 60s\n     \
           \ minBackoff: 30ms\n      maxBackoff: 1m\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
@@ -30538,7 +30637,7 @@ objects:
           \     clientSecret:\n        key: client-secret\n        name: observatorium-credentials\n\
           \      tokenUrl: https://sso.redhat.com/auth/realms/redhat-external/protocol/openid-connect/token\n\
           \    remoteTimeout: 30s\n    writeRelabelConfigs:\n    - sourceLabels:\n\
-          \      - __name__\n      action: keep\n      regex: (package_operator_package_availability|package_operator_object_set_succeeded_timestamp_seconds|addon_operator_addons_count|addon_operator_reconcile_error|addon_operator_addon_health_info|addon_operator_ocm_api_requests_durations|addon_operator_ocm_api_requests_durations_sum|addon_operator_ocm_api_requests_durations_count|addon_operator_paused|cluster_admin_enabled|limited_support_enabled|identity_provider|cpms_enabled|ingress_canary_route_reachable|ocm_agent_service_log_sent_total|sre:slo:probe_success_api|sre:slo:probe_success_console|sre:slo:upgradeoperator_upgrade_result|sre:slo:imageregistry_http_requests_total|sre:slo:oauth_server_requests_total|sre:sla:outage_5_minutes|sre:slo:apiserver_28d_slo|sre:slo:console_28d_slo|sre:error_budget_burn:apiserver_28d_slo|sre:error_budget_burn:console_28d_slo|sre:operators:succeeded|sre:record:upgradeoperator_upgrade_healthcheck_result|sre:slo:upgradeoperator_upgrade_started_timestamp|sre:slo:upgradeoperator_upgrade_completed_timestamp|sre:slo:upgradeoperator_controlplane_upgrade_started_timestamp|sre:slo:upgradeoperator_controlplane_upgrade_completed_timestamp|sre:slo:upgradeoperator_workernode_upgrade_started_timestamp|sre:slo:upgradeoperator_workernode_upgrade_completed_timestamp)\n\
+          \      - __name__\n      action: keep\n      regex: (sre:telemetry:package_operator_object_set_succeeded_timestamp_seconds|sre:telemetry:package_operator_package_availability|addon_operator_addons_count|addon_operator_reconcile_error|addon_operator_addon_health_info|addon_operator_ocm_api_requests_durations|addon_operator_ocm_api_requests_durations_sum|addon_operator_ocm_api_requests_durations_count|addon_operator_paused|cluster_admin_enabled|limited_support_enabled|identity_provider|cpms_enabled|ingress_canary_route_reachable|ocm_agent_service_log_sent_total|sre:slo:probe_success_api|sre:slo:probe_success_console|sre:slo:upgradeoperator_upgrade_result|sre:slo:imageregistry_http_requests_total|sre:slo:oauth_server_requests_total|sre:sla:outage_5_minutes|sre:slo:apiserver_28d_slo|sre:slo:console_28d_slo|sre:error_budget_burn:apiserver_28d_slo|sre:error_budget_burn:console_28d_slo|sre:operators:succeeded|sre:record:upgradeoperator_upgrade_healthcheck_result|sre:slo:upgradeoperator_upgrade_started_timestamp|sre:slo:upgradeoperator_upgrade_completed_timestamp|sre:slo:upgradeoperator_controlplane_upgrade_started_timestamp|sre:slo:upgradeoperator_controlplane_upgrade_completed_timestamp|sre:slo:upgradeoperator_workernode_upgrade_started_timestamp|sre:slo:upgradeoperator_workernode_upgrade_completed_timestamp)\n\
           \    queueConfig:\n      capacity: 2500\n      maxShards: 1000\n      minShards:\
           \ 1\n      maxSamplesPerSend: 2000\n      batchSendDeadline: 60s\n     \
           \ minBackoff: 30ms\n      maxBackoff: 1m\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
@@ -30615,7 +30714,7 @@ objects:
           \     clientSecret:\n        key: client-secret\n        name: observatorium-credentials\n\
           \      tokenUrl: https://sso.redhat.com/auth/realms/redhat-external/protocol/openid-connect/token\n\
           \    remoteTimeout: 30s\n    writeRelabelConfigs:\n    - sourceLabels:\n\
-          \      - __name__\n      action: keep\n      regex: (package_operator_package_availability|package_operator_object_set_succeeded_timestamp_seconds|addon_operator_addons_count|addon_operator_reconcile_error|addon_operator_addon_health_info|addon_operator_ocm_api_requests_durations|addon_operator_ocm_api_requests_durations_sum|addon_operator_ocm_api_requests_durations_count|addon_operator_paused|cluster_admin_enabled|limited_support_enabled|identity_provider|cpms_enabled|ingress_canary_route_reachable|ocm_agent_service_log_sent_total|sre:slo:probe_success_api|sre:slo:probe_success_console|sre:slo:upgradeoperator_upgrade_result|sre:slo:imageregistry_http_requests_total|sre:slo:oauth_server_requests_total|sre:sla:outage_5_minutes|sre:slo:apiserver_28d_slo|sre:slo:console_28d_slo|sre:error_budget_burn:apiserver_28d_slo|sre:error_budget_burn:console_28d_slo|sre:operators:succeeded|sre:record:upgradeoperator_upgrade_healthcheck_result|sre:slo:upgradeoperator_upgrade_started_timestamp|sre:slo:upgradeoperator_upgrade_completed_timestamp|sre:slo:upgradeoperator_controlplane_upgrade_started_timestamp|sre:slo:upgradeoperator_controlplane_upgrade_completed_timestamp|sre:slo:upgradeoperator_workernode_upgrade_started_timestamp|sre:slo:upgradeoperator_workernode_upgrade_completed_timestamp)\n\
+          \      - __name__\n      action: keep\n      regex: (sre:telemetry:package_operator_object_set_succeeded_timestamp_seconds|sre:telemetry:package_operator_package_availability|addon_operator_addons_count|addon_operator_reconcile_error|addon_operator_addon_health_info|addon_operator_ocm_api_requests_durations|addon_operator_ocm_api_requests_durations_sum|addon_operator_ocm_api_requests_durations_count|addon_operator_paused|cluster_admin_enabled|limited_support_enabled|identity_provider|cpms_enabled|ingress_canary_route_reachable|ocm_agent_service_log_sent_total|sre:slo:probe_success_api|sre:slo:probe_success_console|sre:slo:upgradeoperator_upgrade_result|sre:slo:imageregistry_http_requests_total|sre:slo:oauth_server_requests_total|sre:sla:outage_5_minutes|sre:slo:apiserver_28d_slo|sre:slo:console_28d_slo|sre:error_budget_burn:apiserver_28d_slo|sre:error_budget_burn:console_28d_slo|sre:operators:succeeded|sre:record:upgradeoperator_upgrade_healthcheck_result|sre:slo:upgradeoperator_upgrade_started_timestamp|sre:slo:upgradeoperator_upgrade_completed_timestamp|sre:slo:upgradeoperator_controlplane_upgrade_started_timestamp|sre:slo:upgradeoperator_controlplane_upgrade_completed_timestamp|sre:slo:upgradeoperator_workernode_upgrade_started_timestamp|sre:slo:upgradeoperator_workernode_upgrade_completed_timestamp)\n\
           \    queueConfig:\n      capacity: 2500\n      maxShards: 1000\n      minShards:\
           \ 1\n      maxSamplesPerSend: 2000\n      batchSendDeadline: 60s\n     \
           \ minBackoff: 30ms\n      maxBackoff: 1m\n  nodeSelector:\n    node-role.kubernetes.io/infra:\
