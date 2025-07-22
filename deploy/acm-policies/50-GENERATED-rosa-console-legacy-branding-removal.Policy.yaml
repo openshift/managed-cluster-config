@@ -1,0 +1,142 @@
+---
+apiVersion: policy.open-cluster-management.io/v1
+kind: Policy
+metadata:
+    annotations:
+        policy.open-cluster-management.io/categories: CM Configuration Management
+        policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+        policy.open-cluster-management.io/standards: NIST SP 800-53
+    name: rosa-console-legacy-branding-removal
+    namespace: openshift-acm-policies
+spec:
+    disabled: false
+    policy-templates:
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+                name: rosa-console-legacy-branding-removal
+            spec:
+                evaluationInterval:
+                    compliant: 2h
+                    noncompliant: 45s
+                object-templates:
+                    - complianceType: musthave
+                      metadataComplianceType: musthave
+                      objectDefinition:
+                        apiVersion: v1
+                        kind: ServiceAccount
+                        metadata:
+                            name: legacy-brand-migration
+                            namespace: openshift-console
+                    - complianceType: musthave
+                      metadataComplianceType: musthave
+                      objectDefinition:
+                        apiVersion: rbac.authorization.k8s.io/v1
+                        kind: ClusterRole
+                        metadata:
+                            name: legacy-brand-migration
+                        rules:
+                            - apiGroups:
+                                - operator.openshift.io
+                              resources:
+                                - consoles
+                              verbs:
+                                - get
+                                - list
+                                - patch
+                    - complianceType: musthave
+                      metadataComplianceType: musthave
+                      objectDefinition:
+                        apiVersion: rbac.authorization.k8s.io/v1
+                        kind: ClusterRoleBinding
+                        metadata:
+                            name: legacy-brand-migration
+                        roleRef:
+                            apiGroup: rbac.authorization.k8s.io
+                            kind: ClusterRole
+                            name: legacy-brand-migration
+                        subjects:
+                            - kind: ServiceAccount
+                              name: legacy-brand-migration
+                              namespace: openshift-console
+                    - complianceType: musthave
+                      metadataComplianceType: musthave
+                      objectDefinition:
+                        apiVersion: v1
+                        data:
+                            entrypoint: "#!/bin/bash\n\necho \"This cronjob removes the legacy brand configuration if present, otherwise exits cleanly as a noop\"\n\noc patch console.operator cluster --type json --patch '[{\"op\": \"replace\", \"path\": \"/spec/customization/customProductName\", \"value\": null},{\"op\": \"replace\", \"path\": \"/spec/customization/customLogoFile\", \"value\": null}]' "
+                        kind: ConfigMap
+                        metadata:
+                            name: remove-legacy-brand-config
+                            namespace: openshift-console
+                    - complianceType: musthave
+                      metadataComplianceType: musthave
+                      objectDefinition:
+                        apiVersion: batch/v1
+                        kind: CronJob
+                        metadata:
+                            name: rosa-legacy-brand-migration
+                            namespace: openshift-console
+                        spec:
+                            concurrencyPolicy: Replace
+                            failedJobsHistoryLimit: 3
+                            jobTemplate:
+                                spec:
+                                    template:
+                                        metadata:
+                                            annotations:
+                                                openshift.io/required-scc: restricted-v2
+                                        spec:
+                                            containers:
+                                                - command:
+                                                    - /bin/sh
+                                                    - -c
+                                                    - /etc/config/entrypoint
+                                                  image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+                                                  name: rosa-legacy-brand-migration
+                                                  volumeMounts:
+                                                    - mountPath: /etc/config
+                                                      name: legacy-brand-migration
+                                                      readOnly: true
+                                            restartPolicy: Never
+                                            serviceAccountName: legacy-brand-migration
+                                            volumes:
+                                                - configMap:
+                                                    defaultMode: 493
+                                                    name: remove-legacy-brand-config
+                                                  name: legacy-brand-migration
+                                    ttlSecondsAfterFinished: 86400
+                            schedule: '*/15 * * * *'
+                            successfulJobsHistoryLimit: 1
+                pruneObjectBehavior: DeleteIfCreated
+                remediationAction: enforce
+                severity: low
+    remediationAction: enforce
+---
+apiVersion: apps.open-cluster-management.io/v1
+kind: PlacementRule
+metadata:
+    name: placement-rosa-console-legacy-branding-removal
+    namespace: openshift-acm-policies
+spec:
+    clusterSelector:
+        matchExpressions:
+            - key: hypershift.open-cluster-management.io/hosted-cluster
+              operator: In
+              values:
+                - "true"
+---
+apiVersion: policy.open-cluster-management.io/v1
+kind: PlacementBinding
+metadata:
+    name: binding-rosa-console-legacy-branding-removal
+    namespace: openshift-acm-policies
+placementRef:
+    apiGroup: apps.open-cluster-management.io
+    kind: PlacementRule
+    name: placement-rosa-console-legacy-branding-removal
+subjects:
+    - apiGroup: policy.open-cluster-management.io
+      kind: Policy
+      name: rosa-console-legacy-branding-removal
