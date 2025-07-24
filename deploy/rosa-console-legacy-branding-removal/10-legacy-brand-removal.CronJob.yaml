@@ -19,6 +19,7 @@ spec:
         spec:
           serviceAccountName: legacy-brand-migration
           restartPolicy: Never
+          priorityClassName: "system-cluster-critical"
           containers:
             - name: rosa-legacy-brand-migration
               image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
@@ -27,6 +28,10 @@ spec:
                 - name: legacy-brand-migration
                   mountPath: /etc/config
                   readOnly: true
+              resources:
+                requests:
+                  cpu: "100m"
+                  memory: "128Mi"
           volumes:
             - name: legacy-brand-migration
               configMap:

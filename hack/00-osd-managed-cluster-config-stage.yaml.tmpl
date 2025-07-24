@@ -36679,36 +36679,6 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: osd-cluster-metadata
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-    resourceApplyMode: Sync
-    enableResourceTemplates: true
-    resources:
-    - apiVersion: v1
-      kind: ConfigMap
-      metadata:
-        name: osd-cluster-metadata
-        namespace: openshift-config
-      data:
-        api.openshift.com_ccs: '{{ fromCDLabel "api.openshift.com/ccs" }}'
-        api.openshift.com_channel-group: '{{ fromCDLabel "api.openshift.com/channel-group"
-          }}'
-        api.openshift.com_environment: '{{ fromCDLabel "api.openshift.com/environment"
-          }}'
-        hive.openshift.io_cluster-platform: '{{ fromCDLabel "hive.openshift.io/cluster-platform"
-          }}'
-        hive.openshift.io_cluster-region: '{{ fromCDLabel "hive.openshift.io/cluster-region"
-          }}'
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    labels:
-      managed.openshift.io/gitHash: ${IMAGE_TAG}
-      managed.openshift.io/gitRepoName: ${REPO_NAME}
-      managed.openshift.io/osd: 'true'
     name: osd-cluster-ready
   spec:
     clusterDeploymentSelector:
