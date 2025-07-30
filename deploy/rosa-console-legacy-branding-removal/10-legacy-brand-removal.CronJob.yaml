@@ -1,0 +1,40 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: rosa-legacy-brand-migration
+  namespace: openshift-console
+spec:
+  failedJobsHistoryLimit: 3
+  successfulJobsHistoryLimit: 1
+  concurrencyPolicy: Replace
+  schedule: "*/15 * * * *"
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: 86400
+      template:
+        metadata:
+          annotations:
+            openshift.io/required-scc: restricted-v2
+        spec:
+          serviceAccountName: legacy-brand-migration
+          restartPolicy: Never
+          priorityClassName: "system-cluster-critical"
+          containers:
+            - name: rosa-legacy-brand-migration
+              image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+              command: [ "/bin/sh", "-c", "/etc/config/entrypoint" ]
+              volumeMounts:
+                - name: legacy-brand-migration
+                  mountPath: /etc/config
+                  readOnly: true
+              resources:
+                requests:
+                  cpu: "100m"
+                  memory: "128Mi"
+          volumes:
+            - name: legacy-brand-migration
+              configMap:
+                name: remove-legacy-brand-config
+                defaultMode: 0755
+

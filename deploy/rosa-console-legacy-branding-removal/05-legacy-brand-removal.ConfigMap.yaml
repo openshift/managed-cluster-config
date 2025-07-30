@@ -1,0 +1,13 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: remove-legacy-brand-config
+  namespace: openshift-console
+data:
+  entrypoint: |-
+    #!/bin/bash
+
+    echo "This cronjob removes the legacy brand configuration if present, otherwise exits cleanly as a noop"
+
+    oc patch console.operator cluster --type json --patch '[{"op": "replace", "path": "/spec/customization/customProductName", "value": null},{"op": "replace", "path": "/spec/customization/customLogoFile", "value": null}]' 
