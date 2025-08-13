@@ -1,0 +1,20 @@
+apiVersion: machine.openshift.io/v1beta1
+kind: MachineHealthCheck
+metadata:
+  name: srep-master-healthcheck
+  namespace: openshift-machine-api
+spec:
+  selector:
+    matchExpressions:
+    - key: machine.openshift.io/cluster-api-machine-role
+      operator: In
+      values:
+      - "master"
+  unhealthyConditions:
+  - type:    "Ready"
+    timeout: "480s"
+    status: "False"
+  - type:    "Ready"
+    timeout: "600s"
+    status: "Unknown"
+  maxUnhealthy: 1
