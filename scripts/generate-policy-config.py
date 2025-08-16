@@ -41,7 +41,6 @@ directories = [
         'rbac-permissions-operator-config',
         'rosa-console-branding',
         'rosa-console-legacy-branding-configmap',
-        'rosa-console-legacy-branding-removal',
         'rosa-ingress-certificate-policies',
         'rosa-ingress-certificate-check',
         ]
