@@ -48136,6 +48136,399 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: srep-1000-ethtool-exporter
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: ext-hypershift.openshift.io/cluster-type
+        operator: In
+        values:
+        - management-cluster
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: Namespace
+      metadata:
+        annotations:
+          openshift.io/description: Provide supplemental metrics not currently available
+            in Openshift CMO
+          openshift.io/display-name: openshift-sre-observe
+          security.openshift.io/MinimallySufficientPodSecurityStandard: privileged
+        labels:
+          kubernetes.io/metadata.name: openshift-sre-observe
+          openshift.io/cluster-monitoring: 'true'
+          pod-security.kubernetes.io/audit: privileged
+          pod-security.kubernetes.io/audit-version: latest
+          pod-security.kubernetes.io/warn: privileged
+          pod-security.kubernetes.io/warn-version: latest
+        name: openshift-sre-observe
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        annotations: null
+        labels: null
+        name: ethtool-exporter-sa
+        namespace: openshift-sre-observe
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        labels: null
+        name: prometheus-k8s
+        namespace: openshift-sre-observe
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - services
+        - endpoints
+        - pods
+        verbs:
+        - get
+        - list
+        - watch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        labels: null
+        name: prometheus-k8s
+        namespace: openshift-sre-observe
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: prometheus-k8s
+      subjects:
+      - kind: ServiceAccount
+        name: prometheus-k8s
+        namespace: openshift-monitoring
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: ethtool-exporter-token-reviewer
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: system:auth-delegator
+      subjects:
+      - kind: ServiceAccount
+        name: ethtool-exporter-sa
+        namespace: openshift-sre-observe
+    - apiVersion: security.openshift.io/v1
+      kind: SecurityContextConstraints
+      metadata:
+        annotations:
+          kubernetes.io/description: ethtool-exporter scc used by supplemental node-exporter
+            to provide ethtool metrics
+        name: ethtool-exporter
+      allowHostDirVolumePlugin: true
+      allowHostIPC: false
+      allowHostNetwork: true
+      allowHostPID: true
+      allowHostPorts: true
+      allowPrivilegeEscalation: true
+      allowPrivilegedContainer: true
+      allowedCapabilities: null
+      defaultAddCapabilities: null
+      fsGroup:
+        type: RunAsAny
+      groups: []
+      priority: null
+      readOnlyRootFilesystem: false
+      requiredDropCapabilities: null
+      runAsUser:
+        type: RunAsAny
+      seLinuxContext:
+        type: RunAsAny
+      seccompProfiles:
+      - runtime/default
+      supplementalGroups:
+        type: RunAsAny
+      users:
+      - system:serviceaccount:openshift-sre-observe:ethtool-exporter-sa
+      volumes:
+      - '*'
+    - apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        annotations: null
+        labels:
+          config.openshift.io/inject-trusted-cabundle: 'true'
+        name: ethtool-exporter-ca-bundle
+        namespace: openshift-sre-observe
+    - apiVersion: v1
+      kind: Secret
+      data:
+        config.yaml: ImF1dGhvcml6YXRpb24iOgogICJzdGF0aWMiOgogIC0gInBhdGgiOiAiL21ldHJpY3MiCiAgICAicmVzb3VyY2VSZXF1ZXN0IjogZmFsc2UKICAgICJ1c2VyIjoKICAgICAgIm5hbWUiOiAic3lzdGVtOnNlcnZpY2VhY2NvdW50Om9wZW5zaGlmdC1tb25pdG9yaW5nOnByb21ldGhldXMtazhzIgogICAgInZlcmIiOiAiZ2V0Ig==
+      metadata:
+        labels: null
+        name: ethtool-exporter-kube-rbac-proxy-config
+        namespace: openshift-sre-observe
+      type: Opaque
+    - apiVersion: apps/v1
+      kind: DaemonSet
+      metadata:
+        annotations:
+          openshift.io/required-scc: ethtool-exporter
+          openshift.io/scc: ethtool-exporter
+          seccomp.security.alpha.kubernetes.io/pod: runtime/default
+          openshift.io/description: Provde supplemental ethtool metrics not currently
+            available in CMO
+        labels:
+          app.kubernetes.io/component: exporter
+          app.kubernetes.io/name: ethtool-exporter
+        name: ethtool-exporter
+        namespace: openshift-sre-observe
+      spec:
+        selector:
+          matchLabels:
+            app.kubernetes.io/component: exporter
+            app.kubernetes.io/name: ethtool-exporter
+        template:
+          metadata:
+            labels:
+              app.kubernetes.io/component: exporter
+              app.kubernetes.io/name: ethtool-exporter
+          spec:
+            automountServiceAccountToken: true
+            dnsPolicy: ClusterFirst
+            hostNetwork: true
+            hostPID: true
+            nodeSelector:
+              kubernetes.io/os: linux
+            tolerations:
+            - operator: Exists
+            serviceAccount: ethtool-exporter-sa
+            serviceAccountName: ethtool-exporter-sa
+            containers:
+            - args:
+              - --web.listen-address=127.0.0.1:9500
+              - --path.sysfs=/host/sys
+              - --path.rootfs=/host/root
+              - --path.procfs=/host/proc
+              - --path.udev.data="/host/root/run/udev/data"
+              - --collector.disable-defaults
+              - --collector.ethtool
+              - --collector.ethtool.metrics-include=^(bw_in_allowance_exceeded|bw_out_allowance_exceeded|conntrack_allowance_exceeded|linklocal_allowance_exceeded|pps_allowance_exceeded)$
+              - --runtime.gomaxprocs=0
+              name: ethtool-exporter
+              image: prom/node-exporter
+              command:
+              - /bin/sh
+              - -c
+              - "export GOMAXPROCS=4\n# We don't take CPU affinity into account as\
+                \ the container doesn't have integer CPU requests.\n# In case of error,\
+                \ fallback to the default value.\nNUM_CPUS=$(grep -c '^processor'\
+                \ \"/proc/cpuinfo\" 2>/dev/null || echo \"0\")\nif [ \"$NUM_CPUS\"\
+                \ -lt \"$GOMAXPROCS\" ]; then\n  export GOMAXPROCS=\"$NUM_CPUS\"\n\
+                fi\necho \"num_cpus=$NUM_CPUS gomaxprocs=$GOMAXPROCS\"\nexec /bin/node_exporter\
+                \ \"$0\" \"$@\"\n"
+              env:
+              - name: DBUS_SYSTEM_BUS_ADDRESS
+                value: unix:path=/host/root/var/run/dbus/system_bus_socket
+              imagePullPolicy: IfNotPresent
+              resources:
+                limits:
+                  cpu: 250m
+                  memory: 180Mi
+                requests:
+                  cpu: 8m
+                  memory: 32Mi
+              securityContext: {}
+              volumeMounts:
+              - name: rootfs
+                mountPath: /host/root
+                readOnly: true
+              - name: sysfs
+                mountPath: /host/sys
+                readOnly: true
+              - mountPath: /var/node_exporter/text/file
+                name: node-exporter-textfile
+                readOnly: true
+              - name: procfs
+                mountPath: /host/proc
+                readOnly: true
+              workingDir: /var/node_exporter/textfile
+            - args:
+              - --secure-listen-address=[$(IP)]:9500
+              - --tls-cipher-suites=TLS_AES_128_GCM_SHA256,TLS_AES_256_GCM_SHA384,TLS_CHACHA20_POLY1305_SHA256,TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
+              - --upstream=http://127.0.0.1:9500/
+              - --tls-cert-file=/etc/tls/private/tls.crt
+              - --config-file=/etc/kube-rbac-policy/config.yaml
+              - --tls-min-version=VersionTLS12
+              - --tls-private-key-file=/etc/tls/private/tls.key
+              - --client-ca-file=/etc/tls/client/ca-bundle.crt
+              env:
+              - name: IP
+                valueFrom:
+                  fieldRef:
+                    apiVersion: v1
+                    fieldPath: status.podIP
+              image: quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:971174692a1aae68ac07ffa132254eb3c018a52507eb32621b6dc286fd25ca0d
+              imagePullPolicy: IfNotPresent
+              name: kube-rbac-proxy
+              ports:
+              - containerPort: 9500
+                hostPort: 9500
+                name: exporter-port
+                protocol: TCP
+              resources:
+                requests:
+                  cpu: 1m
+                  memory: 15Mi
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                  - ALL
+                readOnlyRootFilesystem: true
+                runAsGroup: 65532
+                runAsNonRoot: true
+                runAsUser: 65532
+                seccompProfile:
+                  type: RuntimeDefault
+              terminationMessagePath: /dev/termination-log
+              terminationMessagePolicy: FallbackToLogsOnError
+              volumeMounts:
+              - mountPath: /etc/tls/private
+                name: ethtool-exporter-tls
+              - mountPath: /etc/tls/client
+                name: ethtool-exporter-ca-bundle
+              - mountPath: /etc/kube-rbac-policy
+                name: ethtool-exporter-kube-rbac-proxy-config
+                readOnly: true
+            initContainers:
+            - command:
+              - /bin/sh
+              - -c
+              - '[[ ! -d /node_exporter/collectors/init ]] || find /node_exporter/collectors/init
+                -perm /111 -type f -exec {} \;'
+              env:
+              - name: TMPDIR
+                value: /tmp
+              image: quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:310bb92390dfc716f46a4fefed4add1b5e4f09c008985cb24f4ea53a152b1de7
+              imagePullPolicy: IfNotPresent
+              name: init-textfile
+              resources:
+                requests:
+                  cpu: 1m
+                  memory: 1Mi
+              securityContext:
+                privileged: true
+                runAsUser: 0
+              terminationMessagePath: /dev/termination-log
+              terminationMessagePolicy: FallbackToLogsOnError
+              volumeMounts:
+              - mountPath: /var/node_exporter/textfile
+                name: node-exporter-textfile
+              - mountPath: /var/log/wtmp
+                name: node-exporter-wtmp
+                readOnly: true
+              workingDir: /var/node_exporter/textfile
+            volumes:
+            - name: rootfs
+              hostPath:
+                path: /
+            - name: sysfs
+              hostPath:
+                path: /sys
+            - name: procfs
+              hostPath:
+                path: /proc
+            - emptyDir: {}
+              name: node-exporter-textfile
+            - hostPath:
+                path: /var/log/wtmp
+                type: File
+              name: node-exporter-wtmp
+            - name: ethtool-exporter-tls
+              secret:
+                defaultMode: 420
+                secretName: ethtool-exporter-tls
+            - name: ethtool-exporter-kube-rbac-proxy-config
+              secret:
+                defaultMode: 420
+                secretName: ethtool-exporter-kube-rbac-proxy-config
+            - configMap:
+                defaultMode: 420
+                name: ethtool-exporter-ca-bundle
+              name: ethtool-exporter-ca-bundle
+    - kind: Service
+      apiVersion: v1
+      metadata:
+        name: ethtool-exporter
+        namespace: openshift-sre-observe
+        annotations:
+          service.beta.openshift.io/serving-cert-secret-name: ethtool-exporter-tls
+        labels:
+          app: ethtool-exporter
+      spec:
+        type: ClusterIP
+        selector:
+          app.kubernetes.io/component: exporter
+          app.kubernetes.io/name: ethtool-exporter
+        ports:
+        - name: https
+          protocol: TCP
+          port: 9500
+          targetPort: 9500
+    - apiVersion: monitoring.coreos.com/v1
+      kind: ServiceMonitor
+      metadata:
+        labels:
+          monitoring.openshift.io/collection-profile: full
+        name: ethtool-exporter
+        namespace: openshift-sre-observe
+      spec:
+        endpoints:
+        - interval: 15s
+          bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+          port: https
+          scheme: https
+          tlsConfig:
+            serverName: ethtool-exporter.openshift-sre-observe.svc
+            ca:
+              configMap:
+                key: service-ca.crt
+                name: openshift-service-ca.crt
+            cert:
+              secret:
+                key: tls.crt
+                name: ethtool-exporter-tls
+            keySecret:
+              key: tls.key
+              name: ethtool-exporter-tls
+          metricRelabelings:
+          - action: keep
+            regex: node_ethtool_.*_allowance_exceeded
+            sourceLabels:
+            - __name__
+          relabelings:
+          - action: replace
+            regex: (.*)
+            replacement: $1
+            sourceLabels:
+            - __meta_kubernetes_pod_node_name
+            targetLabel: instance
+        jobLabel: app.kubernetes.io/name
+        scrapeClass: tls-client-certificate-auth
+        namespaceSelector:
+          matchNames:
+          - openshift-sre-observe
+        selector:
+          matchLabels:
+            app: ethtool-exporter
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: velero-configuration
   spec:
     clusterDeploymentSelector:
