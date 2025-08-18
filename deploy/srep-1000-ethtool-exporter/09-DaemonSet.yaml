@@ -1,0 +1,190 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  annotations:
+    openshift.io/required-scc: ethtool-exporter
+    openshift.io/scc: ethtool-exporter
+    seccomp.security.alpha.kubernetes.io/pod: runtime/default
+    openshift.io/description: "Provde supplemental ethtool metrics not currently available in CMO"
+  labels:
+    app.kubernetes.io/component: exporter
+    app.kubernetes.io/name: ethtool-exporter
+  name: ethtool-exporter
+  namespace: openshift-sre-observe
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: exporter
+      app.kubernetes.io/name: ethtool-exporter
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: exporter
+        app.kubernetes.io/name: ethtool-exporter
+    spec:
+      automountServiceAccountToken: true
+      dnsPolicy: ClusterFirst
+      hostNetwork: true
+      hostPID: true
+      nodeSelector:
+        kubernetes.io/os: linux
+      tolerations:
+        - operator: Exists
+      serviceAccount: ethtool-exporter-sa
+      serviceAccountName: ethtool-exporter-sa
+      containers:
+        - args:
+            - --web.listen-address=127.0.0.1:9500
+            - --path.sysfs=/host/sys
+            - --path.rootfs=/host/root
+            - --path.procfs=/host/proc
+            - --path.udev.data="/host/root/run/udev/data"
+            - --collector.disable-defaults
+            - --collector.ethtool
+            - --collector.ethtool.metrics-include=^(bw_in_allowance_exceeded|bw_out_allowance_exceeded|conntrack_allowance_exceeded|linklocal_allowance_exceeded|pps_allowance_exceeded)$
+            - --runtime.gomaxprocs=0
+          name: ethtool-exporter
+          image: prom/node-exporter
+          command:
+            - /bin/sh
+            - -c
+            - |
+              export GOMAXPROCS=4
+              # We don't take CPU affinity into account as the container doesn't have integer CPU requests.
+              # In case of error, fallback to the default value.
+              NUM_CPUS=$(grep -c '^processor' "/proc/cpuinfo" 2>/dev/null || echo "0")
+              if [ "$NUM_CPUS" -lt "$GOMAXPROCS" ]; then
+                export GOMAXPROCS="$NUM_CPUS"
+              fi
+              echo "num_cpus=$NUM_CPUS gomaxprocs=$GOMAXPROCS"
+              exec /bin/node_exporter "$0" "$@"
+          env:
+            - name: DBUS_SYSTEM_BUS_ADDRESS
+              value: unix:path=/host/root/var/run/dbus/system_bus_socket
+          imagePullPolicy: IfNotPresent
+          resources:
+            limits:
+              cpu: 250m
+              memory: 180Mi
+            requests:
+              cpu: 8m
+              memory: 32Mi
+          securityContext: {}
+          volumeMounts:
+            - name: rootfs
+              mountPath: /host/root
+              readOnly: true
+            - name: sysfs
+              mountPath: /host/sys
+              readOnly: true
+            - mountPath: /var/node_exporter/text/file
+              name: node-exporter-textfile
+              readOnly: true
+            - name: procfs
+              mountPath: /host/proc
+              readOnly: true
+          workingDir: /var/node_exporter/textfile
+        - args:
+            - --secure-listen-address=[$(IP)]:9500
+            - --tls-cipher-suites=TLS_AES_128_GCM_SHA256,TLS_AES_256_GCM_SHA384,TLS_CHACHA20_POLY1305_SHA256,TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
+            - --upstream=http://127.0.0.1:9500/
+            - --tls-cert-file=/etc/tls/private/tls.crt
+            - --config-file=/etc/kube-rbac-policy/config.yaml
+            - --tls-min-version=VersionTLS12
+            - --tls-private-key-file=/etc/tls/private/tls.key
+            - --client-ca-file=/etc/tls/client/ca-bundle.crt
+          env:
+            - name: IP
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: status.podIP
+          image: quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:971174692a1aae68ac07ffa132254eb3c018a52507eb32621b6dc286fd25ca0d
+          imagePullPolicy: IfNotPresent
+          name: kube-rbac-proxy
+          ports:
+            - containerPort: 9500
+              hostPort: 9500
+              name: exporter-port
+              protocol: TCP
+          resources:
+            requests:
+              cpu: 1m
+              memory: 15Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsGroup: 65532
+            runAsNonRoot: true
+            runAsUser: 65532
+            seccompProfile:
+              type: RuntimeDefault
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: FallbackToLogsOnError
+          volumeMounts:
+            - mountPath: /etc/tls/private
+              name: ethtool-exporter-tls
+            - mountPath: /etc/tls/client
+              name: ethtool-exporter-ca-bundle
+            - mountPath: /etc/kube-rbac-policy
+              name: ethtool-exporter-kube-rbac-proxy-config
+              readOnly: true
+      initContainers:
+        - command:
+            - /bin/sh
+            - -c
+            - '[[ ! -d /node_exporter/collectors/init ]] || find /node_exporter/collectors/init -perm /111 -type f -exec {} \;'
+          env:
+            - name: TMPDIR
+              value: /tmp
+          #image: prom/node-exporter
+          image: quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:310bb92390dfc716f46a4fefed4add1b5e4f09c008985cb24f4ea53a152b1de7
+          imagePullPolicy: IfNotPresent
+          name: init-textfile
+          resources:
+            requests:
+              cpu: 1m
+              memory: 1Mi
+          securityContext:
+            privileged: true
+            runAsUser: 0
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: FallbackToLogsOnError
+          volumeMounts:
+            - mountPath: /var/node_exporter/textfile
+              name: node-exporter-textfile
+            - mountPath: /var/log/wtmp
+              name: node-exporter-wtmp
+              readOnly: true
+          workingDir: /var/node_exporter/textfile
+      volumes:
+        - name: rootfs
+          hostPath:
+            path: /
+        - name: sysfs
+          hostPath:
+            path: /sys
+        - name: procfs
+          hostPath:
+            path: /proc
+        - emptyDir: {}
+          name: node-exporter-textfile
+        - hostPath:
+            path: /var/log/wtmp
+            type: File
+          name: node-exporter-wtmp
+        - name: ethtool-exporter-tls
+          secret:
+            defaultMode: 420
+            secretName: ethtool-exporter-tls
+        - name: ethtool-exporter-kube-rbac-proxy-config
+          secret:
+            defaultMode: 420
+            secretName: ethtool-exporter-kube-rbac-proxy-config
+        - configMap:
+            defaultMode: 420
+            name: ethtool-exporter-ca-bundle
+          name: ethtool-exporter-ca-bundle
