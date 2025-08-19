@@ -6,11 +6,11 @@ When OCP installs a cluster it sets the ClusterVerison channel to the stable for
 
 For OSD this is a challenge as customer do not have permission to manage this directly in cluster.  OCM uses telemeter to identify the channel and available upgrades for a cluster.  Therefore to boostrap this we've created this simple set of SSS to patch the channel based on the labels on ClusterDeployments (CD).
 
-If CD indicates it is in the fast or candidate channel we use the major.minor label to pick the right SelectorSyncSet (SSS) an patch the channel in-cluster.  This gets us the initial channel corrected.  On upgrade, OCM will create an UpgradeConfig via SyncSet that contains the new target channel.  This is then set in-cluster before the upgrade is initiated.  Once upgraded, the version and channel is fed out to telemeter.
+If CD indicates it is in the fast, candidate, or eus channel we use the major.minor label to pick the right SelectorSyncSet (SSS) an patch the channel in-cluster.  This gets us the initial channel corrected.  On upgrade, OCM will create an UpgradeConfig via SyncSet that contains the new target channel.  This is then set in-cluster before the upgrade is initiated.  Once upgraded, the version and channel is fed out to telemeter.
 
 On a minor upgrade (i.e. 4.5.z to 4.6.z) it is possible that hive will reset the channel before we get updated version information.  This is OK as the upgrade is already initiated or done and the channel is only used when assessing if an upgrade can be _started_.  Once the upgrade is complete the version is sent to telemter and ultimately is reflected in the ClusterDeployment.  This in-turn will trigger the appropriate patch from SSS created in the configuration here.
 
-NOTE that if OCP moves to a version agnostic channel strategy that we do not need as many of these SSS and can patch just to the channel `candidate`, `fast`, or `stable`.
+NOTE that if OCP moves to a version agnostic channel strategy that we do not need as many of these SSS and can patch just to the channel `candidate`, `fast`, `stable`, or `eus`.
 
 # Updating for new versions
 
@@ -18,6 +18,34 @@ We can pre-populate future minor versions by copying previous versions and updat
 ```bash
 for minor in {15..19}; do for channel in stable fast candidate; do cp -R ${channel}-4.14 ${channel}-4.${minor}; gsed -i -e s/4\.14/4\.${minor}/g ${channel}-4.${minor}/*.yaml; done; done
 ```
+
+To add new versions including EUS channels, use this updated command. For example, to add versions 4.26 through 4.30:
+```bash
+# Add stable, fast, candidate channels
+for minor in {26..30}; do 
+  for channel in stable fast candidate; do 
+    cp -R ${channel}-4.25 ${channel}-4.${minor}
+    sed -i -e s/4\.25/4\.${minor}/g ${channel}-4.${minor}/*.yaml
+  done
+done
+
+# Add EUS channels
+for minor in {26..30}; do
+  cp -R eus-4.25 eus-4.${minor}
+  sed -i -e s/4\.25/4\.${minor}/g eus-4.${minor}/config.yaml
+  # Update patch file with correct EUS version naming
+  if [ $((minor % 2)) -eq 0 ]; then
+    # Even version: use eus-4.X
+    eus_version="eus-4.${minor}"
+  else
+    # Odd version: use eus-4.X+1
+    eus_version="eus-4.$((minor + 1))"
+  fi
+  sed -i -e "s/eus-4\.[0-9]\+/${eus_version}/g" eus-4.${minor}/01-patch.clusterversion.yaml
+done
+```
+
+**Note on EUS Channel Naming**: EUS channels use a special naming convention where even versions (4.16, 4.18, etc.) use `eus-4.X` and odd versions (4.17, 4.19, etc.) use `eus-4.X+1`. This is automatically handled by the script above.
 
 # Use Cases
 
