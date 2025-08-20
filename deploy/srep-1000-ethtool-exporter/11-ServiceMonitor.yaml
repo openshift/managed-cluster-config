@@ -4,7 +4,7 @@ metadata:
   labels:
     monitoring.openshift.io/collection-profile: full
   name: ethtool-exporter
-  namespace: openshift-sre-observe
+  namespace: openshift-sre-ethtool-exporter
 spec:
   endpoints:
     - interval: 15s
@@ -12,7 +12,7 @@ spec:
       port: https
       scheme: https
       tlsConfig:
-        serverName: ethtool-exporter.openshift-sre-observe.svc
+        serverName: ethtool-exporter.openshift-sre-ethtool-exporter.svc
         ca:
           configMap:
             key: service-ca.crt
@@ -40,7 +40,7 @@ spec:
   scrapeClass: tls-client-certificate-auth
   namespaceSelector:
     matchNames:
-      - openshift-sre-observe
+      - openshift-sre-ethtool-exporter
   selector:
     matchLabels:
       app: ethtool-exporter

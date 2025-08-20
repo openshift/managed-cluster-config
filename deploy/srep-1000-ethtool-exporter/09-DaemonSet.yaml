@@ -10,7 +10,7 @@ metadata:
     app.kubernetes.io/component: exporter
     app.kubernetes.io/name: ethtool-exporter
   name: ethtool-exporter
-  namespace: openshift-sre-observe
+  namespace: openshift-sre-ethtool-exporter
 spec:
   selector:
     matchLabels:
@@ -34,6 +34,12 @@ spec:
       serviceAccountName: ethtool-exporter-sa
       containers:
         - args:
+            # Contrasts to CMO's node exporter config:
+            # - binds to host port 9500 to not compete with CMO's 9100
+            # - ethtool collector adds use of /proc on host
+            # - disables all collectors, and collector config != ethtool
+            # - defines only a specific set of (ethtool) metrics to include
+            #   (serviceMonitor is expected to filter out any other metrics)
             - --web.listen-address=127.0.0.1:9500
             - --path.sysfs=/host/sys
             - --path.rootfs=/host/root
@@ -44,7 +50,9 @@ spec:
             - --collector.ethtool.metrics-include=^(bw_in_allowance_exceeded|bw_out_allowance_exceeded|conntrack_allowance_exceeded|linklocal_allowance_exceeded|pps_allowance_exceeded)$
             - --runtime.gomaxprocs=0
           name: ethtool-exporter
-          image: prom/node-exporter
+          # Taken from PROD 4.16.42 MCs currently using: @sha256:85765701a29f4a47596da38ecd9ec26a3a4173a952673c1bf8faf00ab2eb07cd
+          # Can also use image: prom/node-exporter
+          image: quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:85765701a29f4a47596da38ecd9ec26a3a4173a952673c1bf8faf00ab2eb07cd
           command:
             - /bin/sh
             - -c
@@ -99,7 +107,8 @@ spec:
                 fieldRef:
                   apiVersion: v1
                   fieldPath: status.podIP
-          image: quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:971174692a1aae68ac07ffa132254eb3c018a52507eb32621b6dc286fd25ca0d
+          # Taken from PROD 4.16.42 MCs currently using: sha256:82f5ad5a8c1827db890f6bbb9f85e3f571eceba5bc6903b721be6fdeaea651fa
+          image: quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:82f5ad5a8c1827db890f6bbb9f85e3f571eceba5bc6903b721be6fdeaea651fa
           imagePullPolicy: IfNotPresent
           name: kube-rbac-proxy
           ports:
@@ -140,8 +149,8 @@ spec:
           env:
             - name: TMPDIR
               value: /tmp
-          #image: prom/node-exporter
-          image: quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:310bb92390dfc716f46a4fefed4add1b5e4f09c008985cb24f4ea53a152b1de7
+          # Taken from PROD 4.16.42 MCs currently using: sha256:85765701a29f4a47596da38ecd9ec26a3a4173a952673c1bf8faf00ab2eb07cdd
+          image: quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:85765701a29f4a47596da38ecd9ec26a3a4173a952673c1bf8faf00ab2eb07cd
           imagePullPolicy: IfNotPresent
           name: init-textfile
           resources:
