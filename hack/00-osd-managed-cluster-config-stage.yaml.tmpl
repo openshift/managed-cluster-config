@@ -48158,29 +48158,29 @@ objects:
         annotations:
           openshift.io/description: Provide supplemental metrics not currently available
             in Openshift CMO
-          openshift.io/display-name: openshift-sre-observe
+          openshift.io/display-name: openshift-sre-ethtool-exporter
           security.openshift.io/MinimallySufficientPodSecurityStandard: privileged
         labels:
-          kubernetes.io/metadata.name: openshift-sre-observe
+          kubernetes.io/metadata.name: openshift-sre-ethtool-exporter
           openshift.io/cluster-monitoring: 'true'
           pod-security.kubernetes.io/audit: privileged
           pod-security.kubernetes.io/audit-version: latest
           pod-security.kubernetes.io/warn: privileged
           pod-security.kubernetes.io/warn-version: latest
-        name: openshift-sre-observe
+        name: openshift-sre-ethtool-exporter
     - apiVersion: v1
       kind: ServiceAccount
       metadata:
         annotations: null
         labels: null
         name: ethtool-exporter-sa
-        namespace: openshift-sre-observe
+        namespace: openshift-sre-ethtool-exporter
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: Role
       metadata:
         labels: null
         name: prometheus-k8s
-        namespace: openshift-sre-observe
+        namespace: openshift-sre-ethtool-exporter
       rules:
       - apiGroups:
         - ''
@@ -48197,7 +48197,7 @@ objects:
       metadata:
         labels: null
         name: prometheus-k8s
-        namespace: openshift-sre-observe
+        namespace: openshift-sre-ethtool-exporter
       roleRef:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
@@ -48217,7 +48217,7 @@ objects:
       subjects:
       - kind: ServiceAccount
         name: ethtool-exporter-sa
-        namespace: openshift-sre-observe
+        namespace: openshift-sre-ethtool-exporter
     - apiVersion: security.openshift.io/v1
       kind: SecurityContextConstraints
       metadata:
@@ -48249,7 +48249,7 @@ objects:
       supplementalGroups:
         type: RunAsAny
       users:
-      - system:serviceaccount:openshift-sre-observe:ethtool-exporter-sa
+      - system:serviceaccount:openshift-sre-ethtool-exporter:ethtool-exporter-sa
       volumes:
       - '*'
     - apiVersion: v1
@@ -48259,7 +48259,7 @@ objects:
         labels:
           config.openshift.io/inject-trusted-cabundle: 'true'
         name: ethtool-exporter-ca-bundle
-        namespace: openshift-sre-observe
+        namespace: openshift-sre-ethtool-exporter
     - apiVersion: v1
       kind: Secret
       data:
@@ -48267,7 +48267,7 @@ objects:
       metadata:
         labels: null
         name: ethtool-exporter-kube-rbac-proxy-config
-        namespace: openshift-sre-observe
+        namespace: openshift-sre-ethtool-exporter
       type: Opaque
     - apiVersion: apps/v1
       kind: DaemonSet
@@ -48282,7 +48282,7 @@ objects:
           app.kubernetes.io/component: exporter
           app.kubernetes.io/name: ethtool-exporter
         name: ethtool-exporter
-        namespace: openshift-sre-observe
+        namespace: openshift-sre-ethtool-exporter
       spec:
         selector:
           matchLabels:
@@ -48316,7 +48316,7 @@ objects:
               - --collector.ethtool.metrics-include=^(bw_in_allowance_exceeded|bw_out_allowance_exceeded|conntrack_allowance_exceeded|linklocal_allowance_exceeded|pps_allowance_exceeded)$
               - --runtime.gomaxprocs=0
               name: ethtool-exporter
-              image: prom/node-exporter
+              image: quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:85765701a29f4a47596da38ecd9ec26a3a4173a952673c1bf8faf00ab2eb07cd
               command:
               - /bin/sh
               - -c
@@ -48368,7 +48368,7 @@ objects:
                   fieldRef:
                     apiVersion: v1
                     fieldPath: status.podIP
-              image: quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:971174692a1aae68ac07ffa132254eb3c018a52507eb32621b6dc286fd25ca0d
+              image: quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:82f5ad5a8c1827db890f6bbb9f85e3f571eceba5bc6903b721be6fdeaea651fa
               imagePullPolicy: IfNotPresent
               name: kube-rbac-proxy
               ports:
@@ -48410,7 +48410,7 @@ objects:
               env:
               - name: TMPDIR
                 value: /tmp
-              image: quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:310bb92390dfc716f46a4fefed4add1b5e4f09c008985cb24f4ea53a152b1de7
+              image: quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:85765701a29f4a47596da38ecd9ec26a3a4173a952673c1bf8faf00ab2eb07cd
               imagePullPolicy: IfNotPresent
               name: init-textfile
               resources:
@@ -48461,7 +48461,7 @@ objects:
       apiVersion: v1
       metadata:
         name: ethtool-exporter
-        namespace: openshift-sre-observe
+        namespace: openshift-sre-ethtool-exporter
         annotations:
           service.beta.openshift.io/serving-cert-secret-name: ethtool-exporter-tls
         labels:
@@ -48482,7 +48482,7 @@ objects:
         labels:
           monitoring.openshift.io/collection-profile: full
         name: ethtool-exporter
-        namespace: openshift-sre-observe
+        namespace: openshift-sre-ethtool-exporter
       spec:
         endpoints:
         - interval: 15s
@@ -48490,7 +48490,7 @@ objects:
           port: https
           scheme: https
           tlsConfig:
-            serverName: ethtool-exporter.openshift-sre-observe.svc
+            serverName: ethtool-exporter.openshift-sre-ethtool-exporter.svc
             ca:
               configMap:
                 key: service-ca.crt
@@ -48518,7 +48518,7 @@ objects:
         scrapeClass: tls-client-certificate-auth
         namespaceSelector:
           matchNames:
-          - openshift-sre-observe
+          - openshift-sre-ethtool-exporter
         selector:
           matchLabels:
             app: ethtool-exporter
