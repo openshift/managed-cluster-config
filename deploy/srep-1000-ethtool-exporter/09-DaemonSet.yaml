@@ -85,13 +85,13 @@ spec:
             - name: sysfs
               mountPath: /host/sys
               readOnly: true
-            - mountPath: /var/node_exporter/text/file
-              name: node-exporter-textfile
+            - mountPath: /var/ethtool_exporter/text/file
+              name: ethtool-exporter-textfile
               readOnly: true
             - name: procfs
               mountPath: /host/proc
               readOnly: true
-          workingDir: /var/node_exporter/textfile
+          workingDir: /var/ethtool_exporter/textfile
         - args:
             - --secure-listen-address=[$(IP)]:9500
             - --tls-cipher-suites=TLS_AES_128_GCM_SHA256,TLS_AES_256_GCM_SHA384,TLS_CHACHA20_POLY1305_SHA256,TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
@@ -163,12 +163,12 @@ spec:
           terminationMessagePath: /dev/termination-log
           terminationMessagePolicy: FallbackToLogsOnError
           volumeMounts:
-            - mountPath: /var/node_exporter/textfile
-              name: node-exporter-textfile
+            - mountPath: /var/ethtool_exporter/textfile
+              name: ethtool-exporter-textfile
             - mountPath: /var/log/wtmp
-              name: node-exporter-wtmp
+              name: ethtool-exporter-wtmp
               readOnly: true
-          workingDir: /var/node_exporter/textfile
+          workingDir: /var/ethtool_exporter/textfile
       volumes:
         - name: rootfs
           hostPath:
@@ -180,11 +180,11 @@ spec:
           hostPath:
             path: /proc
         - emptyDir: {}
-          name: node-exporter-textfile
+          name: ethtool-exporter-textfile
         - hostPath:
             path: /var/log/wtmp
             type: File
-          name: node-exporter-wtmp
+          name: ethtool-exporter-wtmp
         - name: ethtool-exporter-tls
           secret:
             defaultMode: 420
