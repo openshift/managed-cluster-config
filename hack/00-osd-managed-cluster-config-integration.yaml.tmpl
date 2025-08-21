@@ -45488,6 +45488,18 @@ objects:
               ="master"} ) - 1 ) / count ( cluster:nodes_roles{label_node_role_kubernetes_io
               ="master"} ) ) )
             record: sre:node_control_plane:excessive_consumption_memory
+          - expr: "avg_over_time(\n  (\n    (\n      (1 - avg by (instance) (\n  \
+              \      rate(node_cpu_seconds_total{mode=\"idle\"}[5m])\n      )) * 100\n\
+              \      AND on(instance) label_replace(kube_node_role{role=\"master\"\
+              }, \"instance\", \"$1\", \"node\", \"(.+)\")\n    ) > bool 80\n  )[24h:5m]\n\
+              )\n"
+            record: sre:node_control_plane:cpu_usage_ebb
+          - expr: "avg_over_time(\n  (\n    (\n      1 - (\n        (node_memory_MemFree_bytes\
+              \ + node_memory_Buffers_bytes + node_memory_Cached_bytes)\n        /\
+              \ node_memory_MemTotal_bytes\n      )\n    ) * 100 > bool 80\n    AND\
+              \ on(instance) label_replace(kube_node_role{role=\"master\"}, \"instance\"\
+              , \"$1\", \"node\", \"(.+)\")\n  )[24h:5m]\n)\n"
+            record: sre:node_control_plane:memory_usage_ebb
         - name: sre-control-plane-resizing-alerts
           rules:
           - alert: ControlPlaneNodesNeedResizingSRE
@@ -45513,6 +45525,16 @@ objects:
               message: The cluster's control plane nodes have been undersized for
                 24 hours and must be vertically scaled to support the existing workload.
                 See linked SOP for details.
+          - alert: ControlPlaneNodeErrorBudgetBurn
+            expr: (sre:node_control_plane:cpu_usage_ebb > (2/24)) or (sre:node_control_plane:memory_usage_ebb
+              > (2/24))
+            for: 5m
+            labels:
+              severity: critical
+              namespace: openshift-monitoring
+            annotations:
+              message: Control plane CPU or memory usage exceeded 80% for >2h within
+                the last 24h. Consider resizing nodes. See linked SOP for details.
     - apiVersion: monitoring.coreos.com/v1
       kind: PrometheusRule
       metadata:
