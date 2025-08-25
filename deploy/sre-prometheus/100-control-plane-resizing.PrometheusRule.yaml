@@ -128,7 +128,7 @@ spec:
           severity: warning
           namespace: openshift-monitoring
         annotations:
-          message: "The cluster's control plane nodes have been undersized for 15 minutes and should be vertically scaled to support the existing workload. See linked SOP for details. Critical alert will be raised at 24 hours."
+          description: "The cluster's control plane nodes have been undersized for 15 minutes and should be vertically scaled to support the existing workload. See linked SOP for details. Critical alert will be raised at 24 hours."
         # This used to be called MasterNodesNeedResizingSRE
       - alert: ControlPlaneNodesNeedResizingSRE
         expr: (sre:node_control_plane:excessive_consumption_memory > 0) or (sre:node_control_plane:excessive_consumption_cpu > 0)
@@ -137,7 +137,7 @@ spec:
           severity: critical
           namespace: openshift-monitoring
         annotations:
-          message: "The cluster's control plane nodes have been undersized for 24 hours and must be vertically scaled to support the existing workload. See linked SOP for details."
+          description: "The cluster's control plane nodes have been undersized for 24 hours and must be vertically scaled to support the existing workload. See linked SOP for details."
 
       - alert: ControlPlaneNodeErrorBudgetBurn
         expr: (sre:node_control_plane:cpu_usage_ebb > (2/24)) or (sre:node_control_plane:memory_usage_ebb > (2/24))
@@ -146,5 +146,5 @@ spec:
           severity: critical
           namespace: openshift-monitoring
         annotations:
-          message: "Control plane CPU or memory usage exceeded 80% for >2h within the last 24h. Consider resizing nodes. See linked SOP for details."
+          description: "Control plane CPU or memory usage exceeded 80% for >2h within the last 24h. Consider resizing nodes. See linked SOP for details."
           runbook_url: "https://github.com/openshift/ops-sop/blob/master/v4/alerts/ControlPlaneNodeErrorBudgetBurn.md"
