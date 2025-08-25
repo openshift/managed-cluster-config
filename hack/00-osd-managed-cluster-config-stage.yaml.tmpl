@@ -45525,17 +45525,6 @@ objects:
               message: The cluster's control plane nodes have been undersized for
                 24 hours and must be vertically scaled to support the existing workload.
                 See linked SOP for details.
-          - alert: ControlPlaneNodeErrorBudgetBurn
-            expr: (sre:node_control_plane:cpu_usage_ebb > (2/24)) or (sre:node_control_plane:memory_usage_ebb
-              > (2/24))
-            for: 5m
-            labels:
-              severity: critical
-              namespace: openshift-monitoring
-            annotations:
-              message: Control plane CPU or memory usage exceeded 80% for >2h within
-                the last 24h. Consider resizing nodes. See linked SOP for details.
-              runbook_url: https://github.com/openshift/ops-sop/blob/master/v4/alerts/ControlPlaneNodeErrorBudgetBurn.md
     - apiVersion: monitoring.coreos.com/v1
       kind: PrometheusRule
       metadata:

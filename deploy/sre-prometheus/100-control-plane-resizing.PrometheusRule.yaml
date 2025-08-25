@@ -18,7 +18,7 @@ spec:
       ## the Average (per node) rate of change of CPU time spent in non-idle modes, totalled by CPU, looking back across the past 8h,
       ## "*" applies a label replace to limit output to control plane nodes
       ## Greater than (>) the threshold which is (n-1)/n where n is the number of control plane nodes, evaluating to 2/3 in most circumstances.
-      - expr: ( 
+      - expr: (
                 avg (
                   avg by (instance) (
                     sum by (cpu, instance) (
@@ -51,7 +51,7 @@ spec:
                 )
               )
         record: sre:node_control_plane:excessive_consumption_cpu
-      ## Expression Explanation: 
+      ## Expression Explanation:
       ## 1, minus the total amount of free memory divided by the total amount of memory for the infra node type, gives us the percent used memory as a decimal value: 0.%%
       ## Greater than (>) the threshold which is (n-1)/n where n is the number of control plane nodes, evaluating to 2/3 in most circumstances.
       - expr: ( 1 -
@@ -62,16 +62,16 @@ spec:
                     AND on (instance) label_replace(
                         kube_node_role{role="master"}, "instance", "$1", "node", "(.+)"
                     )
-                ) 
-                / 
+                )
+                /
                 sum (
                     node_memory_MemTotal_bytes
                     AND on (instance) label_replace(
                         kube_node_role{role="master"}, "instance", "$1", "node", "(.+)"
                     )
                 )
-            ) 
-            > 
+            )
+            >
             (
               scalar (
                 (
@@ -87,9 +87,9 @@ spec:
               )
             )
         record: sre:node_control_plane:excessive_consumption_memory
-      ## Calculates CPU usage per master node as 100 – idle%.  
-      ## Converts each sample to 1 if usage >80%, 0 otherwise.  
-      ## avg_over_time(...[24h:5m]) computes the fraction of the last 24h each node was above 80% CPU.                 
+      ## Calculates CPU usage per master node as 100 – idle%.
+      ## Converts each sample to 1 if usage >80%, 0 otherwise.
+      ## avg_over_time(...[24h:5m]) computes the fraction of the last 24h each node was above 80% CPU.
       - expr: |
           avg_over_time(
             (
@@ -102,8 +102,8 @@ spec:
             )[24h:5m]
           )
         record: sre:node_control_plane:cpu_usage_ebb
-      ## Calculates memory usage per master node as (1 – free/total) × 100.  
-      ## Converts each sample to 1 if usage >80%, 0 otherwise.  
+      ## Calculates memory usage per master node as (1 – free/total) × 100.
+      ## Converts each sample to 1 if usage >80%, 0 otherwise.
       ## avg_over_time(...[24h:5m]) computes the fraction of the last 24h each node was above 80% memory.
       - expr: |
           avg_over_time(
@@ -138,13 +138,3 @@ spec:
           namespace: openshift-monitoring
         annotations:
           message: "The cluster's control plane nodes have been undersized for 24 hours and must be vertically scaled to support the existing workload. See linked SOP for details."
-
-      - alert: ControlPlaneNodeErrorBudgetBurn
-        expr: (sre:node_control_plane:cpu_usage_ebb > (2/24)) or (sre:node_control_plane:memory_usage_ebb > (2/24))
-        for: 5m
-        labels:
-          severity: critical
-          namespace: openshift-monitoring
-        annotations:
-          message: "Control plane CPU or memory usage exceeded 80% for >2h within the last 24h. Consider resizing nodes. See linked SOP for details."
-          runbook_url: "https://github.com/openshift/ops-sop/blob/master/v4/alerts/ControlPlaneNodeErrorBudgetBurn.md"
