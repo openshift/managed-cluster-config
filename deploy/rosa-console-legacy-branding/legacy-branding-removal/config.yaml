@@ -1,0 +1,19 @@
+deploymentMode: "SelectorSyncSet"
+selectorSyncSet:
+  matchExpressions:
+  - key: api.openshift.com/product
+    operator: In
+    values: ["rosa"]
+  - key: hive.openshift.io/version-major-minor
+    operator: In
+    values: ["4.15"]
+    # We only want to apply this to 4.15, as everything 4.15 and greater has been migrated to use the ROSA brand at
+    # this point. We now want to allow customers to be able to configure their own custom branding per XCMSTRAT-599
+    # so we limit the legacy brand removal to version 4.15, and then after customers upgrade to 4.16 they can customize
+    # their console branding
+  applyBehavior: "CreateOrUpdate"
+  # use Upsert so if this configuration no longer applies it will not delete the resource in cluster . We should never delete console.
+  resourceApplyMode: "Upsert"
+policy:
+  destination: "acm-policies"
+  complianceType: "musthave"
