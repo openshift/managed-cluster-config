@@ -10073,17 +10073,6 @@ objects:
                 metadataComplianceType: musthave
                 objectDefinition:
                   apiVersion: operator.openshift.io/v1
-                  applyMode: AlwaysApply
-                  kind: Console
-                  name: cluster
-                  patch: '[{"op": "replace", "path": "/spec/customization/customProductName",
-                    "value": null},{"op": "replace", "path": "/spec/customization/customLogoFile",
-                    "value": null}]'
-                  patchType: json
-              - complianceType: musthave
-                metadataComplianceType: musthave
-                objectDefinition:
-                  apiVersion: operator.openshift.io/v1
                   kind: Console
                   metadata:
                     name: cluster
@@ -37676,7 +37665,7 @@ objects:
       kind: Console
       name: cluster
       patchType: merge
-      patch: '{"spec":{"managementState":"Managed","route":null,"customization":{"brand":"dedicated","documentationBaseURL":"https://docs.openshift.com/dedicated/4/","customProductName":null,"customLogoFile":null}}}'
+      patch: '{"spec":{"managementState":"Managed","route":null,"customization":{"brand":"dedicated","documentationBaseURL":"https://docs.openshift.com/dedicated/4/"}}}'
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -44724,15 +44713,6 @@ objects:
         - '4.14'
     resourceApplyMode: Upsert
     applyBehavior: CreateOrUpdate
-    patches:
-    - apiVersion: operator.openshift.io/v1
-      applyMode: AlwaysApply
-      kind: Console
-      name: cluster
-      patch: '[{"op": "replace", "path": "/spec/customization/customProductName",
-        "value": null},{"op": "replace", "path": "/spec/customization/customLogoFile",
-        "value": null}]'
-      patchType: json
     resources:
     - apiVersion: operator.openshift.io/v1
       kind: Console
@@ -44955,6 +44935,38 @@ objects:
         creationTimestamp: null
         name: rosa-brand-logo
         namespace: openshift-config
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: rosa-console-legacy-branding-legacy-branding-removal
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/product
+        operator: In
+        values:
+        - rosa
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.15'
+    resourceApplyMode: Upsert
+    applyBehavior: CreateOrUpdate
+    patches:
+    - apiVersion: operator.openshift.io/v1
+      applyMode: AlwaysApply
+      kind: Console
+      name: cluster
+      patch: '[{"op": "replace", "path": "/spec/customization/customProductName",
+        "value": null},{"op": "replace", "path": "/spec/customization/customLogoFile",
+        "value": null}]'
+      patchType: json
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
