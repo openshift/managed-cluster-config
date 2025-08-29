@@ -1,0 +1,19 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: ethtool-exporter
+  namespace: openshift-sre-ethtool-exporter
+  annotations:
+    service.beta.openshift.io/serving-cert-secret-name: ethtool-exporter-tls
+  labels:
+    app: ethtool-exporter
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/component: exporter
+    app.kubernetes.io/name: ethtool-exporter
+  ports:
+    - name: https
+      protocol: TCP
+      port: 9500
+      targetPort: 9500
