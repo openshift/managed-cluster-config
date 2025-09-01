@@ -49140,6 +49140,33 @@ objects:
           - events
           snapshotVolumes: false
           ttl: 720h0m0s
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: mvo-migration-reader
+        namespace: openshift-velero
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - secrets
+        resourceNames:
+        - velero-iam-credentials
+        verbs:
+        - get
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: mvo-migration-reader
+        namespace: openshift-velero
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: mvo-migration-reader
+      subjects:
+      - apiGroup: rbac.authorization.k8s.io
+        kind: Group
+        name: dedicated-admins
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
