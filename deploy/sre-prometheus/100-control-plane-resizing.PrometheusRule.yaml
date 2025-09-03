@@ -87,36 +87,73 @@ spec:
               )
             )
         record: sre:node_control_plane:excessive_consumption_memory
-      ## Calculates CPU usage per master node as 100 – idle%.
-      ## Converts each sample to 1 if usage >80%, 0 otherwise.
-      ## avg_over_time(...[24h:5m]) computes the fraction of the last 24h each node was above 80% CPU.
-      - expr: |
-          avg_over_time(
-            (
-              (
-                (1 - avg by (instance) (
-                  rate(node_cpu_seconds_total{mode="idle"}[5m])
-                )) * 100
-                AND on(instance) label_replace(kube_node_role{role="master"}, "instance", "$1", "node", "(.+)")
-              ) > bool 80
-            )[24h:5m]
-          )
+      ## CPU: % usage = 100 × non-idle/total; >80% flagged as 1 per 5m sample.
+      ## avg_over_time gives fraction of last 24h masters were >80% CPU.
+      ## count_over_time ensures ≥12h of data before emitting values.
+      - expr: avg_over_time (
+                (
+                  (
+                    100 * sum by (instance) (
+                      rate( node_cpu_seconds_total{mode!="idle"}[5m] )
+                    )
+                    /
+                    sum by (instance) (
+                      rate( node_cpu_seconds_total[5m] )
+                    )
+                    AND on(instance) label_replace(
+                      kube_node_role{role="master"},"instance", "$1", "node", "(.+)"
+                    )
+                  ) > bool 80
+                )[24h:5m]
+              ) AND count_over_time(
+                (
+                  (
+                    100 * sum by (instance) (
+                      rate( node_cpu_seconds_total{mode!="idle"}[5m] )
+                    )
+                    /
+                    sum by (instance) (
+                      rate( node_cpu_seconds_total[5m] )
+                    )
+                    AND on(instance) label_replace(
+                      kube_node_role{role="master"},"instance", "$1", "node", "(.+)"
+                    )
+                  )
+                )[24h:5m]
+              ) > (12 * 60/5)
         record: sre:node_control_plane:cpu_usage_ebb
-      ## Calculates memory usage per master node as (1 – free/total) × 100.
-      ## Converts each sample to 1 if usage >80%, 0 otherwise.
-      ## avg_over_time(...[24h:5m]) computes the fraction of the last 24h each node was above 80% memory.
-      - expr: |
-          avg_over_time(
-            (
-              (
-                1 - (
-                  (node_memory_MemFree_bytes + node_memory_Buffers_bytes + node_memory_Cached_bytes)
-                  / node_memory_MemTotal_bytes
-                )
-              ) * 100 > bool 80
-              AND on(instance) label_replace(kube_node_role{role="master"}, "instance", "$1", "node", "(.+)")
-            )[24h:5m]
-          )
+      ## Memory: % used = (total − (free+buffers+cached)) / total × 100; >80% flagged as 1.
+      ## avg_over_time gives fraction of last 24h masters were >80% memory.
+      ## count_over_time ensures ≥12h of data before emitting values.
+      - expr: avg_over_time (
+                (
+                  (
+                    (
+                      (
+                        ( node_memory_MemTotal_bytes
+                          - ( node_memory_MemFree_bytes + node_memory_Buffers_bytes + node_memory_Cached_bytes )
+                        )
+                        / node_memory_MemTotal_bytes
+                      ) * 100
+                    )
+                    AND on(instance) label_replace(
+                      kube_node_role{role="master"}, "instance", "$1", "node", "(.+)"
+                    )
+                  ) > bool 80
+                )[24h:5m]
+              ) AND count_over_time(
+                (
+                  (
+                    ( node_memory_MemTotal_bytes
+                      - ( node_memory_MemFree_bytes + node_memory_Buffers_bytes + node_memory_Cached_bytes )
+                    )
+                    / node_memory_MemTotal_bytes
+                  ) * 100
+                  AND on(instance) label_replace(
+                    kube_node_role{role="master"},"instance", "$1", "node", "(.+)"
+                  )
+                )[24h:5m]
+              ) > (12 * 60/5)
         record: sre:node_control_plane:memory_usage_ebb
   - name: sre-control-plane-resizing-alerts
     rules:
@@ -138,3 +175,13 @@ spec:
           namespace: openshift-monitoring
         annotations:
           message: "The cluster's control plane nodes have been undersized for 24 hours and must be vertically scaled to support the existing workload. See linked SOP for details."
+      # Alerts critical if control plane CPU or memory >80% for over 2h in the past 24h.
+      - alert: ControlPlaneNodeErrorBudgetBurn
+        expr: (sre:node_control_plane:cpu_usage_ebb > (2/24)) or (sre:node_control_plane:memory_usage_ebb > (2/24))
+        for: 5m
+        labels:
+          severity: warning
+          namespace: openshift-monitoring
+        annotations:
+          description: "Control plane CPU or memory usage exceeded 80% for >2h within the last 24h. Consider resizing nodes. See linked SOP for details."
+          runbook_url: https://github.com/openshift/ops-sop/blob/master/v4/alerts/ControlPlaneNodeErrorBudgetBurn.md
