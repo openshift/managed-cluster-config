@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  labels:
+    app.kubernetes.io/component: authentication-proxy
+    app.kubernetes.io/name: token-refresher
+  name: token-refresher
+  namespace: openshift-logging
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: authentication-proxy
+      app.kubernetes.io/name: token-refresher
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: openshift-monitoring
+          podSelector:
+            matchLabels:
+              prometheus: k8s
+
