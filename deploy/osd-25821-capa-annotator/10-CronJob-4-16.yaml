@@ -32,7 +32,7 @@ spec:
           containers:
           - name: capa-annotator
             image: image-registry.openshift-image-registry.svc:5000/openshift/tools:latest
-            imagePullPolicy: Always
+            imagePullPolicy: IfNotPresent
             securityContext:
               allowPrivilegeEscalation: false
               capabilities:
@@ -40,37 +40,23 @@ spec:
                 - ALL
               runAsNonRoot: true
             env:
-              - name: IMAGE
-                # 4.16.23
+              - name: IMAGE # 4.16.23
                 value: quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:fbad492113bbe9763af4b04be533473dea08ffdd759a288a697b41c7aafa4d5e
               - name: MAJOR_MINOR_VER
                 value: "4.16"
+              - name: Z_STREAM_FIXED_VER
+                value: "23"
+            volumeMounts:
+              - name: scripts
+                mountPath: /tmp/scripts
             command:
-            - /bin/bash
+              - /bin/bash
             args:
-            - -c
-            - |
-              # Get all manifestwork objects and extract their names
-              managedclusters=$(oc get managedclusters -l openshiftVersion-major-minor=${MAJOR_MINOR_VER} -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}')
-              # Loop through each manifestwork object
-              for clusterID in ${managedclusters[@]};do 
-                # Extract namespace and name
-                namespace=$(oc get managedclusters $clusterID -o json | jq -r '.metadata.labels["api.openshift.com/management-cluster"]')
-                kinds=$(oc get manifestwork -n $namespace $clusterID -o json | jq -r '.spec.workload.manifests[].kind')
-                num=0 
-                for kind in $kinds;do 
-                  if [[ $kind == "HostedCluster" ]]; then
-                      echo $clusterID
-                      #~1 escapes / in bash
-                      json_payload='[{"op":"replace","path":"/spec/workload/manifests/'"$num"'/metadata/annotations/hypershift.openshift.io~1capi-provider-aws-image","value":"'"$IMAGE"'"}]'
-                      echo "oc patch manifestwork $clusterID -n $namespace --type='json' -p "$json_payload""
-                      oc patch manifestwork $clusterID -n $namespace --type='json' -p "$json_payload"
-                      echo "-------------------------------------------------------------------------"
-                      break
-                  fi
-                (( num++))
-                done
-              done
+              - /tmp/scripts/patch.sh
+          volumes:
+            - name: scripts
+              configMap:
+                name: capa-annotator
           serviceAccountName: capa-annotator
           automountServiceAccountToken: true
           restartPolicy: Never

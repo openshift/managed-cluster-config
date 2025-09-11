@@ -14,7 +14,7 @@ data:
         key: node-role.kubernetes.io/infra
         operator: Exists
       retention: 11d
-      retentionSize: 90GB
+      retentionSize: 85GB
       volumeClaimTemplate:
         metadata:
           name: prometheus-data
@@ -51,13 +51,6 @@ data:
       - effect: NoSchedule
         key: node-role.kubernetes.io/infra
         operator: Exists
-    k8sPrometheusAdapter:
-      nodeSelector:
-        node-role.kubernetes.io/infra: ''
-      tolerations:
-      - effect: NoSchedule
-        key: node-role.kubernetes.io/infra
-        operator: Exists
     kubeStateMetrics:
       nodeSelector:
         node-role.kubernetes.io/infra: ''
@@ -80,6 +73,13 @@ data:
         key: node-role.kubernetes.io/infra
         operator: Exists
     monitoringPlugin:
+      nodeSelector:
+        node-role.kubernetes.io/infra: ''
+      tolerations:
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/infra
+        operator: Exists
+    metricsServer:
       nodeSelector:
         node-role.kubernetes.io/infra: ''
       tolerations:
