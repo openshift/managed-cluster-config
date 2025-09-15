@@ -43,6 +43,7 @@ directories = [
         'rosa-console-legacy-branding-configmap',
         'rosa-ingress-certificate-policies',
         'rosa-ingress-certificate-check',
+        "validating-admission-policies/hcp-node-label-winli",
         ]
 policy_generator_config = './scripts/policy-generator-config.yaml'
 config_filename = "config.yaml"

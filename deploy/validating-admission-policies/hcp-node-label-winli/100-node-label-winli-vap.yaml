@@ -1,0 +1,25 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: rh-sre-deny-node-image-type-modify
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+      - apiGroups: [""]
+        apiVersions: ["v1"]
+        operations: ["UPDATE"]
+        resources: ["nodes"]
+  validations:
+    - expression: |
+        (
+          "api.openshift.com/image-type" in oldObject.metadata.labels &&
+          "api.openshift.com/image-type" in object.metadata.labels &&
+          object.metadata.labels["api.openshift.com/image-type"] == oldObject.metadata.labels["api.openshift.com/image-type"]
+        )
+        ||
+        (
+          !("api.openshift.com/image-type" in oldObject.metadata.labels) &&
+          !("api.openshift.com/image-type" in object.metadata.labels)
+        )
+      message: "Modification of node label api.openshift.com/image-type is not allowed"
