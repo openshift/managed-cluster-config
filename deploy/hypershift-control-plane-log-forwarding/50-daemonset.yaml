@@ -1,0 +1,109 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  labels:
+    app: control-plane-log-forwarding
+    app.kubernetes.io/component: log-collector
+    app.kubernetes.io/name: control-plane-log-forwarding
+    app.kubernetes.io/part-of: multi-tenant-logging
+  name: control-plane-log-forwarding
+  namespace: hypershift-control-plane-log-forwarding
+spec:
+  selector:
+    matchLabels:
+      app: control-plane-log-forwarding
+  template:
+    metadata:
+      labels:
+        app: control-plane-log-forwarding
+    spec:
+      containers:
+      - command:
+        - vector
+        env:
+        - name: VECTOR_LOG
+          value: DEBUG
+        - name: AWS_REGION
+          value: "{{ fromCDLabel \"ext-hypershift.openshift.io/cluster-region\" }}"
+        - name: AWS_DEFAULT_REGION
+          value: "{{ fromCDLabel \"ext-hypershift.openshift.io/cluster-region\" }}"
+        - name: VECTOR_CONFIG_YAML
+          value: /etc/vector/vector.yaml
+        - name: VECTOR_SELF_NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: VECTOR_REQUIRE_HEALTHY
+          value: "true"
+        - name: MC_CLUSTER_ID
+          value: "{{ fromCDLabel \"api.openshift.com/id\" }}"
+        # The configmap for the following two env vars is
+        # created and managed by Fleet Manager
+        - name: S3_BUCKET_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: log-forwarding-config
+              key: s3_bucket_name
+        - name: S3_WRITER_ROLE_ARN
+          valueFrom:
+            configMapKeyRef:
+              name: log-forwarding-config
+              key: s3_writer_role_arn
+        # TODO: Change this to a konflux image in the future when
+        # it's available
+        image: public.ecr.aws/d1w4s4o1/rosa-logrouter/collector:dev
+        name: vector
+        ports:
+        - containerPort: 8686
+          name: metrics
+        resources:
+          limits:
+            cpu: 200m
+            memory: 2Gi
+          requests:
+            cpu: 50m
+            memory: 256Mi
+        securityContext:
+          allowPrivilegeEscalation: true
+          privileged: true
+          readOnlyRootFilesystem: true
+          runAsNonRoot: false
+          runAsUser: 0
+        volumeMounts:
+        - mountPath: /var/log
+          name: var-log
+          readOnly: true
+        - mountPath: /var/lib/docker/containers
+          name: var-lib-docker-containers
+          readOnly: true
+        - mountPath: /etc/vector
+          name: vector-config
+          readOnly: true
+        - mountPath: /vector-data-dir
+          name: vector-data
+      serviceAccountName: control-plane-log-forwarding
+      # We only want this on HCP nodes - it would be a waste to schedule this to master/infra nodes
+      tolerations:
+      - key: "hypershift.openshift.io/control-plane"
+        effect: NoSchedule
+        operator: Exists
+      - key: "hypershift.openshift.io/request-serving-component"
+        effect: NoSchedule
+        operator: Exists
+      - key: "hypershift.openshift.io/cluster"
+        effect: NoSchedule
+        operator: Exists
+      volumes:
+      - hostPath:
+          path: /var/log
+        name: var-log
+      - hostPath:
+          path: /var/lib/docker/containers
+        name: var-lib-docker-containers
+      - configMap:
+          name: vector-config
+        name: vector-config
+      - hostPath:
+          path: /var/lib/vector-data
+          type: DirectoryOrCreate
+        name: vector-data
