@@ -10430,6 +10430,105 @@ objects:
       - apiGroup: policy.open-cluster-management.io
         kind: Policy
         name: rosa-ingress-certificate-policies
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: Policy
+      metadata:
+        annotations:
+          policy.open-cluster-management.io/categories: CM Configuration Management
+          policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/standards: NIST SP 800-53
+        name: srep-vap-hcp-node-label
+        namespace: openshift-acm-policies
+      spec:
+        disabled: false
+        policy-templates:
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+              name: srep-vap-hcp-node-label
+            spec:
+              evaluationInterval:
+                compliant: 2h
+                noncompliant: 45s
+              object-templates:
+              - complianceType: mustonlyhave
+                metadataComplianceType: musthave
+                objectDefinition:
+                  apiVersion: admissionregistration.k8s.io/v1
+                  kind: ValidatingAdmissionPolicy
+                  metadata:
+                    name: rh-sre-deny-node-image-type-modify
+                  spec:
+                    failurePolicy: Fail
+                    matchConstraints:
+                      resourceRules:
+                      - apiGroups:
+                        - ''
+                        apiVersions:
+                        - v1
+                        operations:
+                        - UPDATE
+                        resources:
+                        - nodes
+                    validations:
+                    - expression: "(\n  \"api.openshift.com/image-type\" in oldObject.metadata.labels\
+                        \ &&\n  \"api.openshift.com/image-type\" in object.metadata.labels\
+                        \ &&\n  object.metadata.labels[\"api.openshift.com/image-type\"\
+                        ] == oldObject.metadata.labels[\"api.openshift.com/image-type\"\
+                        ]\n)\n||\n(\n  !(\"api.openshift.com/image-type\" in oldObject.metadata.labels)\
+                        \ &&\n  !(\"api.openshift.com/image-type\" in object.metadata.labels)\n\
+                        )\n"
+                      message: Modification of node label api.openshift.com/image-type
+                        is not allowed
+              - complianceType: mustonlyhave
+                metadataComplianceType: musthave
+                objectDefinition:
+                  apiVersion: admissionregistration.k8s.io/v1
+                  kind: ValidatingAdmissionPolicyBinding
+                  metadata:
+                    name: rh-sre-deny-node-image-type-modify-binding
+                  spec:
+                    policyName: rh-sre-deny-node-image-type-modify
+                    validationActions:
+                    - Deny
+              pruneObjectBehavior: DeleteIfCreated
+              remediationAction: enforce
+              severity: low
+        remediationAction: enforce
+    - apiVersion: apps.open-cluster-management.io/v1
+      kind: PlacementRule
+      metadata:
+        name: placement-srep-vap-hcp-node-label
+        namespace: openshift-acm-policies
+      spec:
+        clusterSelector:
+          matchExpressions:
+          - key: hypershift.open-cluster-management.io/hosted-cluster
+            operator: In
+            values:
+            - 'true'
+          - key: openshiftVersion-major-minor
+            operator: NotIn
+            values:
+            - '4.14'
+            - '4.15'
+            - '4.16'
+            - '4.17'
+            - '4.18'
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: PlacementBinding
+      metadata:
+        name: binding-srep-vap-hcp-node-label
+        namespace: openshift-acm-policies
+      placementRef:
+        apiGroup: apps.open-cluster-management.io
+        kind: PlacementRule
+        name: placement-srep-vap-hcp-node-label
+      subjects:
+      - apiGroup: policy.open-cluster-management.io
+        kind: Policy
+        name: srep-vap-hcp-node-label
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:

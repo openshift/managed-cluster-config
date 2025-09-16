@@ -43,6 +43,7 @@ directories = [
         'rosa-console-legacy-branding-configmap',
         'rosa-ingress-certificate-policies',
         'rosa-ingress-certificate-check',
+        "srep-vap/hcp-node-label",
         ]
 policy_generator_config = './scripts/policy-generator-config.yaml'
 config_filename = "config.yaml"
