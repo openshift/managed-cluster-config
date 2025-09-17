@@ -1,0 +1,79 @@
+---
+apiVersion: policy.open-cluster-management.io/v1
+kind: Policy
+metadata:
+  annotations:
+    policy.open-cluster-management.io/standards: NIST SP 800-53
+    policy.open-cluster-management.io/categories: CM Configuration Management
+    policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+  name: "autoscaler-podmonitor-policy"
+  namespace: openshift-acm-policies
+spec:
+  remediationAction: enforce
+  disabled: false
+  policy-templates:
+    # Deployment
+    - objectDefinition:
+        apiVersion: policy.open-cluster-management.io/v1
+        kind: ConfigurationPolicy
+        metadata:
+          name: autoscaler-podmonitor-policy
+        spec:
+          namespaceSelector:
+            matchLabels:
+              hypershift.openshift.io/hosted-control-plane: "true"
+          pruneObjectBehavior: None
+          object-templates-raw: |
+            {{- range (lookup "hypershift.openshift.io/v1beta1" "HostedCluster" "" "").items }}
+            - complianceType: MustHave
+              objectDefinition:
+                apiVersion: monitoring.rhobs/v1
+                kind: PodMonitor
+                metadata:
+                  name: autoscaler
+                  namespace: {{ (printf "%s-%s" .metadata.namespace .metadata.name) }}
+                spec:
+                  podMetricsEndpoints:
+                  - path: /metrics
+                    port: metrics
+                    metricRelabelings:
+                      - action: replace
+                        replacement: {{ (printf "%s" .spec.clusterID) }}
+                        targetLabel: _id
+                    relabelings:
+                      - action: replace
+                        replacement: {{ (printf "%s" .spec.clusterID) }}
+                        targetLabel: _id
+                    scheme: http
+                    targetPort: 8085
+                  selector:
+                    matchLabels:
+                      app: cluster-autoscaler
+            {{- end}}
+---
+apiVersion: apps.open-cluster-management.io/v1
+kind: PlacementRule
+metadata:
+  name: "autoscaler-podmonitor-placement-rule"
+  namespace: openshift-acm-policies
+spec:
+  clusterSelector:
+    matchExpressions:
+      - key: hypershift.open-cluster-management.io/management-cluster
+        operator: In
+        values:
+          - "true"
+---
+apiVersion: policy.open-cluster-management.io/v1
+kind: PlacementBinding
+metadata:
+  name: "autoscaler-podmonitor-placement-binding"
+  namespace: openshift-acm-policies
+placementRef:
+  apiGroup: apps.open-cluster-management.io
+  kind: PlacementRule
+  name: autoscaler-podmonitor-placement-rule
+subjects:
+  - apiGroup: policy.open-cluster-management.io
+    kind: Policy
+    name: "autoscaler-podmonitor-policy"

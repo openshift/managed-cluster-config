@@ -31288,6 +31288,90 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: hypershift-autoscaler-podmonitor
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: ext-hypershift.openshift.io/cluster-type
+        operator: In
+        values:
+        - service-cluster
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: Policy
+      metadata:
+        annotations:
+          policy.open-cluster-management.io/standards: NIST SP 800-53
+          policy.open-cluster-management.io/categories: CM Configuration Management
+          policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+        name: autoscaler-podmonitor-policy
+        namespace: openshift-acm-policies
+      spec:
+        remediationAction: enforce
+        disabled: false
+        policy-templates:
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+              name: autoscaler-podmonitor-policy
+            spec:
+              namespaceSelector:
+                matchLabels:
+                  hypershift.openshift.io/hosted-control-plane: 'true'
+              pruneObjectBehavior: None
+              object-templates-raw: "{{- range (lookup \"hypershift.openshift.io/v1beta1\"\
+                \ \"HostedCluster\" \"\" \"\").items }}\n- complianceType: MustHave\n\
+                \  objectDefinition:\n    apiVersion: monitoring.rhobs/v1\n    kind:\
+                \ PodMonitor\n    metadata:\n      name: autoscaler\n      namespace:\
+                \ {{ (printf \"%s-%s\" .metadata.namespace .metadata.name) }}\n  \
+                \  spec:\n      podMetricsEndpoints:\n      - path: /metrics\n   \
+                \     port: metrics\n        metricRelabelings:\n          - action:\
+                \ replace\n            replacement: {{ (printf \"%s\" .spec.clusterID)\
+                \ }}\n            targetLabel: _id\n        relabelings:\n       \
+                \   - action: replace\n            replacement: {{ (printf \"%s\"\
+                \ .spec.clusterID) }}\n            targetLabel: _id\n        scheme:\
+                \ http\n        targetPort: 8085\n      selector:\n        matchLabels:\n\
+                \          app: cluster-autoscaler\n{{- end}}\n"
+    - apiVersion: apps.open-cluster-management.io/v1
+      kind: PlacementRule
+      metadata:
+        name: autoscaler-podmonitor-placement-rule
+        namespace: openshift-acm-policies
+      spec:
+        clusterSelector:
+          matchExpressions:
+          - key: hypershift.open-cluster-management.io/management-cluster
+            operator: In
+            values:
+            - 'true'
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: PlacementBinding
+      metadata:
+        name: autoscaler-podmonitor-placement-binding
+        namespace: openshift-acm-policies
+      placementRef:
+        apiGroup: apps.open-cluster-management.io
+        kind: PlacementRule
+        name: autoscaler-podmonitor-placement-rule
+      subjects:
+      - apiGroup: policy.open-cluster-management.io
+        kind: Policy
+        name: autoscaler-podmonitor-policy
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: hypershift-namespace-labels
   spec:
     clusterDeploymentSelector:
