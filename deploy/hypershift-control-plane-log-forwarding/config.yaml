@@ -1,0 +1,17 @@
+deploymentMode: "SelectorSyncSet"
+selectorSyncSet:
+  enableResourceTemplates: true
+  resourceApplyMode: "Sync"
+  matchExpressions:
+  - key: ext-hypershift.openshift.io/cluster-type
+    operator: In
+    values: ["management-cluster"]
+  - key: api.openshift.com/fedramp
+    operator: NotIn
+    values: ["true"]  
+  # limit deployment to integration and staging to not
+  # block production deployments for ongoing development
+  - key: api.openshift.com/environment
+    operator: NotIn
+    values: ["production"]
+

@@ -1,0 +1,38 @@
+apiVersion: security.openshift.io/v1
+kind: SecurityContextConstraints
+metadata:
+  name: hcp-log-forwarder
+  namespace: hypershift-control-plane-log-forwarding
+
+allowHostDirVolumePlugin: true
+allowHostIPC: false
+allowHostNetwork: false
+allowHostPID: false
+allowHostPorts: false
+allowPrivilegedContainer: true
+allowedCapabilities: null
+allowedUnsafeSysctls:
+- '*'
+defaultAddCapabilities: null
+fsGroup:
+  type: RunAsAny
+priority: 10
+readOnlyRootFilesystem: false
+requiredDropCapabilities:
+- MKNOD
+runAsUser:
+  type: RunAsAny
+seLinuxContext:
+  type: RunAsAny
+supplementalGroups:
+  type: RunAsAny
+users:
+  - system:serviceaccount:hypershift-control-plane-log-forwarding:control-plane-log-forwarding
+volumes:
+- configMap
+- downwardAPI
+- emptyDir
+- hostPath
+- persistentVolumeClaim
+- projected
+- secret
