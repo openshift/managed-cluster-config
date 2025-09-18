@@ -31595,12 +31595,17 @@ objects:
           \     }\n        }\n      }\n\n# Sinks\nsinks:\n  s3_logs:\n    type: \"\
           aws_s3\"\n    inputs: [\"parse_plain_text_timestamps\"]\n    \n    # S3\
           \ bucket configuration\n    bucket: \"${S3_BUCKET_NAME}\"\n    region: \"\
-          ${AWS_REGION}\"\n    \n    # Dynamic key prefix based on cluster/namespace/app/pod\
-          \ structure\n    key_prefix: \"{{ mc_cluster_id }}/{{ namespace }}/{{ application\
-          \ }}/{{ pod_name }}/{{ container_name }}/\"\n    \n    # Batch settings\n\
-          \    batch:\n      max_bytes: 67108864  # 64MB\n      timeout_secs: 300\
-          \    # 5 minutes\n    \n    # Request settings\n    request:\n      retry_attempts:\
-          \ 3\n      retry_initial_backoff_secs: 1\n      retry_max_duration_secs:\
+          ${AWS_REGION}\"\n    \n    # Escape the following string so hive doesn't\
+          \ attempt to interpolate\n    # the same syntax as vector does during the\
+          \ selectorsyncset apply\n    # The weird brace syntax is how you escape\
+          \ these in the text/template\n    # go library\n    # Dynamic key prefix\
+          \ based on cluster/namespace/app/pod structure\n    key_prefix: \"{{\\\"\
+          {{\\\"}} mc_cluster_id {{\\\"}}\\\"}}/{{\\\"{{\\\"}} namespace {{\\\"}}\\\
+          \"}}/{{\\\"{{\\\"}} application {{\\\"}}\\\"}}/{{\\\"{{\\\"}} pod_name {{\\\
+          \"}}\\\"}}/{{\\\"{{\\\"}} container_name {{\\\"}}\\\"}}/\"\n    \n    #\
+          \ Batch settings\n    batch:\n      max_bytes: 67108864  # 64MB\n      timeout_secs:\
+          \ 300    # 5 minutes\n    \n    # Request settings\n    request:\n     \
+          \ retry_attempts: 3\n      retry_initial_backoff_secs: 1\n      retry_max_duration_secs:\
           \ 30\n      timeout_secs: 30\n    \n    # Compression\n    compression:\
           \ \"gzip\"\n    \n    # File format\n    encoding:\n      codec: \"json\"\
           \n      framing:\n        method: \"newline_delimited\"\n    \n    # Buffer\
