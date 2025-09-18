@@ -196,8 +196,12 @@ data:
         bucket: "${S3_BUCKET_NAME}"
         region: "${AWS_REGION}"
         
+        # Escape the following string so hive doesn't attempt to interpolate
+        # the same syntax as vector does during the selectorsyncset apply
+        # The weird brace syntax is how you escape these in the text/template
+        # go library
         # Dynamic key prefix based on cluster/namespace/app/pod structure
-        key_prefix: "{{ mc_cluster_id }}/{{ namespace }}/{{ application }}/{{ pod_name }}/{{ container_name }}/"
+        key_prefix: "{{\"{{\"}} mc_cluster_id {{\"}}\"}}/{{\"{{\"}} namespace {{\"}}\"}}/{{\"{{\"}} application {{\"}}\"}}/{{\"{{\"}} pod_name {{\"}}\"}}/{{\"{{\"}} container_name {{\"}}\"}}/"
         
         # Batch settings
         batch:
