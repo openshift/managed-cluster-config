@@ -1,10 +1,10 @@
 # ocm-agent-operator ManagedFleetNotifications-CR
 
-This location manages the distribution of the OCM Agent Operator `ManagedFleetNotification` CR to hypershift-only OCM agent running on `rhobsp02ue1`.
+This location manages the distribution of the OCM Agent Operator `ManagedFleetNotification` CR to hypershift-only OCM agent running on management clusters.
 
 The purpose of the `ManagedFleetNotification` CR is to define notification templates that map to AlertManager alerts, allowing the OCM Agent to build and send notifications when it is notified about those alerts.
 
-`ManagedNotifications` are specifically for HyperShift and are currently sent from a centralized place (`rhobsp02ue1`) to the whole fleet of HCP clusters. Furthermore, `ManagedNotifications` support notifications of type limited support by setting the `limitedSupport` field to `true`. 
+`ManagedNotifications` are specifically for HyperShift and are currently sent from the fleet mode `ocm-agent` instance running on management clusters to the OCM backend for hosted clusters. Furthermore, `ManagedNotifications` support notifications of type limited support by setting the `limitedSupport` field to `true`. 
 
 ## How to make changes
 
