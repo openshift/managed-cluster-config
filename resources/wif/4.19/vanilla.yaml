@@ -145,15 +145,18 @@ service_accounts:
           - dns.resourceRecordSets.delete
           - dns.resourceRecordSets.list
           - iam.roles.get
+          - iam.serviceAccounts.actAs
           - iam.serviceAccounts.get
           - iam.serviceAccounts.getIamPolicy
           - iam.serviceAccounts.list
+          - iam.serviceAccounts.signBlob
           - iam.workloadIdentityPoolProviders.get
           - iam.workloadIdentityPools.get
           - monitoring.timeSeries.list
           - orgpolicy.policy.get
           - resourcemanager.projects.get
           - resourcemanager.projects.getIamPolicy
+          - resourcemanager.projects.setIamPolicy
           - serviceusage.quotas.get
           - serviceusage.services.list
           - storage.buckets.create
@@ -165,20 +168,6 @@ service_accounts:
           - storage.objects.delete
           - storage.objects.get
           - storage.objects.list
-      - id: iam.serviceAccountUser
-        kind: Role
-        predefined: true
-        resource_bindings:
-          - type: iam.serviceAccounts
-            name: osd-worker
-          - type: iam.serviceAccounts
-            name: osd-control-plane
-      - id: iam.serviceAccountTokenCreator
-        kind: Role
-        predefined: true
-        resource_bindings:
-          - type: iam.serviceAccounts
-            name: osd-deployer
   - access_method: wif
     credential_request:
       secret_ref:
@@ -400,6 +389,7 @@ service_accounts:
           - compute.zoneOperations.list
           - compute.zones.get
           - compute.zones.list
+          - iam.serviceAccounts.actAs
           - iam.serviceAccounts.get
           - iam.serviceAccounts.list
           - resourcemanager.tagValues.get
@@ -407,14 +397,6 @@ service_accounts:
           - serviceusage.quotas.get
           - serviceusage.services.get
           - serviceusage.services.list
-      - id: iam.serviceAccountUser
-        kind: Role
-        predefined: true
-        resource_bindings:
-          - type: iam.serviceAccounts
-            name: osd-worker
-          - type: iam.serviceAccounts
-            name: osd-control-plane
   - access_method: vm
     id: osd-worker
     kind: ServiceAccount
