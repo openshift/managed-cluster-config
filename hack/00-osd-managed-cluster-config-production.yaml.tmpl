@@ -49444,7 +49444,6 @@ objects:
           security.openshift.io/MinimallySufficientPodSecurityStandard: privileged
         labels:
           kubernetes.io/metadata.name: openshift-sre-ethtool-exporter
-          openshift.io/cluster-monitoring: 'true'
           hypershift.openshift.io/monitoring: 'true'
           pod-security.kubernetes.io/audit: privileged
           pod-security.kubernetes.io/audit-version: latest
@@ -49486,9 +49485,6 @@ objects:
         kind: Role
         name: prometheus-k8s
       subjects:
-      - kind: ServiceAccount
-        name: prometheus-k8s
-        namespace: openshift-monitoring
       - kind: ServiceAccount
         name: hypershift-monitoring-stack-prometheus
         namespace: openshift-observability-operator
@@ -49549,7 +49545,7 @@ objects:
     - apiVersion: v1
       kind: Secret
       data:
-        config.yaml: ImF1dGhvcml6YXRpb24iOgogICJzdGF0aWMiOgogIC0gInBhdGgiOiAiL21ldHJpY3MiCiAgICAicmVzb3VyY2VSZXF1ZXN0IjogZmFsc2UKICAgICJ1c2VyIjoKICAgICAgIm5hbWUiOiAic3lzdGVtOnNlcnZpY2VhY2NvdW50Om9wZW5zaGlmdC1tb25pdG9yaW5nOnByb21ldGhldXMtazhzIgogICAgInZlcmIiOiAiZ2V0IgogIC0gInBhdGgiOiAiL21ldHJpY3MiCiAgICAicmVzb3VyY2VSZXF1ZXN0IjogZmFsc2UKICAgICJ1c2VyIjoKICAgICAgIm5hbWUiOiAic3lzdGVtOnNlcnZpY2VhY2NvdW50Om9wZW5zaGlmdC1vYnNlcnZhYmlsaXR5LW9wZXJhdG9yOmh5cGVyc2hpZnQtbW9uaXRvcmluZy1zdGFjay1wcm9tZXRoZXVzIgogICAgInZlcmIiOiAiZ2V0Igo=
+        config.yaml: ImF1dGhvcml6YXRpb24iOgogICJzdGF0aWMiOgogIC0gInBhdGgiOiAiL21ldHJpY3MiCiAgICAicmVzb3VyY2VSZXF1ZXN0IjogZmFsc2UKICAgICJ1c2VyIjoKICAgICAgIm5hbWUiOiAic3lzdGVtOnNlcnZpY2VhY2NvdW50Om9wZW5zaGlmdC1vYnNlcnZhYmlsaXR5LW9wZXJhdG9yOmh5cGVyc2hpZnQtbW9uaXRvcmluZy1zdGFjay1wcm9tZXRoZXVzIgogICAgInZlcmIiOiAiZ2V0Igo=
       metadata:
         labels: null
         name: ethtool-exporter-kube-rbac-proxy-config
@@ -49762,50 +49758,6 @@ objects:
           protocol: TCP
           port: 9500
           targetPort: 9500
-    - apiVersion: monitoring.coreos.com/v1
-      kind: ServiceMonitor
-      metadata:
-        labels: null
-        name: ethtool-exporter
-        namespace: openshift-sre-ethtool-exporter
-      spec:
-        endpoints:
-        - interval: 15s
-          bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
-          port: https
-          scheme: https
-          tlsConfig:
-            serverName: ethtool-exporter.openshift-sre-ethtool-exporter.svc
-            ca:
-              configMap:
-                key: service-ca.crt
-                name: openshift-service-ca.crt
-            cert:
-              secret:
-                key: tls.crt
-                name: ethtool-exporter-tls
-            keySecret:
-              key: tls.key
-              name: ethtool-exporter-tls
-          metricRelabelings:
-          - action: keep
-            regex: node_ethtool_.*_allowance_exceeded
-            sourceLabels:
-            - __name__
-          relabelings:
-          - action: replace
-            regex: (.*)
-            replacement: $1
-            sourceLabels:
-            - __meta_kubernetes_pod_node_name
-            targetLabel: instance
-        jobLabel: app.kubernetes.io/name
-        namespaceSelector:
-          matchNames:
-          - openshift-sre-ethtool-exporter
-        selector:
-          matchLabels:
-            app: ethtool-exporter
     - apiVersion: monitoring.rhobs/v1
       kind: ServiceMonitor
       metadata:
