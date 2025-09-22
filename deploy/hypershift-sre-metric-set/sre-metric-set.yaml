@@ -13,3 +13,13 @@ data:
       - action:       "keep"
         regex:        "apiserver_request_total.*|apiserver_request_duration_seconds_count.*|apiserver_request_duration_seconds_bucket;(1|5|\\+Inf)"
         sourceLabels: ["__name__", "le"]
+    kubeControllerManager:
+      - action:       "drop"
+        regex:        "etcd_(debugging|disk|request|server).*"
+        sourceLabels: ["__name__"]
+      - action:       "drop"
+        regex:        "rest_client_request_latency_seconds_(bucket|count|sum)"
+        sourceLabels: ["__name__"]
+      - action:       "drop"
+        regex:        "root_ca_cert_publisher_sync_duration_seconds_(bucket|count|sum)"
+        sourceLabels: ["__name__"]

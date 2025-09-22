@@ -31852,7 +31852,13 @@ objects:
           apiserver_request_total.*|apiserver_request_duration_seconds_count.*|apiserver_request_duration_seconds_bucket;(1|5|\\\
           \\+Inf)\"\n    sourceLabels: [\"__name__\", \"le\"]\nopenshiftAPIServer:\n\
           \  - action:       \"keep\"\n    regex:        \"apiserver_request_total.*|apiserver_request_duration_seconds_count.*|apiserver_request_duration_seconds_bucket;(1|5|\\\
-          \\+Inf)\"\n    sourceLabels: [\"__name__\", \"le\"]\n"
+          \\+Inf)\"\n    sourceLabels: [\"__name__\", \"le\"]\nkubeControllerManager:\n\
+          \  - action:       \"drop\"\n    regex:        \"etcd_(debugging|disk|request|server).*\"\
+          \n    sourceLabels: [\"__name__\"]\n  - action:       \"drop\"\n    regex:\
+          \        \"rest_client_request_latency_seconds_(bucket|count|sum)\"\n  \
+          \  sourceLabels: [\"__name__\"]\n  - action:       \"drop\"\n    regex:\
+          \        \"root_ca_cert_publisher_sync_duration_seconds_(bucket|count|sum)\"\
+          \n    sourceLabels: [\"__name__\"]\n"
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
