@@ -1,0 +1,14 @@
+apiVersion: v1
+metadata:
+  name: ethtool-exporter-kube-rbac-proxy-config
+  namespace: openshift-sre-ethtool-exporter
+data:
+  config.yaml: |
+    authorization:
+      static:
+      - path: "/metrics"
+        resourceRequest: false
+        user":
+          name: "system:serviceaccount:openshift-observability-operator:hypershift-monitoring-stack-prometheus"
+        verb: "get"
+kind: ConfigMap
