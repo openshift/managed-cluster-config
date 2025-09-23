@@ -29,6 +29,13 @@ This configuration replaces the Managed Velero Operator (MVO) with the following
 3. **API**: Uses DataProtectionApplication CRD instead of VeleroInstall
 4. **RBAC**: Updated cluster roles to include OADP resources
 
+## Environment Variables
+
+The following environment variables must be configured for the DataProtectionApplication:
+
+- `OADP_BACKUP_BUCKET` - S3 bucket name for storing backups
+- `AWS_REGION` - AWS region where the bucket is located
+
 ## Deployment
 
 This configuration is deployed via Hive SelectorSyncSets to clusters matching the selector criteria:
