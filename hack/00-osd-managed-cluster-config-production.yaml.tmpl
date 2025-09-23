@@ -49777,7 +49777,7 @@ objects:
           security.openshift.io/MinimallySufficientPodSecurityStandard: privileged
         labels:
           kubernetes.io/metadata.name: openshift-sre-ethtool-exporter
-          openshift.io/cluster-monitoring: 'true'
+          hypershift.openshift.io/monitoring: 'true'
           pod-security.kubernetes.io/audit: privileged
           pod-security.kubernetes.io/audit-version: latest
           pod-security.kubernetes.io/warn: privileged
@@ -49819,8 +49819,8 @@ objects:
         name: prometheus-k8s
       subjects:
       - kind: ServiceAccount
-        name: prometheus-k8s
-        namespace: openshift-monitoring
+        name: hypershift-monitoring-stack-prometheus
+        namespace: openshift-observability-operator
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRoleBinding
       metadata:
@@ -49876,14 +49876,14 @@ objects:
         name: ethtool-exporter-ca-bundle
         namespace: openshift-sre-ethtool-exporter
     - apiVersion: v1
-      kind: Secret
-      data:
-        config.yaml: ImF1dGhvcml6YXRpb24iOgogICJzdGF0aWMiOgogIC0gInBhdGgiOiAiL21ldHJpY3MiCiAgICAicmVzb3VyY2VSZXF1ZXN0IjogZmFsc2UKICAgICJ1c2VyIjoKICAgICAgIm5hbWUiOiAic3lzdGVtOnNlcnZpY2VhY2NvdW50Om9wZW5zaGlmdC1tb25pdG9yaW5nOnByb21ldGhldXMtazhzIgogICAgInZlcmIiOiAiZ2V0Ig==
       metadata:
-        labels: null
         name: ethtool-exporter-kube-rbac-proxy-config
         namespace: openshift-sre-ethtool-exporter
-      type: Opaque
+      data:
+        config.yaml: "authorization:\n  static:\n  - path: \"/metrics\"\n    resourceRequest:\
+          \ false\n    user\":\n      name: \"system:serviceaccount:openshift-observability-operator:hypershift-monitoring-stack-prometheus\"\
+          \n    verb: \"get\"\n"
+      kind: ConfigMap
     - apiVersion: apps/v1
       kind: DaemonSet
       metadata:
@@ -50064,10 +50064,10 @@ objects:
               secret:
                 defaultMode: 420
                 secretName: ethtool-exporter-tls
-            - name: ethtool-exporter-kube-rbac-proxy-config
-              secret:
+            - configMap:
                 defaultMode: 420
-                secretName: ethtool-exporter-kube-rbac-proxy-config
+                name: ethtool-exporter-kube-rbac-proxy-config
+              name: ethtool-exporter-kube-rbac-proxy-config
             - configMap:
                 defaultMode: 420
                 name: ethtool-exporter-ca-bundle
@@ -50091,11 +50091,9 @@ objects:
           protocol: TCP
           port: 9500
           targetPort: 9500
-    - apiVersion: monitoring.coreos.com/v1
+    - apiVersion: monitoring.rhobs/v1
       kind: ServiceMonitor
       metadata:
-        labels:
-          monitoring.openshift.io/collection-profile: full
         name: ethtool-exporter
         namespace: openshift-sre-ethtool-exporter
       spec:
