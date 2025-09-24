@@ -1,0 +1,13 @@
+apiVersion: monitoring.rhobs/v1
+kind: PodMonitor
+metadata:
+  name: control-plane-log-forwarding
+  namespace: hypershift-control-plane-log-forwarding
+spec:
+  podMetricsEndpoints:
+  - path: /metrics
+    port: metrics
+    scheme: http
+  selector:
+    matchLabels:
+      app: control-plane-log-forwarding

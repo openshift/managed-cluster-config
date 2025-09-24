@@ -31400,6 +31400,7 @@ objects:
         labels:
           openshift.io/cluster-logging: 'true'
           openshift.io/cluster-monitoring: 'true'
+          hypershift.openshift.io/monitoring: 'true'
           app.kubernetes.io/name: control-plane-log-forwarding
           app.kubernetes.io/part-of: multi-tenant-logging
     - apiVersion: rbac.authorization.k8s.io/v1
@@ -31492,30 +31493,30 @@ objects:
           \  extra_namespace_label_selector: \"hypershift.openshift.io/hosted-control-plane=true\"\
           \n    glob_minimum_cooldown_ms: 1000\n    auto_partial_merge: true\n   \
           \ use_apiserver_cache: true\n    namespace_annotation_fields:\n      - metadata.labels\n\
-          \n# Transforms\ntransforms:  \n  enrich_metadata:\n    type: \"remap\"\n\
-          \    inputs: [\"kubernetes_logs\"]\n    source: |\n      # Extract metadata\
-          \ for S3 path structure\n      .mc_cluster_id = get_env_var!(\"MC_CLUSTER_ID\"\
-          ) || \"unknown\"\n      .namespace = .kubernetes.pod_namespace || \"unknown\"\
-          \n      .application = .kubernetes.pod_labels.app || \"unknown\"\n     \
-          \ .pod_name = .kubernetes.pod_name || \"unknown\"\n      .container_name\
-          \ = .kubernetes.container_name || \"container\"\n      \n      # Keep timestamp\n\
-          \      if !exists(.timestamp) {\n        .timestamp = now()\n      }\n \
-          \     \n      # Store Vector's ingestion timestamp before any processing\n\
-          \      .ingest_timestamp = .timestamp\n      \n  parse_json_logs:\n    type:\
-          \ \"remap\"\n    inputs: [\"enrich_metadata\"]\n    source: |\n      # Attempt\
-          \ to parse the message field as JSON for timestamp extraction only\n   \
-          \   # Do NOT merge parsed JSON into the top-level event - preserve original\
-          \ message\n      # Original JSON payload should remain in .message for delivery\n\
-          \      \n      # Performance optimization: only attempt JSON parsing if\
-          \ message looks like JSON\n      message_str = string!(.message)\n     \
-          \ if starts_with(message_str, \"{\") || starts_with(message_str, \"[\")\
-          \ {\n        parsed, err = parse_json(.message)\n        if err == null\
-          \ && is_object(parsed) {\n          # Handle timestamp precedence: prefer\
-          \ JSON log timestamps over Vector's timestamp\n          # Priority order:\
-          \ ts -> time -> stageTimestamp -> requestReceivedTimestamp -> Vector default\n\
-          \          \n          # Try 'ts' field first (etcd, ignition-server style)\n\
-          \          if exists(parsed.ts) {\n            ts_value = parsed.ts\n  \
-          \          if is_string(ts_value) {\n              # Handle ISO timestamp\
+          \n  vector_metrics:\n    type: internal_metrics\n\n# Transforms\ntransforms:\
+          \  \n  enrich_metadata:\n    type: \"remap\"\n    inputs: [\"kubernetes_logs\"\
+          ]\n    source: |\n      # Extract metadata for S3 path structure\n     \
+          \ .mc_cluster_id = get_env_var!(\"MC_CLUSTER_ID\") || \"unknown\"\n    \
+          \  .namespace = .kubernetes.pod_namespace || \"unknown\"\n      .application\
+          \ = .kubernetes.pod_labels.app || \"unknown\"\n      .pod_name = .kubernetes.pod_name\
+          \ || \"unknown\"\n      .container_name = .kubernetes.container_name ||\
+          \ \"container\"\n      \n      # Keep timestamp\n      if !exists(.timestamp)\
+          \ {\n        .timestamp = now()\n      }\n      \n      # Store Vector's\
+          \ ingestion timestamp before any processing\n      .ingest_timestamp = .timestamp\n\
+          \      \n  parse_json_logs:\n    type: \"remap\"\n    inputs: [\"enrich_metadata\"\
+          ]\n    source: |\n      # Attempt to parse the message field as JSON for\
+          \ timestamp extraction only\n      # Do NOT merge parsed JSON into the top-level\
+          \ event - preserve original message\n      # Original JSON payload should\
+          \ remain in .message for delivery\n      \n      # Performance optimization:\
+          \ only attempt JSON parsing if message looks like JSON\n      message_str\
+          \ = string!(.message)\n      if starts_with(message_str, \"{\") || starts_with(message_str,\
+          \ \"[\") {\n        parsed, err = parse_json(.message)\n        if err ==\
+          \ null && is_object(parsed) {\n          # Handle timestamp precedence:\
+          \ prefer JSON log timestamps over Vector's timestamp\n          # Priority\
+          \ order: ts -> time -> stageTimestamp -> requestReceivedTimestamp -> Vector\
+          \ default\n          \n          # Try 'ts' field first (etcd, ignition-server\
+          \ style)\n          if exists(parsed.ts) {\n            ts_value = parsed.ts\n\
+          \            if is_string(ts_value) {\n              # Handle ISO timestamp\
           \ strings\n              parsed_ts, ts_err = parse_timestamp(ts_value, \"\
           %+\")\n              if ts_err == null {\n                .timestamp = parsed_ts\n\
           \              } else {\n                # Try Unix timestamp in string\
@@ -31592,27 +31593,28 @@ objects:
           ]\n            iso_timestamp = join!(parts, \"\")\n            parsed_ts,\
           \ ts_err = parse_timestamp(iso_timestamp, \"%+\")\n            if ts_err\
           \ == null {\n              .timestamp = parsed_ts\n            }\n     \
-          \     }\n        }\n      }\n\n# Sinks\nsinks:\n  s3_logs:\n    type: \"\
-          aws_s3\"\n    inputs: [\"parse_plain_text_timestamps\"]\n    \n    # S3\
-          \ bucket configuration\n    bucket: \"${S3_BUCKET_NAME}\"\n    region: \"\
-          ${AWS_REGION}\"\n    \n    # Escape the following string so hive doesn't\
-          \ attempt to interpolate\n    # the same syntax as vector does during the\
-          \ selectorsyncset apply\n    # The weird brace syntax is how you escape\
-          \ these in the text/template\n    # go library\n    # Dynamic key prefix\
-          \ based on cluster/namespace/app/pod structure\n    key_prefix: '{{ \"{{\"\
-          \ }} mc_cluster_id {{ \"}}\" }}/{{ \"{{\" }} namespace {{ \"}}\" }}/{{ \"\
-          {{\" }} application {{ \"}}\" }}/{{ \"{{\" }} pod_name {{ \"}}\" }}/{{ \"\
-          {{\" }} container_name {{ \"}}\" }}/'\n    \n    # Batch settings\n    batch:\n\
-          \      max_bytes: 67108864  # 64MB\n      timeout_secs: 300    # 5 minutes\n\
-          \    \n    # Request settings\n    request:\n      retry_attempts: 3\n \
-          \     retry_initial_backoff_secs: 1\n      retry_max_duration_secs: 30\n\
-          \      timeout_secs: 30\n    \n    # Compression\n    compression: \"gzip\"\
-          \n    \n    # File format\n    encoding:\n      codec: \"json\"\n      framing:\n\
-          \        method: \"newline_delimited\"\n    \n    # Buffer configuration\n\
-          \    buffer:\n      type: \"disk\"\n      max_size: 10737418240  # 10GB\n\
-          \      when_full: \"block\"\n    \n    # Authentication via IRSA\n    auth:\n\
-          \      assume_role: \"${S3_WRITER_ROLE_ARN}\"\n      \n    # Add timestamp\
-          \ to filename\n    filename_append_uuid: true\n    filename_time_format:\
+          \     }\n        }\n      }\n\n# Sinks\nsinks:\n  prometheus:\n    type:\
+          \ prometheus_exporter\n    inputs:\n      - vector_metrics\n\n  s3_logs:\n\
+          \    type: \"aws_s3\"\n    inputs: [\"parse_plain_text_timestamps\"]\n \
+          \   \n    # S3 bucket configuration\n    bucket: \"${S3_BUCKET_NAME}\"\n\
+          \    region: \"${AWS_REGION}\"\n    \n    # Escape the following string\
+          \ so hive doesn't attempt to interpolate\n    # the same syntax as vector\
+          \ does during the selectorsyncset apply\n    # The weird brace syntax is\
+          \ how you escape these in the text/template\n    # go library\n    # Dynamic\
+          \ key prefix based on cluster/namespace/app/pod structure\n    key_prefix:\
+          \ '{{ \"{{\" }} mc_cluster_id {{ \"}}\" }}/{{ \"{{\" }} namespace {{ \"\
+          }}\" }}/{{ \"{{\" }} application {{ \"}}\" }}/{{ \"{{\" }} pod_name {{ \"\
+          }}\" }}/{{ \"{{\" }} container_name {{ \"}}\" }}/'\n    \n    # Batch settings\n\
+          \    batch:\n      max_bytes: 67108864  # 64MB\n      timeout_secs: 300\
+          \    # 5 minutes\n    \n    # Request settings\n    request:\n      retry_attempts:\
+          \ 3\n      retry_initial_backoff_secs: 1\n      retry_max_duration_secs:\
+          \ 30\n      timeout_secs: 30\n    \n    # Compression\n    compression:\
+          \ \"gzip\"\n    \n    # File format\n    encoding:\n      codec: \"json\"\
+          \n      framing:\n        method: \"newline_delimited\"\n    \n    # Buffer\
+          \ configuration\n    buffer:\n      type: \"disk\"\n      max_size: 10737418240\
+          \  # 10GB\n      when_full: \"block\"\n    \n    # Authentication via IRSA\n\
+          \    auth:\n      assume_role: \"${S3_WRITER_ROLE_ARN}\"\n      \n    #\
+          \ Add timestamp to filename\n    filename_append_uuid: true\n    filename_time_format:\
           \ \"%Y%m%d-%H%M%S\"\n    filename_extension: \"json.gz\"\n"
     - apiVersion: apps/v1
       kind: DaemonSet
@@ -31668,7 +31670,7 @@ objects:
               image: quay.io/openshift-logging/vector@sha256:05b889ef6a1cb6853ec0bf4f6a982df88325a3604e4a1083673d58a38709883d
               name: vector
               ports:
-              - containerPort: 8686
+              - containerPort: 9598
                 name: metrics
               resources:
                 limits:
@@ -31720,6 +31722,19 @@ objects:
                 path: /var/lib/vector-data
                 type: DirectoryOrCreate
               name: vector-data
+    - apiVersion: monitoring.rhobs/v1
+      kind: PodMonitor
+      metadata:
+        name: control-plane-log-forwarding
+        namespace: hypershift-control-plane-log-forwarding
+      spec:
+        podMetricsEndpoints:
+        - path: /metrics
+          port: metrics
+          scheme: http
+        selector:
+          matchLabels:
+            app: control-plane-log-forwarding
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:

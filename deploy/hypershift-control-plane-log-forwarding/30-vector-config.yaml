@@ -24,6 +24,9 @@ data:
         use_apiserver_cache: true
         namespace_annotation_fields:
           - metadata.labels
+
+      vector_metrics:
+        type: internal_metrics
     
     # Transforms
     transforms:  
@@ -188,6 +191,11 @@ data:
     
     # Sinks
     sinks:
+      prometheus:
+        type: prometheus_exporter
+        inputs:
+          - vector_metrics
+
       s3_logs:
         type: "aws_s3"
         inputs: ["parse_plain_text_timestamps"]
