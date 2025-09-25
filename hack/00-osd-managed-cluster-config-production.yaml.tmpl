@@ -31604,18 +31604,17 @@ objects:
           \ key prefix based on cluster/namespace/app/pod structure\n    key_prefix:\
           \ '{{ \"{{\" }} mc_cluster_id {{ \"}}\" }}/{{ \"{{\" }} namespace {{ \"\
           }}\" }}/{{ \"{{\" }} application {{ \"}}\" }}/{{ \"{{\" }} pod_name {{ \"\
-          }}\" }}/{{ \"{{\" }} container_name {{ \"}}\" }}/'\n    \n    # Batch settings\n\
-          \    batch:\n      max_bytes: 67108864  # 64MB\n      timeout_secs: 300\
-          \    # 5 minutes\n    \n    # Request settings\n    request:\n      retry_attempts:\
-          \ 3\n      retry_initial_backoff_secs: 1\n      retry_max_duration_secs:\
-          \ 30\n      timeout_secs: 30\n    \n    # Compression\n    compression:\
-          \ \"gzip\"\n    \n    # File format\n    encoding:\n      codec: \"json\"\
-          \n      framing:\n        method: \"newline_delimited\"\n    \n    # Buffer\
-          \ configuration\n    buffer:\n      type: \"disk\"\n      max_size: 10737418240\
-          \  # 10GB\n      when_full: \"block\"\n    \n    # Authentication via IRSA\n\
-          \    auth:\n      assume_role: \"${S3_WRITER_ROLE_ARN}\"\n      \n    #\
-          \ Add timestamp to filename\n    filename_append_uuid: true\n    filename_time_format:\
-          \ \"%Y%m%d-%H%M%S\"\n    filename_extension: \"json.gz\"\n"
+          }}\" }}/{{ \"{{\" }} container_name {{ \"}}\" }}/'\n    \n    # Request\
+          \ settings\n    request:\n      retry_attempts: 3\n      retry_initial_backoff_secs:\
+          \ 1\n      retry_max_duration_secs: 30\n      timeout_secs: 30\n    \n \
+          \   # Compression\n    compression: \"gzip\"\n    \n    # File format\n\
+          \    encoding:\n      codec: \"json\"\n      framing:\n        method: \"\
+          newline_delimited\"\n    \n    # Buffer configuration\n    buffer:\n   \
+          \   type: \"disk\"\n      max_size: 10737418240  # 10GB\n      when_full:\
+          \ \"block\"\n    \n    # Authentication via IRSA\n    auth:\n      assume_role:\
+          \ \"${S3_WRITER_ROLE_ARN}\"\n      \n    # Add timestamp to filename\n \
+          \   filename_append_uuid: true\n    filename_time_format: \"%Y%m%d-%H%M%S\"\
+          \n    filename_extension: \"json.gz\"\n"
     - apiVersion: apps/v1
       kind: DaemonSet
       metadata:
@@ -31697,6 +31696,7 @@ objects:
                 readOnly: true
               - mountPath: /vector-data-dir
                 name: vector-data
+            priorityClassName: hypershift-api-critical
             serviceAccountName: control-plane-log-forwarding
             tolerations:
             - key: hypershift.openshift.io/control-plane
