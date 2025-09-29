@@ -1,17 +1,16 @@
-# OADP Operator Installation for Red Hat Managed Clusters
+# OADP Operator Installation for Hive Clusters
 
-This directory contains OpenShift API for Data Protection (OADP) operator installation manifests specifically for Red Hat managed/internal clusters.
+This directory contains OpenShift API for Data Protection (OADP) operator installation manifests specifically for Hive-managed clusters.
 
 ## Overview
 
-This configuration installs the OADP operator on Red Hat managed clusters only. It is designed to work alongside the main OADP configuration in `/deploy/oadp-configuration/` which provides the DataProtectionApplication and backup schedules.
+This configuration installs the OADP operator on Hive clusters only. It is designed to work alongside the main OADP configuration in `/deploy/oadp-configuration/` which provides the DataProtectionApplication and backup schedules.
 
 ## Target Clusters
 
-This installation targets **Red Hat managed clusters only**:
-- Clusters with `api.openshift.com/customer = redhat`
+This installation targets **Hive clusters only**:
+- Clusters with `ext-managed.openshift.io/hive-shard: "true"` label
 - Excludes FedRAMP clusters
-- Excludes customer production clusters
 
 ## Components
 
