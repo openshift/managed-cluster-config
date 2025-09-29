@@ -39,11 +39,31 @@ The `hive-specific/` directory now contains the complete OADP operator installat
 - `${OADP_BACKUP_BUCKET}` - S3 bucket name for storing backups
 - `${AWS_REGION}` - AWS region where the bucket is located
 
-## Migration Timeline
+## Migration Strategy & Resource Handling
 
-1. ✅ **Phase 1**: Deploy OADP operator and configuration to Hive clusters
+### Resource Apply Mode: "Upsert"
+The hive-specific configuration uses `resourceApplyMode: "Upsert"` which means:
+- ✅ **Safe Deployment**: New OADP resources will be created alongside existing Velero resources
+- ✅ **No Conflicts**: Old Velero resources will NOT be automatically deleted
+- ✅ **Coexistence**: Both MVO and OADP can run simultaneously during transition
+- ⚠️ **Manual Cleanup**: Old Velero resources require separate cleanup phase
+
+### Migration Timeline
+
+1. ✅ **Phase 1**: Deploy OADP operator and configuration to Hive clusters (this PR)
+   - OADP operator installed in `openshift-adp` namespace
+   - MVO continues running in `openshift-velero` namespace
+   - Both backup systems coexist safely
+
 2. 🔄 **Phase 2**: Validate OADP functionality and backup operations
-3. 🔄 **Phase 3**: Remove MVO from clusters with successful OADP deployment
+   - Test OADP backups and restores
+   - Verify environment variable configuration
+   - Monitor both systems for conflicts
+
+3. 🔄 **Phase 3**: Clean up old Velero resources (future PR with Sync mode)
+   - Create cleanup SyncSet with `resourceApplyMode: "Sync"`
+   - Remove old Velero ClusterRoles, Schedules, and MVO components
+   - Complete migration to OADP-only
 
 ## Related Issues
 
