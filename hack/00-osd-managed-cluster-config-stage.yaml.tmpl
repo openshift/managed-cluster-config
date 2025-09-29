@@ -32459,200 +32459,6 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: oadp-configuration
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-      matchExpressions:
-      - key: api.openshift.com/product
-        operator: In
-        values:
-        - osd
-        - rosa
-      - key: api.openshift.com/fedramp
-        operator: NotIn
-        values:
-        - 'true'
-    resourceApplyMode: Sync
-    resources:
-    - apiVersion: oadp.openshift.io/v1alpha1
-      kind: DataProtectionApplication
-      metadata:
-        name: dpa-sample
-        namespace: openshift-adp
-      spec:
-        configuration:
-          velero:
-            defaultPlugins:
-            - openshift
-            - aws
-            resourceAllocations:
-              limits:
-                cpu: '1'
-                memory: 1Gi
-              requests:
-                cpu: 500m
-                memory: 256Mi
-            logLevel: info
-            podConfig:
-              nodeSelector:
-                kubernetes.io/os: linux
-        backupLocations:
-        - velero:
-            provider: aws
-            default: true
-            config:
-              region: ${AWS_REGION}
-              profile: default
-            credential:
-              name: cloud-credentials
-              key: cloud
-            objectStorage:
-              bucket: ${OADP_BACKUP_BUCKET}
-              prefix: velero
-    - apiVersion: velero.io/v1
-      kind: Backup
-      metadata:
-        name: oadp-validation-backup
-        namespace: openshift-adp
-        labels:
-          managed.openshift.io/oadp-validation: 'true'
-      spec:
-        includedNamespaces:
-        - openshift-adp
-        excludedResources:
-        - events
-        - events.events.k8s.io
-        snapshotVolumes: false
-        ttl: 1h0m0s
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    labels:
-      managed.openshift.io/gitHash: ${IMAGE_TAG}
-      managed.openshift.io/gitRepoName: ${REPO_NAME}
-      managed.openshift.io/osd: 'true'
-    name: oadp-configuration-hive-specific
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-        ext-managed.openshift.io/hive-shard: 'true'
-      matchExpressions:
-      - key: api.openshift.com/fedramp
-        operator: NotIn
-        values:
-        - 'true'
-    resourceApplyMode: Sync
-    resources:
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        labels:
-          managed.openshift.io/aggregate-to-dedicated-admins: cluster
-        name: oadp-schedule-admins-cluster
-      rules:
-      - apiGroups:
-        - velero.io
-        attributeRestrictions: null
-        resources:
-        - schedules
-        - backups
-        - restores
-        verbs:
-        - '*'
-      - apiGroups:
-        - oadp.openshift.io
-        attributeRestrictions: null
-        resources:
-        - dataprotectionapplications
-        verbs:
-        - get
-        - list
-        - watch
-    - apiVersion: velero.io/v1
-      kind: Schedule
-      metadata:
-        name: 5min-object-backup
-        namespace: openshift-adp
-      spec:
-        schedule: '*/5 * * * *'
-        template:
-          includedNamespaces:
-          - '*'
-          excludedResources:
-          - imagetags.image.openshift.io
-          - images.image.openshift.io
-          - oauthaccesstokens.oauth.openshift.io
-          - oauthauthorizetokens.oauth.openshift.io
-          - templateinstances.template.openshift.io
-          - clusterserviceversions.operators.coreos.com
-          - packagemanifests.packages.operators.coreos.com
-          - operatorgroups.operators.coreos.com
-          - subscriptions.operators.coreos.com
-          - servicebrokers.servicecatalog.k8s.io
-          - servicebindings.servicecatalog.k8s.io
-          - serviceclasses.servicecatalog.k8s.io
-          - serviceinstances.servicecatalog.k8s.io
-          - serviceplans.servicecatalog.k8s.io
-          - events.events.k8s.io
-          - events
-          snapshotVolumes: false
-          ttl: 0h25m0s
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    labels:
-      managed.openshift.io/gitHash: ${IMAGE_TAG}
-      managed.openshift.io/gitRepoName: ${REPO_NAME}
-      managed.openshift.io/osd: 'true'
-    name: oadp-operator-install
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-        ext-managed.openshift.io/hive-shard: 'true'
-      matchExpressions:
-      - key: api.openshift.com/fedramp
-        operator: NotIn
-        values:
-        - 'true'
-    resourceApplyMode: Sync
-    resources:
-    - apiVersion: operators.coreos.com/v1alpha1
-      kind: Subscription
-      metadata:
-        name: openshift-adp
-        namespace: openshift-adp
-      spec:
-        channel: stable
-        name: redhat-oadp-operator
-        source: redhat-operators
-        sourceNamespace: openshift-marketplace
-        installPlanApproval: Automatic
-    - apiVersion: v1
-      kind: Namespace
-      metadata:
-        name: openshift-adp
-        labels:
-          name: openshift-adp
-          openshift.io/cluster-monitoring: 'true'
-    - apiVersion: operators.coreos.com/v1
-      kind: OperatorGroup
-      metadata:
-        name: oadp-operator-group
-        namespace: openshift-adp
-      spec:
-        targetNamespaces:
-        - openshift-adp
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    labels:
-      managed.openshift.io/gitHash: ${IMAGE_TAG}
-      managed.openshift.io/gitRepoName: ${REPO_NAME}
-      managed.openshift.io/osd: 'true'
     name: ocm-agent-operator-managedfleetnotifications
   spec:
     clusterDeploymentSelector:
@@ -50499,20 +50305,49 @@ objects:
       metadata:
         labels:
           managed.openshift.io/aggregate-to-dedicated-admins: cluster
-        name: velero-schedule-admins-cluster
+        name: oadp-schedule-admins-cluster
       rules:
       - apiGroups:
         - velero.io
         attributeRestrictions: null
         resources:
         - schedules
+        - backups
+        - restores
         verbs:
         - '*'
+      - apiGroups:
+        - oadp.openshift.io
+        attributeRestrictions: null
+        resources:
+        - dataprotectionapplications
+        verbs:
+        - get
+        - list
+        - watch
+    - apiVersion: operators.coreos.com/v1alpha1
+      kind: Subscription
+      metadata:
+        name: openshift-adp
+        namespace: openshift-adp
+      spec:
+        channel: stable
+        name: redhat-oadp-operator
+        source: redhat-operators
+        sourceNamespace: openshift-marketplace
+        installPlanApproval: Automatic
+    - apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: openshift-adp
+        labels:
+          name: openshift-adp
+          openshift.io/cluster-monitoring: 'true'
     - apiVersion: velero.io/v1
       kind: Schedule
       metadata:
         name: 5min-object-backup
-        namespace: openshift-velero
+        namespace: openshift-adp
       spec:
         schedule: '*/5 * * * *'
         template:
@@ -50537,3 +50372,61 @@ objects:
           - events
           snapshotVolumes: false
           ttl: 0h25m0s
+    - apiVersion: operators.coreos.com/v1
+      kind: OperatorGroup
+      metadata:
+        name: oadp-operator-group
+        namespace: openshift-adp
+      spec:
+        targetNamespaces:
+        - openshift-adp
+    - apiVersion: oadp.openshift.io/v1alpha1
+      kind: DataProtectionApplication
+      metadata:
+        name: dpa-sample
+        namespace: openshift-adp
+      spec:
+        configuration:
+          velero:
+            defaultPlugins:
+            - openshift
+            - aws
+            resourceAllocations:
+              limits:
+                cpu: '1'
+                memory: 1Gi
+              requests:
+                cpu: 500m
+                memory: 256Mi
+            logLevel: info
+            podConfig:
+              nodeSelector:
+                kubernetes.io/os: linux
+        backupLocations:
+        - velero:
+            provider: aws
+            default: true
+            config:
+              region: ${AWS_REGION}
+              profile: default
+            credential:
+              name: cloud-credentials
+              key: cloud
+            objectStorage:
+              bucket: ${OADP_BACKUP_BUCKET}
+              prefix: velero
+    - apiVersion: velero.io/v1
+      kind: Backup
+      metadata:
+        name: oadp-validation-backup
+        namespace: openshift-adp
+        labels:
+          managed.openshift.io/oadp-validation: 'true'
+      spec:
+        includedNamespaces:
+        - openshift-adp
+        excludedResources:
+        - events
+        - events.events.k8s.io
+        snapshotVolumes: false
+        ttl: 1h0m0s
