@@ -1,18 +1,21 @@
-# OADP Configuration for Red Hat Managed Clusters
+# OADP Configuration for Red Hat Managed Clusters (Enable-Only)
 
-This directory contains OpenShift API for Data Protection (OADP) operator configurations to replace the deprecated Managed Velero Operator (MVO) on Red Hat managed clusters.
+This directory contains OpenShift API for Data Protection (OADP) configurations to enable backup and restore functionality on clusters where the OADP operator is already installed.
 
 ## Overview
 
-OADP provides backup and restore capabilities for OpenShift clusters and is the supported data protection solution for Red Hat managed clusters going forward.
+OADP provides backup and restore capabilities for OpenShift clusters and is the supported data protection solution for Red Hat managed clusters going forward. This configuration assumes the OADP operator is pre-installed and only enables/configures the backup functionality.
+
+## Prerequisites
+
+- OADP operator must be pre-installed in `openshift-adp` namespace
+- Cloud credentials must be properly configured for backup storage access
+- Environment variables `${OADP_BACKUP_BUCKET}` and `${AWS_REGION}` must be set
 
 ## Components
 
 ### Main Configuration
-- `100-oadp.Subscription.yaml` - OADP operator subscription
-- `110-oadp.Namespace.yaml` - openshift-adp namespace creation
-- `120-oadp.OperatorGroup.yaml` - Operator group for OADP
-- `130-oadp.DataProtectionApplication.yaml` - Main DPA configuration
+- `130-oadp.DataProtectionApplication.yaml` - Main DPA configuration (enables OADP)
 - `140-oadp.TestBackup.yaml` - Validation backup for testing
 
 ### Hive-Specific Configuration
@@ -44,16 +47,17 @@ This configuration is deployed via Hive SelectorSyncSets to clusters matching th
 
 ## Validation
 
-After deployment, validate the installation:
+After deployment, validate the OADP configuration:
 
-1. Verify OADP operator is running:
+1. Verify OADP operator is already running (prerequisite):
    ```bash
    oc get pods -n openshift-adp
    ```
 
-2. Check DataProtectionApplication status:
+2. Check DataProtectionApplication was created and is ready:
    ```bash
    oc get dpa -n openshift-adp
+   oc describe dpa dpa-sample -n openshift-adp
    ```
 
 3. Verify backup schedule is created:
