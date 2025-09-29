@@ -1,0 +1,19 @@
+deploymentMode: "SelectorSyncSet"
+selectorSyncSet:
+  matchExpressions:
+  # Target Red Hat managed/internal clusters only
+  - key: api.openshift.com/customer
+    operator: In
+    values:
+    - redhat
+  # Exclude FedRAMP clusters
+  - key: api.openshift.com/fedramp
+    operator: NotIn
+    values:
+    - "true"
+  # Exclude customer production clusters
+  - key: managed.openshift.io/customer-cluster
+    operator: NotIn
+    values:
+    - "true"
+  resourceApplyMode: "Sync"

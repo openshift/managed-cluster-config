@@ -32476,32 +32476,6 @@ objects:
         - 'true'
     resourceApplyMode: Sync
     resources:
-    - apiVersion: operators.coreos.com/v1alpha1
-      kind: Subscription
-      metadata:
-        name: openshift-adp
-        namespace: openshift-adp
-      spec:
-        channel: stable
-        name: redhat-oadp-operator
-        source: redhat-operators
-        sourceNamespace: openshift-marketplace
-        installPlanApproval: Automatic
-    - apiVersion: v1
-      kind: Namespace
-      metadata:
-        name: openshift-adp
-        labels:
-          name: openshift-adp
-          openshift.io/cluster-monitoring: 'true'
-    - apiVersion: operators.coreos.com/v1
-      kind: OperatorGroup
-      metadata:
-        name: oadp-operator-group
-        namespace: openshift-adp
-      spec:
-        targetNamespaces:
-        - openshift-adp
     - apiVersion: oadp.openshift.io/v1alpha1
       kind: DataProtectionApplication
       metadata:
@@ -32626,6 +32600,59 @@ objects:
           - events
           snapshotVolumes: false
           ttl: 0h25m0s
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: oadp-operator-install
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/customer
+        operator: In
+        values:
+        - redhat
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+      - key: managed.openshift.io/customer-cluster
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: operators.coreos.com/v1alpha1
+      kind: Subscription
+      metadata:
+        name: openshift-adp
+        namespace: openshift-adp
+      spec:
+        channel: stable
+        name: redhat-oadp-operator
+        source: redhat-operators
+        sourceNamespace: openshift-marketplace
+        installPlanApproval: Automatic
+    - apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: openshift-adp
+        labels:
+          name: openshift-adp
+          openshift.io/cluster-monitoring: 'true'
+    - apiVersion: operators.coreos.com/v1
+      kind: OperatorGroup
+      metadata:
+        name: oadp-operator-group
+        namespace: openshift-adp
+      spec:
+        targetNamespaces:
+        - openshift-adp
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
