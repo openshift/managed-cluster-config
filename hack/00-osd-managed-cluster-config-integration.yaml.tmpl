@@ -9040,7 +9040,6 @@ objects:
                         - openshift-rbac-permissions
                         - openshift-splunk-forwarder-operator
                         - openshift-managed-upgrade-operator
-                        - openshift-velero
                         - openshift-ocm-agent-operator
                         - openshift-must-gather-operator
                         - openshift-addon-operator
@@ -9076,7 +9075,6 @@ objects:
                         - openshift-operator-lifecycle-manager
                         - openshift-rbac-permissions
                         - openshift-splunk-forwarder-operator
-                        - openshift-velero
                         - openshift-managed-upgrade-operator
                         - openshift-ocm-agent-operator
                         - openshift-must-gather-operator
@@ -32396,51 +32394,6 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: managed-velero-operator-rolebinding
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-    resourceApplyMode: Sync
-    resources:
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: Role
-      metadata:
-        creationTimestamp: null
-        name: cluster-config-v1-reader
-        namespace: kube-system
-      rules:
-      - apiGroups:
-        - ''
-        resourceNames:
-        - cluster-config-v1
-        resources:
-        - configmaps
-        verbs:
-        - get
-    - kind: RoleBinding
-      apiVersion: rbac.authorization.k8s.io/v1
-      metadata:
-        name: managed-velero-operator-cluster-config-v1-reader
-        namespace: kube-system
-        labels:
-          owner: managed-velero-operator
-          owner.namespace: managed-velero-operator
-      subjects:
-      - kind: ServiceAccount
-        name: managed-velero-operator
-        namespace: openshift-velero
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: Role
-        name: cluster-config-v1-reader
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    labels:
-      managed.openshift.io/gitHash: ${IMAGE_TAG}
-      managed.openshift.io/gitRepoName: ${REPO_NAME}
-      managed.openshift.io/osd: 'true'
     name: management-cluster-node-update-concurrency
   spec:
     clusterDeploymentSelector:
@@ -41437,9 +41390,9 @@ objects:
           \  - name: openshift-route-monitor-operator\n  - name: openshift-scanning\n\
           \  - name: openshift-security\n  - name: openshift-splunk-forwarder-operator\n\
           \  - name: openshift-sre-pruning\n  - name: openshift-suricata\n  - name:\
-          \ openshift-validation-webhook\n  - name: openshift-velero\n  - name: openshift-monitoring\n\
-          \  - name: openshift\n  - name: openshift-cluster-version\n  - name: goalert\n\
-          \  - name: keycloak\n  - name: configure-goalert-operator\n"
+          \ openshift-validation-webhook\n  - name: openshift-monitoring\n  - name:\
+          \ openshift\n  - name: openshift-cluster-version\n  - name: goalert\n  -\
+          \ name: keycloak\n  - name: configure-goalert-operator\n"
     - apiVersion: v1
       kind: ConfigMap
       metadata:
@@ -42284,14 +42237,13 @@ objects:
           \ | {{.spec.nodeName}} {{\"\\n\" -}} {{end}}{{end}}{{end}}'|grep \"node-role.kubernetes.io/infra\"\
           \ |grep -vE ${infranodes_regexp}`\n      if [ ! -z  \"$misscheduled_pods\"\
           \ ]; then\n      # --ignore-not-found=true so that for STS clusters this\
-          \ doesn't fail when this can't find CIO or velero pods\n        while read\
-          \ line ; do cmd=`echo $line|awk -F'|' '{print \"oc -n \" $1 \" delete po\
-          \ --ignore-not-found=true \" $2}'`;echo \"INFO: $cmd\"; eval $cmd;done <<<\
-          \ \"$misscheduled_pods\"\n      else\n        echo \"INFO: no misscheduled\
-          \ pods in $ns namespaces\"\n      fi\n    done\n}\n\necho \"INFO: Rebalancing\
-          \ openshift-dns/dns-default Daemonset...\"\nkubeDaemonsetMisscheduled \"\
-          openshift-dns\" \"dns.operator.openshift.io/daemonset-dns=default\"\n\n\
-          echo \"INFO: Rebalancing prometheus pods...\"\nrebalancePods prometheus\
+          \ doesn't fail when this can't find pods\n        while read line ; do cmd=`echo\
+          \ $line|awk -F'|' '{print \"oc -n \" $1 \" delete po --ignore-not-found=true\
+          \ \" $2}'`;echo \"INFO: $cmd\"; eval $cmd;done <<< \"$misscheduled_pods\"\
+          \n      else\n        echo \"INFO: no misscheduled pods in $ns namespaces\"\
+          \n      fi\n    done\n}\n\necho \"INFO: Rebalancing openshift-dns/dns-default\
+          \ Daemonset...\"\nkubeDaemonsetMisscheduled \"openshift-dns\" \"dns.operator.openshift.io/daemonset-dns=default\"\
+          \n\necho \"INFO: Rebalancing prometheus pods...\"\nrebalancePods prometheus\
           \ openshift-monitoring app prometheus-data\n\necho \"INFO: Rebalancing UWM\
           \ prometheus pods...\"\nrebalancePods prometheus openshift-user-workload-monitoring\
           \ app prometheus-user-workload-db\n\necho \"INFO: Rebalancing alertmanager\
@@ -42322,8 +42274,7 @@ objects:
           \  openshift-cloud-ingress-operator openshift-custom-domains-operator openshift-image-registry\
           \ openshift-managed-node-metadata-operator openshift-monitoring openshift-must-gather-operator\
           \ openshift-network-operator openshift-ocm-agent-operator openshift-osd-metrics\
-          \ openshift-rbac-permissions openshift-route-monitor-operator openshift-splunk-forwarder-operator\
-          \ openshift-velero"
+          \ openshift-rbac-permissions openshift-route-monitor-operator openshift-splunk-forwarder-operator"
     - apiVersion: batch/v1
       kind: CronJob
       metadata:
@@ -42435,46 +42386,6 @@ objects:
       metadata:
         name: osd-rebalance-infra-nodes-openshift-pod-rebalance
         namespace: openshift-custom-domains-operator
-      subjects:
-      - kind: ServiceAccount
-        name: osd-rebalance-infra-nodes
-        namespace: openshift-monitoring
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: ClusterRole
-        name: osd-rebalance-infra-nodes-openshift-pod-rebalance
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    labels:
-      managed.openshift.io/gitHash: ${IMAGE_TAG}
-      managed.openshift.io/gitRepoName: ${REPO_NAME}
-      managed.openshift.io/osd: 'true'
-    name: osd-rebalance-infra-nodes-non-fr-sts-wif
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-      matchExpressions:
-      - key: api.openshift.com/sts
-        operator: NotIn
-        values:
-        - 'true'
-      - key: api.openshift.com/wif
-        operator: NotIn
-        values:
-        - 'true'
-      - key: api.openshift.com/fedramp
-        operator: NotIn
-        values:
-        - 'true'
-    resourceApplyMode: Upsert
-    resources:
-    - kind: RoleBinding
-      apiVersion: rbac.authorization.k8s.io/v1
-      metadata:
-        name: osd-rebalance-infra-nodes-openshift-pod-rebalance
-        namespace: openshift-velero
       subjects:
       - kind: ServiceAccount
         name: osd-rebalance-infra-nodes
@@ -42776,11 +42687,6 @@ objects:
     - apiVersion: v1
       kind: ServiceAccount
       metadata:
-        name: managed-velero-operator
-        namespace: openshift-velero
-    - apiVersion: v1
-      kind: ServiceAccount
-      metadata:
         name: ocm-agent-operator
         namespace: openshift-ocm-agent-operator
 - apiVersion: hive.openshift.io/v1
@@ -42887,7 +42793,7 @@ objects:
                   - -c
                   - "for NS in openshift-cloud-ingress-operator openshift-custom-domains-operator\
                     \ openshift-managed-upgrade-operator openshift-monitoring openshift-rbac-permissions\
-                    \ openshift-splunk-forwarder-operator openshift-velero openshift-ocm-agent-operator;\n\
+                    \ openshift-splunk-forwarder-operator openshift-ocm-agent-operator;\n\
                     do\n  for SA in $(oc -n $NS get serviceaccount --ignore-not-found\
                     \ -o jsonpath='{.items[?(@.metadata.ownerReferences[0].kind==\"\
                     ClusterServiceVersion\")].metadata.name}');\n  do\n    echo \"\
@@ -42945,11 +42851,6 @@ objects:
       metadata:
         name: splunk-forwarder-operator
         namespace: openshift-splunk-forwarder-operator
-    - apiVersion: v1
-      kind: ServiceAccount
-      metadata:
-        name: managed-velero-operator
-        namespace: openshift-velero
     - apiVersion: v1
       kind: ServiceAccount
       metadata:
@@ -44367,7 +44268,6 @@ objects:
             - openshift-rbac-permissions
             - openshift-splunk-forwarder-operator
             - openshift-managed-upgrade-operator
-            - openshift-velero
             - openshift-ocm-agent-operator
             - openshift-must-gather-operator
             - openshift-addon-operator
@@ -44400,7 +44300,6 @@ objects:
             - openshift-operator-lifecycle-manager
             - openshift-rbac-permissions
             - openshift-splunk-forwarder-operator
-            - openshift-velero
             - openshift-managed-upgrade-operator
             - openshift-ocm-agent-operator
             - openshift-must-gather-operator
@@ -46689,54 +46588,6 @@ objects:
       kind: PrometheusRule
       metadata:
         labels:
-          prometheus: sre-managed-velero-operator-alerts
-          role: alert-rules
-        name: sre-managed-velero-operator-alerts
-        namespace: openshift-monitoring
-      spec:
-        groups:
-        - name: sre-managed-velero-operator-alerts
-          rules:
-          - alert: VeleroHourlyObjectBackupsMissedConsecutively
-            expr: 'time() - clamp_min(velero_backup_last_successful_timestamp{namespace="openshift-velero",schedule="hourly-object-backup"},
-
-              scalar(max(kube_deployment_created{namespace="openshift-velero",deployment="velero"})))
-              > 10800 + 600
-
-              '
-            labels:
-              severity: warning
-              namespace: '{{ $labels.namespace }}'
-            annotations:
-              message: Consecutive hourly Velero backups have not successfully completed
-          - alert: VeleroDailyFullBackupMissed
-            expr: 'time() - clamp_min(velero_backup_last_successful_timestamp{namespace="openshift-velero",schedule="daily-full-backup"},
-
-              scalar(max(kube_deployment_created{namespace="openshift-velero",deployment="velero"})))
-              > 86400 + 600
-
-              '
-            labels:
-              severity: warning
-              namespace: '{{ $labels.namespace }}'
-            annotations:
-              message: The daily Velero backup has not successfully completed
-          - alert: VeleroWeeklyFullBackupMissed
-            expr: 'time() - clamp_min(velero_backup_last_successful_timestamp{namespace="openshift-velero",schedule="weekly-full-backup"},
-
-              scalar(max(kube_deployment_created{namespace="openshift-velero",deployment="velero"})))
-              > 604800 + 600
-
-              '
-            labels:
-              severity: warning
-              namespace: '{{ $labels.namespace }}'
-            annotations:
-              message: The weekly Velero backup has not successfully completed
-    - apiVersion: monitoring.coreos.com/v1
-      kind: PrometheusRule
-      metadata:
-        labels:
           prometheus: sre-node-filedescriptor-limit
           role: alert-rules
         name: sre-node-filedescriptor-limit
@@ -47653,7 +47504,7 @@ objects:
               "version", ".*") * on () group_right (_id, cluster_version, provider)
               sum by (exported_namespace, name, version, channel, package) ( label_replace(csv_succeeded,
               "name", "$1", "name", "([^.]+).*") ^ on (name) group_left (channel,
-              package) subscription_sync_total{name=~"addon-operator|aws-vpce-operator|custom-domains-operator|managed-node-metadata-operator|managed-upgrade-operator|must-gather-operator|ocm-agent-operator|osd-metrics-exporter|rbac-permissions-operator|openshift-splunk-forwarder-operator|aws-account-operator|certman-operator|cloud-ingress-operator|configure-alertmanager-operator|deadmanssnitch-operator|deployment-validation-operator|dynatrace-operator|gcp-project-operator|managed-velero-operator|observability-operator|opentelemetry-operator|pagerduty-operator|route-monitor-operator"}
+              package) subscription_sync_total{name=~"addon-operator|aws-vpce-operator|custom-domains-operator|managed-node-metadata-operator|managed-upgrade-operator|must-gather-operator|ocm-agent-operator|osd-metrics-exporter|rbac-permissions-operator|openshift-splunk-forwarder-operator|aws-account-operator|certman-operator|cloud-ingress-operator|configure-alertmanager-operator|deadmanssnitch-operator|deployment-validation-operator|dynatrace-operator|gcp-project-operator|observability-operator|opentelemetry-operator|pagerduty-operator|route-monitor-operator"}
               )
             record: sre:operators:succeeded:raw
           - expr: sre:operators:succeeded:raw{exported_namespace =~ "openshift-.*"}
@@ -50185,212 +50036,3 @@ objects:
         selector:
           matchLabels:
             app: ethtool-exporter
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    labels:
-      managed.openshift.io/gitHash: ${IMAGE_TAG}
-      managed.openshift.io/gitRepoName: ${REPO_NAME}
-      managed.openshift.io/osd: 'true'
-    name: velero-configuration
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-      matchExpressions:
-      - key: api.openshift.com/sts
-        operator: NotIn
-        values:
-        - 'true'
-      - key: api.openshift.com/wif
-        operator: NotIn
-        values:
-        - 'true'
-      - key: api.openshift.com/fedramp
-        operator: NotIn
-        values:
-        - 'true'
-    resourceApplyMode: Sync
-    resources:
-    - apiVersion: managed.openshift.io/v1alpha2
-      kind: VeleroInstall
-      metadata:
-        name: cluster
-        namespace: openshift-velero
-    - apiVersion: velero.io/v1
-      kind: Schedule
-      metadata:
-        name: daily-full-backup
-        namespace: openshift-velero
-      spec:
-        schedule: 0 1 * * *
-        template:
-          includedNamespaces:
-          - '*'
-          excludedResources:
-          - imagetags.image.openshift.io
-          - images.image.openshift.io
-          - oauthaccesstokens.oauth.openshift.io
-          - oauthauthorizetokens.oauth.openshift.io
-          - templateinstances.template.openshift.io
-          - clusterserviceversions.operators.coreos.com
-          - packagemanifests.packages.operators.coreos.com
-          - operatorgroups.operators.coreos.com
-          - subscriptions.operators.coreos.com
-          - servicebrokers.servicecatalog.k8s.io
-          - servicebindings.servicecatalog.k8s.io
-          - serviceclasses.servicecatalog.k8s.io
-          - serviceinstances.servicecatalog.k8s.io
-          - serviceplans.servicecatalog.k8s.io
-          - events.events.k8s.io
-          - events
-          snapshotVolumes: false
-          ttl: 168h0m0s
-    - apiVersion: velero.io/v1
-      kind: Schedule
-      metadata:
-        name: hourly-object-backup
-        namespace: openshift-velero
-      spec:
-        schedule: 17 * * * *
-        template:
-          includedNamespaces:
-          - '*'
-          excludedResources:
-          - imagetags.image.openshift.io
-          - images.image.openshift.io
-          - oauthaccesstokens.oauth.openshift.io
-          - oauthauthorizetokens.oauth.openshift.io
-          - templateinstances.template.openshift.io
-          - clusterserviceversions.operators.coreos.com
-          - packagemanifests.packages.operators.coreos.com
-          - operatorgroups.operators.coreos.com
-          - subscriptions.operators.coreos.com
-          - servicebrokers.servicecatalog.k8s.io
-          - servicebindings.servicecatalog.k8s.io
-          - serviceclasses.servicecatalog.k8s.io
-          - serviceinstances.servicecatalog.k8s.io
-          - serviceplans.servicecatalog.k8s.io
-          - events.events.k8s.io
-          - events
-          snapshotVolumes: false
-          ttl: 24h0m0s
-    - apiVersion: velero.io/v1
-      kind: Schedule
-      metadata:
-        name: weekly-full-backup
-        namespace: openshift-velero
-      spec:
-        schedule: 0 2 * * 1
-        template:
-          includedNamespaces:
-          - '*'
-          excludedResources:
-          - imagetags.image.openshift.io
-          - images.image.openshift.io
-          - oauthaccesstokens.oauth.openshift.io
-          - oauthauthorizetokens.oauth.openshift.io
-          - templateinstances.template.openshift.io
-          - clusterserviceversions.operators.coreos.com
-          - packagemanifests.packages.operators.coreos.com
-          - operatorgroups.operators.coreos.com
-          - subscriptions.operators.coreos.com
-          - servicebrokers.servicecatalog.k8s.io
-          - servicebindings.servicecatalog.k8s.io
-          - serviceclasses.servicecatalog.k8s.io
-          - serviceinstances.servicecatalog.k8s.io
-          - serviceplans.servicecatalog.k8s.io
-          - events.events.k8s.io
-          - events
-          snapshotVolumes: false
-          ttl: 720h0m0s
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: Role
-      metadata:
-        name: mvo-migration-reader
-        namespace: openshift-velero
-      rules:
-      - apiGroups:
-        - ''
-        resources:
-        - secrets
-        resourceNames:
-        - velero-iam-credentials
-        verbs:
-        - get
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: RoleBinding
-      metadata:
-        name: mvo-migration-reader
-        namespace: openshift-velero
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: Role
-        name: mvo-migration-reader
-      subjects:
-      - apiGroup: rbac.authorization.k8s.io
-        kind: Group
-        name: dedicated-admins
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    labels:
-      managed.openshift.io/gitHash: ${IMAGE_TAG}
-      managed.openshift.io/gitRepoName: ${REPO_NAME}
-      managed.openshift.io/osd: 'true'
-    name: velero-configuration-hive-specific
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-        ext-managed.openshift.io/hive-shard: 'true'
-      matchExpressions:
-      - key: api.openshift.com/fedramp
-        operator: NotIn
-        values:
-        - 'true'
-    resourceApplyMode: Sync
-    resources:
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        labels:
-          managed.openshift.io/aggregate-to-dedicated-admins: cluster
-        name: velero-schedule-admins-cluster
-      rules:
-      - apiGroups:
-        - velero.io
-        attributeRestrictions: null
-        resources:
-        - schedules
-        verbs:
-        - '*'
-    - apiVersion: velero.io/v1
-      kind: Schedule
-      metadata:
-        name: 5min-object-backup
-        namespace: openshift-velero
-      spec:
-        schedule: '*/5 * * * *'
-        template:
-          includedNamespaces:
-          - '*'
-          excludedResources:
-          - imagetags.image.openshift.io
-          - images.image.openshift.io
-          - oauthaccesstokens.oauth.openshift.io
-          - oauthauthorizetokens.oauth.openshift.io
-          - templateinstances.template.openshift.io
-          - clusterserviceversions.operators.coreos.com
-          - packagemanifests.packages.operators.coreos.com
-          - operatorgroups.operators.coreos.com
-          - subscriptions.operators.coreos.com
-          - servicebrokers.servicecatalog.k8s.io
-          - servicebindings.servicecatalog.k8s.io
-          - serviceclasses.servicecatalog.k8s.io
-          - serviceinstances.servicecatalog.k8s.io
-          - serviceplans.servicecatalog.k8s.io
-          - events.events.k8s.io
-          - events
-          snapshotVolumes: false
-          ttl: 0h25m0s

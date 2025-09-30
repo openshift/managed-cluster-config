@@ -128,7 +128,7 @@ data:
           # each pod on the list needs to be rescheduled
           misscheduled_pods=`oc -n $ns get po -o go-template='{{range .items}}{{$isjob := index .metadata.labels "job-name"}}{{$namespace := .metadata.namespace}}{{$name := .metadata.name}}{{$affinity := .spec.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution }}{{if not $isjob}}{{if $affinity}}{{- $namespace }} | {{$name}} | {{$affinity}} | {{.spec.nodeName}} {{"\n" -}} {{end}}{{end}}{{end}}'|grep "node-role.kubernetes.io/infra" |grep -vE ${infranodes_regexp}`
           if [ ! -z  "$misscheduled_pods" ]; then
-          # --ignore-not-found=true so that for STS clusters this doesn't fail when this can't find CIO or velero pods
+          # --ignore-not-found=true so that for STS clusters this doesn't fail when this can't find pods
             while read line ; do cmd=`echo $line|awk -F'|' '{print "oc -n " $1 " delete po --ignore-not-found=true " $2}'`;echo "INFO: $cmd"; eval $cmd;done <<< "$misscheduled_pods"
           else
             echo "INFO: no misscheduled pods in $ns namespaces"
@@ -190,4 +190,4 @@ data:
     waitRunningPods splunk-heavy-forwarder openshift-security name
 
     echo "INFO: Rebalancing misscheduled pods from openshift- namespaces"
-    infraPodsMisscheduled  openshift-cloud-ingress-operator openshift-custom-domains-operator openshift-image-registry openshift-managed-node-metadata-operator openshift-monitoring openshift-must-gather-operator openshift-network-operator openshift-ocm-agent-operator openshift-osd-metrics openshift-rbac-permissions openshift-route-monitor-operator openshift-splunk-forwarder-operator openshift-velero
+    infraPodsMisscheduled  openshift-cloud-ingress-operator openshift-custom-domains-operator openshift-image-registry openshift-managed-node-metadata-operator openshift-monitoring openshift-must-gather-operator openshift-network-operator openshift-ocm-agent-operator openshift-osd-metrics openshift-rbac-permissions openshift-route-monitor-operator openshift-splunk-forwarder-operator
