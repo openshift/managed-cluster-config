@@ -29747,6 +29747,106 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: backplane-srep-hypershift-rhobs-cluster
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: ext-managed.openshift.io/rhobs-regional-cluster
+        operator: In
+        values:
+        - 'true'
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-srep-rhobs-regional-cluster-project
+      rules:
+      - apiGroups:
+        - monitoring.rhobs
+        resources:
+        - alertmanagers
+        - monitoringstacks
+        - prometheuses
+        - prometheusrules
+        - thanosqueriers
+        - servicemonitors
+        verbs:
+        - get
+        - list
+        - watch
+        - patch
+        - update
+        - delete
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - alertmanagers
+        - monitoringstacks
+        - prometheuses
+        - prometheusrules
+        - thanosqueriers
+        - servicemonitors
+        verbs:
+        - get
+        - list
+        - watch
+        - patch
+        - update
+        - delete
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        - configmaps
+        - poddisruptionbudgets
+        - services
+        - endpoints
+        verbs:
+        - get
+        - list
+        - watch
+        - patch
+        - update
+        - delete
+      - apiGroups:
+        - apps
+        resources:
+        - deployments
+        - statefulsets
+        - replicaset
+        verbs:
+        - get
+        - list
+        - watch
+        - patch
+        - update
+        - delete
+    - apiVersion: managed.openshift.io/v1alpha1
+      kind: SubjectPermission
+      metadata:
+        name: backplane-srep-rhobs-regional-cluster
+        namespace: openshift-rbac-permissions
+      spec:
+        permissions:
+        - clusterRoleName: backplane-srep-rhobs-regional-cluster-project
+          namespacesAllowedRegex: (^rhobs.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        subjectKind: Group
+        subjectName: system:serviceaccounts:openshift-backplane-srep
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: backplane-srep-hypershift-service-cluster
   spec:
     clusterDeploymentSelector:

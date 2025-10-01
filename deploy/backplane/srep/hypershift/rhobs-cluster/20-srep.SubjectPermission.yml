@@ -1,0 +1,12 @@
+apiVersion: managed.openshift.io/v1alpha1
+kind: SubjectPermission
+metadata:
+  name: backplane-srep-rhobs-regional-cluster
+  namespace: openshift-rbac-permissions
+spec:
+  permissions:
+  - clusterRoleName: backplane-srep-rhobs-regional-cluster-project
+    namespacesAllowedRegex: "(^rhobs.*)"
+    namespacesDeniedRegex: openshift-backplane-cluster-admin
+  subjectKind: Group
+  subjectName: system:serviceaccounts:openshift-backplane-srep

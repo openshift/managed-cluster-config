@@ -1,0 +1,65 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: backplane-srep-rhobs-regional-cluster-project
+rules:
+- apiGroups:
+  - monitoring.rhobs
+  resources:
+  - alertmanagers
+  - monitoringstacks
+  - prometheuses
+  - prometheusrules
+  - thanosqueriers
+  - servicemonitors
+  verbs:
+  - get
+  - list
+  - watch
+  - patch
+  - update
+  - delete
+- apiGroups:
+  - monitoring.coreos.com
+  resources:
+  - alertmanagers
+  - monitoringstacks
+  - prometheuses
+  - prometheusrules
+  - thanosqueriers
+  - servicemonitors
+  verbs:
+  - get
+  - list
+  - watch
+  - patch
+  - update
+  - delete
+- apiGroups:
+  - "" # The core API group for built-in resources like pods and configmaps
+  resources:
+  - pods
+  - configmaps
+  - poddisruptionbudgets
+  - services 
+  - endpoints
+  verbs:
+  - get
+  - list
+  - watch
+  - patch
+  - update
+  - delete
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  - statefulsets
+  - replicaset
+  verbs:
+  - get
+  - list
+  - watch
+  - patch
+  - update
+  - delete
