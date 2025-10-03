@@ -47995,6 +47995,17 @@ objects:
             for: 1h
             labels:
               namespace: openshift-logging
+              severity: warning
+          - alert: ElasticsearchDiskNeedsResizingSRE
+            annotations:
+              message: Cluster {{ $labels.cluster }} is predicted to be out of disk
+                space within the next 6h and should be resized to 1200Gi.
+              summary: Cluster low on disk space
+            expr: "sum(predict_linear(es_fs_path_available_bytes[6h], 6 * 3600)) <\
+              \ 0\n  and\nes_fs_path_total_bytes < 400 * 1024 * 1024 * 1024\n"
+            for: 1h
+            labels:
+              namespace: openshift-logging
               severity: critical
           - alert: ElasticsearchHighFileDescriptorUsageSRE
             annotations:
