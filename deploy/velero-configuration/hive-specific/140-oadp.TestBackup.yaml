@@ -1,0 +1,15 @@
+apiVersion: velero.io/v1
+kind: Backup
+metadata:
+  name: oadp-validation-backup
+  namespace: openshift-adp
+  labels:
+    managed.openshift.io/oadp-validation: "true"
+spec:
+  includedNamespaces:
+  - openshift-adp
+  excludedResources:
+  - events
+  - events.events.k8s.io
+  snapshotVolumes: false
+  ttl: 1h0m0s
