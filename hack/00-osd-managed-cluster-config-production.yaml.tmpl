@@ -31838,6 +31838,209 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: hypershift-kube-state-metrics
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: ext-hypershift.openshift.io/cluster-type
+        operator: In
+        values:
+        - management-cluster
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: hypershift-observability
+        labels:
+          name: hypershift-observability
+          hypershift.openshift.io/monitoring: 'true'
+    - apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: kube-state-metrics
+        namespace: hypershift-observability
+        labels:
+          app.kubernetes.io/name: kube-state-metrics
+          app.kubernetes.io/version: v2.17.0
+      spec:
+        replicas: 1
+        selector:
+          matchLabels:
+            app.kubernetes.io/name: kube-state-metrics
+        template:
+          metadata:
+            labels:
+              app.kubernetes.io/name: kube-state-metrics
+              app.kubernetes.io/version: v2.17.0
+          spec:
+            serviceAccountName: kube-state-metrics
+            containers:
+            - name: kube-state-metrics
+              image: quay.io/openshift/origin-kube-state-metrics:4.19.0
+              ports:
+              - containerPort: 8080
+                name: http-metrics
+              - containerPort: 8081
+                name: telemetry
+              args:
+              - --host=0.0.0.0
+              - --port=8080
+              - --telemetry-host=0.0.0.0
+              - --telemetry-port=8081
+              - --custom-resource-state-only=true
+              - --custom-resource-state-config-file=/etc/config/custom-resource-state.yaml
+              volumeMounts:
+              - name: config
+                mountPath: /etc/config
+                readOnly: true
+              livenessProbe:
+                httpGet:
+                  path: /healthz
+                  port: 8080
+                initialDelaySeconds: 5
+                timeoutSeconds: 5
+              readinessProbe:
+                httpGet:
+                  path: /
+                  port: 8081
+                initialDelaySeconds: 5
+                timeoutSeconds: 5
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 32Mi
+                limits:
+                  cpu: 100m
+                  memory: 256Mi
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                runAsNonRoot: true
+                capabilities:
+                  drop:
+                  - ALL
+                seccompProfile:
+                  type: RuntimeDefault
+            volumes:
+            - name: config
+              configMap:
+                name: kube-state-metrics-config
+            securityContext:
+              runAsNonRoot: true
+              seccompProfile:
+                type: RuntimeDefault
+    - apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: kube-state-metrics-config
+        namespace: hypershift-observability
+      data:
+        custom-resource-state.yaml: "spec:\n  resources:\n    - groupVersionKind:\n\
+          \        group: cluster.x-k8s.io\n        version: v1beta1\n        kind:\
+          \ Machine\n      metricNamePrefix: capi_machine\n      labelsFromPath:\n\
+          \        machine_name:\n          - metadata\n          - name\n       \
+          \ exported_namespace:\n          - metadata\n          - namespace\n   \
+          \     _id:\n          - metadata\n          - labels\n          - \"cluster.x-k8s.io/cluster-name\"\
+          \n      metrics:\n        - name: \"info\"\n          help: \"The current\
+          \ state of a machine.\"\n          each:\n            type: Info\n     \
+          \       info:\n                labelsFromPath:\n                  status_phase:\
+          \ [status, phase]\n                  ready: [status, conditions, \"[type=Ready]\"\
+          , status]\n                  healthcheck_succeeded: [status, conditions,\
+          \ \"[type=HealthCheckSucceeded]\", status]\n                  infrastructure_ready:\
+          \ [status, conditions, \"[type=InfrastructureReady]\", status]\n       \
+          \           node_healthy: [status, conditions, \"[type=NodeHealthy]\", status]\n\
+          \                  draining_succeeded: [status, conditions, \"[type=DrainingSucceeded]\"\
+          , status]"
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: kube-state-metrics
+        namespace: hypershift-observability
+        labels:
+          app.kubernetes.io/name: kube-state-metrics
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: hypershift-kube-state-metrics
+        labels:
+          app.kubernetes.io/name: kube-state-metrics
+      rules:
+      - apiGroups:
+        - cluster.x-k8s.io
+        resources:
+        - machines
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - apiextensions.k8s.io
+        resources:
+        - customresourcedefinitions
+        verbs:
+        - list
+        - watch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: hypershift-kube-state-metrics
+        labels:
+          app.kubernetes.io/name: kube-state-metrics
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: hypershift-kube-state-metrics
+      subjects:
+      - kind: ServiceAccount
+        name: kube-state-metrics
+        namespace: hypershift-observability
+    - apiVersion: v1
+      kind: Service
+      metadata:
+        name: kube-state-metrics
+        namespace: hypershift-observability
+        labels:
+          app.kubernetes.io/name: kube-state-metrics
+      spec:
+        clusterIP: None
+        ports:
+        - name: http-metrics
+          port: 8080
+          targetPort: http-metrics
+        - name: telemetry
+          port: 8081
+          targetPort: telemetry
+        selector:
+          app.kubernetes.io/name: kube-state-metrics
+    - apiVersion: monitoring.rhobs/v1
+      kind: ServiceMonitor
+      metadata:
+        name: kube-state-metrics
+        namespace: hypershift-observability
+        labels:
+          app.kubernetes.io/name: kube-state-metrics
+      spec:
+        selector:
+          matchLabels:
+            app.kubernetes.io/name: kube-state-metrics
+        endpoints:
+        - port: http-metrics
+          interval: 30s
+          path: /metrics
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: hypershift-namespace-labels
   spec:
     clusterDeploymentSelector:
