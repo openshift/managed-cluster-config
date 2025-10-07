@@ -1,0 +1,78 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: osd-master-node-labeller
+  namespace: openshift-config
+spec:
+  failedJobsHistoryLimit: 3
+  successfulJobsHistoryLimit: 3
+  concurrencyPolicy: Replace
+  schedule: "0 0 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          affinity:
+            nodeAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+                - preference:
+                    matchExpressions:
+                      - key: node-role.kubernetes.io/infra
+                        operator: Exists
+                  weight: 1
+          tolerations:
+            - effect: NoSchedule
+              key: node-role.kubernetes.io/infra
+              operator: Exists
+          serviceAccountName: osd-master-node-labeller
+          restartPolicy: Never
+          containers:
+            - name: osd-master-node-labeller
+              image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+              imagePullPolicy: Always
+              command:
+                - /bin/bash
+                - -c
+                - |
+                  #!/bin/bash
+                  set -euo pipefail
+
+                  echo "Starting master node labeller job..."
+
+                  # Get all nodes with node-role.kubernetes.io/master label
+                  master_nodes=$(oc get nodes -l node-role.kubernetes.io/master -o jsonpath='{.items[*].metadata.name}')
+
+                  if [ -z "$master_nodes" ]; then
+                    echo "No nodes found with label node-role.kubernetes.io/master"
+                    exit 0
+                  fi
+
+                  echo "Found master nodes: $master_nodes"
+
+                  # Check if all master nodes already have control-plane label
+                  master_count=$(echo $master_nodes | wc -w)
+                  control_plane_count=$(oc get nodes -l node-role.kubernetes.io/master,node-role.kubernetes.io/control-plane --no-headers 2>/dev/null | wc -l)
+
+                  if [ "$master_count" -eq "$control_plane_count" ]; then
+                    echo "All $master_count master nodes already have node-role.kubernetes.io/control-plane label. Exiting."
+                    exit 0
+                  fi
+
+                  nodes_needing_label=$((master_count - control_plane_count))
+                  echo "Found $nodes_needing_label master nodes that need the control-plane label"
+
+                  # Label each master node with control-plane label
+                  for node in $master_nodes; do
+                    echo "Processing node: $node"
+
+                    # Check if the node already has the control-plane label
+                    if oc get node "$node" --show-labels | grep -q "node-role.kubernetes.io/control-plane"; then
+                      echo "Node $node already has node-role.kubernetes.io/control-plane label, skipping"
+                    else
+                      echo "Adding node-role.kubernetes.io/control-plane label to node $node"
+                      oc label node "$node" node-role.kubernetes.io/control-plane="" --overwrite
+                      echo "Successfully labeled node $node"
+                    fi
+                  done
+
+                  echo "Master node labeller job completed successfully"

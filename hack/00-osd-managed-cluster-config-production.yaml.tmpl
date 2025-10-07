@@ -41786,6 +41786,126 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: osd-master-node-labeller
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/product
+        operator: In
+        values:
+        - osd
+        - rosa
+      - key: hive.openshift.io/version-major-minor-patch
+        operator: In
+        values:
+        - '4.12'
+        - '4.13'
+        - '4.14'
+        - '4.15'
+        - '4.16'
+        - '4.17'
+        - '4.18'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: osd-master-node-labeller
+        namespace: openshift-config
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: osd-master-node-labeller
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - nodes
+        verbs:
+        - list
+        - get
+        - patch
+    - kind: ClusterRoleBinding
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        name: osd-master-node-labeller
+      subjects:
+      - kind: ServiceAccount
+        name: osd-master-node-labeller
+        namespace: openshift-config
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: osd-master-node-labeller
+    - apiVersion: batch/v1
+      kind: CronJob
+      metadata:
+        name: osd-master-node-labeller
+        namespace: openshift-config
+      spec:
+        failedJobsHistoryLimit: 3
+        successfulJobsHistoryLimit: 3
+        concurrencyPolicy: Replace
+        schedule: 0 0 * * *
+        jobTemplate:
+          spec:
+            template:
+              spec:
+                affinity:
+                  nodeAffinity:
+                    preferredDuringSchedulingIgnoredDuringExecution:
+                    - preference:
+                        matchExpressions:
+                        - key: node-role.kubernetes.io/infra
+                          operator: Exists
+                      weight: 1
+                tolerations:
+                - effect: NoSchedule
+                  key: node-role.kubernetes.io/infra
+                  operator: Exists
+                serviceAccountName: osd-master-node-labeller
+                restartPolicy: Never
+                containers:
+                - name: osd-master-node-labeller
+                  image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+                  imagePullPolicy: Always
+                  command:
+                  - /bin/bash
+                  - -c
+                  - "#!/bin/bash\nset -euo pipefail\n\necho \"Starting master node\
+                    \ labeller job...\"\n\n# Get all nodes with node-role.kubernetes.io/master\
+                    \ label\nmaster_nodes=$(oc get nodes -l node-role.kubernetes.io/master\
+                    \ -o jsonpath='{.items[*].metadata.name}')\n\nif [ -z \"$master_nodes\"\
+                    \ ]; then\n  echo \"No nodes found with label node-role.kubernetes.io/master\"\
+                    \n  exit 0\nfi\n\necho \"Found master nodes: $master_nodes\"\n\
+                    \n# Check if all master nodes already have control-plane label\n\
+                    master_count=$(echo $master_nodes | wc -w)\ncontrol_plane_count=$(oc\
+                    \ get nodes -l node-role.kubernetes.io/master,node-role.kubernetes.io/control-plane\
+                    \ --no-headers 2>/dev/null | wc -l)\n\nif [ \"$master_count\"\
+                    \ -eq \"$control_plane_count\" ]; then\n  echo \"All $master_count\
+                    \ master nodes already have node-role.kubernetes.io/control-plane\
+                    \ label. Exiting.\"\n  exit 0\nfi\n\nnodes_needing_label=$((master_count\
+                    \ - control_plane_count))\necho \"Found $nodes_needing_label master\
+                    \ nodes that need the control-plane label\"\n\n# Label each master\
+                    \ node with control-plane label\nfor node in $master_nodes; do\n\
+                    \  echo \"Processing node: $node\"\n\n  # Check if the node already\
+                    \ has the control-plane label\n  if oc get node \"$node\" --show-labels\
+                    \ | grep -q \"node-role.kubernetes.io/control-plane\"; then\n\
+                    \    echo \"Node $node already has node-role.kubernetes.io/control-plane\
+                    \ label, skipping\"\n  else\n    echo \"Adding node-role.kubernetes.io/control-plane\
+                    \ label to node $node\"\n    oc label node \"$node\" node-role.kubernetes.io/control-plane=\"\
+                    \" --overwrite\n    echo \"Successfully labeled node $node\"\n\
+                    \  fi\ndone\n\necho \"Master node labeller job completed successfully\"\
+                    \n"
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: osd-must-gather-operator
   spec:
     clusterDeploymentSelector:
