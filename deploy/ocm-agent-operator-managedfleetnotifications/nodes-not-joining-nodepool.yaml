@@ -1,0 +1,25 @@
+apiVersion: ocmagent.managed.openshift.io/v1alpha1
+kind: ManagedFleetNotification
+metadata:
+  name: nodes-not-joining-nodepool
+  namespace: openshift-ocm-agent-operator
+spec:
+  fleetNotification:
+    name: nodes-not-joining-nodepool
+    summary: Action Required - EC2 instances are failing to join your NodePool
+    notificationMessage: |-
+      Your EC2 instances are not joining your ROSA HyperShift cluster's NodePool. This can prevent your workloads from running properly and may indicate configuration issues with your AWS environment.
+
+      Common causes include:
+      - Network connectivity issues (security groups, NACLs, firewall rules)
+      - DNS resolution problems
+      - Misconfigured KMS encryption key policies (either custom or default EBS KMS key)
+      - Custom DHCP Options Set with non-default domain name
+      - AWS permissions or quota issues
+
+      For detailed troubleshooting steps, please refer to: [KCS_URL_TO_BE_ADDED_FROM_SREP_1618]
+
+      If you need assistance, please open a support case.
+    resendWait: 24
+    severity: Warning
+    limitedSupport: false

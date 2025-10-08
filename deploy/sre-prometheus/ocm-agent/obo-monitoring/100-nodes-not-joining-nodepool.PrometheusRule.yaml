@@ -1,0 +1,38 @@
+---
+apiVersion: monitoring.rhobs/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: nodes-not-joining-nodepool
+    role: alert-rules
+  name: nodes-not-joining-nodepool
+  namespace: openshift-observability-rhobs
+spec:
+  groups:
+    - name: NodesNotJoiningNodePool
+      interval: 60s
+      rules:
+        # SREP-1620: Alert when NodePool doesn't have expected nodes for more than an hour
+        - alert: NodesNotJoiningNodePoolSRE
+          annotations:
+            description: "The NodePool in {{ $labels.namespace }} has not reached its target size. Current replicas: {{ $value }}, Expected size: {{ $labels.size }}. EC2 instances may be failing to join the cluster."
+            summary: "NodePool replicas not reaching target size for over 1 hour"
+          # Alert when current_replicas / size != 1 for an hour
+          # Using the metrics: hypershift_nodepools_size and hypershift_nodepools_available_replicas
+          # This calculates the ratio and alerts when it's not equal to 1 (meaning not all expected nodes are available)
+          expr: |
+            sum by (mc_name, _mc_id, sector, region, env, namespace, source, _id, name, size) (
+              (
+                hypershift_nodepools_available_replicas / hypershift_nodepools_size
+              ) != 1
+            )
+            and
+            sum by (mc_name, _mc_id, sector, region, env, namespace, source, _id, name, size) (
+              hypershift_nodepools_size > 0
+            )
+          for: 60m
+          labels:
+            severity: warning
+            send_managed_notification: "true"
+            managed_notification_template: nodes-not-joining-nodepool
+            namespace: "{{ $labels.namespace }}"
