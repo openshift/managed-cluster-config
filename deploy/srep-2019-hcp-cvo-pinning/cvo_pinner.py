@@ -1,0 +1,443 @@
+#!/usr/bin/env python3
+
+# NOTE: If you update this script, run `./generate_configmap.sh`
+
+"""
+CVO Pinner Script
+
+This script patches ManifestWork objects for HyperShift clusters to override
+the cluster-version-operator image based on a version mapping file.
+
+Logic:
+- Read version-mappings.yaml to get version-to-image mappings
+- Iterate over all managedclusters
+- For each cluster:
+  - If the cluster version is in the mappings, add the CVO image override annotation
+  - If the cluster version is NOT in the mappings, remove any existing override annotation
+
+Usage:
+  cvo_pinner.py [--mappings-file PATH] [--dry-run]
+
+Arguments:
+  --mappings-file PATH  Path to version-mappings.yaml file (default: /tmp/scripts/version-mappings.yaml)
+  --dry-run             Run in dry-run mode - show what would be done without making changes
+"""
+
+import sys
+import json
+import subprocess
+import logging
+import yaml
+import argparse
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+# Constants
+IMAGE_OVERRIDES_ANNOTATION = "hypershift.openshift.io/image-overrides"
+DEFAULT_VERSION_MAPPINGS_FILE = "/tmp/scripts/version-mappings.yaml"
+
+
+def run_oc_command(args, check=True):
+    """
+    Run an oc command and return the result.
+
+    Args:
+        args: List of command arguments (e.g., ['get', 'managedclusters'])
+        check: Whether to raise an exception on non-zero exit code
+
+    Returns:
+        subprocess.CompletedProcess object
+    """
+    try:
+        result = subprocess.run(
+            ['oc'] + args + ['--as=backplane-cluster-admin'],
+            capture_output=True,
+            text=True,
+            check=check
+        )
+        return result
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Command failed: oc {' '.join(args)}")
+        logger.error(f"Error: {e.stderr}")
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error running command: {e}")
+        raise
+
+
+def load_version_mappings(mappings_file):
+    """
+    Load version-to-image mappings from YAML file.
+
+    Args:
+        mappings_file: Path to the version mappings YAML file
+
+    Returns:
+        dict: Mapping of version strings to image strings
+    """
+    try:
+        logger.info(f"Loading version mappings from: {mappings_file}")
+        with open(mappings_file, 'r') as f:
+            data = yaml.safe_load(f)
+
+        mappings = {}
+        for mapping in data.get('mappings', []):
+            version = mapping.get('version')
+            image = mapping.get('image')
+            if version and image:
+                mappings[version] = image
+                logger.info(f"Loaded mapping: {version} -> {image}")
+            else:
+                logger.warning(f"Skipping invalid mapping: {mapping}")
+
+        logger.info(f"Loaded {len(mappings)} version mappings")
+        return mappings
+    except FileNotFoundError:
+        logger.error(f"Version mappings file not found: {mappings_file}")
+        return {}
+    except yaml.YAMLError as e:
+        logger.error(f"Error parsing YAML file: {e}")
+        return {}
+    except Exception as e:
+        logger.error(f"Unexpected error loading version mappings: {e}")
+        return {}
+
+
+def get_managedclusters():
+    """
+    Get list of all managedclusters.
+
+    Returns:
+        list: List of cluster names
+    """
+    try:
+        result = run_oc_command([
+            'get', 'managedclusters',
+            '-o', 'jsonpath={range .items[*]}{.metadata.name}{"\\n"}{end}'
+        ])
+        clusters = [c.strip() for c in result.stdout.strip().split('\n') if c.strip()]
+        logger.info(f"Found {len(clusters)} managed clusters")
+        return clusters
+    except Exception as e:
+        logger.error(f"Failed to get managed clusters: {e}")
+        return []
+
+
+def get_cluster_info(cluster_name):
+    """
+    Get cluster information including version and namespace.
+
+    Args:
+        cluster_name: Name of the cluster
+
+    Returns:
+        dict: Cluster info with 'version' and 'namespace' keys, or None if error
+    """
+    try:
+        result = run_oc_command([
+            'get', 'managedclusters', cluster_name,
+            '-o', 'json'
+        ])
+        cluster_data = json.loads(result.stdout)
+
+        version = cluster_data.get('metadata', {}).get('labels', {}).get('openshiftVersion')
+        namespace = cluster_data.get('metadata', {}).get('labels', {}).get('api.openshift.com/management-cluster')
+
+        return {
+            'version': version,
+            'namespace': namespace
+        }
+    except Exception as e:
+        logger.error(f"Failed to get info for cluster {cluster_name}: {e}")
+        return None
+
+
+def find_hostedcluster_manifest_index(namespace, cluster_name):
+    """
+    Find the index of the HostedCluster manifest in the ManifestWork.
+
+    Args:
+        namespace: Namespace containing the manifestwork
+        cluster_name: Name of the cluster (same as manifestwork name)
+
+    Returns:
+        int: Index of HostedCluster manifest, or None if not found
+    """
+    try:
+        result = run_oc_command([
+            'get', 'manifestwork', cluster_name,
+            '-n', namespace,
+            '-o', 'json'
+        ])
+        manifestwork = json.loads(result.stdout)
+
+        manifests = manifestwork.get('spec', {}).get('workload', {}).get('manifests', [])
+        for idx, manifest in enumerate(manifests):
+            if manifest.get('kind') == 'HostedCluster':
+                logger.debug(f"Found HostedCluster manifest at index {idx}")
+                return idx
+
+        logger.warning(f"No HostedCluster manifest found for cluster {cluster_name}")
+        return None
+    except Exception as e:
+        logger.error(f"Failed to get manifestwork for cluster {cluster_name}: {e}")
+        return None
+
+
+def check_existing_annotation(namespace, cluster_name, manifest_index):
+    """
+    Check if the CVO annotation already exists on the manifest.
+
+    Args:
+        namespace: Namespace containing the manifestwork
+        cluster_name: Name of the cluster
+        manifest_index: Index of the HostedCluster manifest
+
+    Returns:
+        str: Current annotation value, or None if not present
+    """
+    try:
+        # Use JSON path to get the annotation value
+        path = f"{{.spec.workload.manifests[{manifest_index}].metadata.annotations.hypershift\\.openshift\\.io/image-overrides}}"
+        result = run_oc_command([
+            'get', 'manifestwork', cluster_name,
+            '-n', namespace,
+            '-o', f'jsonpath={path}'
+        ], check=False)
+
+        value = result.stdout.strip()
+        return value if value else None
+    except Exception as e:
+        logger.debug(f"No existing annotation found: {e}")
+        return None
+
+
+def patch_manifestwork_add(namespace, cluster_name, manifest_index, image, dry_run=False):
+    """
+    Add or update the CVO image annotation on a manifestwork.
+
+    Args:
+        namespace: Namespace containing the manifestwork
+        cluster_name: Name of the cluster
+        manifest_index: Index of the HostedCluster manifest
+        image: Image to set in the annotation
+        dry_run: If True, log what would be done without making changes
+
+    Returns:
+        bool: True if successful, False otherwise
+    """
+    try:
+        # Format the annotation value as "cluster-version-operator=<image>"
+        annotation_value = f"cluster-version-operator={image}"
+
+        # Check if annotation exists first
+        existing = check_existing_annotation(namespace, cluster_name, manifest_index)
+
+        if existing == annotation_value:
+            logger.info(f"Cluster {cluster_name}: annotation already set to {annotation_value}, skipping")
+            return True
+
+        # Construct JSON patch
+        # Note: In JSON patch, / in keys must be escaped as ~1
+        patch = [{
+            "op": "add",
+            "path": f"/spec/workload/manifests/{manifest_index}/metadata/annotations/{IMAGE_OVERRIDES_ANNOTATION.replace('/', '~1')}",
+            "value": annotation_value
+        }]
+
+        patch_json = json.dumps(patch)
+
+        if dry_run:
+            logger.info(f"[DRY-RUN] Would patch cluster {cluster_name}: adding {IMAGE_OVERRIDES_ANNOTATION} annotation with value {annotation_value}")
+            logger.info(f"[DRY-RUN] Command: oc patch manifestwork {cluster_name} -n {namespace} --type=json -p='{patch_json}'")
+        else:
+            logger.info(f"Patching cluster {cluster_name}: adding {IMAGE_OVERRIDES_ANNOTATION} annotation with value {annotation_value}")
+            run_oc_command([
+                'patch', 'manifestwork', cluster_name,
+                '-n', namespace,
+                '--type=json',
+                f'-p={patch_json}'
+            ])
+            logger.info(f"Successfully patched cluster {cluster_name}")
+
+        return True
+    except Exception as e:
+        logger.error(f"Failed to patch cluster {cluster_name}: {e}")
+        return False
+
+
+def patch_manifestwork_remove(namespace, cluster_name, manifest_index, dry_run=False):
+    """
+    Remove the CVO image annotation from a manifestwork.
+
+    Args:
+        namespace: Namespace containing the manifestwork
+        cluster_name: Name of the cluster
+        manifest_index: Index of the HostedCluster manifest
+        dry_run: If True, log what would be done without making changes
+
+    Returns:
+        bool: True if successful, False otherwise
+    """
+    try:
+        # Check if annotation exists
+        existing = check_existing_annotation(namespace, cluster_name, manifest_index)
+
+        if not existing:
+            logger.debug(f"Cluster {cluster_name}: no annotation to remove, skipping")
+            return True
+
+        # Construct JSON patch
+        patch = [{
+            "op": "remove",
+            "path": f"/spec/workload/manifests/{manifest_index}/metadata/annotations/{IMAGE_OVERRIDES_ANNOTATION.replace('/', '~1')}"
+        }]
+
+        patch_json = json.dumps(patch)
+
+        if dry_run:
+            logger.info(f"[DRY-RUN] Would remove {IMAGE_OVERRIDES_ANNOTATION} annotation from cluster {cluster_name}")
+            logger.info(f"[DRY-RUN] Command: oc patch manifestwork {cluster_name} -n {namespace} --type=json -p='{patch_json}'")
+        else:
+            logger.info(f"Removing {IMAGE_OVERRIDES_ANNOTATION} annotation from cluster {cluster_name}")
+            run_oc_command([
+                'patch', 'manifestwork', cluster_name,
+                '-n', namespace,
+                '--type=json',
+                f'-p={patch_json}'
+            ])
+            logger.info(f"Successfully removed annotation from cluster {cluster_name}")
+
+        return True
+    except Exception as e:
+        logger.error(f"Failed to remove annotation from cluster {cluster_name}: {e}")
+        return False
+
+
+def process_cluster(cluster_name, version_mappings, dry_run=False):
+    """
+    Process a single cluster and patch if needed.
+
+    Args:
+        cluster_name: Name of the cluster
+        version_mappings: Dict of version -> image mappings
+        dry_run: If True, log what would be done without making changes
+
+    Returns:
+        bool: True if successful, False otherwise
+    """
+    logger.info(f"Processing cluster: {cluster_name}")
+
+    # Get cluster info
+    info = get_cluster_info(cluster_name)
+    if not info:
+        logger.warning(f"Skipping cluster {cluster_name}: failed to get cluster info")
+        return False
+
+    version = info['version']
+    namespace = info['namespace']
+
+    # Skip management and local clusters
+    if not namespace or namespace == 'null':
+        logger.info(f"Skipping cluster {cluster_name}: management or local cluster")
+        return True
+
+    if not version:
+        logger.warning(f"Skipping cluster {cluster_name}: no version label found")
+        return False
+
+    logger.info(f"Cluster {cluster_name}: version={version}, namespace={namespace}")
+
+    # Find HostedCluster manifest
+    manifest_index = find_hostedcluster_manifest_index(namespace, cluster_name)
+    if manifest_index is None:
+        logger.warning(f"Skipping cluster {cluster_name}: no HostedCluster manifest found")
+        return False
+
+    # Check if version needs override
+    if version in version_mappings:
+        image = version_mappings[version]
+        logger.info(f"Cluster {cluster_name}: version {version} needs override with image {image}")
+        return patch_manifestwork_add(namespace, cluster_name, manifest_index, image, dry_run)
+    else:
+        logger.info(f"Cluster {cluster_name}: version {version} not in mappings, removing any override")
+        return patch_manifestwork_remove(namespace, cluster_name, manifest_index, dry_run)
+
+
+def parse_args():
+    """Parse command-line arguments."""
+    parser = argparse.ArgumentParser(
+        description='CVO Pinner - Patch ManifestWork objects to override CVO images for specific cluster versions'
+    )
+    parser.add_argument(
+        '--mappings-file',
+        default=DEFAULT_VERSION_MAPPINGS_FILE,
+        help=f'Path to version-mappings.yaml file (default: {DEFAULT_VERSION_MAPPINGS_FILE})'
+    )
+    parser.add_argument(
+        '--dry-run',
+        action='store_true',
+        help='Run in dry-run mode - show what would be done without making changes'
+    )
+    return parser.parse_args()
+
+
+def main():
+    """Main entry point."""
+    # Parse arguments
+    args = parse_args()
+
+    logger.info("=" * 80)
+    logger.info("Starting CVO Pinner Script")
+    if args.dry_run:
+        logger.info("*** DRY-RUN MODE: No changes will be made ***")
+    logger.info("=" * 80)
+
+    # Load version mappings
+    version_mappings = load_version_mappings(args.mappings_file)
+    if not version_mappings:
+        logger.warning("No version mappings loaded, exiting")
+        return 0
+
+    # Get all managed clusters
+    clusters = get_managedclusters()
+    if not clusters:
+        logger.warning("No managed clusters found, exiting")
+        return 0
+
+    # Process each cluster
+    success_count = 0
+    failure_count = 0
+
+    for cluster in clusters:
+        try:
+            if process_cluster(cluster, version_mappings, args.dry_run):
+                success_count += 1
+            else:
+                failure_count += 1
+        except Exception as e:
+            logger.error(f"Unexpected error processing cluster {cluster}: {e}")
+            failure_count += 1
+
+        logger.info("-" * 80)
+
+    # Summary
+    logger.info("=" * 80)
+    logger.info(f"CVO Pinner Script Complete")
+    if args.dry_run:
+        logger.info("*** DRY-RUN MODE: No changes were made ***")
+    logger.info(f"Clusters processed: {len(clusters)}")
+    logger.info(f"Successful: {success_count}")
+    logger.info(f"Failed: {failure_count}")
+    logger.info("=" * 80)
+
+    return 0 if failure_count == 0 else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
