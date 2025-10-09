@@ -27,6 +27,7 @@ ADDITIONAL_MANAGED_NAMESPACES = [
     {"name": "openshift-cluster-version"},
     {"name": "keycloak"},
     {"name": "goalert"},
+    {"name": "dynatrace"},
     {"name": "configure-goalert-operator"}
 ]
 

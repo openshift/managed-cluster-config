@@ -73,6 +73,7 @@ Resources:
   - name: openshift-custom-domains-operator
   - name: openshift-customer-monitoring
   - name: openshift-deployment-validation-operator
+  - name: dynatrace
   - name: openshift-managed-node-metadata-operator
   - name: openshift-file-integrity
   - name: openshift-logging
@@ -205,6 +206,10 @@ Resources:
   - namespace: openshift-backplane-srep
     name: UNIQUE_BACKPLANE_SERVICEACCOUNT_ID
   Service:
+  - namespace: dynatrace
+    name: dynatrace-webhook
+  - namespace: dynatrace
+    name: opentelemetry-dynatrace-collector-monitoring
   - namespace: openshift-deployment-validation-operator
     name: deployment-validation-operator-metrics
   - namespace: openshift-monitoring
@@ -230,6 +235,8 @@ Resources:
   - name: sre-scc-validation
   - name: sre-techpreviewnoupgrade-validation
   DaemonSet:
+  - namespace: dynatrace
+    name: dynatrace-oneagent
   - namespace: openshift-monitoring
     name: sre-dns-latency-exporter
   - namespace: openshift-scanning
@@ -242,6 +249,16 @@ Resources:
     name: suricata
   - namespace: openshift-validation-webhook
     name: validation-webhook
+  Deployment:
+  - namespace: dynatrace
+    name: dynatrace-operator
+  - namespace: dynatrace
+    name: dynatrace-webhook
+  - namespace: dynatrace
+    name: opentelemetry-dynatrace-collector
+  StatefulSet:
+  - namespace: dynatrace
+    name: dynatrace-activegate
   DeploymentConfig:
   - namespace: openshift-monitoring
     name: sre-ebs-iops-reporter
@@ -531,6 +548,8 @@ Resources:
   - namespace: openshift-velero
     name: prometheus-k8s
   CronJob:
+  - namespace: dynatrace
+    name: dynatrace-cluster-bootstrap
   - namespace: openshift-backplane-managed-scripts
     name: osd-delete-backplane-script-resources
   - namespace: openshift-backplane-srep
