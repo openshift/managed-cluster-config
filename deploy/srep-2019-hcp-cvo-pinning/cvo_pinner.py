@@ -10,7 +10,7 @@ the cluster-version-operator image based on a version mapping file.
 
 Logic:
 - Read version-mappings.yaml to get version-to-image mappings
-- Iterate over all managedclusters
+- Iterate over all ManagedClusters
 - For each cluster:
   - If the cluster version is in the mappings, add the CVO image override annotation
   - If the cluster version is NOT in the mappings, remove any existing override annotation
@@ -55,7 +55,7 @@ def run_oc_command(args, check=True):
     """
     try:
         result = subprocess.run(
-            ['oc'] + args + ['--as=backplane-cluster-admin'],
+            ['oc'] + args,
             capture_output=True,
             text=True,
             check=check
