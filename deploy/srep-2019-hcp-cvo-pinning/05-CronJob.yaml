@@ -1,0 +1,55 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: hcp-cvo-pinner
+  namespace: openshift-hcp-cvo-pinning
+  annotations:
+    kubernetes.io/description: "Patches ManifestWork objects to override CVO image for specific cluster versions https://issues.redhat.com/browse/SREP-2019"
+spec:
+  schedule: "*/5 * * * *" # Every five minutes
+  concurrencyPolicy: Replace
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          name: hcp-cvo-pinner
+          namespace: openshift-hcp-cvo-pinning
+          annotations:
+            kubernetes.io/description: "Patches ManifestWork objects to override CVO image for specific cluster versions https://issues.redhat.com/browse/SREP-2019"
+        spec:
+          affinity:
+            nodeAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+              - preference:
+                  matchExpressions:
+                  - key: node-role.kubernetes.io/infra
+                    operator: Exists
+                weight: 1
+          tolerations:
+            - effect: NoSchedule
+              key: node-role.kubernetes.io/infra
+              operator: Exists
+          containers:
+          - name: hcp-cvo-pinner
+            image: image-registry.openshift-image-registry.svc:5000/openshift/tools:latest
+            imagePullPolicy: IfNotPresent
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                - ALL
+              runAsNonRoot: true
+            volumeMounts:
+              - name: scripts
+                mountPath: /tmp/scripts
+            command:
+              - /usr/bin/python3
+            args:
+              - /tmp/scripts/cvo_pinner.py
+          volumes:
+            - name: scripts
+              configMap:
+                name: hcp-cvo-pinner
+          serviceAccountName: hcp-cvo-annotator
+          automountServiceAccountToken: true
+          restartPolicy: Never
