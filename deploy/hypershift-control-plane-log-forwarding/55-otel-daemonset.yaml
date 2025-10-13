@@ -1,0 +1,123 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  labels:
+    app: otel-log-collector
+    app.kubernetes.io/component: otel-log-collector
+    app.kubernetes.io/name: otel-log-collector
+    app.kubernetes.io/part-of: multi-tenant-logging
+  name: otel-log-collector
+  namespace: hypershift-control-plane-log-forwarding
+spec:
+  selector:
+    matchLabels:
+      app: otel-log-collector
+  template:
+    metadata:
+      labels:
+        app: otel-log-collector
+    spec:
+      containers:
+      - name: otel-collector
+        image: otel/opentelemetry-collector-contrib:0.115.1
+        command:
+          - /otelcol-contrib
+          - --config=/etc/otelcol/otel-collector-config.yaml
+        env:
+        - name: AWS_REGION
+          value: "{{ fromCDLabel \"ext-hypershift.openshift.io/cluster-region\" }}"
+        - name: AWS_DEFAULT_REGION
+          value: "{{ fromCDLabel \"ext-hypershift.openshift.io/cluster-region\" }}"
+        - name: KUBE_NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: MC_CLUSTER_ID
+          value: "{{ fromCDLabel \"api.openshift.com/id\" }}"
+        # The configmap for the following two env vars is
+        # created and managed by Fleet Manager
+        - name: S3_BUCKET_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: log-forwarding-config
+              key: s3_bucket_name
+        - name: S3_WRITER_ROLE_ARN
+          valueFrom:
+            configMapKeyRef:
+              name: log-forwarding-config
+              key: s3_writer_role_arn
+        - name: GOGC
+          value: "80"
+        ports:
+        - containerPort: 8888
+          name: metrics
+          protocol: TCP
+        - containerPort: 13133
+          name: health
+          protocol: TCP
+        resources:
+          limits:
+            cpu: 200m
+            memory: 2Gi
+          requests:
+            cpu: 50m
+            memory: 256Mi
+        securityContext:
+          allowPrivilegeEscalation: true
+          privileged: true
+          readOnlyRootFilesystem: true
+          runAsNonRoot: false
+          runAsUser: 0
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 13133
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 13133
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+        volumeMounts:
+        - mountPath: /var/log
+          name: var-log
+          readOnly: true
+        - mountPath: /var/lib/docker/containers
+          name: var-lib-docker-containers
+          readOnly: true
+        - mountPath: /etc/otelcol
+          name: otel-collector-config
+          readOnly: true
+        - mountPath: /var/lib/otelcol
+          name: otel-data
+      priorityClassName: hypershift-api-critical
+      serviceAccountName: control-plane-log-forwarding
+      # We only want this on HCP nodes - it would be a waste to schedule this to master/infra nodes
+      tolerations:
+      - key: "hypershift.openshift.io/control-plane"
+        effect: NoSchedule
+        operator: Exists
+      - key: "hypershift.openshift.io/request-serving-component"
+        effect: NoSchedule
+        operator: Exists
+      - key: "hypershift.openshift.io/cluster"
+        effect: NoSchedule
+        operator: Exists
+      volumes:
+      - hostPath:
+          path: /var/log
+        name: var-log
+      - hostPath:
+          path: /var/lib/docker/containers
+        name: var-lib-docker-containers
+      - configMap:
+          name: otel-collector-config
+        name: otel-collector-config
+      - hostPath:
+          path: /var/lib/otelcol-data
+          type: DirectoryOrCreate
+        name: otel-data

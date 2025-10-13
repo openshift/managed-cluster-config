@@ -1,0 +1,229 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-collector-config
+  namespace: hypershift-control-plane-log-forwarding
+data:
+  otel-collector-config.yaml: |
+    receivers:
+      filelog:
+        include:
+          - /var/log/pods/*/*/*.log
+        # Parse container runtime format (CRI-O)
+        operators:
+          # Parse CRI-O log format: 2024-01-01T00:00:00.000000000Z stdout F actual log message
+          - type: regex_parser
+            regex: '^(?P<time>[^ ]+) (?P<stream>stdout|stderr) (?P<logtag>[^ ]*) ?(?P<log>.*)$'
+            timestamp:
+              parse_from: attributes.time
+              layout: '%Y-%m-%dT%H:%M:%S.%LZ'
+
+          # Move log content to body
+          - type: move
+            from: attributes.log
+            to: body
+
+          # Add k8s metadata enrichment
+          - type: add
+            field: resource["k8s.pod.name"]
+            value: EXPR(attributes["k8s.pod.name"])
+
+          - type: add
+            field: resource["k8s.namespace.name"]
+            value: EXPR(attributes["k8s.namespace.name"])
+
+          - type: add
+            field: resource["k8s.container.name"]
+            value: EXPR(attributes["k8s.container.name"])
+
+        # Kubernetes metadata
+        include_file_path: true
+        include_file_name: false
+
+        # Filter to only hosted control plane namespaces
+        # This is handled by pod name pattern matching
+        start_at: end
+
+        # Performance settings
+        max_concurrent_files: 1024
+        max_log_size: 1MiB
+
+        # Resource attributes from file path
+        resource:
+          k8s.pod.name: ""
+          k8s.namespace.name: ""
+          k8s.container.name: ""
+
+    processors:
+      # Kubernetes attributes processor
+      k8sattributes:
+        auth_type: "serviceAccount"
+        passthrough: false
+        filter:
+          node_from_env_var: KUBE_NODE_NAME
+        extract:
+          metadata:
+            - k8s.namespace.name
+            - k8s.pod.name
+            - k8s.pod.uid
+            - k8s.deployment.name
+            - k8s.node.name
+          labels:
+            - tag_name: app
+              key: app
+              from: pod
+            - tag_name: hypershift_hcp
+              key: hypershift.openshift.io/hosted-control-plane
+              from: namespace
+        pod_association:
+          - sources:
+              - from: resource_attribute
+                name: k8s.pod.name
+          - sources:
+              - from: resource_attribute
+                name: k8s.namespace.name
+          - sources:
+              - from: connection
+
+      # Filter to only include HCP namespaces
+      filter/hcp_only:
+        logs:
+          log_record:
+            - 'resource.attributes["hypershift_hcp"] == "true"'
+
+      # Transform processor to generate UUID for filename uniqueness
+      transform:
+        log_statements:
+          - context: resource
+            statements:
+              - set(attributes["file_uuid"], UUID())
+
+      # Resource processor to add cluster ID and prepare for S3 path
+      resource:
+        attributes:
+          - key: mc_cluster_id
+            value: ${env:MC_CLUSTER_ID}
+            action: insert
+          - key: namespace
+            from_attribute: k8s.namespace.name
+            action: insert
+          - key: application
+            from_attribute: app
+            action: insert
+          - key: pod_name
+            from_attribute: k8s.pod.name
+            action: insert
+          - key: container_name
+            from_attribute: k8s.container.name
+            action: insert
+          # S3 prefix attribute for dynamic path construction
+          # Path format: {mc_cluster_id}/{namespace}/{application}/{pod_name}/{container_name}
+          - key: com.awss3.prefix
+            value: ${mc_cluster_id}/${namespace}/${application}/${pod_name}/${container_name}
+            action: insert
+
+      # Batch processor for efficiency
+      batch:
+        timeout: 10s
+        send_batch_size: 1024
+        send_batch_max_size: 2048
+
+      # Memory limiter to prevent OOM
+      memory_limiter:
+        check_interval: 1s
+        limit_mib: 1536
+        spike_limit_mib: 512
+
+    exporters:
+      # AWS S3 exporter for logs
+      awss3:
+        region: ${env:AWS_REGION}
+        s3_bucket: ${env:S3_BUCKET_NAME}
+
+        # Use resource attributes to dynamically set the S3 path
+        # Path: {mc_cluster_id}/{namespace}/{application}/{pod_name}/{container_name}/
+        resource_attrs_to_s3:
+          s3_prefix: "com.awss3.prefix"
+
+        # Prepend "otel-" to the filename
+        # Vector format: {uuid}-{YYYYMMDD-HHMMSS}.json.gz
+        # OTEL format:   otel-{YYYYMMDD-HHMMSS}-{unique_id}.json.gz
+        s3_prefix: "otel"
+
+        # Partition format for timestamp in filename
+        s3_partition_format: "-%Y%m%d-%H%M%S"
+        s3_partition_timezone: "UTC"
+
+        # Output format - JSON with newline delimited records
+        marshaler: "otlp_json"
+        compression: "gzip"
+
+        # AWS authentication via IRSA
+        role_arn: ${env:S3_WRITER_ROLE_ARN}
+
+        # Retry configuration
+        retry_on_failure:
+          enabled: true
+          initial_interval: 1s
+          max_interval: 30s
+          max_elapsed_time: 300s
+
+        # Sending queue
+        sending_queue:
+          enabled: true
+          num_consumers: 10
+          queue_size: 1000
+          storage: file_storage/s3_queue
+
+      # Prometheus exporter for metrics
+      prometheus:
+        endpoint: "0.0.0.0:8888"
+        namespace: otelcol
+        const_labels:
+          collector: hypershift-hcp-logs
+
+    extensions:
+      # Health check extension
+      health_check:
+        endpoint: 0.0.0.0:13133
+
+      # pprof for debugging
+      pprof:
+        endpoint: 0.0.0.0:1777
+
+      # File storage for WAL
+      file_storage/s3_queue:
+        directory: /var/lib/otelcol/queue
+        timeout: 10s
+        compaction:
+          on_start: true
+          on_rebound: true
+          directory: /var/lib/otelcol/queue
+          max_transaction_size: 65536
+
+    service:
+      extensions:
+        - health_check
+        - pprof
+        - file_storage/s3_queue
+
+      pipelines:
+        logs:
+          receivers:
+            - filelog
+          processors:
+            - memory_limiter
+            - k8sattributes
+            - filter/hcp_only
+            - transform
+            - resource
+            - batch
+          exporters:
+            - awss3
+
+      telemetry:
+        logs:
+          level: info
+        metrics:
+          level: detailed
+          address: 0.0.0.0:8888
