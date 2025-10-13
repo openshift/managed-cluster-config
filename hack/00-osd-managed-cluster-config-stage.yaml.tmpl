@@ -31711,6 +31711,90 @@ objects:
           \ \"${S3_WRITER_ROLE_ARN}\"\n      \n    # Add timestamp to filename\n \
           \   filename_append_uuid: true\n    filename_time_format: \"%Y%m%d-%H%M%S\"\
           \n    filename_extension: \"json.gz\"\n"
+    - apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: otel-collector-config
+        namespace: hypershift-control-plane-log-forwarding
+      data:
+        otel-collector-config.yaml: "receivers:\n  filelog:\n    include:\n      -\
+          \ /var/log/pods/*/*/*.log\n    # Parse container runtime format (CRI-O)\n\
+          \    operators:\n      # Parse CRI-O log format: 2024-01-01T00:00:00.000000000Z\
+          \ stdout F actual log message\n      - type: regex_parser\n        regex:\
+          \ '^(?P<time>[^ ]+) (?P<stream>stdout|stderr) (?P<logtag>[^ ]*) ?(?P<log>.*)$'\n\
+          \        timestamp:\n          parse_from: attributes.time\n          layout:\
+          \ '%Y-%m-%dT%H:%M:%S.%LZ'\n\n      # Move log content to body\n      - type:\
+          \ move\n        from: attributes.log\n        to: body\n\n      # Add k8s\
+          \ metadata enrichment\n      - type: add\n        field: resource[\"k8s.pod.name\"\
+          ]\n        value: EXPR(attributes[\"k8s.pod.name\"])\n\n      - type: add\n\
+          \        field: resource[\"k8s.namespace.name\"]\n        value: EXPR(attributes[\"\
+          k8s.namespace.name\"])\n\n      - type: add\n        field: resource[\"\
+          k8s.container.name\"]\n        value: EXPR(attributes[\"k8s.container.name\"\
+          ])\n\n    # Kubernetes metadata\n    include_file_path: true\n    include_file_name:\
+          \ false\n\n    # Filter to only hosted control plane namespaces\n    # This\
+          \ is handled by pod name pattern matching\n    start_at: end\n\n    # Performance\
+          \ settings\n    max_concurrent_files: 1024\n    max_log_size: 1MiB\n\n \
+          \   # Resource attributes from file path\n    resource:\n      k8s.pod.name:\
+          \ \"\"\n      k8s.namespace.name: \"\"\n      k8s.container.name: \"\"\n\
+          \nprocessors:\n  # Kubernetes attributes processor\n  k8sattributes:\n \
+          \   auth_type: \"serviceAccount\"\n    passthrough: false\n    filter:\n\
+          \      node_from_env_var: KUBE_NODE_NAME\n    extract:\n      metadata:\n\
+          \        - k8s.namespace.name\n        - k8s.pod.name\n        - k8s.pod.uid\n\
+          \        - k8s.deployment.name\n        - k8s.node.name\n      labels:\n\
+          \        - tag_name: app\n          key: app\n          from: pod\n    \
+          \    - tag_name: hypershift_hcp\n          key: hypershift.openshift.io/hosted-control-plane\n\
+          \          from: namespace\n    pod_association:\n      - sources:\n   \
+          \       - from: resource_attribute\n            name: k8s.pod.name\n   \
+          \   - sources:\n          - from: resource_attribute\n            name:\
+          \ k8s.namespace.name\n      - sources:\n          - from: connection\n\n\
+          \  # Filter to only include HCP namespaces\n  filter/hcp_only:\n    logs:\n\
+          \      log_record:\n        - 'resource.attributes[\"hypershift_hcp\"] ==\
+          \ \"true\"'\n\n  # Transform processor to generate UUID for filename uniqueness\n\
+          \  transform:\n    log_statements:\n      - context: resource\n        statements:\n\
+          \          - set(attributes[\"file_uuid\"], UUID())\n\n  # Resource processor\
+          \ to add cluster ID and prepare for S3 path\n  resource:\n    attributes:\n\
+          \      - key: mc_cluster_id\n        value: ${env:MC_CLUSTER_ID}\n     \
+          \   action: insert\n      - key: namespace\n        from_attribute: k8s.namespace.name\n\
+          \        action: insert\n      - key: application\n        from_attribute:\
+          \ app\n        action: insert\n      - key: pod_name\n        from_attribute:\
+          \ k8s.pod.name\n        action: insert\n      - key: container_name\n  \
+          \      from_attribute: k8s.container.name\n        action: insert\n    \
+          \  # S3 prefix attribute for dynamic path construction\n      # Path format:\
+          \ {mc_cluster_id}/{namespace}/{application}/{pod_name}/{container_name}\n\
+          \      - key: com.awss3.prefix\n        value: ${mc_cluster_id}/${namespace}/${application}/${pod_name}/${container_name}\n\
+          \        action: insert\n\n  # Batch processor for efficiency\n  batch:\n\
+          \    timeout: 10s\n    send_batch_size: 1024\n    send_batch_max_size: 2048\n\
+          \n  # Memory limiter to prevent OOM\n  memory_limiter:\n    check_interval:\
+          \ 1s\n    limit_mib: 1536\n    spike_limit_mib: 512\n\nexporters:\n  # AWS\
+          \ S3 exporter for logs\n  awss3:\n    region: ${env:AWS_REGION}\n    s3_bucket:\
+          \ ${env:S3_BUCKET_NAME}\n\n    # Use resource attributes to dynamically\
+          \ set the S3 path\n    # Path: {mc_cluster_id}/{namespace}/{application}/{pod_name}/{container_name}/\n\
+          \    resource_attrs_to_s3:\n      s3_prefix: \"com.awss3.prefix\"\n\n  \
+          \  # Prepend \"otel-\" to the filename\n    # Vector format: {uuid}-{YYYYMMDD-HHMMSS}.json.gz\n\
+          \    # OTEL format:   otel-{YYYYMMDD-HHMMSS}-{unique_id}.json.gz\n    s3_prefix:\
+          \ \"otel\"\n\n    # Partition format for timestamp in filename\n    s3_partition_format:\
+          \ \"-%Y%m%d-%H%M%S\"\n    s3_partition_timezone: \"UTC\"\n\n    # Output\
+          \ format - JSON with newline delimited records\n    marshaler: \"otlp_json\"\
+          \n    compression: \"gzip\"\n\n    # AWS authentication via IRSA\n    role_arn:\
+          \ ${env:S3_WRITER_ROLE_ARN}\n\n    # Retry configuration\n    retry_on_failure:\n\
+          \      enabled: true\n      initial_interval: 1s\n      max_interval: 30s\n\
+          \      max_elapsed_time: 300s\n\n    # Sending queue\n    sending_queue:\n\
+          \      enabled: true\n      num_consumers: 10\n      queue_size: 1000\n\
+          \      storage: file_storage/s3_queue\n\n  # Prometheus exporter for metrics\n\
+          \  prometheus:\n    endpoint: \"0.0.0.0:8888\"\n    namespace: otelcol\n\
+          \    const_labels:\n      collector: hypershift-hcp-logs\n\nextensions:\n\
+          \  # Health check extension\n  health_check:\n    endpoint: 0.0.0.0:13133\n\
+          \n  # pprof for debugging\n  pprof:\n    endpoint: 0.0.0.0:1777\n\n  # File\
+          \ storage for WAL\n  file_storage/s3_queue:\n    directory: /var/lib/otelcol/queue\n\
+          \    timeout: 10s\n    compaction:\n      on_start: true\n      on_rebound:\
+          \ true\n      directory: /var/lib/otelcol/queue\n      max_transaction_size:\
+          \ 65536\n\nservice:\n  extensions:\n    - health_check\n    - pprof\n  \
+          \  - file_storage/s3_queue\n\n  pipelines:\n    logs:\n      receivers:\n\
+          \        - filelog\n      processors:\n        - memory_limiter\n      \
+          \  - k8sattributes\n        - filter/hcp_only\n        - transform\n   \
+          \     - resource\n        - batch\n      exporters:\n        - awss3\n\n\
+          \  telemetry:\n    logs:\n      level: info\n    metrics:\n      level:\
+          \ detailed\n      address: 0.0.0.0:8888\n"
     - apiVersion: apps/v1
       kind: DaemonSet
       metadata:
@@ -31818,6 +31902,128 @@ objects:
                 path: /var/lib/vector-data
                 type: DirectoryOrCreate
               name: vector-data
+    - apiVersion: apps/v1
+      kind: DaemonSet
+      metadata:
+        labels:
+          app: otel-log-collector
+          app.kubernetes.io/component: otel-log-collector
+          app.kubernetes.io/name: otel-log-collector
+          app.kubernetes.io/part-of: multi-tenant-logging
+        name: otel-log-collector
+        namespace: hypershift-control-plane-log-forwarding
+      spec:
+        selector:
+          matchLabels:
+            app: otel-log-collector
+        template:
+          metadata:
+            labels:
+              app: otel-log-collector
+          spec:
+            containers:
+            - name: otel-collector
+              image: otel/opentelemetry-collector-contrib:0.115.1
+              command:
+              - /otelcol-contrib
+              - --config=/etc/otelcol/otel-collector-config.yaml
+              env:
+              - name: AWS_REGION
+                value: '{{ fromCDLabel "ext-hypershift.openshift.io/cluster-region"
+                  }}'
+              - name: AWS_DEFAULT_REGION
+                value: '{{ fromCDLabel "ext-hypershift.openshift.io/cluster-region"
+                  }}'
+              - name: KUBE_NODE_NAME
+                valueFrom:
+                  fieldRef:
+                    fieldPath: spec.nodeName
+              - name: MC_CLUSTER_ID
+                value: '{{ fromCDLabel "api.openshift.com/id" }}'
+              - name: S3_BUCKET_NAME
+                valueFrom:
+                  configMapKeyRef:
+                    name: log-forwarding-config
+                    key: s3_bucket_name
+              - name: S3_WRITER_ROLE_ARN
+                valueFrom:
+                  configMapKeyRef:
+                    name: log-forwarding-config
+                    key: s3_writer_role_arn
+              - name: GOGC
+                value: '80'
+              ports:
+              - containerPort: 8888
+                name: metrics
+                protocol: TCP
+              - containerPort: 13133
+                name: health
+                protocol: TCP
+              resources:
+                limits:
+                  cpu: 200m
+                  memory: 2Gi
+                requests:
+                  cpu: 50m
+                  memory: 256Mi
+              securityContext:
+                allowPrivilegeEscalation: true
+                privileged: true
+                readOnlyRootFilesystem: true
+                runAsNonRoot: false
+                runAsUser: 0
+              livenessProbe:
+                httpGet:
+                  path: /
+                  port: 13133
+                initialDelaySeconds: 30
+                periodSeconds: 30
+                timeoutSeconds: 5
+              readinessProbe:
+                httpGet:
+                  path: /
+                  port: 13133
+                initialDelaySeconds: 10
+                periodSeconds: 10
+                timeoutSeconds: 5
+              volumeMounts:
+              - mountPath: /var/log
+                name: var-log
+                readOnly: true
+              - mountPath: /var/lib/docker/containers
+                name: var-lib-docker-containers
+                readOnly: true
+              - mountPath: /etc/otelcol
+                name: otel-collector-config
+                readOnly: true
+              - mountPath: /var/lib/otelcol
+                name: otel-data
+            priorityClassName: hypershift-api-critical
+            serviceAccountName: control-plane-log-forwarding
+            tolerations:
+            - key: hypershift.openshift.io/control-plane
+              effect: NoSchedule
+              operator: Exists
+            - key: hypershift.openshift.io/request-serving-component
+              effect: NoSchedule
+              operator: Exists
+            - key: hypershift.openshift.io/cluster
+              effect: NoSchedule
+              operator: Exists
+            volumes:
+            - hostPath:
+                path: /var/log
+              name: var-log
+            - hostPath:
+                path: /var/lib/docker/containers
+              name: var-lib-docker-containers
+            - configMap:
+                name: otel-collector-config
+              name: otel-collector-config
+            - hostPath:
+                path: /var/lib/otelcol-data
+                type: DirectoryOrCreate
+              name: otel-data
     - apiVersion: monitoring.rhobs/v1
       kind: PodMonitor
       metadata:
@@ -31829,8 +32035,12 @@ objects:
           port: metrics
           scheme: http
         selector:
-          matchLabels:
-            app: control-plane-log-forwarding
+          matchExpressions:
+          - key: app
+            operator: In
+            values:
+            - control-plane-log-forwarding
+            - otel-log-collector
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
