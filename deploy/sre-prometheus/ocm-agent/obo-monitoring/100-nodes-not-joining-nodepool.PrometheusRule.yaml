@@ -1,0 +1,26 @@
+---
+apiVersion: monitoring.rhobs/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: nodepool-provisioning-failure
+    role: alert-rules
+  name: nodepool-provisioning-failure
+  namespace: openshift-observability-rhobs
+spec:
+  groups:
+    - name: NodePoolProvisioningFailureSRE
+      interval: 60s
+      rules:
+        # SREP-1620: Alert when NodePool doesn't have expected nodes for more than an hour
+        - alert: NodesNotJoiningNodePoolSRE
+          annotations:
+            description: "The NodePool has not reached its target size for more than 1 hour"
+            summary: "NodePool provisioning Failure"
+          expr: sum by (_id, namespace, cluster_name, exported_namespace, name) (hypershift_nodepools_available_replicas / hypershift_nodepools_size < 1) and on (_id) (hypershift_cluster_limited_support_enabled != 1)
+          for: 60m
+          labels:
+            severity: warning
+            send_managed_notification: "true"
+            managed_notification_template: nodepool-provisioning-failure
+            namespace: "{{ $labels.namespace }}"
