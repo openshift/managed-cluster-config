@@ -49910,7 +49910,8 @@ objects:
               summary: NodePool provisioning Failure
             expr: sum by (_id, namespace, cluster_name, exported_namespace, name)
               (((hypershift_nodepools_available_replicas / hypershift_nodepools_size)
-              < 1) unless on (_id) ((hypershift_nodepools_size == 0) or hypershift_cluster_alerts_disabled))
+              < 1) unless on (_id) ((hypershift_nodepools_size == 0) or hypershift_cluster_alerts_disabled
+              or hypershift_cluster_deleting_duration_seconds))
             for: 60m
             labels:
               severity: warning
