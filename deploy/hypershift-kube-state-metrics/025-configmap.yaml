@@ -36,3 +36,40 @@ data:
                       infrastructure_ready: [status, conditions, "[type=InfrastructureReady]", status]
                       node_healthy: [status, conditions, "[type=NodeHealthy]", status]
                       draining_succeeded: [status, conditions, "[type=DrainingSucceeded]", status]
+        - groupVersionKind:
+            group: hypershift.openshift.io
+            version: v1beta1
+            kind: NodePool
+          metricNamePrefix: hypershift_nodepool
+          labelsFromPath:
+            nodepool_name:
+              - metadata
+              - name
+            exported_namespace:
+              - metadata
+              - namespace
+            _id:
+              - metadata
+              - lables
+              - "api.openshift.com/id"
+            cluster_name:
+              - metadata
+              - lables
+              - "api.openshift.com/name"
+          metrics:
+            - name: "state_info"
+              help: "The current state of a nodepool."
+              each:
+                type: Info
+                info:
+                    labelsFromPath:
+                      autoscaling_enabled: [status, conditions, "[type=AutoscalingEnabled]", status]
+                      ready: [status, conditions, "[type=Ready]", status]
+                      sg_available: [status, conditions, "[type=AWSSecurityGroupAvailable]", status]
+                      sg_available_reason: [status, conditions, "[type=AWSSecurityGroupAvailable]", reason]
+                      payload_valid: [status, conditions, "[type=ValidGeneratedPayload]", status]
+                      payload_valid_reason: [status, conditions, "[type=ValidGeneratedPayload]", reason]
+                      ign_server_reached: [status, conditions, "[type=ReachedIgnitionEndpoint]", status]
+                      ign_server_reached_reason: [status, conditions, "[type=ReachedIgnitionEndpoint]", reason]
+                      all_nodes_healthy: [status, conditions, "[type=AllNodesHealthy]", status]
+                      all_machines_ready: [status, conditions, "[type=AllMachinesReady]", status]
