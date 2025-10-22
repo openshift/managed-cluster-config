@@ -1,0 +1,61 @@
+---
+apiVersion: monitoring.rhobs/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: hypershift-component-availability
+    role: alert-rules
+  name: hypershift-component-availability
+  namespace: openshift-observability-rhobs
+spec:
+  groups:
+    - name: HyperShiftComponentAvailabilitySRE
+      interval: 60s
+      rules:
+        - alert: ClusterAPIUnavailableSRE
+          annotations:
+            description: "Cluster API controller is unavailable in namespace {{ $labels.namespace }} for cluster {{ $labels.cluster_name }}"
+            summary: "Cluster API controller unavailable"
+          expr: |
+            sum by (_id, namespace, cluster_name, exported_namespace) (
+              kube_pod_status_ready{pod=~"cluster-api-.*", condition="true"} == 0
+            ) unless on (_id) (
+              hypershift_cluster_alerts_disabled or hypershift_cluster_deleting_duration_seconds
+            )
+          for: 15m
+          labels:
+            severity: warning
+            send_managed_notification: "false"
+            namespace: "{{ $labels.namespace }}"
+
+        - alert: CAPIProviderAWSUnavailableSRE
+          annotations:
+            description: "CAPI Provider AWS is unavailable in namespace {{ $labels.namespace }} for cluster {{ $labels.cluster_name }}"
+            summary: "CAPI Provider AWS unavailable"
+          expr: |
+            sum by (_id, namespace, cluster_name, exported_namespace) (
+              kube_pod_status_ready{pod=~"capi-provider-.*", condition="true"} == 0
+            ) unless on (_id) (
+              hypershift_cluster_alerts_disabled or hypershift_cluster_deleting_duration_seconds
+            )
+          for: 15m
+          labels:
+            severity: warning
+            send_managed_notification: "false"
+            namespace: "{{ $labels.namespace }}"
+
+        - alert: IgnitionServerUnavailableSRE
+          annotations:
+            description: "Ignition Server is unavailable in namespace {{ $labels.namespace }} for cluster {{ $labels.cluster_name }}"
+            summary: "Ignition Server unavailable"
+          expr: |
+            sum by (_id, namespace, cluster_name, exported_namespace) (
+              kube_pod_status_ready{pod=~"ignition-server-[0-9a-z]+-[0-9a-z]+", condition="true"} == 0
+            ) unless on (_id) (
+              hypershift_cluster_alerts_disabled or hypershift_cluster_deleting_duration_seconds
+            )
+          for: 15m
+          labels:
+            severity: warning
+            send_managed_notification: "false"
+            namespace: "{{ $labels.namespace }}"
