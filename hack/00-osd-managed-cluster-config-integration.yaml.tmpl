@@ -49926,14 +49926,19 @@ objects:
         - name: NodePoolProvisioningFailureSRE
           interval: 60s
           rules:
+          - record: nodes_not_joining_nodepool
+            expr: "sum by (_id, cluster_name, exported_namespace, namespace) (\n \
+              \ (\n    ((hypershift_nodepools_available_replicas / hypershift_nodepools_size)\
+              \ < 1)\n    unless on (_id) (\n      (hypershift_nodepools_size == 0)\
+              \ or (hypershift_cluster_limited_support_enabled == 1)\n    )\n  )\n\
+              \  unless on (exported_namespace) last_over_time(hypershift_cluster_deleting_duration_seconds[10m])\n\
+              )"
           - alert: NodesNotJoiningNodePoolSRE
             annotations:
               description: The NodePool {{ $labels.name }} has not reached its target
                 size for more than 1 hour
               summary: NodePool provisioning Failure
-            expr: sum by (_id, namespace, cluster_name, exported_namespace, name)
-              (((hypershift_nodepools_available_replicas / hypershift_nodepools_size)
-              < 1) unless on (_id) ((hypershift_nodepools_size == 0) or hypershift_cluster_alerts_disabled))
+            expr: nodes_not_joining_nodepool
             for: 60m
             labels:
               severity: warning
