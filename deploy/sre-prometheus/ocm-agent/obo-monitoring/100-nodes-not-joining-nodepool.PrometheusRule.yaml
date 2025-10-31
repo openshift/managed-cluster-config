@@ -12,11 +12,22 @@ spec:
     - name: NodePoolProvisioningFailureSRE
       interval: 60s
       rules:
+        - record: nodes_not_joining_nodepool
+          expr: |-
+            sum by (_id, cluster_name, exported_namespace, namespace) (
+              (
+                ((hypershift_nodepools_available_replicas / hypershift_nodepools_size) < 1)
+                unless on (_id) (
+                  (hypershift_nodepools_size == 0) or (hypershift_cluster_limited_support_enabled == 1)
+                )
+              )
+              unless on (exported_namespace) last_over_time(hypershift_cluster_deleting_duration_seconds[10m])
+            )
         - alert: NodesNotJoiningNodePoolSRE
           annotations:
             description: "The NodePool {{ $labels.name }} has not reached its target size for more than 1 hour"
             summary: "NodePool provisioning Failure"
-          expr: sum by (_id, namespace, cluster_name, exported_namespace, name) (((hypershift_nodepools_available_replicas / hypershift_nodepools_size) < 1) unless on (_id) ((hypershift_nodepools_size == 0) or hypershift_cluster_alerts_disabled))
+          expr: nodes_not_joining_nodepool unless on (exported_namespace) (sre:nodepool_components:all_available==0 or sre:nodepool:invalid_payload_nodepool_provision_failure)
           for: 60m
           labels:
             severity: warning
