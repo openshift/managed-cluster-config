@@ -49965,10 +49965,9 @@ objects:
               description: Customer cloud environment is unreachable from the management
                 cluster due to invalid aws credentials
               summary: Cluster has invalid AWS credentials
-            expr: sum by (mc_name, _mc_id, sector, region, env, namespace, exported_namespace,
-              source, _id) (last_over_time(hypershift_cluster_invalid_aws_creds[10m]))
-              > 0 unless on (exported_namespace) hypershift_cluster_waiting_initial_avaibility_duration_seconds
-              unless on (exported_namespace) last_over_time(hypershift_cluster_deleting_duration_seconds[10m])
+            expr: (max by (exported_namespace, _id) (hypershift_cluster_invalid_aws_creds)
+              == 1) unless on (exported_namespace) (hypershift_cluster_waiting_initial_avaibility_duration_seconds
+              or hypershift_cluster_deleting_duration_seconds)
             for: 4m
             labels:
               severity: warning

@@ -19,7 +19,8 @@ spec:
           # Clusters tend to have their `hypershift_cluster_invalid_aws_creds` set to > 0 while the HCP didn't finish the installation, thus we check
           # that the HCP is not rolling out in our expression (= hypershift_cluster_waiting_initial_avaibility_duration_seconds does not exist)
           # hypershift_cluster_waiting_initial_avaibility_duration_seconds stops being emitted once the HCP is rolled out
-          expr: sum by (mc_name, _mc_id, sector, region, env, namespace, exported_namespace, source, _id) (last_over_time(hypershift_cluster_invalid_aws_creds[10m])) > 0 unless on (exported_namespace) hypershift_cluster_waiting_initial_avaibility_duration_seconds unless on (exported_namespace) last_over_time(hypershift_cluster_deleting_duration_seconds[10m])
+          # This will be fixed with https://issues.redhat.com/browse/OCPBUGS-63353 
+          expr: (max by (exported_namespace, _id) (hypershift_cluster_invalid_aws_creds) == 1) unless on (exported_namespace) (hypershift_cluster_waiting_initial_avaibility_duration_seconds or hypershift_cluster_deleting_duration_seconds)
           for: 4m # api-ErrorBudgetBurn is our highest SLA and triggers after 5 minutes of CrashLooping kube-apiserver pods. KAS pods can CrashLoop due to missing OIDC/invalid AWS permissions. To reduce self-resolving alerts, we need the limited support to be in place before the alert triggers.
           labels:
             severity: warning
