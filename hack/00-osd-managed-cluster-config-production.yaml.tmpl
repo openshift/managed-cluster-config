@@ -31689,10 +31689,20 @@ objects:
           ]\n            iso_timestamp = join!(parts, \"\")\n            parsed_ts,\
           \ ts_err = parse_timestamp(iso_timestamp, \"%+\")\n            if ts_err\
           \ == null {\n              .timestamp = parsed_ts\n            }\n     \
-          \     }\n        }\n      }\n\n# Sinks\nsinks:\n  prometheus:\n    type:\
-          \ prometheus_exporter\n    inputs:\n      - vector_metrics\n\n  hcp_logs:\n\
-          \    type: \"aws_s3\"\n    inputs: [\"parse_plain_text_timestamps\"]\n \
-          \   \n    # S3 bucket configuration\n    bucket: \"${S3_BUCKET_NAME}\"\n\
+          \     }\n        }\n      }\n\n  # Create custom per-cluster metrics for\
+          \ S3 delivery monitoring\n  # Converts log events into Prometheus metrics\
+          \ with source pod labels\n  cluster_metrics:\n    type: \"log_to_metric\"\
+          \n    inputs: [\"parse_plain_text_timestamps\"]\n    metrics:\n      - type:\
+          \ \"counter\"\n        field: \"message\"\n        name: \"hcp_logs_events_total\"\
+          \n        namespace: \"vector\"\n        tags:\n          pod_namespace:\
+          \ \"{{ namespace }}\"\n          pod_name: \"{{ pod_name }}\"\n        \
+          \  container_name: \"{{ container_name }}\"\n          mc_cluster_id: \"\
+          {{ mc_cluster_id }}\"\n          application: \"{{ application }}\"\n\n\
+          # Sinks\nsinks:\n  prometheus:\n    type: prometheus_exporter\n    inputs:\n\
+          \      - vector_metrics      # Internal Vector component metrics\n     \
+          \ - cluster_metrics     # Custom per-cluster metrics with source labels\n\
+          \n  hcp_logs:\n    type: \"aws_s3\"\n    inputs: [\"parse_plain_text_timestamps\"\
+          ]\n\n    # S3 bucket configuration\n    bucket: \"${S3_BUCKET_NAME}\"\n\
           \    region: \"${AWS_REGION}\"\n    \n    # Escape the following string\
           \ so hive doesn't attempt to interpolate\n    # the same syntax as vector\
           \ does during the selectorsyncset apply\n    # The weird brace syntax is\
