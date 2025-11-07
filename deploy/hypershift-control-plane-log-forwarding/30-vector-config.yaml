@@ -188,18 +188,36 @@ data:
               }
             }
           }
-    
+
+      # Create custom per-cluster metrics for S3 delivery monitoring
+      # Converts log events into Prometheus metrics with source pod labels
+      cluster_metrics:
+        type: "log_to_metric"
+        inputs: ["parse_plain_text_timestamps"]
+        metrics:
+          - type: "counter"
+            field: "message"
+            name: "hcp_logs_events_total"
+            namespace: "vector"
+            tags:
+              pod_namespace: "{{ namespace }}"
+              pod_name: "{{ pod_name }}"
+              container_name: "{{ container_name }}"
+              mc_cluster_id: "{{ mc_cluster_id }}"
+              application: "{{ application }}"
+
     # Sinks
     sinks:
       prometheus:
         type: prometheus_exporter
         inputs:
-          - vector_metrics
+          - vector_metrics      # Internal Vector component metrics
+          - cluster_metrics     # Custom per-cluster metrics with source labels
 
       hcp_logs:
         type: "aws_s3"
         inputs: ["parse_plain_text_timestamps"]
-        
+
         # S3 bucket configuration
         bucket: "${S3_BUCKET_NAME}"
         region: "${AWS_REGION}"
