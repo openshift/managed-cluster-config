@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/component: authentication-proxy
+    app.kubernetes.io/name: token-refresher
+  name: token-refresher
+  namespace: openshift-logging
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: authentication-proxy
+      app.kubernetes.io/name: token-refresher
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: authentication-proxy
+        app.kubernetes.io/name: token-refresher
+    spec:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - preference:
+                matchExpressions:
+                  - key: node-role.kubernetes.io/infra
+                    operator: Exists
+              weight: 1
+      tolerations:
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/infra
+          operator: Exists
+      volumes:
+        - configMap:
+            defaultMode: 420
+            items:
+              - key: ca-bundle.crt
+                path: ca-certificates.crt
+            name: token-refresher-trusted-ca-bundle
+          name: token-refresher-trusted-ca-bundle
+      containers:
+        - args:
+            - --log.level=info
+            - --log.format=logfmt
+            - --web.listen=0.0.0.0:8080
+            - --web.internal.listen=0.0.0.0:8081
+            - --oidc.client-id=$(OIDC_CLIENT_ID)
+            - --oidc.client-secret=$(OIDC_CLIENT_SECRET)
+            - --oidc.issuer-url=https://sso.redhat.com/auth/realms/redhat-external
+            - --upstream.url=$(RECEIVER_URL)
+            - --scope=profile
+          env:
+            - name: CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: observatorium-credentials
+                  key: client-id
+            - name: CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: observatorium-credentials
+                  key: client-secret
+            - name: RECEIVER_URL
+              valueFrom:
+                secretKeyRef:
+                  name: observatorium-credentials
+                  key: receiver-url
+          image: quay.io/observatorium/token-refresher@sha256:0a3562d2a10bbb68f3edf60b3e471a1cb344735673dde2af16776b53c6674a43
+          name: token-refresher
+          ports:
+            - containerPort: 8080
+              name: http
+          volumeMounts:
+            - mountPath: /etc/ssl/certs/
+              name: token-refresher-trusted-ca-bundle
+              readOnly: true
