@@ -9,7 +9,7 @@ metadata:
   namespace: openshift-observability-rhobs
 spec:
   groups:
-    - name: NodePoolProvisioningFailureSRE
+    - name: nodepool-provisioning-failure
       interval: 60s
       rules:
         - record: sre:nodepool:provisioning_failure_notify
@@ -23,7 +23,7 @@ spec:
               )
               unless on (exported_namespace) last_over_time(hypershift_cluster_deleting_duration_seconds[10m])
             )
-        - alert: NodesNotJoiningNodePoolSRE
+        - alert: NodepoolFailureNotification
           annotations:
             description: "One or more nodepool for cluster {{ $labels._id }} has not reached its target size for more than 1 hour"
             summary: "NodePool provisioning Failure"
