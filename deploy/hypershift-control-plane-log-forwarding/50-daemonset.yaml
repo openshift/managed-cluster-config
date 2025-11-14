@@ -9,6 +9,11 @@ metadata:
   name: control-plane-log-forwarding
   namespace: hypershift-control-plane-log-forwarding
 spec:
+  updateStrategy:
+    rollingUpdate:
+      maxSurge: 0 # Must ensure each pod is removed before starting the next due to buffer lock
+      maxUnavailable: 1
+    type: RollingUpdate
   selector:
     matchLabels:
       app: control-plane-log-forwarding
@@ -20,6 +25,9 @@ spec:
       containers:
       - command:
         - vector
+        - --watch-config
+        - --watch-config-method
+        - recommended
         env:
         - name: VECTOR_LOG
           value: DEBUG

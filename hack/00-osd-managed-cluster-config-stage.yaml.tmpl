@@ -31924,6 +31924,11 @@ objects:
         name: control-plane-log-forwarding
         namespace: hypershift-control-plane-log-forwarding
       spec:
+        updateStrategy:
+          rollingUpdate:
+            maxSurge: 0
+            maxUnavailable: 1
+          type: RollingUpdate
         selector:
           matchLabels:
             app: control-plane-log-forwarding
@@ -31935,6 +31940,9 @@ objects:
             containers:
             - command:
               - vector
+              - --watch-config
+              - --watch-config-method
+              - recommended
               env:
               - name: VECTOR_LOG
                 value: DEBUG
