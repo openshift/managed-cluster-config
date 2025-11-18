@@ -1,0 +1,13 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: control-plane-log-forwarding-cmo
+  namespace: hypershift-control-plane-log-forwarding
+spec:
+  podMetricsEndpoints:
+  - path: /metrics
+    port: metrics
+    scheme: http
+  selector:
+    matchLabels:
+      app: control-plane-log-forwarding
