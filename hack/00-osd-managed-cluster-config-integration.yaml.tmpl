@@ -31864,6 +31864,54 @@ objects:
         selector:
           matchLabels:
             app: control-plane-log-forwarding
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PodMonitor
+      metadata:
+        name: control-plane-log-forwarding-cmo
+        namespace: hypershift-control-plane-log-forwarding
+      spec:
+        podMetricsEndpoints:
+        - path: /metrics
+          port: metrics
+          scheme: http
+        selector:
+          matchLabels:
+            app: control-plane-log-forwarding
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: prometheus-k8s-monitoring
+        namespace: hypershift-control-plane-log-forwarding
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - services
+        - endpoints
+        - pods
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - configmaps
+        verbs:
+        - get
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: prometheus-k8s-monitoring
+        namespace: hypershift-control-plane-log-forwarding
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: prometheus-k8s-monitoring
+      subjects:
+      - kind: ServiceAccount
+        name: prometheus-k8s
+        namespace: openshift-monitoring
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -49284,6 +49332,60 @@ objects:
                 stateful set in the 'openshift-observability-operator' namespace is
                 not available for 60 minutes.
               SOP: https://github.com/openshift/ops-sop/blob/master/hypershift/alerts/OpenshiftObservabilityOperatorAlertmanagerComponentsDegradedSRE.md
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        name: sre-vector-log-forwarding
+        namespace: openshift-monitoring
+        labels:
+          prometheus: sre-vector-log-forwarding
+          role: alert-rules
+      spec:
+        groups:
+        - name: sre-vector-log-forwarding-recording-rules
+          rules:
+          - record: vector:log_delivery:success_ratio
+            expr: 'sum(rate(vector_component_sent_events_total{component_id="hcp_logs"}[5m]))
+
+              /
+
+              sum(rate(vector_component_received_events_total{component_id="kubernetes_logs"}[5m]))
+
+              '
+          - record: vector:log_delivery:pipeline_ratio:by_cluster
+            expr: "sum by (pod_namespace) (\n  rate(vector_hcp_logs_events_total[5m])\n\
+              )\n/\nsum by (pod_namespace) (\n  rate(vector_component_received_events_total{component_id=\"\
+              kubernetes_logs\"}[5m])\n)\n"
+          - record: vector:s3_sink:write_ratio
+            expr: 'sum(rate(vector_component_sent_events_total{component_id="hcp_logs"}[5m]))
+
+              /
+
+              sum(rate(vector_component_received_events_total{component_id="hcp_logs"}[5m]))
+
+              '
+          - record: vector:logs:ingestion_rate
+            expr: 'sum(rate(vector_component_received_events_total{component_id="kubernetes_logs"}[5m]))
+
+              '
+          - record: vector:logs:s3_delivery_rate
+            expr: 'sum(rate(vector_component_sent_events_total{component_id="hcp_logs"}[5m]))
+
+              '
+          - record: vector:logs:ingestion_rate:by_pod
+            expr: "sum by (pod) (\n  rate(vector_component_received_events_total{component_id=\"\
+              kubernetes_logs\"}[5m])\n)\n"
+          - record: vector:logs:s3_delivery_rate:by_pod
+            expr: "sum by (pod) (\n  rate(vector_component_sent_events_total{component_id=\"\
+              hcp_logs\"}[5m])\n)\n"
+          - record: vector:logs:write_ratio:by_pod
+            expr: "sum by (pod) (\n  rate(vector_component_sent_events_total{component_id=\"\
+              hcp_logs\"}[5m])\n)\n/\nsum by (pod) (\n  rate(vector_component_received_events_total{component_id=\"\
+              kubernetes_logs\"}[5m])\n)\n"
+        - name: sre-vector-log-forwarding-critical-alerts
+          rules: null
+        - name: sre-vector-log-forwarding-warning-alerts
+          rules: null
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
