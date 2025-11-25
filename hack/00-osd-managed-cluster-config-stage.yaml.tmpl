@@ -49358,9 +49358,174 @@ objects:
               hcp_logs\"}[5m])\n)\n/\nsum by (pod) (\n  rate(vector_component_received_events_total{component_id=\"\
               kubernetes_logs\"}[5m])\n)\n"
         - name: sre-vector-log-forwarding-critical-alerts
-          rules: null
+          rules:
+          - alert: VectorNoLogsIngestedSRE
+            expr: 'sum(rate(vector_component_received_events_total{component_id="kubernetes_logs"}[5m]))
+              == 0
+
+              '
+            for: 5m
+            labels:
+              severity: warning
+              namespace: openshift-monitoring
+            annotations:
+              summary: Vector is not collecting any logs from HCP pods
+              description: No logs have been collected in the last 5 minutes. Check
+                Vector pod status and k8s API connectivity.
+              SOP: https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/VectorNoLogsIngestedSRE.md
+          - alert: VectorS3WritesStoppedSRE
+            expr: 'sum(rate(vector_component_sent_events_total{component_id="hcp_logs"}[5m]))
+              == 0
+
+              '
+            for: 5m
+            labels:
+              severity: warning
+              namespace: openshift-monitoring
+            annotations:
+              summary: Vector has stopped writing logs to S3
+              description: No logs have been written to S3 in the last 5 minutes.
+                Buffer will eventually fill. Check S3 access and IAM roles.
+              SOP: https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/VectorS3WritesStoppedSRE.md
+          - alert: VectorErrorBudgetBurnFastSRE
+            expr: '(1 - vector:log_delivery:success_ratio) > 0.0144
+
+              '
+            for: 2m
+            labels:
+              severity: warning
+              namespace: openshift-monitoring
+            annotations:
+              summary: Vector is burning through error budget rapidly
+              description: 'Delivery failure rate: {{ $value | humanizePercentage
+                }}. At current rate, would exhaust 5% of 30-day error budget in 1
+                hour.'
+              SOP: https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/VectorErrorBudgetBurnFastSRE.md
         - name: sre-vector-log-forwarding-warning-alerts
-          rules: null
+          rules:
+          - alert: VectorBufferNearCapacitySRE
+            expr: 'vector_buffer_byte_size{buffer_id="hcp_logs"} > 7516192768
+
+              '
+            for: 10m
+            labels:
+              severity: warning
+              namespace: openshift-monitoring
+            annotations:
+              summary: Vector S3 buffer is >70% full on pod {{ $labels.pod }}
+              description: 'Buffer size: {{ $value | humanize1024 }}B (>7GB threshold).
+                If buffer reaches 10GB, log collection will be blocked.'
+              SOP: https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/VectorBufferNearCapacitySRE.md
+          - alert: VectorS3ErrorsSRE
+            expr: 'sum(rate(vector_component_errors_total{component_id="hcp_logs"}[5m]))
+              > 0
+
+              '
+            for: 5m
+            labels:
+              severity: warning
+              namespace: openshift-monitoring
+            annotations:
+              summary: Vector is experiencing S3 write errors
+              description: 'S3 error rate: {{ $value | humanize }} errors/sec. Check
+                Vector logs and S3 service status.'
+              SOP: https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/VectorS3ErrorsSRE.md
+          - alert: VectorS3WriteBackpressureSRE
+            expr: "(\n  sum(rate(vector_component_sent_events_total{component_id=\"\
+              hcp_logs\"}[5m]))\n  /\n  sum(rate(vector_component_received_events_total{component_id=\"\
+              hcp_logs\"}[5m]))\n) < 0.95\n"
+            for: 30m
+            labels:
+              severity: warning
+              namespace: openshift-monitoring
+            annotations:
+              summary: S3 sink is not keeping up with incoming logs
+              description: S3 write rate is {{ $value | humanizePercentage }} of queue
+                rate. Buffer will grow over time. Check S3 write latency.
+              SOP: https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/VectorS3WriteBackpressureSRE.md
+          - alert: VectorPipelineLossSRE
+            expr: "(\n  sum(rate(vector_component_sent_events_total{component_id=\"\
+              hcp_logs\"}[5m]))\n  /\n  sum(rate(vector_component_received_events_total{component_id=\"\
+              kubernetes_logs\"}[5m]))\n) < 0.98\n"
+            for: 30m
+            labels:
+              severity: warning
+              namespace: openshift-monitoring
+            annotations:
+              summary: Logs are being lost in Vector pipeline
+              description: 'End-to-end delivery: {{ $value | humanizePercentage }}.
+                Expected ~100%. Check for transform errors or S3 sink issues.'
+              SOP: https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/VectorPipelineLossSRE.md
+          - alert: VectorErrorBudgetBurnSlowSRE
+            expr: '(1 - vector:log_delivery:success_ratio) > 0.003
+
+              '
+            for: 1h
+            labels:
+              severity: warning
+              namespace: openshift-monitoring
+            annotations:
+              summary: Vector is burning through error budget (slow burn)
+              description: 'Delivery failure rate: {{ $value | humanizePercentage
+                }}. At current rate, would exhaust 10% of 30-day error budget in 6
+                hours.'
+              SOP: https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/VectorErrorBudgetBurnSlowSRE.md
+          - alert: VectorBufferGrowingRapidlySRE
+            expr: 'deriv(vector_buffer_byte_size{buffer_id="hcp_logs"}[5m]) > 1677721.6
+
+              '
+            for: 10m
+            labels:
+              severity: warning
+              namespace: openshift-monitoring
+            annotations:
+              summary: Vector buffer growing rapidly on pod {{ $labels.pod }}
+              description: 'Buffer growth rate: {{ $value | humanize }}B/sec (>100MB/min
+                threshold). IMPORTANT: This value is the GROWTH RATE (how fast buffer
+                is filling), not the buffer size.'
+              SOP: https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/VectorBufferGrowingRapidlySRE.md
+          - alert: VectorTransformErrorsSRE
+            expr: "sum by (component_id) (\n  rate(vector_component_errors_total{\n\
+              \    component_id=~\"enrich_metadata|parse_json_logs|parse_plain_text_timestamps\"\
+              \n  }[5m])\n) > 0\n"
+            for: 5m
+            labels:
+              severity: warning
+              namespace: openshift-monitoring
+            annotations:
+              summary: Vector transform {{ $labels.component_id }} is experiencing
+                errors
+              description: 'Transform error rate: {{ $value | humanize }} errors/sec.
+                Logs may be dropped or delivered with incomplete metadata.'
+              SOP: https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/VectorTransformErrorsSRE.md
+          - alert: VectorClusterExcessiveLogsSRE
+            expr: "sum by (pod_namespace) (\n  rate(vector_component_received_events_total{component_id=\"\
+              kubernetes_logs\"}[5m])\n) > 2000\n"
+            for: 15m
+            labels:
+              severity: warning
+              namespace: openshift-monitoring
+            annotations:
+              summary: HCP cluster {{ $labels.pod_namespace }} generating excessive
+                logs
+              description: 'Log rate: {{ $value | humanize }} events/sec (>2000 threshold).
+                This may be normal during high activity or indicate logging issues.'
+              SOP: https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/VectorClusterExcessiveLogsSRE.md
+          - alert: VectorClusterPipelineIssuesSRE
+            expr: 'vector:log_delivery:pipeline_ratio:by_cluster < 0.95
+
+              '
+            for: 30m
+            labels:
+              severity: warning
+              namespace: openshift-monitoring
+            annotations:
+              summary: HCP cluster {{ $labels.pod_namespace }} has pipeline processing
+                issues
+              description: 'Pipeline throughput: {{ $value | humanizePercentage }}
+                (<95% threshold). Logs may be dropped in transforms. Check for VRL
+                errors in enrich_metadata, parse_json_logs, or parse_plain_text_timestamps.'
+              SOP: https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/VectorClusterPipelineIssuesSRE.md
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
