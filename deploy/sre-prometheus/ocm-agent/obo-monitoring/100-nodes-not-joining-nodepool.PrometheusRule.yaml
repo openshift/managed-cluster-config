@@ -16,12 +16,23 @@ spec:
           expr: |-
             sum by (_id, cluster_name, exported_namespace, namespace) (
               (
-                ((hypershift_nodepools_available_replicas / hypershift_nodepools_size) < 1)
-                unless on (_id) (
-                  (hypershift_nodepools_size == 0) or (hypershift_cluster_limited_support_enabled == 1)
+                (
+                  (hypershift_nodepools_available_replicas / hypershift_nodepools_size < 1)
+                  unless on (_id) (
+                    hypershift_nodepools_size == 0
+                    or
+                    hypershift_cluster_limited_support_enabled == 1
+                  )
                 )
+                unless on (exported_namespace) last_over_time(hypershift_cluster_deleting_duration_seconds[10m])
               )
-              unless on (exported_namespace) last_over_time(hypershift_cluster_deleting_duration_seconds[10m])
+              unless on (exported_namespace) label_replace(
+                capi_machine_info{status_phase="Deleting"},
+                "exported_namespace",
+                "$1-$2-$3",
+                "exported_namespace",
+                "^(.*?)-(.*?)-(.*?)-.*$"
+              )
             )
         - alert: NodepoolFailureNotification
           annotations:
@@ -33,5 +44,5 @@ spec:
             severity: warning
             send_managed_notification: "false"
             managed_notification_template: nodepool-provisioning-failure
-            cluster_id: "{{ $labels._id }}" 
+            cluster_id: "{{ $labels._id }}"
             namespace: "{{ $labels.namespace }}"
