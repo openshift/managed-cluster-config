@@ -50205,11 +50205,13 @@ objects:
           rules:
           - record: sre:nodepool:provisioning_failure_notify
             expr: "sum by (_id, cluster_name, exported_namespace, namespace) (\n \
-              \ (\n    ((hypershift_nodepools_available_replicas / hypershift_nodepools_size)\
-              \ < 1)\n    unless on (_id) (\n      (hypershift_nodepools_size == 0)\
-              \ or (hypershift_cluster_limited_support_enabled == 1)\n    )\n  )\n\
-              \  unless on (exported_namespace) last_over_time(hypershift_cluster_deleting_duration_seconds[10m])\n\
-              )"
+              \ (\n    (\n      (hypershift_nodepools_available_replicas / hypershift_nodepools_size\
+              \ < 1)\n      unless on (_id) (\n        hypershift_nodepools_size ==\
+              \ 0\n        or\n        hypershift_cluster_limited_support_enabled\
+              \ == 1\n      )\n    )\n    unless on (exported_namespace) last_over_time(hypershift_cluster_deleting_duration_seconds[10m])\n\
+              \  )\n  unless on (exported_namespace) label_replace(\n    capi_machine_info{status_phase=\"\
+              Deleting\"},\n    \"exported_namespace\",\n    \"$1-$2-$3\",\n    \"\
+              exported_namespace\",\n    \"^(.*?)-(.*?)-(.*?)-.*$\"\n  )\n)"
           - alert: NodepoolFailureNotification
             annotations:
               description: One or more nodepool for cluster {{ $labels._id }} has
