@@ -1,0 +1,32 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: windows-vcpu-overcommit
+spec:
+  failurePolicy: Fail
+  matchConditions:
+  - expression: (('kubevirt.io/preference-name' in object.metadata.annotations) && 
+        (object.metadata.annotations['kubevirt.io/preference-name'].lowerAscii().contains('windows'))) ||
+        (('kubevirt.io/cluster-preference-name' in object.metadata.annotations) && 
+        (object.metadata.annotations['kubevirt.io/cluster-preference-name'].lowerAscii().contains('windows'))) ||
+        (('vm.kubevirt.io/os' in object.metadata.annotations) && 
+        (object.metadata.annotations['vm.kubevirt.io/os'].lowerAscii().contains('windows')))
+    name: windows-vcpu-overcommit
+  matchConstraints:
+    resourceRules:
+    - apiGroups: ["kubevirt.io"]
+      apiVersions: ["*"]
+      operations: ["CREATE", "UPDATE"]
+      resources: ["virtualmachineinstances"]
+  validations:
+    - expression: |-
+        (
+          'kubevirt.io/cluster-preference-name' in object.metadata.annotations &&
+          object.metadata.annotations['kubevirt.io/cluster-preference-name'].lowerAscii().contains('dedicated')
+        ) ||
+        (
+          'kubevirt.io/preference-name' in object.metadata.annotations &&
+          object.metadata.annotations['kubevirt.io/preference-name'].lowerAscii().contains('dedicated')
+        )
+      message: "Windows VM are required to use *dedicated preferences."
+
