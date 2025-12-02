@@ -38640,6 +38640,23 @@ objects:
       - kind: ServiceAccount
         name: osd-cluster-ready
         namespace: openshift-monitoring
+    - apiVersion: networking.k8s.io/v1
+      kind: NetworkPolicy
+      metadata:
+        labels:
+          app.kubernetes.io/managed-by: osd-cluster-ready
+          app.kubernetes.io/part-of: openshift-monitoring
+        name: osd-cluster-ready
+        namespace: openshift-monitoring
+      spec:
+        egress:
+        - {}
+        podSelector:
+          matchLabels:
+            job-name: osd-cluster-ready
+        policyTypes:
+        - Ingress
+        - Egress
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: Role
       metadata:
@@ -42552,6 +42569,23 @@ objects:
         apiGroup: rbac.authorization.k8s.io
         kind: Role
         name: osd-rebalance-infra-nodes-openshift-dns
+    - apiVersion: networking.k8s.io/v1
+      kind: NetworkPolicy
+      metadata:
+        labels:
+          app.kubernetes.io/managed-by: osd-rebalance-infra-nodes
+          app.kubernetes.io/part-of: openshift-monitoring
+        name: osd-rebalance-infra-nodes
+        namespace: openshift-monitoring
+      spec:
+        egress:
+        - {}
+        podSelector:
+          matchLabels:
+            app.kubernetes.io/name: osd-rebalance-infra-nodes
+        policyTypes:
+        - Ingress
+        - Egress
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: Role
       metadata:

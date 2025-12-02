@@ -1,0 +1,17 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: osd-rebalance-infra-nodes
+    app.kubernetes.io/part-of: openshift-monitoring
+  name: osd-rebalance-infra-nodes
+  namespace: openshift-monitoring
+spec:
+  egress:
+  - {}
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: osd-rebalance-infra-nodes
+  policyTypes:
+  - Ingress
+  - Egress
