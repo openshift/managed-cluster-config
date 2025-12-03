@@ -10069,7 +10069,7 @@ objects:
                 compliant: 2h
                 noncompliant: 45s
               object-templates:
-              - complianceType: musthave
+              - complianceType: mustonlyhave
                 metadataComplianceType: musthave
                 objectDefinition:
                   apiVersion: operator.openshift.io/v1
@@ -46088,53 +46088,6 @@ objects:
         customization:
           brand: ROSA
           documentationBaseURL: https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws_classic_architecture/4/
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    labels:
-      managed.openshift.io/gitHash: ${IMAGE_TAG}
-      managed.openshift.io/gitRepoName: ${REPO_NAME}
-      managed.openshift.io/osd: 'true'
-    name: rosa-console-branding-hcp
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-      matchExpressions:
-      - key: api.openshift.com/product
-        operator: In
-        values:
-        - rosa
-      - key: hive.openshift.io/version-major-minor
-        operator: NotIn
-        values:
-        - '4.1'
-        - '4.2'
-        - '4.3'
-        - '4.4'
-        - '4.5'
-        - '4.6'
-        - '4.7'
-        - '4.8'
-        - '4.9'
-        - '4.10'
-        - '4.11'
-        - '4.12'
-        - '4.13'
-        - '4.14'
-    resourceApplyMode: Upsert
-    applyBehavior: CreateOrUpdate
-    resources:
-    - apiVersion: operator.openshift.io/v1
-      kind: Console
-      metadata:
-        name: cluster
-      spec:
-        managementState: Managed
-        route: null
-        customization:
-          brand: ROSA
-          documentationBaseURL: https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
