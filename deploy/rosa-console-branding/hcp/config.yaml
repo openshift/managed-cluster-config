@@ -1,17 +1,7 @@
-deploymentMode: "SelectorSyncSet"
-selectorSyncSet:
+deploymentMode: Policy
+clusterSelectors:
   matchExpressions:
-  - key: api.openshift.com/product
-    operator: In
-    values: ["rosa"]
-  - key: hive.openshift.io/version-major-minor
-    operator: NotIn
-    values: ["4.1", "4.2", "4.3", "4.4", "4.5", "4.6", "4.7", "4.8", "4.9", "4.10", "4.11", "4.12", "4.13", "4.14"]
-    # Due to a race condition found during testing SREP-901 during cluster upgrades, we do not set the "ROSA" brand
-    # until 4.15
-  applyBehavior: "CreateOrUpdate"
-  # use Upsert so if this configuration no longer applies it will not delete the resource in cluster . We should never delete console.
-  resourceApplyMode: "Upsert"
-policy:
-  destination: "acm-policies"
-  complianceType: "musthave"
+    - key: hypershift.open-cluster-management.io/hosted-cluster
+      operator: In
+      values:
+        - "true"
