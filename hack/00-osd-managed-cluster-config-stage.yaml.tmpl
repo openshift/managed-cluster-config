@@ -49076,15 +49076,26 @@ objects:
         - name: sre-machine-out-of-compliance
           rules:
           - alert: MachineOutOfComplianceSRE
-            expr: (time() - mapi_machine_created_timestamp_seconds) > 2419200
-            for: 60m
+            expr: (time() - mapi_machine_created_timestamp_seconds) > 3024000
+            for: 1h
             labels:
               severity: critical
               namespace: '{{ $labels.namespace }}'
               node: '{{ $labels.node }}'
               link: https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/MachineOutOfCompliance.md
             annotations:
-              message: A machine on a management cluster is older than 28 days.
+              message: A machine on a management cluster is older than 35 days, indicating
+                a compliance-monkey failure.
+          - alert: MachineOutOfComplianceSREWarning
+            expr: count((time() - mapi_machine_created_timestamp_seconds) > 2419200)
+              > 5
+            for: 4h
+            labels:
+              severity: warning
+              link: https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/MachineOutOfCompliance.md
+            annotations:
+              message: '{{ $value }} machines on a management cluster are older than
+                28 days, indicating a compliance-monkey queue backup.'
     - apiVersion: monitoring.coreos.com/v1
       kind: PrometheusRule
       metadata:
