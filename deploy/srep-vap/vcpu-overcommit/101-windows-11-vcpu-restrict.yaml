@@ -1,0 +1,68 @@
+apiVersion: instancetype.kubevirt.io/v1beta1
+kind: VirtualMachineClusterPreference
+metadata:
+  annotations:
+    iconClass: icon-windows
+    openshift.io/display-name: Microsoft Windows 11 (virtio dedicated vCPU)
+    openshift.io/documentation-url: https://access.redhat.com
+    openshift.io/provider-display-name: Red Hat
+    openshift.io/support-url: https://access.redhat.com
+    tags: hidden,kubevirt,windows
+  labels:
+    instancetype.kubevirt.io/os-type: windows
+    instancetype.kubevirt.io/vendor: redhat.com
+  name: windows.11.virtio.dedicated
+spec:
+  annotations:
+    vm.kubevirt.io/os: windows
+  clock:
+    preferredClockOffset:
+      utc: {}
+    preferredTimer:
+      hpet:
+        present: false
+      hyperv: {}
+      pit:
+        tickPolicy: delay
+      rtc:
+        tickPolicy: catchup
+  cpu:
+    preferredCPUTopology: sockets
+    dedicatedCpuPlacement: true
+  devices:
+    preferredAutoattachInputDevice: true
+    preferredDiskBus: virtio
+    preferredInputBus: virtio
+    preferredInputType: tablet
+    preferredInterfaceModel: virtio
+    preferredTPM:
+      persistent: true
+  features:
+    preferredAcpi: {}
+    preferredApic: {}
+    preferredHyperv:
+      frequencies: {}
+      ipi: {}
+      reenlightenment: {}
+      relaxed: {}
+      reset: {}
+      runtime: {}
+      spinlocks:
+        spinlocks: 8191
+      synic: {}
+      synictimer:
+        direct: {}
+      tlbflush: {}
+      vapic: {}
+      vpindex: {}
+    preferredSmm: {}
+  firmware:
+    preferredEfi:
+      persistent: true
+      secureBoot: true
+  preferredTerminationGracePeriodSeconds: 3600
+  requirements:
+    cpu:
+      guest: 2
+    memory:
+      guest: 4Gi

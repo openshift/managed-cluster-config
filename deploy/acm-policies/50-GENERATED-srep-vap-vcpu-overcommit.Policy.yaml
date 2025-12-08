@@ -1,0 +1,182 @@
+---
+apiVersion: policy.open-cluster-management.io/v1
+kind: Policy
+metadata:
+    annotations:
+        policy.open-cluster-management.io/categories: CM Configuration Management
+        policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+        policy.open-cluster-management.io/standards: NIST SP 800-53
+    name: srep-vap-vcpu-overcommit
+    namespace: openshift-acm-policies
+spec:
+    disabled: false
+    policy-templates:
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+                name: srep-vap-vcpu-overcommit
+            spec:
+                evaluationInterval:
+                    compliant: 2h
+                    noncompliant: 45s
+                object-templates:
+                    - complianceType: mustonlyhave
+                      metadataComplianceType: musthave
+                      objectDefinition:
+                        apiVersion: instancetype.kubevirt.io/v1beta1
+                        kind: VirtualMachineClusterPreference
+                        metadata:
+                            annotations:
+                                iconClass: icon-windows
+                                openshift.io/display-name: Microsoft Windows 11 (virtio dedicated vCPU)
+                                openshift.io/documentation-url: https://access.redhat.com
+                                openshift.io/provider-display-name: Red Hat
+                                openshift.io/support-url: https://access.redhat.com
+                                tags: hidden,kubevirt,windows
+                            labels:
+                                instancetype.kubevirt.io/os-type: windows
+                                instancetype.kubevirt.io/vendor: redhat.com
+                            name: windows.11.virtio.dedicated
+                        spec:
+                            annotations:
+                                vm.kubevirt.io/os: windows
+                            clock:
+                                preferredClockOffset:
+                                    utc: {}
+                                preferredTimer:
+                                    hpet:
+                                        present: false
+                                    hyperv: {}
+                                    pit:
+                                        tickPolicy: delay
+                                    rtc:
+                                        tickPolicy: catchup
+                            cpu:
+                                dedicatedCpuPlacement: true
+                                preferredCPUTopology: sockets
+                            devices:
+                                preferredAutoattachInputDevice: true
+                                preferredDiskBus: virtio
+                                preferredInputBus: virtio
+                                preferredInputType: tablet
+                                preferredInterfaceModel: virtio
+                                preferredTPM:
+                                    persistent: true
+                            features:
+                                preferredAcpi: {}
+                                preferredApic: {}
+                                preferredHyperv:
+                                    frequencies: {}
+                                    ipi: {}
+                                    reenlightenment: {}
+                                    relaxed: {}
+                                    reset: {}
+                                    runtime: {}
+                                    spinlocks:
+                                        spinlocks: 8191
+                                    synic: {}
+                                    synictimer:
+                                        direct: {}
+                                    tlbflush: {}
+                                    vapic: {}
+                                    vpindex: {}
+                                preferredSmm: {}
+                            firmware:
+                                preferredEfi:
+                                    persistent: true
+                                    secureBoot: true
+                            preferredTerminationGracePeriodSeconds: 3600
+                            requirements:
+                                cpu:
+                                    guest: 2
+                                memory:
+                                    guest: 4Gi
+                    - complianceType: mustonlyhave
+                      metadataComplianceType: musthave
+                      objectDefinition:
+                        apiVersion: admissionregistration.k8s.io/v1
+                        kind: ValidatingAdmissionPolicy
+                        metadata:
+                            name: windows-vcpu-overcommit
+                        spec:
+                            failurePolicy: Fail
+                            matchConditions:
+                                - expression: (('kubevirt.io/preference-name' in object.metadata.annotations) && (object.metadata.annotations['kubevirt.io/preference-name'].lowerAscii().contains('windows'))) || (('kubevirt.io/cluster-preference-name' in object.metadata.annotations) && (object.metadata.annotations['kubevirt.io/cluster-preference-name'].lowerAscii().contains('windows'))) || (('vm.kubevirt.io/os' in object.metadata.annotations) && (object.metadata.annotations['vm.kubevirt.io/os'].lowerAscii().contains('windows')))
+                                  name: windows-vcpu-overcommit
+                            matchConstraints:
+                                resourceRules:
+                                    - apiGroups:
+                                        - kubevirt.io
+                                      apiVersions:
+                                        - '*'
+                                      operations:
+                                        - CREATE
+                                        - UPDATE
+                                      resources:
+                                        - virtualmachineinstances
+                            validations:
+                                - expression: |-
+                                    (
+                                      'kubevirt.io/cluster-preference-name' in object.metadata.annotations &&
+                                      object.metadata.annotations['kubevirt.io/cluster-preference-name'].lowerAscii().contains('dedicated')
+                                    ) ||
+                                    (
+                                      'kubevirt.io/preference-name' in object.metadata.annotations &&
+                                      object.metadata.annotations['kubevirt.io/preference-name'].lowerAscii().contains('dedicated')
+                                    )
+                                  message: Windows VM are required to use *dedicated preferences.
+                    - complianceType: mustonlyhave
+                      metadataComplianceType: musthave
+                      objectDefinition:
+                        apiVersion: admissionregistration.k8s.io/v1
+                        kind: ValidatingAdmissionPolicyBinding
+                        metadata:
+                            name: windows-vcpu-overcommit-binding
+                        spec:
+                            policyName: windows-vcpu-overcommit
+                            validationActions:
+                                - Deny
+                pruneObjectBehavior: DeleteIfCreated
+                remediationAction: enforce
+                severity: low
+    remediationAction: enforce
+---
+apiVersion: apps.open-cluster-management.io/v1
+kind: PlacementRule
+metadata:
+    name: placement-srep-vap-vcpu-overcommit
+    namespace: openshift-acm-policies
+spec:
+    clusterSelector:
+        matchExpressions:
+            - key: hypershift.open-cluster-management.io/hosted-cluster
+              operator: In
+              values:
+                - "true"
+            - key: api.openshift.com/win-li
+              operator: In
+              values:
+                - "true"
+            - key: openshiftVersion-major-minor
+              operator: NotIn
+              values:
+                - "4.14"
+                - "4.15"
+                - "4.16"
+                - "4.17"
+                - "4.18"
+---
+apiVersion: policy.open-cluster-management.io/v1
+kind: PlacementBinding
+metadata:
+    name: binding-srep-vap-vcpu-overcommit
+    namespace: openshift-acm-policies
+placementRef:
+    apiGroup: apps.open-cluster-management.io
+    kind: PlacementRule
+    name: placement-srep-vap-vcpu-overcommit
+subjects:
+    - apiGroup: policy.open-cluster-management.io
+      kind: Policy
+      name: srep-vap-vcpu-overcommit
