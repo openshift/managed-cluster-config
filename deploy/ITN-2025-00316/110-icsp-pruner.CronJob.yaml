@@ -1,0 +1,51 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: icsp-pruner
+  namespace: openshift-sre-pruning
+  annotations:
+    managed.openshift.io/source: ITN-2025-00316
+    managed.openshift.io/description: "CronJob to prune ImageContentSourcePolicy 'image-policy' every 30 minutes"
+spec:
+  failedJobsHistoryLimit: 5
+  successfulJobsHistoryLimit: 3
+  concurrencyPolicy: Replace
+  schedule: "*/30 * * * *"
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: 86400
+      template:
+        spec:
+          affinity:
+            nodeAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+              - preference:
+                  matchExpressions:
+                  - key: node-role.kubernetes.io/infra
+                    operator: Exists
+                weight: 1
+          tolerations:
+            - effect: NoSchedule
+              key: node-role.kubernetes.io/infra
+              operator: Exists
+          serviceAccountName: icsp-pruner-sa
+          restartPolicy: Never
+          containers:
+          - name: icsp-pruner
+            image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+            imagePullPolicy: Always
+            command:
+            - /bin/bash
+            - -c
+            - |
+              set -e
+              echo "Checking for ImageContentSourcePolicy 'image-policy'..."
+              if oc get imagecontentsourcepolicy image-policy &>/dev/null; then
+                echo "Found ImageContentSourcePolicy 'image-policy', deleting..."
+                oc delete imagecontentsourcepolicy image-policy
+                echo "Successfully deleted ImageContentSourcePolicy 'image-policy'"
+              else
+                echo "ImageContentSourcePolicy 'image-policy' not found - nothing to do"
+              fi
+              echo "Job completed successfully"

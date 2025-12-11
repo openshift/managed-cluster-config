@@ -1,0 +1,16 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: icsp-pruner-cr
+  annotations:
+    managed.openshift.io/source: ITN-2025-00316
+    managed.openshift.io/description: "CronJob ClusterRole to prune ImageContentSourcePolicy 'image-policy'"
+rules:
+- apiGroups:
+  - operator.openshift.io
+  resources:
+  - imagecontentsourcepolicies
+  verbs:
+  - get
+  - list
+  - delete
