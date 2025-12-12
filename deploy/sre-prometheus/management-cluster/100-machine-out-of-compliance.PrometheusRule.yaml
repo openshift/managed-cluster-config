@@ -10,15 +10,29 @@ spec:
   groups:
   - name: sre-machine-out-of-compliance
     rules:
+    # Critical alert for machines truly stuck (>35 days = clear failure)
     - alert: MachineOutOfComplianceSRE
       # https://issues.redhat.com/browse/OSD-17905
       # This alert is a fallback in case the workload in https://issues.redhat.com/browse/OSD-17902 doesn't do it's job.
-      expr: (time() - mapi_machine_created_timestamp_seconds) > 2419200
-      for: 60m
+      # Fires when ANY machine exceeds 35 days old, indicating compliance-monkey failed to replace it.
+      expr: (time() - mapi_machine_created_timestamp_seconds) > 3024000
+      for: 1h
       labels:
         severity: critical
         namespace: "{{ $labels.namespace }}"
         node: "{{ $labels.node }}"
         link: "https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/MachineOutOfCompliance.md"
       annotations:
-        message:  A machine on a management cluster is older than 28 days.
+        message: A machine on a management cluster is older than 35 days, indicating a compliance-monkey failure.
+    # Warning alert for queue backlogs (multiple machines aging out simultaneously)
+    - alert: MachineOutOfComplianceSREWarning
+      # https://issues.redhat.com/browse/OSD-17905
+      # Fires when multiple machines are >28 days old, indicating compliance-monkey queue backup.
+      # This is expected when many machines age out simultaneously but warrants monitoring.
+      expr: count((time() - mapi_machine_created_timestamp_seconds) > 2419200) > 5
+      for: 4h
+      labels:
+        severity: warning
+        link: "https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/MachineOutOfCompliance.md"
+      annotations:
+        message: "{{ $value }} machines on a management cluster are older than 28 days, indicating a compliance-monkey queue backup."
