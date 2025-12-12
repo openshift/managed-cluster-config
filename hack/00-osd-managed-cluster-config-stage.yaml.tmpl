@@ -49316,6 +49316,10 @@ objects:
               sum(rate(vector_component_received_events_total{component_id="kubernetes_logs"}[5m]))
 
               '
+          - record: vector:log_delivery:success_ratio:by_cluster
+            expr: "sum by (pod_namespace) (\n  rate(vector_component_sent_events_total{component_id=\"\
+              hcp_logs\"}[5m])\n)\n/\nsum by (pod_namespace) (\n  rate(vector_component_received_events_total{component_id=\"\
+              kubernetes_logs\"}[5m])\n)\n"
           - record: vector:log_delivery:pipeline_ratio:by_cluster
             expr: "sum by (pod_namespace) (\n  rate(vector_hcp_logs_events_total[5m])\n\
               )\n/\nsum by (pod_namespace) (\n  rate(vector_component_received_events_total{component_id=\"\
@@ -49377,7 +49381,7 @@ objects:
                 Buffer will eventually fill. Check S3 access and IAM roles.
               SOP: https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/VectorS3WritesStoppedSRE.md
           - alert: VectorErrorBudgetBurnFastSRE
-            expr: '(1 - vector:log_delivery:success_ratio) > 0.0144
+            expr: '(1 - vector:log_delivery:success_ratio:by_cluster) > 0.0144
 
               '
             for: 2m
@@ -49385,10 +49389,11 @@ objects:
               severity: warning
               namespace: openshift-monitoring
             annotations:
-              summary: Vector is burning through error budget rapidly
-              description: 'Delivery failure rate: {{ $value | humanizePercentage
-                }}. At current rate, would exhaust 5% of 30-day error budget in 1
-                hour.'
+              summary: Vector is burning through error budget rapidly for cluster
+                {{ $labels.pod_namespace }}
+              description: 'HCP cluster {{ $labels.pod_namespace }} delivery failure
+                rate: {{ $value | humanizePercentage }}. At current rate, would exhaust
+                5% of 30-day error budget in 1 hour.'
               SOP: https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/VectorErrorBudgetBurnFastSRE.md
         - name: sre-vector-log-forwarding-warning-alerts
           rules:
@@ -49446,7 +49451,7 @@ objects:
                 Expected ~100%. Check for transform errors or S3 sink issues.'
               SOP: https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/VectorPipelineLossSRE.md
           - alert: VectorErrorBudgetBurnSlowSRE
-            expr: '(1 - vector:log_delivery:success_ratio) > 0.003
+            expr: '(1 - vector:log_delivery:success_ratio:by_cluster) > 0.003
 
               '
             for: 1h
@@ -49454,10 +49459,11 @@ objects:
               severity: warning
               namespace: openshift-monitoring
             annotations:
-              summary: Vector is burning through error budget (slow burn)
-              description: 'Delivery failure rate: {{ $value | humanizePercentage
-                }}. At current rate, would exhaust 10% of 30-day error budget in 6
-                hours.'
+              summary: Vector is burning through error budget (slow burn) for cluster
+                {{ $labels.pod_namespace }}
+              description: 'HCP cluster {{ $labels.pod_namespace }} delivery failure
+                rate: {{ $value | humanizePercentage }}. At current rate, would exhaust
+                10% of 30-day error budget in 6 hours.'
               SOP: https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/VectorErrorBudgetBurnSlowSRE.md
           - alert: VectorBufferGrowingRapidlySRE
             expr: 'deriv(vector_buffer_byte_size{buffer_id="hcp_logs"}[5m]) > 1677721.6
