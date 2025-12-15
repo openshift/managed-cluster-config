@@ -28,6 +28,8 @@ parameters:
   required: true
 - name: OBSERVATORIUM_URL
   required: true
+- name: OBSERVATORIUM_CREDENTIALS_VERSION
+  required: false
 metadata:
   name: selectorsyncset-template
 objects:
@@ -1464,6 +1466,8 @@ objects:
         operator: NotIn
         values:
           - "true"
+      - key: reconcile-observatorium-credentials-${OBSERVATORIUM_CREDENTIALS_VERSION}
+        operator: DoesNotExist
     resourceApplyMode: Sync
     secretMappings:
     - sourceRef:
