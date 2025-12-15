@@ -70,7 +70,7 @@ data:
               .message = "[NO_MESSAGE_FIELD]"
             }
             # Don't attempt JSON parsing since original message wasn't a string
-          } else if starts_with(message_str, "{") || starts_with(message_str, "[") {
+          } else if (starts_with(message_str, "{") && ends_with(message_str, "}")) || (starts_with(message_str, "[") && ends_with(message_str, "]")) {
             parsed, err = parse_json(.message)
             if err == null && is_object(parsed) {
               # Handle timestamp precedence: prefer JSON log timestamps over Vector's timestamp
@@ -113,6 +113,9 @@ data:
                   }
                 } else if is_float(ts_value) || is_integer(ts_value) {
                   # Handle numeric timestamps
+                  # Convert to timestamp (handle both seconds and milliseconds)
+                  # unix_ts < 1000000000000.0 is an attempt to identify seconds vs milliseconds in the timestamp
+                  # Where a timestamp > 1 trillion can safely be assumed to be milliseconds
                   ts_float, float_err = to_float(ts_value)
                   if float_err == null {
                     if ts_float < 1000000000000.0 {
@@ -202,8 +205,10 @@ data:
               # 3. Kubernetes log format: "I0830 11:27:01.564974 1 controller.go:231] Message"
               k8s_match, k8s_err = parse_regex(message, r'^[IWEF](?P<month>\d{2})(?P<day>\d{2})\s+(?P<hour>\d{2}):(?P<minute>\d{2}):(?P<second>\d{2})\.(?P<microsecond>\d{6})')
               if k8s_err == null && k8s_match != null {
-                # Construct ISO timestamp (assume current year)
-                current_year, year_err = format_timestamp(now(), "%Y")
+                # Construct ISO timestamp using ingestion timestamp's year
+                # Use .ingest_timestamp instead of now() to avoid year-boundary bugs
+                # (logs written Dec 31 but processed Jan 1 would get wrong year with now())
+                current_year, year_err = format_timestamp(.ingest_timestamp, "%Y")
                 if year_err == null {
                   # Extract milliseconds (first 3 digits of microseconds)
                   millis, slice_err = slice(k8s_match.microsecond, start: 0, end: 3)
