@@ -60,11 +60,16 @@ data:
           # Performance optimization: only attempt JSON parsing if message looks like JSON
           message_str, str_err = string(.message)
           if str_err != null {
-            # Message field is missing or not a string - preserve the event but skip JSON parsing
-            if !exists(.message) {
+            # Message is not a string (could be integer, object, array, null, or missing)
+            if exists(.message) {
+              # Preserve non-string values by converting to string representation
+              # This ensures integers, objects, arrays are kept as strings for S3/downstream
+              .message = to_string(.message)
+            } else {
+              # Field is completely missing - set placeholder for debugging
               .message = "[NO_MESSAGE_FIELD]"
             }
-            # Keep Vector's ingestion timestamp, don't attempt JSON parsing
+            # Don't attempt JSON parsing since original message wasn't a string
           } else if starts_with(message_str, "{") || starts_with(message_str, "[") {
             parsed, err = parse_json(.message)
             if err == null && is_object(parsed) {
@@ -84,6 +89,8 @@ data:
                     unix_ts, unix_err = to_float(ts_value)
                     if unix_err == null {
                       # Convert to timestamp (handle both seconds and milliseconds)
+                      # unix_ts < 1000000000000.0 is an attempt to identify seconds vs milliseconds in the timestamp
+                      # Where a timestamp > 1 trillion can safely be assumed to be milliseconds
                       unix_ts_int, int_err = to_int(unix_ts)
                       if int_err == null {
                         if unix_ts < 1000000000000.0 {
