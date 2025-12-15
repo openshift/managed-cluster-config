@@ -170,12 +170,10 @@ data:
           # This handles logs that weren't parsed as JSON or didn't have timestamp fields
 
           message, msg_err = string(.message)
-          if msg_err != null {
-            # Message is not a string - skip timestamp parsing but preserve the event
-            # The event will keep its Vector ingestion timestamp or JSON-parsed timestamp from previous stage
-            # Exit this transform early without further processing
-            # (VRL doesn't have explicit return, so we just skip all parsing logic)
-          } else {
+          # If message is a string, process normally
+          # If message is not a string - skip timestamp parsing but preserve the event
+          # The event will keep its Vector ingestion timestamp or JSON-parsed timestamp from previous stage
+          if msg_err == null {
             # Priority order for timestamp extraction (try most specific first)
 
             # 1. Direct ISO timestamp at start: "2025-08-30T06:11:26.816Z Message here"
