@@ -31684,44 +31684,42 @@ objects:
           \ [\"parse_json_logs\"]\n    source: |\n      # Parse timestamps from plain\
           \ text log messages\n      # This handles logs that weren't parsed as JSON\
           \ or didn't have timestamp fields\n\n      message, msg_err = string(.message)\n\
-          \      if msg_err != null {\n        # Message is not a string - skip timestamp\
-          \ parsing but preserve the event\n        # The event will keep its Vector\
-          \ ingestion timestamp or JSON-parsed timestamp from previous stage\n   \
-          \     # Exit this transform early without further processing\n        #\
-          \ (VRL doesn't have explicit return, so we just skip all parsing logic)\n\
-          \      } else {\n        # Priority order for timestamp extraction (try\
-          \ most specific first)\n\n        # 1. Direct ISO timestamp at start: \"\
-          2025-08-30T06:11:26.816Z Message here\"\n        iso_match, iso_err = parse_regex(message,\
-          \ r'^(?P<timestamp>\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{3,6})?Z?)')\n\
-          \        if iso_err == null && iso_match != null {\n          parsed_ts,\
-          \ ts_err = parse_timestamp(iso_match.timestamp, \"%+\")\n          if ts_err\
-          \ == null {\n            .timestamp = parsed_ts\n          }\n        }\
-          \ else {\n          # 2. time=\"timestamp\" format: 'time=\"2025-08-30T09:21:21Z\"\
-          \ Additional content'\n          time_match, time_err = parse_regex(message,\
-          \ r'time=\"(?P<timestamp>[^\"]+)\"')\n          if time_err == null && time_match\
-          \ != null {\n            parsed_ts, ts_err = parse_timestamp(time_match.timestamp,\
-          \ \"%+\")\n            if ts_err == null {\n              .timestamp = parsed_ts\n\
-          \            }\n          }\n          # 3. Kubernetes log format: \"I0830\
-          \ 11:27:01.564974 1 controller.go:231] Message\"\n          k8s_match, k8s_err\
-          \ = parse_regex(message, r'^[IWEF](?P<month>\\d{2})(?P<day>\\d{2})\\s+(?P<hour>\\\
-          d{2}):(?P<minute>\\d{2}):(?P<second>\\d{2})\\.(?P<microsecond>\\d{6})')\n\
-          \          if k8s_err == null && k8s_match != null {\n            # Construct\
-          \ ISO timestamp (assume current year)\n            current_year, year_err\
-          \ = format_timestamp(now(), \"%Y\")\n            if year_err == null {\n\
-          \              # Extract milliseconds (first 3 digits of microseconds)\n\
-          \              millis, slice_err = slice(k8s_match.microsecond, start: 0,\
-          \ end: 3)\n              if slice_err == null {\n                # Build\
-          \ ISO timestamp using join function\n                parts = [current_year,\
-          \ \"-\", k8s_match.month, \"-\", k8s_match.day, \"T\",\n               \
-          \         k8s_match.hour, \":\", k8s_match.minute, \":\", k8s_match.second,\
-          \ \".\", millis, \"Z\"]\n                iso_timestamp, join_err = join(parts,\
-          \ \"\")\n                if join_err == null {\n                  parsed_ts,\
-          \ ts_err = parse_timestamp(iso_timestamp, \"%+\")\n                  if\
-          \ ts_err == null {\n                    .timestamp = parsed_ts\n       \
-          \           }\n                }\n              }\n            }\n     \
-          \     # 4. Go standard log format: \"2025/08/30 10:33:20 message\"\n   \
-          \       } else {\n            go_match, go_err = parse_regex(message, r'^(?P<year>\\\
-          d{4})/(?P<month>\\d{2})/(?P<day>\\d{2})\\s+(?P<hour>\\d{2}):(?P<minute>\\\
+          \      # If message is a string, process normally\n      # If message is\
+          \ not a string - skip timestamp parsing but preserve the event\n      #\
+          \ The event will keep its Vector ingestion timestamp or JSON-parsed timestamp\
+          \ from previous stage\n      if msg_err == null {\n        # Priority order\
+          \ for timestamp extraction (try most specific first)\n\n        # 1. Direct\
+          \ ISO timestamp at start: \"2025-08-30T06:11:26.816Z Message here\"\n  \
+          \      iso_match, iso_err = parse_regex(message, r'^(?P<timestamp>\\d{4}-\\\
+          d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{3,6})?Z?)')\n        if iso_err\
+          \ == null && iso_match != null {\n          parsed_ts, ts_err = parse_timestamp(iso_match.timestamp,\
+          \ \"%+\")\n          if ts_err == null {\n            .timestamp = parsed_ts\n\
+          \          }\n        } else {\n          # 2. time=\"timestamp\" format:\
+          \ 'time=\"2025-08-30T09:21:21Z\" Additional content'\n          time_match,\
+          \ time_err = parse_regex(message, r'time=\"(?P<timestamp>[^\"]+)\"')\n \
+          \         if time_err == null && time_match != null {\n            parsed_ts,\
+          \ ts_err = parse_timestamp(time_match.timestamp, \"%+\")\n            if\
+          \ ts_err == null {\n              .timestamp = parsed_ts\n            }\n\
+          \          }\n          # 3. Kubernetes log format: \"I0830 11:27:01.564974\
+          \ 1 controller.go:231] Message\"\n          k8s_match, k8s_err = parse_regex(message,\
+          \ r'^[IWEF](?P<month>\\d{2})(?P<day>\\d{2})\\s+(?P<hour>\\d{2}):(?P<minute>\\\
+          d{2}):(?P<second>\\d{2})\\.(?P<microsecond>\\d{6})')\n          if k8s_err\
+          \ == null && k8s_match != null {\n            # Construct ISO timestamp\
+          \ (assume current year)\n            current_year, year_err = format_timestamp(now(),\
+          \ \"%Y\")\n            if year_err == null {\n              # Extract milliseconds\
+          \ (first 3 digits of microseconds)\n              millis, slice_err = slice(k8s_match.microsecond,\
+          \ start: 0, end: 3)\n              if slice_err == null {\n            \
+          \    # Build ISO timestamp using join function\n                parts =\
+          \ [current_year, \"-\", k8s_match.month, \"-\", k8s_match.day, \"T\",\n\
+          \                        k8s_match.hour, \":\", k8s_match.minute, \":\"\
+          , k8s_match.second, \".\", millis, \"Z\"]\n                iso_timestamp,\
+          \ join_err = join(parts, \"\")\n                if join_err == null {\n\
+          \                  parsed_ts, ts_err = parse_timestamp(iso_timestamp, \"\
+          %+\")\n                  if ts_err == null {\n                    .timestamp\
+          \ = parsed_ts\n                  }\n                }\n              }\n\
+          \            }\n          # 4. Go standard log format: \"2025/08/30 10:33:20\
+          \ message\"\n          } else {\n            go_match, go_err = parse_regex(message,\
+          \ r'^(?P<year>\\d{4})/(?P<month>\\d{2})/(?P<day>\\d{2})\\s+(?P<hour>\\d{2}):(?P<minute>\\\
           d{2}):(?P<second>\\d{2})')\n            if go_err == null && go_match !=\
           \ null {\n              # Build ISO timestamp using join function\n    \
           \          parts = [go_match.year, \"-\", go_match.month, \"-\", go_match.day,\
