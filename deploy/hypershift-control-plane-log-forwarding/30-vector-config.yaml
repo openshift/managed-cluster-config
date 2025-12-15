@@ -35,7 +35,7 @@ data:
         inputs: ["kubernetes_logs"]
         source: |
           # Extract metadata for S3 path structure
-          .mc_cluster_id = get_env_var!("MC_CLUSTER_ID") || "unknown"
+          .mc_cluster_id = get_env_var("MC_CLUSTER_ID") ?? "unknown"
           .namespace = .kubernetes.pod_namespace || "unknown"
           .application = .kubernetes.pod_labels.app || "unknown"
           .pod_name = .kubernetes.pod_name || "unknown"
