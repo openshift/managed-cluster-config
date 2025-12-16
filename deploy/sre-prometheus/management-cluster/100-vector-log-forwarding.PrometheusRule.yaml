@@ -174,6 +174,33 @@ spec:
         description: "HCP cluster {{ $labels.pod_namespace }} delivery failure rate: {{ $value | humanizePercentage }}. At current rate, would exhaust 5% of 30-day error budget in 1 hour."
         SOP: https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/VectorErrorBudgetBurnFastSRE.md
 
+    # CRITICAL: Vector is missing MC_CLUSTER_ID environment variable
+    # This indicates the ClusterDeployment label 'api.openshift.com/id' is missing
+    # or Hive template interpolation failed during SelectorSyncSet deployment
+    # Impact:
+    #   - All logs will be written to S3 path: s3://bucket/unknown/...
+    #   - Cannot identify which Management Cluster generated the logs
+    #   - Multiple MCs writing to same bucket will have path collisions
+    #   - Troubleshooting becomes extremely difficult
+    # Resolution:
+    #   - Verify ClusterDeployment has label: api.openshift.com/id
+    #   - Check Hive SelectorSyncSet template interpolation
+    #   - Restart Vector pods after fixing label
+    # TEMPORARILY WARNING: Set to warning for initial validation
+    - alert: VectorMissingClusterIDSRE
+      expr: |
+        sum by (mc_cluster_id) (
+          rate(vector_hcp_logs_events_total{mc_cluster_id="unknown"}[5m])
+        ) > 0
+      for: 5m
+      labels:
+        severity: warning
+        namespace: openshift-monitoring
+      annotations:
+        summary: Vector is missing MC_CLUSTER_ID environment variable
+        description: "Logs are being tagged with mc_cluster_id='unknown', indicating the ClusterDeployment label 'api.openshift.com/id' is missing or Hive template interpolation failed. S3 logs will be unidentifiable by Management Cluster."
+        SOP: https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/VectorMissingClusterIDSRE.md
+
   - name: sre-vector-log-forwarding-warning-alerts
     rules:
 
