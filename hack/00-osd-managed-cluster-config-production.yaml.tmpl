@@ -31617,13 +31617,18 @@ objects:
           \ event - preserve original message\n      # Original JSON payload should\
           \ remain in .message for delivery\n\n      # Performance optimization: only\
           \ attempt JSON parsing if message looks like JSON\n      message_str, str_err\
-          \ = string(.message)\n      if str_err != null {\n        # Message field\
-          \ is missing or not a string - preserve the event but skip JSON parsing\n\
-          \        if !exists(.message) {\n          .message = \"[NO_MESSAGE_FIELD]\"\
-          \n        }\n        # Keep Vector's ingestion timestamp, don't attempt\
-          \ JSON parsing\n      } else if starts_with(message_str, \"{\") || starts_with(message_str,\
-          \ \"[\") {\n        parsed, err = parse_json(.message)\n        if err ==\
-          \ null && is_object(parsed) {\n          # Handle timestamp precedence:\
+          \ = string(.message)\n      if str_err != null {\n        # Message is not\
+          \ a string (could be integer, object, array, null, or missing)\n       \
+          \ if exists(.message) {\n          # Preserve non-string values by converting\
+          \ to string representation\n          # This ensures integers, objects,\
+          \ arrays are kept as strings for S3/downstream\n          .message = to_string(.message)\n\
+          \        } else {\n          # Field is completely missing - set placeholder\
+          \ for debugging\n          .message = \"[NO_MESSAGE_FIELD]\"\n        }\n\
+          \        # Don't attempt JSON parsing since original message wasn't a string\n\
+          \      } else if (starts_with(message_str, \"{\") && ends_with(message_str,\
+          \ \"}\")) || (starts_with(message_str, \"[\") && ends_with(message_str,\
+          \ \"]\")) {\n        parsed, err = parse_json(.message)\n        if err\
+          \ == null && is_object(parsed) {\n          # Handle timestamp precedence:\
           \ prefer JSON log timestamps over Vector's timestamp\n          # Priority\
           \ order: ts -> time -> stageTimestamp -> requestReceivedTimestamp -> Vector\
           \ default\n\n          # Try 'ts' field first (etcd, ignition-server style)\n\
@@ -31634,47 +31639,53 @@ objects:
           \              } else {\n                # Try Unix timestamp in string\
           \ format\n                unix_ts, unix_err = to_float(ts_value)\n     \
           \           if unix_err == null {\n                  # Convert to timestamp\
-          \ (handle both seconds and milliseconds)\n                  unix_ts_int,\
-          \ int_err = to_int(unix_ts)\n                  if int_err == null {\n  \
-          \                  if unix_ts < 1000000000000.0 {\n                    \
-          \  ts_result, ts_conv_err = from_unix_timestamp(unix_ts_int, \"seconds\"\
-          )\n                      if ts_conv_err == null {\n                    \
-          \    .timestamp = ts_result\n                      }\n                 \
-          \   } else {\n                      unix_ts_ms = unix_ts / 1000\n      \
-          \                unix_ts_ms_int, ms_int_err = to_int(unix_ts_ms)\n     \
-          \                 if ms_int_err == null {\n                        ts_result,\
-          \ ts_conv_err = from_unix_timestamp(unix_ts_ms_int, \"seconds\")\n     \
-          \                   if ts_conv_err == null {\n                         \
-          \ .timestamp = ts_result\n                        }\n                  \
-          \    }\n                    }\n                  }\n                }\n\
-          \              }\n            } else if is_float(ts_value) || is_integer(ts_value)\
-          \ {\n              # Handle numeric timestamps\n              ts_float,\
-          \ float_err = to_float(ts_value)\n              if float_err == null {\n\
-          \                if ts_float < 1000000000000.0 {\n                  ts_int,\
-          \ int_err = to_int(ts_value)\n                  if int_err == null {\n \
-          \                   ts_result, ts_conv_err = from_unix_timestamp(ts_int,\
+          \ (handle both seconds and milliseconds)\n                  # unix_ts <\
+          \ 1000000000000.0 is an attempt to identify seconds vs milliseconds in the\
+          \ timestamp\n                  # Where a timestamp > 1 trillion can safely\
+          \ be assumed to be milliseconds\n                  unix_ts_int, int_err\
+          \ = to_int(unix_ts)\n                  if int_err == null {\n          \
+          \          if unix_ts < 1000000000000.0 {\n                      ts_result,\
+          \ ts_conv_err = from_unix_timestamp(unix_ts_int, \"seconds\")\n        \
+          \              if ts_conv_err == null {\n                        .timestamp\
+          \ = ts_result\n                      }\n                    } else {\n \
+          \                     unix_ts_ms = unix_ts / 1000\n                    \
+          \  unix_ts_ms_int, ms_int_err = to_int(unix_ts_ms)\n                   \
+          \   if ms_int_err == null {\n                        ts_result, ts_conv_err\
+          \ = from_unix_timestamp(unix_ts_ms_int, \"seconds\")\n                 \
+          \       if ts_conv_err == null {\n                          .timestamp =\
+          \ ts_result\n                        }\n                      }\n      \
+          \              }\n                  }\n                }\n             \
+          \ }\n            } else if is_float(ts_value) || is_integer(ts_value) {\n\
+          \              # Handle numeric timestamps\n              # Convert to timestamp\
+          \ (handle both seconds and milliseconds)\n              # unix_ts < 1000000000000.0\
+          \ is an attempt to identify seconds vs milliseconds in the timestamp\n \
+          \             # Where a timestamp > 1 trillion can safely be assumed to\
+          \ be milliseconds\n              ts_float, float_err = to_float(ts_value)\n\
+          \              if float_err == null {\n                if ts_float < 1000000000000.0\
+          \ {\n                  ts_int, int_err = to_int(ts_value)\n            \
+          \      if int_err == null {\n                    ts_result, ts_conv_err\
+          \ = from_unix_timestamp(ts_int, \"seconds\")\n                    if ts_conv_err\
+          \ == null {\n                      .timestamp = ts_result\n            \
+          \        }\n                  }\n                } else {\n            \
+          \      ts_seconds = ts_float / 1000.0\n                  ts_seconds_int,\
+          \ int_err = to_int(ts_seconds)\n                  if int_err == null {\n\
+          \                    ts_result, ts_conv_err = from_unix_timestamp(ts_seconds_int,\
           \ \"seconds\")\n                    if ts_conv_err == null {\n         \
           \             .timestamp = ts_result\n                    }\n          \
-          \        }\n                } else {\n                  ts_seconds = ts_float\
-          \ / 1000.0\n                  ts_seconds_int, int_err = to_int(ts_seconds)\n\
-          \                  if int_err == null {\n                    ts_result,\
-          \ ts_conv_err = from_unix_timestamp(ts_seconds_int, \"seconds\")\n     \
-          \               if ts_conv_err == null {\n                      .timestamp\
-          \ = ts_result\n                    }\n                  }\n            \
-          \    }\n              }\n            }\n          # Try 'time' field as\
-          \ fallback (alternative JSON timestamp field)\n          } else if exists(parsed.time)\
-          \ {\n            time_value = parsed.time\n            if is_string(time_value)\
-          \ {\n              # Handle ISO timestamp strings\n              parsed_time,\
-          \ time_err = parse_timestamp(time_value, \"%+\")\n              if time_err\
-          \ == null {\n                .timestamp = parsed_time\n              }\n\
-          \            }\n          # Try 'stageTimestamp' field (Kubernetes audit\
-          \ logs - primary)\n          } else if exists(parsed.stageTimestamp) {\n\
-          \            stage_timestamp = parsed.stageTimestamp\n            if is_string(stage_timestamp)\
-          \ {\n              # Handle ISO timestamp strings\n              parsed_ts,\
-          \ ts_err = parse_timestamp(stage_timestamp, \"%+\")\n              if ts_err\
-          \ == null {\n                .timestamp = parsed_ts\n              }\n \
-          \           }\n          # Try 'requestReceivedTimestamp' field (Kubernetes\
-          \ audit logs - fallback)\n          } else if exists(parsed.requestReceivedTimestamp)\
+          \        }\n                }\n              }\n            }\n        \
+          \  # Try 'time' field as fallback (alternative JSON timestamp field)\n \
+          \         } else if exists(parsed.time) {\n            time_value = parsed.time\n\
+          \            if is_string(time_value) {\n              # Handle ISO timestamp\
+          \ strings\n              parsed_time, time_err = parse_timestamp(time_value,\
+          \ \"%+\")\n              if time_err == null {\n                .timestamp\
+          \ = parsed_time\n              }\n            }\n          # Try 'stageTimestamp'\
+          \ field (Kubernetes audit logs - primary)\n          } else if exists(parsed.stageTimestamp)\
+          \ {\n            stage_timestamp = parsed.stageTimestamp\n            if\
+          \ is_string(stage_timestamp) {\n              # Handle ISO timestamp strings\n\
+          \              parsed_ts, ts_err = parse_timestamp(stage_timestamp, \"%+\"\
+          )\n              if ts_err == null {\n                .timestamp = parsed_ts\n\
+          \              }\n            }\n          # Try 'requestReceivedTimestamp'\
+          \ field (Kubernetes audit logs - fallback)\n          } else if exists(parsed.requestReceivedTimestamp)\
           \ {\n            request_timestamp = parsed.requestReceivedTimestamp\n \
           \           if is_string(request_timestamp) {\n              # Handle ISO\
           \ timestamp strings\n              parsed_ts, ts_err = parse_timestamp(request_timestamp,\
@@ -31705,8 +31716,11 @@ objects:
           \ r'^[IWEF](?P<month>\\d{2})(?P<day>\\d{2})\\s+(?P<hour>\\d{2}):(?P<minute>\\\
           d{2}):(?P<second>\\d{2})\\.(?P<microsecond>\\d{6})')\n          if k8s_err\
           \ == null && k8s_match != null {\n            # Construct ISO timestamp\
-          \ (assume current year)\n            current_year, year_err = format_timestamp(now(),\
-          \ \"%Y\")\n            if year_err == null {\n              # Extract milliseconds\
+          \ using ingestion timestamp's year\n            # Use .ingest_timestamp\
+          \ instead of now() to avoid year-boundary bugs\n            # (logs written\
+          \ Dec 31 but processed Jan 1 would get wrong year with now())\n        \
+          \    current_year, year_err = format_timestamp(.ingest_timestamp, \"%Y\"\
+          )\n            if year_err == null {\n              # Extract milliseconds\
           \ (first 3 digits of microseconds)\n              millis, slice_err = slice(k8s_match.microsecond,\
           \ start: 0, end: 3)\n              if slice_err == null {\n            \
           \    # Build ISO timestamp using join function\n                parts =\
