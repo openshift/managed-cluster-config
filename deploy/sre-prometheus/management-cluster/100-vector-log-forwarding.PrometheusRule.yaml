@@ -152,26 +152,21 @@ spec:
         description: No logs have been written to S3 in the last 5 minutes. Buffer will eventually fill. Check S3 access and IAM roles.
         SOP: https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/VectorS3WritesStoppedSRE.md
 
-    # CRITICAL: Burning through error budget extremely fast (per HCP cluster)
-    # Threshold: 0.0144 = 1.44% failure rate (logs not delivered to S3)
-    # Error budget calculation: Assuming 99.9% SLO over 30 days (720 hours)
-    #   - Allowed error budget: 0.1% = 0.72 hours of failures over 30 days
-    #   - At 1.44% failure rate sustained for 1 hour: uses 0.0144 hours of error budget
-    #   - 0.0144 / 0.72 = 2% of entire 30-day error budget consumed in 1 hour
-    #   - At this rate: would exhaust 100% of error budget in 50 hours (~2 days)
-    # This indicates major delivery problems requiring immediate investigation
+    # CRITICAL: Log delivery success rate below 95% SLO (per HCP cluster) - Fast detection
+    # Threshold: 0.05 = 5% failure rate (logs not delivered to S3)
+    # Success ratio < 95% indicates SLO violation requiring immediate investigation
     # Fires per HCP cluster - pod_namespace label identifies affected cluster
     # TEMPORARILY WARNING: Set to warning for initial validation
     - alert: VectorErrorBudgetBurnFastSRE
       expr: |
-        (1 - vector:log_delivery:success_ratio:by_cluster) > 0.0144
-      for: 2m
+        (1 - vector:log_delivery:success_ratio:by_cluster) > 0.05
+      for: 15m
       labels:
         severity: warning
         namespace: openshift-monitoring
       annotations:
-        summary: "Vector is burning through error budget rapidly for cluster {{ $labels.pod_namespace }}"
-        description: "HCP cluster {{ $labels.pod_namespace }} delivery failure rate: {{ $value | humanizePercentage }}. At current rate, would exhaust 5% of 30-day error budget in 1 hour."
+        summary: "Vector log delivery below 95% SLO for cluster {{ $labels.pod_namespace }}"
+        description: "HCP cluster {{ $labels.pod_namespace }} delivery failure rate: {{ $value | humanizePercentage }}. Success rate has been below 95% SLO for 15 minutes."
         SOP: https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/VectorErrorBudgetBurnFastSRE.md
 
     # CRITICAL: Vector is missing MC_CLUSTER_ID environment variable
@@ -276,25 +271,20 @@ spec:
         description: "End-to-end delivery: {{ $value | humanizePercentage }}. Expected ~100%. Check for transform errors or S3 sink issues."
         SOP: https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/VectorPipelineLossSRE.md
 
-    # WARNING: Burning through error budget slowly (per HCP cluster)
-    # Threshold: 0.003 = 0.3% failure rate (logs not delivered to S3)
-    # Error budget calculation: Assuming 99.9% SLO over 30 days (720 hours)
-    #   - Allowed error budget: 0.1% = 0.72 hours of failures over 30 days
-    #   - At 0.3% failure rate sustained for 6 hours: uses 0.018 hours of error budget
-    #   - 0.018 / 0.72 = 2.5% of entire 30-day error budget consumed in 6 hours
-    #   - At this rate: would exhaust 100% of error budget in 10 days
-    # This indicates ongoing but manageable delivery issues that should be investigated
+    # WARNING: Log delivery success rate below 95% SLO (per HCP cluster) - Sustained violation
+    # Threshold: 0.05 = 5% failure rate (logs not delivered to S3)
+    # Success ratio < 95% for 3 hours indicates sustained SLO violation requiring investigation
     # Fires per HCP cluster - pod_namespace label identifies affected cluster
     - alert: VectorErrorBudgetBurnSlowSRE
       expr: |
-        (1 - vector:log_delivery:success_ratio:by_cluster) > 0.003
-      for: 1h
+        (1 - vector:log_delivery:success_ratio:by_cluster) > 0.05
+      for: 3h
       labels:
         severity: warning
         namespace: openshift-monitoring
       annotations:
-        summary: "Vector is burning through error budget (slow burn) for cluster {{ $labels.pod_namespace }}"
-        description: "HCP cluster {{ $labels.pod_namespace }} delivery failure rate: {{ $value | humanizePercentage }}. At current rate, would exhaust 10% of 30-day error budget in 6 hours."
+        summary: "Vector log delivery below 95% SLO (sustained) for cluster {{ $labels.pod_namespace }}"
+        description: "HCP cluster {{ $labels.pod_namespace }} delivery failure rate: {{ $value | humanizePercentage }}. Success rate has been below 95% SLO for 3 hours."
         SOP: https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/VectorErrorBudgetBurnSlowSRE.md
 
     # WARNING: Disk buffer is growing rapidly (>100MB/min)
