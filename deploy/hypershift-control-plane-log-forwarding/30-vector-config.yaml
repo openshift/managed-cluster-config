@@ -64,7 +64,12 @@ data:
             if exists(.message) {
               # Preserve non-string values by converting to string representation
               # This ensures integers, objects, arrays are kept as strings for S3/downstream
-              .message = to_string(.message)
+              .message, conversion_err = to_string(.message)
+              if conversion_err != null {
+                # If to_string fails, set placeholder with error details for debugging
+                err_str, _ = string(conversion_err)
+                .message = "[MESSAGE_CONVERSION_ERROR: " + (err_str ?? "unknown error") + "]"
+              }
             } else {
               # Field is completely missing - set placeholder for debugging
               .message = "[NO_MESSAGE_FIELD]"
