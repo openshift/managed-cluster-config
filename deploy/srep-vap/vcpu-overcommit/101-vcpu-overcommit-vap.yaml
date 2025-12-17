@@ -19,14 +19,7 @@ spec:
       operations: ["CREATE", "UPDATE"]
       resources: ["virtualmachineinstances"]
   validations:
-    - expression: |-
-        (
-          'kubevirt.io/cluster-preference-name' in object.metadata.annotations &&
-          object.metadata.annotations['kubevirt.io/cluster-preference-name'].lowerAscii().contains('dedicated')
-        ) ||
-        (
-          'kubevirt.io/preference-name' in object.metadata.annotations &&
-          object.metadata.annotations['kubevirt.io/preference-name'].lowerAscii().contains('dedicated')
-        )
-      message: "Windows VM are required to use *dedicated preferences."
+    - expression: |- 
+        has(object.spec.domain.cpu.dedicatedCpuPlacement) && object.spec.domain.cpu.dedicatedCpuPlacement == true
+      message: "Windows VMIs require dedicated CPU placement. Set spec.domain.cpu.dedicatedCpuPlacement to true."
 
