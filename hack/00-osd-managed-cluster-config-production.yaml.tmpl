@@ -31621,11 +31621,15 @@ objects:
           \ a string (could be integer, object, array, null, or missing)\n       \
           \ if exists(.message) {\n          # Preserve non-string values by converting\
           \ to string representation\n          # This ensures integers, objects,\
-          \ arrays are kept as strings for S3/downstream\n          .message = to_string(.message)\n\
-          \        } else {\n          # Field is completely missing - set placeholder\
-          \ for debugging\n          .message = \"[NO_MESSAGE_FIELD]\"\n        }\n\
-          \        # Don't attempt JSON parsing since original message wasn't a string\n\
-          \      } else if (starts_with(message_str, \"{\") && ends_with(message_str,\
+          \ arrays are kept as strings for S3/downstream\n          .message, conversion_err\
+          \ = to_string(.message)\n          if conversion_err != null {\n       \
+          \     # If to_string fails, set placeholder with error details for debugging\n\
+          \            err_str, _ = string(conversion_err)\n            .message =\
+          \ \"[MESSAGE_CONVERSION_ERROR: \" + (err_str ?? \"unknown error\") + \"\
+          ]\"\n          }\n        } else {\n          # Field is completely missing\
+          \ - set placeholder for debugging\n          .message = \"[NO_MESSAGE_FIELD]\"\
+          \n        }\n        # Don't attempt JSON parsing since original message\
+          \ wasn't a string\n      } else if (starts_with(message_str, \"{\") && ends_with(message_str,\
           \ \"}\")) || (starts_with(message_str, \"[\") && ends_with(message_str,\
           \ \"]\")) {\n        parsed, err = parse_json(.message)\n        if err\
           \ == null && is_object(parsed) {\n          # Handle timestamp precedence:\
