@@ -64,7 +64,12 @@ data:
             if exists(.message) {
               # Preserve non-string values by converting to string representation
               # This ensures integers, objects, arrays are kept as strings for S3/downstream
-              .message = to_string(.message)
+              .message, conversion_err = to_string(.message)
+              if conversion_err != null {
+                # If to_string fails, set placeholder with error details for debugging
+                err_str = string!(conversion_err)
+                .message = "[MESSAGE_CONVERSION_ERROR: " + err_str + "]"
+              }
             } else {
               # Field is completely missing - set placeholder for debugging
               .message = "[NO_MESSAGE_FIELD]"
@@ -91,22 +96,18 @@ data:
                       # Convert to timestamp (handle both seconds and milliseconds)
                       # unix_ts < 1000000000000.0 is an attempt to identify seconds vs milliseconds in the timestamp
                       # Where a timestamp > 1 trillion can safely be assumed to be milliseconds
-                      unix_ts_int, int_err = to_int(unix_ts)
-                      if int_err == null {
-                        if unix_ts < 1000000000000.0 {
-                          ts_result, ts_conv_err = from_unix_timestamp(unix_ts_int, "seconds")
-                          if ts_conv_err == null {
-                            .timestamp = ts_result
-                          }
-                        } else {
-                          unix_ts_ms = unix_ts / 1000
-                          unix_ts_ms_int, ms_int_err = to_int(unix_ts_ms)
-                          if ms_int_err == null {
-                            ts_result, ts_conv_err = from_unix_timestamp(unix_ts_ms_int, "seconds")
-                            if ts_conv_err == null {
-                              .timestamp = ts_result
-                            }
-                          }
+                      unix_ts_int = to_int(unix_ts)
+                      if unix_ts < 1000000000000.0 {
+                        ts_result, ts_conv_err = from_unix_timestamp(unix_ts_int, "seconds")
+                        if ts_conv_err == null {
+                          .timestamp = ts_result
+                        }
+                      } else {
+                        unix_ts_ms = unix_ts / 1000
+                        unix_ts_ms_int = to_int(unix_ts_ms)
+                        ts_result, ts_conv_err = from_unix_timestamp(unix_ts_ms_int, "seconds")
+                        if ts_conv_err == null {
+                          .timestamp = ts_result
                         }
                       }
                     }
@@ -119,21 +120,17 @@ data:
                   ts_float, float_err = to_float(ts_value)
                   if float_err == null {
                     if ts_float < 1000000000000.0 {
-                      ts_int, int_err = to_int(ts_value)
-                      if int_err == null {
-                        ts_result, ts_conv_err = from_unix_timestamp(ts_int, "seconds")
-                        if ts_conv_err == null {
-                          .timestamp = ts_result
-                        }
+                      ts_int = to_int(ts_float)
+                      ts_result, ts_conv_err = from_unix_timestamp(ts_int, "seconds")
+                      if ts_conv_err == null {
+                        .timestamp = ts_result
                       }
                     } else {
                       ts_seconds = ts_float / 1000.0
-                      ts_seconds_int, int_err = to_int(ts_seconds)
-                      if int_err == null {
-                        ts_result, ts_conv_err = from_unix_timestamp(ts_seconds_int, "seconds")
-                        if ts_conv_err == null {
-                          .timestamp = ts_result
-                        }
+                      ts_seconds_int = to_int(ts_seconds)
+                      ts_result, ts_conv_err = from_unix_timestamp(ts_seconds_int, "seconds")
+                      if ts_conv_err == null {
+                        .timestamp = ts_result
                       }
                     }
                   }
@@ -314,3 +311,4 @@ data:
         filename_append_uuid: true
         filename_time_format: "%Y%m%d-%H%M%S"
         filename_extension: "json.gz"
+#test
