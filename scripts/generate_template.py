@@ -7,9 +7,13 @@ import sys
 import argparse
 import copy
 import re
+from typing import Any
 
 cluster_platform_ann = "hive.openshift.io/cluster-platform"
 config_filename = "config.yaml"
+environment_selector = "api.openshift.com/environment"
+fedramp_selector = "api.openshift.com/fedramp"
+valid_environments = ["production", "staging", "integration"]
 
 data_sss = []
 data_resources = {
@@ -96,6 +100,19 @@ def add_sss_for(name, directory, config):
     # collect the new sss for later processing
     data_sss.append(o)
 
+
+def expression_is_true(expression: dict[str, Any]) -> bool:
+    values = [v.lower() for v in expression["values"]]
+    match expression["operator"]:
+        case "In":
+            return "true" in values
+        case "NotIn":
+            return "false" in values
+        case "Eq":
+            return "true" in values
+        case _:
+            return False
+
 if __name__ == '__main__':
     #Argument parser
     parser = argparse.ArgumentParser(description="template generation tool", usage='%(prog)s [options]')
@@ -127,7 +144,7 @@ if __name__ == '__main__':
         deploymentMode = "SelectorSyncSet"
 
         if "deploymentMode" in config:
-            deploymentMode = config["deploymentMode"]
+            deploymentMode: str = config["deploymentMode"]
 
         # skip any directory only containing governance policies, as they are only for hypershift
         if deploymentMode == "Policy":
@@ -158,6 +175,31 @@ if __name__ == '__main__':
             if any(ele.isupper() for ele in sss_name):
                 print("The selectorsyncset name should be lowercase. Found selectorsyncset with name " + sss_name)
                 sys.exit(1)
+
+            # Verify that environment selectors make sense
+            sss = config["selectorSyncSet"]
+            valid_envs = valid_environments.copy()
+            expressions: list[dict[str, Any]] = sss.get("matchExpressions", []) if sss else []
+            # FIXME: This is a workaround till https://issues.redhat.com/browse/HCMSEC-2597 is fixed.
+            # Until then 'stage' is a valid environment for fedramp
+            for expression in expressions:
+                if expression["key"] == fedramp_selector:
+                    if expression_is_true(expression):
+                        valid_envs.append('stage')
+            for expression in expressions:
+                if not expression["key"] == environment_selector:
+                    continue
+                values: str|list[str] = expression["values"]
+                match values:
+                    case list(x):
+                        for value in x:
+                            if value not in valid_envs:
+                                raise RuntimeError(f"The environment value {value} for {dirpath} does not match a known environment: must be one of {valid_environments}")
+                    case str(x):
+                        if x not in valid_envs:
+                            raise RuntimeError(f"The environment value {values} for {dirpath} does not match a known environment: must be one of {valid_environments}")
+                    case _:
+                        raise RuntimeError(f"Received invalid values {values} for {dirpath} for key: {environment_selector}")
 
             # If no matchLabelsApplyMode, process as nornmal
             if "matchLabelsApplyMode" in config["selectorSyncSet"] and config["selectorSyncSet"]["matchLabelsApplyMode"] == "OR":
