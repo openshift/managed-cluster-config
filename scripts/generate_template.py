@@ -7,6 +7,7 @@ import sys
 import argparse
 import copy
 import re
+from typing import Any
 
 cluster_platform_ann = "hive.openshift.io/cluster-platform"
 config_filename = "config.yaml"
@@ -164,17 +165,21 @@ if __name__ == '__main__':
 
             # Verify that environment selectors make sense
             sss = config["selectorSyncSet"]
-            expressions = sss.get("matchExpressions", []) if sss else []
+            expressions: list[dict[str, Any]] = sss.get("matchExpressions", []) if sss else []
             for expression in expressions:
                 if not expression["key"] == environment_selector:
                     continue
-                values = expression["values"]
-                if type(values) == list:
-                    for value in values:
-                        if value not in valid_environments:
-                            raise RuntimeError(f"The environment value {value} for {dirpath} does not match a known environment: must be one of {valid_environments}")
-                elif values not in valid_environments:
+                values: str|list[str] = expression["values"]
+                match values:
+                    case list(x):
+                        for value in x:
+                            if value not in valid_environments:
+                                raise RuntimeError(f"The environment value {value} for {dirpath} does not match a known environment: must be one of {valid_environments}")
+                    case str(x):
+                        if x not in valid_environments:
                             raise RuntimeError(f"The environment value {values} for {dirpath} does not match a known environment: must be one of {valid_environments}")
+                    case _:
+                        raise RuntimeError(f"Received invalid values {values} for {dirpath} for key: {environment_selector}")
 
             # If no matchLabelsApplyMode, process as nornmal
             if "matchLabelsApplyMode" in config["selectorSyncSet"] and config["selectorSyncSet"]["matchLabelsApplyMode"] == "OR":
