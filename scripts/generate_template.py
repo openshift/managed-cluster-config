@@ -10,6 +10,8 @@ import re
 
 cluster_platform_ann = "hive.openshift.io/cluster-platform"
 config_filename = "config.yaml"
+environment_selector = "api.openshift.com/environment"
+valid_environments = ["production", "staging", "integration"]
 
 data_sss = []
 data_resources = {
@@ -96,6 +98,7 @@ def add_sss_for(name, directory, config):
     # collect the new sss for later processing
     data_sss.append(o)
 
+
 if __name__ == '__main__':
     #Argument parser
     parser = argparse.ArgumentParser(description="template generation tool", usage='%(prog)s [options]')
@@ -127,7 +130,7 @@ if __name__ == '__main__':
         deploymentMode = "SelectorSyncSet"
 
         if "deploymentMode" in config:
-            deploymentMode = config["deploymentMode"]
+            deploymentMode: str = config["deploymentMode"]
 
         # skip any directory only containing governance policies, as they are only for hypershift
         if deploymentMode == "Policy":
@@ -158,6 +161,20 @@ if __name__ == '__main__':
             if any(ele.isupper() for ele in sss_name):
                 print("The selectorsyncset name should be lowercase. Found selectorsyncset with name " + sss_name)
                 sys.exit(1)
+
+            # Verify that environment selectors make sense
+            sss = config["selectorSyncSet"]
+            expressions = sss.get("matchExpressions", []) if sss else []
+            for expression in expressions:
+                if not expression["key"] == environment_selector:
+                    continue
+                values = expression["values"]
+                if type(values) == list:
+                    for value in values:
+                        if value not in valid_environments:
+                            raise RuntimeError(f"The environment value {value} for {dirpath} does not match a known environment: must be one of {valid_environments}")
+                elif values not in valid_environments:
+                            raise RuntimeError(f"The environment value {values} for {dirpath} does not match a known environment: must be one of {valid_environments}")
 
             # If no matchLabelsApplyMode, process as nornmal
             if "matchLabelsApplyMode" in config["selectorSyncSet"] and config["selectorSyncSet"]["matchLabelsApplyMode"] == "OR":
