@@ -1,0 +1,592 @@
+id: v4.21
+kind: WifTemplate
+service_accounts:
+  - access_method: impersonate
+    id: osd-deployer
+    osd_role: deployer
+    roles:
+      - id: osd_deployer_v4.21
+        kind: Role
+        permissions:
+          - compute.acceleratorTypes.list
+          - compute.addresses.create
+          - compute.addresses.createInternal
+          - compute.addresses.delete
+          - compute.addresses.deleteInternal
+          - compute.addresses.get
+          - compute.addresses.list
+          - compute.addresses.setLabels
+          - compute.addresses.use
+          - compute.addresses.useInternal
+          - compute.backendServices.create
+          - compute.backendServices.delete
+          - compute.backendServices.get
+          - compute.backendServices.list
+          - compute.backendServices.update
+          - compute.backendServices.use
+          - compute.disks.create
+          - compute.disks.delete
+          - compute.disks.get
+          - compute.disks.list
+          - compute.disks.setLabels
+          - compute.firewalls.create
+          - compute.firewalls.delete
+          - compute.firewalls.get
+          - compute.firewalls.list
+          - compute.forwardingRules.create
+          - compute.forwardingRules.delete
+          - compute.forwardingRules.get
+          - compute.forwardingRules.list
+          - compute.forwardingRules.setLabels
+          - compute.forwardingRules.use
+          - compute.globalAddresses.create
+          - compute.globalAddresses.delete
+          - compute.globalAddresses.get
+          - compute.globalAddresses.list
+          - compute.globalAddresses.use
+          - compute.globalForwardingRules.create
+          - compute.globalForwardingRules.delete
+          - compute.globalForwardingRules.get
+          - compute.globalForwardingRules.list
+          - compute.globalForwardingRules.setLabels
+          - compute.globalOperations.get
+          - compute.healthChecks.create
+          - compute.healthChecks.delete
+          - compute.healthChecks.get
+          - compute.healthChecks.list
+          - compute.healthChecks.useReadOnly
+          - compute.httpHealthChecks.create
+          - compute.httpHealthChecks.delete
+          - compute.httpHealthChecks.get
+          - compute.httpHealthChecks.list
+          - compute.httpHealthChecks.useReadOnly
+          - compute.images.list
+          - compute.instanceGroups.create
+          - compute.instanceGroups.delete
+          - compute.instanceGroups.get
+          - compute.instanceGroups.list
+          - compute.instanceGroups.update
+          - compute.instanceGroups.use
+          - compute.instances.create
+          - compute.instances.delete
+          - compute.instances.get
+          - compute.instances.getSerialPortOutput
+          - compute.instances.list
+          - compute.instances.setLabels
+          - compute.instances.setMetadata
+          - compute.instances.setServiceAccount
+          - compute.instances.setTags
+          - compute.instances.stop
+          - compute.instances.use
+          - compute.machineTypes.get
+          - compute.machineTypes.list
+          - compute.networks.create
+          - compute.networks.delete
+          - compute.networks.get
+          - compute.networks.list
+          - compute.networks.updatePolicy
+          - compute.networks.use
+          - cloudkms.cryptoKeys.getIamPolicy
+          - cloudkms.cryptoKeys.list
+          - cloudkms.keyRings.list
+          - compute.regionBackendServices.create
+          - compute.regionBackendServices.delete
+          - compute.regionBackendServices.get
+          - compute.regionBackendServices.list
+          - compute.regionBackendServices.update
+          - compute.regionBackendServices.use
+          - compute.regionHealthChecks.create
+          - compute.regionHealthChecks.delete
+          - compute.regionHealthChecks.get
+          - compute.regionHealthChecks.list
+          - compute.regionHealthChecks.useReadOnly
+          - compute.regionOperations.get
+          - compute.regions.get
+          - compute.regions.list
+          - compute.regionTargetTcpProxies.list
+          - compute.routers.create
+          - compute.routers.delete
+          - compute.routers.get
+          - compute.routers.list
+          - compute.routers.update
+          - compute.routes.list
+          - compute.serviceAttachments.create
+          - compute.serviceAttachments.delete
+          - compute.serviceAttachments.get
+          - compute.subnetworks.create
+          - compute.subnetworks.delete
+          - compute.subnetworks.get
+          - compute.subnetworks.list
+          - compute.subnetworks.use
+          - compute.subnetworks.useExternalIp
+          - compute.targetPools.addInstance
+          - compute.targetPools.create
+          - compute.targetPools.delete
+          - compute.targetPools.get
+          - compute.targetPools.list
+          - compute.targetPools.removeInstance
+          - compute.targetPools.use
+          - compute.targetTcpProxies.create
+          - compute.targetTcpProxies.delete
+          - compute.targetTcpProxies.get
+          - compute.targetTcpProxies.list
+          - compute.targetTcpProxies.use
+          - compute.zoneOperations.get
+          - compute.zones.get
+          - compute.zones.list
+          - dns.changes.create
+          - dns.changes.get
+          - dns.managedZones.create
+          - dns.managedZones.delete
+          - dns.managedZones.get
+          - dns.managedZones.list
+          - dns.networks.bindPrivateDNSZone
+          - dns.resourceRecordSets.create
+          - dns.resourceRecordSets.delete
+          - dns.resourceRecordSets.list
+          - iam.roles.get
+          - iam.serviceAccounts.get
+          - iam.serviceAccounts.getIamPolicy
+          - iam.serviceAccounts.list
+          - iam.workloadIdentityPoolProviders.get
+          - iam.workloadIdentityPools.get
+          - monitoring.timeSeries.list
+          - orgpolicy.policy.get
+          - resourcemanager.projects.get
+          - resourcemanager.projects.getIamPolicy
+          - serviceusage.quotas.get
+          - serviceusage.services.list
+          - storage.buckets.create
+          - storage.buckets.delete
+          - storage.buckets.get
+          - storage.buckets.getIamPolicy
+          - storage.buckets.list
+          - storage.objects.create
+          - storage.objects.delete
+          - storage.objects.get
+          - storage.objects.list
+      - id: iam.serviceAccountUser
+        kind: Role
+        predefined: true
+        resource_bindings:
+          - type: iam.serviceAccounts
+            name: osd-worker
+          - type: iam.serviceAccounts
+            name: osd-control-plane
+      - id: iam.serviceAccountTokenCreator
+        kind: Role
+        predefined: true
+        resource_bindings:
+          - type: iam.serviceAccounts
+            name: osd-deployer
+  - access_method: wif
+    credential_request:
+      secret_ref:
+        name: cloud-credential-operator-gcp-ro-creds
+        namespace: openshift-cloud-credential-operator
+      service_account_names:
+        - cloud-credential-operator
+    id: cloud-credential-op-gcp
+    kind: ServiceAccount
+    osd_role: cloud-credential-operator-gcp-ro-creds
+    roles:
+      - id: cloud_credential_operator_gcp_ro_creds_v4.21
+        kind: Role
+        permissions:
+          - iam.roles.get
+          - iam.serviceAccountKeys.list
+          - iam.serviceAccounts.get
+          - resourcemanager.projects.get
+          - resourcemanager.projects.getIamPolicy
+          - serviceusage.services.list
+  - access_method: wif
+    credential_request:
+      secret_ref:
+        name: cloud-credentials
+        namespace: openshift-cloud-network-config-controller
+      service_account_names:
+        - cloud-network-config-controller
+    id: cloud-network-config-ctrl
+    kind: ServiceAccount
+    osd_role: operator-cloud-network-config-controller-gcp
+    roles:
+      - id: cloud_network_config_controller_gcp_v4.21
+        kind: Role
+        permissions:
+          - compute.instances.get
+          - compute.instances.updateNetworkInterface
+          - compute.subnetworks.get
+          - compute.subnetworks.use
+          - compute.zoneOperations.get
+  - access_method: wif
+    credential_request:
+      secret_ref:
+        name: gcp-ccm-cloud-credentials
+        namespace: openshift-cloud-controller-manager
+      service_account_names:
+        - cloud-controller-manager
+    id: cloud-controller-manager
+    kind: ServiceAccount
+    osd_role: operator-gcp-ccm
+    roles:
+      - id: gcp_cloud_controller_manager_v4.21
+        kind: Role
+        permissions:
+          - compute.addresses.create
+          - compute.addresses.delete
+          - compute.addresses.get
+          - compute.addresses.list
+          - compute.firewalls.create
+          - compute.firewalls.delete
+          - compute.firewalls.get
+          - compute.firewalls.update
+          - compute.forwardingRules.create
+          - compute.forwardingRules.delete
+          - compute.forwardingRules.get
+          - compute.forwardingRules.use
+          - compute.healthChecks.create
+          - compute.healthChecks.delete
+          - compute.healthChecks.get
+          - compute.healthChecks.update
+          - compute.httpHealthChecks.create
+          - compute.httpHealthChecks.delete
+          - compute.httpHealthChecks.get
+          - compute.httpHealthChecks.update
+          - compute.instanceGroups.create
+          - compute.instanceGroups.delete
+          - compute.instanceGroups.get
+          - compute.instanceGroups.update
+          - compute.instances.get
+          - compute.instances.use
+          - compute.regionBackendServices.create
+          - compute.regionBackendServices.delete
+          - compute.regionBackendServices.get
+          - compute.regionBackendServices.update
+          - compute.targetPools.addInstance
+          - compute.targetPools.create
+          - compute.targetPools.delete
+          - compute.targetPools.get
+          - compute.targetPools.removeInstance
+          - compute.zones.list
+  - access_method: wif
+    credential_request:
+      secret_ref:
+        name: gcp-pd-cloud-credentials
+        namespace: openshift-cluster-csi-drivers
+      service_account_names:
+        - gcp-pd-csi-driver-operator
+        - gcp-pd-csi-driver-controller-sa
+    id: gcp-pd-csi-driver-op
+    kind: ServiceAccount
+    osd_role: operator-gcp-pd-csi-driver-operator
+    roles:
+      - id: compute.storageAdmin
+        kind: Role
+        predefined: true
+      - id: iam.serviceAccountUser
+        kind: Role
+        predefined: true
+      - id: resourcemanager.tagUser
+        kind: Role
+        predefined: true
+      - id: gcp_pd_csi_driver_operator_v4.21
+        kind: Role
+        permissions:
+          - compute.instances.attachDisk
+          - compute.instances.detachDisk
+          - compute.instances.get
+  - access_method: wif
+    credential_request:
+      secret_ref:
+        name: installer-cloud-credentials
+        namespace: openshift-image-registry
+      service_account_names:
+        - cluster-image-registry-operator
+        - registry
+    id: image-registry-gcs
+    kind: ServiceAccount
+    osd_role: operator-image-registry-gcs
+    roles:
+      - id: image_registry_gcs_v4.21
+        kind: Role
+        permissions:
+          - resourcemanager.tagValueBindings.create
+          - resourcemanager.tagValues.get
+          - resourcemanager.tagValues.list
+          - storage.buckets.create
+          - storage.buckets.createTagBinding
+          - storage.buckets.delete
+          - storage.buckets.get
+          - storage.buckets.list
+          - storage.buckets.listEffectiveTags
+          - storage.objects.create
+          - storage.objects.delete
+          - storage.objects.get
+          - storage.objects.list
+  - access_method: wif
+    credential_request:
+      secret_ref:
+        name: cloud-credentials
+        namespace: openshift-ingress-operator
+      service_account_names:
+        - ingress-operator
+    id: ingress-op-gcp
+    kind: ServiceAccount
+    osd_role: operator-ingress-gcp
+    roles:
+      - id: ingress_operator_gcp_v4.21
+        kind: Role
+        permissions:
+          - dns.changes.create
+          - dns.resourceRecordSets.create
+          - dns.resourceRecordSets.delete
+          - dns.resourceRecordSets.list
+          - dns.resourceRecordSets.update
+  - access_method: wif
+    credential_request:
+      secret_ref:
+        name: gcp-cloud-credentials
+        namespace: openshift-machine-api
+      service_account_names:
+        - machine-api-controllers
+    id: machine-api-gcp
+    kind: ServiceAccount
+    osd_role: operator-machine-api-gcp
+    roles:
+      - id: machine_api_gcp_v4.21
+        kind: Role
+        permissions:
+          - compute.acceleratorTypes.get
+          - compute.acceleratorTypes.list
+          - compute.disks.create
+          - compute.disks.createTagBinding
+          - compute.disks.setLabels
+          - compute.globalOperations.get
+          - compute.globalOperations.list
+          - compute.healthChecks.useReadOnly
+          - compute.images.get
+          - compute.images.getFromFamily
+          - compute.instanceGroups.create
+          - compute.instanceGroups.delete
+          - compute.instanceGroups.get
+          - compute.instanceGroups.list
+          - compute.instanceGroups.update
+          - compute.instances.create
+          - compute.instances.createTagBinding
+          - compute.instances.delete
+          - compute.instances.get
+          - compute.instances.list
+          - compute.instances.setLabels
+          - compute.instances.setMetadata
+          - compute.instances.setServiceAccount
+          - compute.instances.setTags
+          - compute.instances.update
+          - compute.instances.use
+          - compute.machineTypes.get
+          - compute.machineTypes.list
+          - compute.projects.get
+          - compute.regionBackendServices.create
+          - compute.regionBackendServices.get
+          - compute.regionBackendServices.update
+          - compute.regions.get
+          - compute.regions.list
+          - compute.subnetworks.use
+          - compute.subnetworks.useExternalIp
+          - compute.targetPools.addInstance
+          - compute.targetPools.delete
+          - compute.targetPools.get
+          - compute.targetPools.removeInstance
+          - compute.zoneOperations.get
+          - compute.zoneOperations.list
+          - compute.zones.get
+          - compute.zones.list
+          - iam.serviceAccounts.actAs
+          - iam.serviceAccounts.get
+          - iam.serviceAccounts.list
+          - resourcemanager.tagValues.get
+          - resourcemanager.tagValues.list
+          - serviceusage.quotas.get
+          - serviceusage.services.get
+          - serviceusage.services.list
+  - access_method: vm
+    id: osd-worker
+    kind: ServiceAccount
+    osd_role: worker
+    roles:
+      - id: compute.storageAdmin
+        kind: Role
+        predefined: true
+      - id: compute.viewer
+        kind: Role
+        predefined: true
+  - access_method: vm
+    id: osd-control-plane
+    kind: ServiceAccount
+    osd_role: control-plane
+    roles:
+      - id: compute.instanceAdmin
+        kind: Role
+        predefined: true
+      - id: compute.networkAdmin
+        kind: Role
+        predefined: true
+      - id: compute.securityAdmin
+        kind: Role
+        predefined: true
+      - id: compute.storageAdmin
+        kind: Role
+        predefined: true
+service_apis:
+  - deploymentmanager.googleapis.com
+  - compute.googleapis.com
+  - cloudapis.googleapis.com
+  - cloudresourcemanager.googleapis.com
+  - dns.googleapis.com
+  - networksecurity.googleapis.com
+  - iamcredentials.googleapis.com
+  - iam.googleapis.com
+  - servicemanagement.googleapis.com
+  - serviceusage.googleapis.com
+  - storage-api.googleapis.com
+  - storage-component.googleapis.com
+  - orgpolicy.googleapis.com
+  - iap.googleapis.com
+support:
+  principal: sd-sre-platform-gcp-access@redhat.com
+  roles:
+    - id: sre_managed_support
+      kind: Role
+      permissions:
+        - compute.addresses.get
+        - compute.addresses.list
+        - compute.autoscalers.list
+        - compute.backendBuckets.get
+        - compute.backendBuckets.list
+        - compute.backendServices.get
+        - compute.backendServices.list
+        - compute.disks.createSnapshot
+        - compute.disks.get
+        - compute.disks.list
+        - compute.disks.setLabels
+        - compute.firewalls.get
+        - compute.firewalls.list
+        - compute.forwardingRules.get
+        - compute.forwardingRules.list
+        - compute.globalAddresses.get
+        - compute.globalAddresses.list
+        - compute.globalForwardingRules.get
+        - compute.globalForwardingRules.list
+        - compute.healthChecks.get
+        - compute.healthChecks.list
+        - compute.httpHealthChecks.get
+        - compute.httpHealthChecks.list
+        - compute.httpHealthChecks.update
+        - compute.httpsHealthChecks.get
+        - compute.httpsHealthChecks.list
+        - compute.httpsHealthChecks.update
+        - compute.images.get
+        - compute.images.list
+        - compute.instanceGroupManagers.get
+        - compute.instanceGroupManagers.list
+        - compute.instanceGroups.get
+        - compute.instanceGroups.list
+        - compute.instances.create
+        - compute.instances.delete
+        - compute.instances.get
+        - compute.instances.getSerialPortOutput
+        - compute.instances.list
+        - compute.instances.osLogin
+        - compute.instances.reset
+        - compute.instances.setLabels
+        - compute.instances.setMachineType
+        - compute.instances.setMetadata
+        - compute.instances.setTags
+        - compute.instances.start
+        - compute.instances.stop
+        - compute.machineTypes.get
+        - compute.machineTypes.list
+        - compute.networks.get
+        - compute.networks.getEffectiveFirewalls
+        - compute.networks.list
+        - compute.projects.get
+        - compute.regionBackendServices.get
+        - compute.regionBackendServices.list
+        - compute.regions.list
+        - compute.resourcePolicies.list
+        - compute.routers.get
+        - compute.routers.list
+        - compute.routes.get
+        - compute.routes.list
+        - compute.serviceAttachments.get
+        - compute.serviceAttachments.list
+        - compute.snapshots.create
+        - compute.snapshots.get
+        - compute.snapshots.list
+        - compute.sslCertificates.list
+        - compute.sslPolicies.get
+        - compute.sslPolicies.list
+        - compute.subnetworks.get
+        - compute.subnetworks.list
+        - compute.targetHttpProxies.get
+        - compute.targetHttpProxies.list
+        - compute.targetHttpsProxies.get
+        - compute.targetHttpsProxies.list
+        - compute.targetPools.get
+        - compute.targetPools.list
+        - compute.targetSslProxies.get
+        - compute.targetSslProxies.list
+        - compute.targetTcpProxies.get
+        - compute.targetTcpProxies.list
+        - compute.urlMaps.get
+        - compute.urlMaps.list
+        - compute.vpnGateways.get
+        - compute.vpnGateways.list
+        - compute.vpnTunnels.get
+        - compute.vpnTunnels.list
+        - compute.zones.list
+        - dns.managedZones.get
+        - dns.managedZones.list
+        - dns.resourceRecordSets.list
+        - iam.roles.get
+        - iam.roles.list
+        - iam.serviceAccountKeys.get
+        - iam.serviceAccountKeys.list
+        - iam.serviceAccounts.get
+        - iam.serviceAccounts.getIamPolicy
+        - iam.serviceAccounts.list
+        - iap.tunnelDestGroups.accessViaIAP
+        - iap.tunnelInstances.accessViaIAP
+        - logging.buckets.get
+        - logging.buckets.list
+        - logging.logEntries.list
+        - logging.logEntries.list
+        - logging.logMetrics.list
+        - logging.logServiceIndexes.list
+        - logging.logServices.list
+        - logging.logs.list
+        - logging.operations.get
+        - logging.operations.list
+        - logging.queries.getShared
+        - logging.queries.listShared
+        - logging.queries.usePrivate
+        - logging.sinks.get
+        - logging.sinks.list
+        - logging.usage.get
+        - logging.views.get
+        - logging.views.list
+        - monitoring.metricDescriptors.get
+        - monitoring.metricDescriptors.list
+        - monitoring.timeSeries.list
+        - observability.scopes.get
+        - resourcemanager.projects.get
+        - resourcemanager.projects.getIamPolicy
+        - resourcemanager.tagKeys.get
+        - resourcemanager.tagKeys.list
+        - resourcemanager.tagValues.get
+        - resourcemanager.tagValues.list
+        - serviceusage.services.get
+        - storage.buckets.get
+        - storage.buckets.list
+        - storage.objects.get
+        - storage.objects.getIamPolicy
+        - storage.objects.list
