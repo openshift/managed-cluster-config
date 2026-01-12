@@ -6571,27 +6571,29 @@ objects:
                 \              containers:\n                - name: refresh\n    \
                 \              # Dynamic lookup: get image from node-resolver DaemonSet\n\
                 \                  # This image is guaranteed to be cached on worker\
-                \ nodes\n                  image: '{{ (lookup \"apps/v1\" \"DaemonSet\"\
-                \ \"openshift-dns\" \"node-resolver\").spec.template.spec.containers[0].image\
-                \ }}'\n                  imagePullPolicy: IfNotPresent\n         \
-                \         command:\n                    - /bin/bash\n            \
-                \        - /scripts/refresh.sh\n                  volumeMounts:\n\
-                \                    - name: script\n                      mountPath:\
-                \ /scripts\n                      readOnly: true\n               \
-                \     - name: host-root\n                      mountPath: /host\n\
-                \                      readOnly: true\n                  resources:\n\
-                \                    requests:\n                      cpu: 10m\n \
-                \                     memory: 64Mi\n                    limits:\n\
-                \                      cpu: 100m\n                      memory: 128Mi\n\
-                \                  securityContext:\n                    allowPrivilegeEscalation:\
-                \ false\n                    capabilities:\n                     \
-                \ drop:\n                        - ALL\n                    seccompProfile:\n\
-                \                      type: RuntimeDefault\n              volumes:\n\
-                \                - name: script\n                  configMap:\n  \
-                \                  name: ecr-credential-refresh-script\n         \
-                \           defaultMode: 0755\n                - name: host-root\n\
-                \                  hostPath:\n                    path: /\n      \
-                \              type: Directory\n"
+                \ nodes\n                  # Uses index function since ACM templates\
+                \ don't support bracket notation\n                  image: '{{ (index\
+                \ (lookup \"apps/v1\" \"DaemonSet\" \"openshift-dns\" \"node-resolver\"\
+                ).spec.template.spec.containers 0).image }}'\n                  imagePullPolicy:\
+                \ IfNotPresent\n                  command:\n                    -\
+                \ /bin/bash\n                    - /scripts/refresh.sh\n         \
+                \         volumeMounts:\n                    - name: script\n    \
+                \                  mountPath: /scripts\n                      readOnly:\
+                \ true\n                    - name: host-root\n                  \
+                \    mountPath: /host\n                      readOnly: true\n    \
+                \              resources:\n                    requests:\n       \
+                \               cpu: 10m\n                      memory: 64Mi\n   \
+                \                 limits:\n                      cpu: 100m\n     \
+                \                 memory: 128Mi\n                  securityContext:\n\
+                \                    allowPrivilegeEscalation: false\n           \
+                \         capabilities:\n                      drop:\n           \
+                \             - ALL\n                    seccompProfile:\n       \
+                \               type: RuntimeDefault\n              volumes:\n   \
+                \             - name: script\n                  configMap:\n     \
+                \               name: ecr-credential-refresh-script\n            \
+                \        defaultMode: 0755\n                - name: host-root\n  \
+                \                hostPath:\n                    path: /\n        \
+                \            type: Directory\n"
               pruneObjectBehavior: DeleteIfCreated
               remediationAction: enforce
               severity: low
