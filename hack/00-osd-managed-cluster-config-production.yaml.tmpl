@@ -4624,6 +4624,246 @@ objects:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
           policy.open-cluster-management.io/standards: NIST SP 800-53
+        name: hcp-ze-ecr-creds
+        namespace: openshift-acm-policies
+      spec:
+        disabled: false
+        policy-templates:
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+              name: hcp-ze-ecr-creds
+            spec:
+              evaluationInterval:
+                compliant: 2h
+                noncompliant: 45s
+              object-templates-raw: "- complianceType: mustonlyhave\n  metadataComplianceType:\
+                \ musthave\n  objectDefinition:\n    apiVersion: v1\n    kind: ServiceAccount\n\
+                \    metadata:\n      name: ecr-credential-refresh\n      namespace:\
+                \ kube-system\n      labels:\n        app: ecr-credential-refresh\n\
+                \        app.kubernetes.io/name: ecr-credential-refresh\n        app.kubernetes.io/component:\
+                \ credential-management\n- complianceType: mustonlyhave\n  metadataComplianceType:\
+                \ musthave\n  objectDefinition:\n    apiVersion: rbac.authorization.k8s.io/v1\n\
+                \    kind: Role\n    metadata:\n      name: ecr-credential-refresh\n\
+                \      namespace: kube-system\n      labels:\n        app: ecr-credential-refresh\n\
+                \    rules:\n      - apiGroups: [\"\"]\n        resources: [\"secrets\"\
+                ]\n        resourceNames: [\"additional-pull-secret\"]\n        verbs:\
+                \ [\"get\", \"patch\", \"update\"]\n      - apiGroups: [\"\"]\n  \
+                \      resources: [\"secrets\"]\n        verbs: [\"create\"]\n- complianceType:\
+                \ mustonlyhave\n  metadataComplianceType: musthave\n  objectDefinition:\n\
+                \    apiVersion: rbac.authorization.k8s.io/v1\n    kind: RoleBinding\n\
+                \    metadata:\n      name: ecr-credential-refresh\n      namespace:\
+                \ kube-system\n      labels:\n        app: ecr-credential-refresh\n\
+                \    subjects:\n      - kind: ServiceAccount\n        name: ecr-credential-refresh\n\
+                \        namespace: kube-system\n    roleRef:\n      kind: Role\n\
+                \      name: ecr-credential-refresh\n      apiGroup: rbac.authorization.k8s.io\n\
+                - complianceType: mustonlyhave\n  metadataComplianceType: musthave\n\
+                \  objectDefinition:\n    apiVersion: rbac.authorization.k8s.io/v1\n\
+                \    kind: ClusterRole\n    metadata:\n      name: ecr-credential-refresh\n\
+                \      labels:\n        app: ecr-credential-refresh\n    rules:\n\
+                \      - apiGroups: [\"config.openshift.io\"]\n        resources:\
+                \ [\"imagedigestmirrorsets\", \"infrastructures\"]\n        verbs:\
+                \ [\"get\", \"list\"]\n- complianceType: mustonlyhave\n  metadataComplianceType:\
+                \ musthave\n  objectDefinition:\n    apiVersion: rbac.authorization.k8s.io/v1\n\
+                \    kind: ClusterRoleBinding\n    metadata:\n      name: ecr-credential-refresh\n\
+                \      labels:\n        app: ecr-credential-refresh\n    subjects:\n\
+                \      - kind: ServiceAccount\n        name: ecr-credential-refresh\n\
+                \        namespace: kube-system\n    roleRef:\n      kind: ClusterRole\n\
+                \      name: ecr-credential-refresh\n      apiGroup: rbac.authorization.k8s.io\n\
+                - complianceType: mustonlyhave\n  metadataComplianceType: musthave\n\
+                \  objectDefinition:\n    apiVersion: v1\n    kind: ConfigMap\n  \
+                \  metadata:\n      name: ecr-credential-refresh-script\n      namespace:\
+                \ kube-system\n      labels:\n        app: ecr-credential-refresh\n\
+                \    data:\n      refresh.sh: |\n        #!/bin/bash\n        #\n\
+                \        # ECR Credential Refresh Script for Zero-Egress HCP Clusters\n\
+                \        #\n        # Gets ECR authorization token using the node's\
+                \ ECR credential helper\n        # and updates additional-pull-secret\
+                \ in kube-system namespace. HCCO then\n        # merges this with\
+                \ original credentials to create global-pull-secret.\n        #\n\
+                \        # This script auto-detects zero-egress clusters by checking\
+                \ for IDMS.\n        # Non-zero-egress clusters exit early with success\
+                \ (no-op).\n        #\n        # SOP: https://github.com/openshift/ops-sop/blob/master/hypershift/knowledge_base/howto/zero-egress-ecr-credential-refresh.md\n\
+                \        # Tracking: OHSS-49424\n        #\n        set -euo pipefail\n\
+                \n        SECRET_NAME=\"${SECRET_NAME:-additional-pull-secret}\"\n\
+                \        NAMESPACE=\"${NAMESPACE:-kube-system}\"\n        HELPER_PATH=\"\
+                ${HELPER_PATH:-/host/usr/libexec/kubelet-image-credential-provider-plugins/ecr-credential-provider}\"\
+                \n\n        log() {\n            echo \"$(date '+%Y-%m-%d %H:%M:%S')\
+                \ - $1\"\n        }\n\n        # Check if this is a zero-egress cluster\
+                \ by detecting IDMS with ECR mirrors\n        is_zero_egress_cluster()\
+                \ {\n            log \"Checking if cluster is zero-egress...\"\n \
+                \           local mirror\n            mirror=$(oc get imagedigestmirrorset\
+                \ -o jsonpath='{.items[0].spec.imageDigestMirrors[0].mirrors[0]}'\
+                \ 2>/dev/null || true)\n            if [[ -n \"$mirror\" && \"$mirror\"\
+                \ =~ ^[0-9]+\\.dkr\\.ecr\\.[a-z0-9-]+\\.amazonaws\\.com ]]; then\n\
+                \                log \"Zero-egress cluster detected (IDMS mirror:\
+                \ $mirror)\"\n                return 0\n            fi\n         \
+                \   log \"Not a zero-egress cluster (no ECR IDMS found)\"\n      \
+                \      return 1\n        }\n\n        # Discover ECR registry from\
+                \ ImageDigestMirrorSet or environment\n        discover_ecr_registry()\
+                \ {\n            log \"Discovering ECR registry from cluster configuration...\"\
+                \n\n            # Check environment variables first\n            if\
+                \ [[ -n \"${AWS_ACCOUNT_ID:-}\" && -n \"${AWS_REGION:-}\" ]]; then\n\
+                \                ECR_REGISTRY=\"${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com\"\
+                \n                log \"Using ECR registry from environment: $ECR_REGISTRY\"\
+                \n                return 0\n            fi\n\n            # Extract\
+                \ from ImageDigestMirrorSet\n            local mirror\n          \
+                \  mirror=$(oc get imagedigestmirrorset -o jsonpath='{.items[0].spec.imageDigestMirrors[0].mirrors[0]}'\
+                \ 2>/dev/null || true)\n            if [[ \"$mirror\" =~ ^([0-9]+)\\\
+                .dkr\\.ecr\\.([a-z0-9-]+)\\.amazonaws\\.com ]]; then\n           \
+                \     AWS_ACCOUNT_ID=\"${BASH_REMATCH[1]}\"\n                AWS_REGION=\"\
+                ${BASH_REMATCH[2]}\"\n                # ECR registry is just the host,\
+                \ not including any path\n                ECR_REGISTRY=\"${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com\"\
+                \n                log \"Discovered ECR registry: $ECR_REGISTRY\"\n\
+                \                return 0\n            fi\n\n            log \"ERROR\
+                \ - Could not discover ECR registry\"\n            return 1\n    \
+                \    }\n\n        # Get ECR token using the credential helper\n  \
+                \      get_ecr_token() {\n            log \"Getting ECR authorization\
+                \ token via credential helper...\"\n\n            if [[ ! -x \"$HELPER_PATH\"\
+                \ ]]; then\n                log \"ERROR - ECR credential helper not\
+                \ found or not executable: $HELPER_PATH\"\n                return\
+                \ 1\n            fi\n\n            # The helper expects a CredentialProviderRequest\
+                \ JSON with kind, apiVersion, and image\n            local request='{\"\
+                kind\":\"CredentialProviderRequest\",\"apiVersion\":\"credentialprovider.kubelet.k8s.io/v1\"\
+                ,\"image\":\"'\"${ECR_REGISTRY}\"'/test\"}'\n            local response\n\
+                \n            if ! response=$(echo \"$request\" | \"$HELPER_PATH\"\
+                \ get-credentials 2>&1); then\n                log \"ERROR - Failed\
+                \ to get credentials from helper: $response\"\n                return\
+                \ 1\n            fi\n\n            # Extract password from CredentialProviderResponse\
+                \ using grep/sed (jq not available in CLI image)\n            # Response\
+                \ format: {\"kind\":\"CredentialProviderResponse\",...,\"auth\":{\"\
+                registry\":{\"username\":\"AWS\",\"password\":\"...\"}}}\n       \
+                \     # The password is a base64-encoded string, so we extract between\
+                \ \"password\":\" and the next \"\n            ECR_PASSWORD=$(echo\
+                \ \"$response\" | grep -o '\"password\":\"[^\"]*\"' | head -1 | sed\
+                \ 's/\"password\":\"//;s/\"$//')\n            if [[ -z \"$ECR_PASSWORD\"\
+                \ ]]; then\n                log \"ERROR - No password in credential\
+                \ helper response\"\n                log \"Response: $response\"\n\
+                \                return 1\n            fi\n\n            log \"Successfully\
+                \ retrieved ECR authorization token\"\n            return 0\n    \
+                \    }\n\n        # Update additional-pull-secret with ECR credentials\n\
+                \        update_secret() {\n            log \"Updating $SECRET_NAME\
+                \ in $NAMESPACE...\"\n\n            local auth_token\n           \
+                \ auth_token=$(echo -n \"AWS:${ECR_PASSWORD}\" | base64 -w0)\n\n \
+                \           local config_json\n            config_json=$(cat <<EOF\n\
+                \        {\n          \"auths\": {\n            \"$ECR_REGISTRY\"\
+                : {\n              \"auth\": \"$auth_token\",\n              \"email\"\
+                : \"\"\n            }\n          }\n        }\n        EOF\n     \
+                \   )\n\n            local config_b64\n            config_b64=$(echo\
+                \ -n \"$config_json\" | base64 -w0)\n\n            # Check if secret\
+                \ exists\n            if oc get secret \"$SECRET_NAME\" -n \"$NAMESPACE\"\
+                \ &>/dev/null; then\n                # Patch existing secret\n   \
+                \             if ! oc patch secret \"$SECRET_NAME\" -n \"$NAMESPACE\"\
+                \ \\\n                    --type=merge -p '{\"data\":{\".dockerconfigjson\"\
+                :\"'\"$config_b64\"'\"}}'; then\n                    log \"ERROR -\
+                \ Failed to patch secret\"\n                    return 1\n       \
+                \         fi\n                log \"Successfully patched $SECRET_NAME\
+                \ with credentials for $ECR_REGISTRY\"\n            else\n       \
+                \         # Create new secret\n                cat <<EOF | oc apply\
+                \ -f -\n        apiVersion: v1\n        kind: Secret\n        metadata:\n\
+                \          name: $SECRET_NAME\n          namespace: $NAMESPACE\n \
+                \       type: kubernetes.io/dockerconfigjson\n        data:\n    \
+                \      .dockerconfigjson: $config_b64\n        EOF\n             \
+                \   if [[ $? -ne 0 ]]; then\n                    log \"ERROR - Failed\
+                \ to create secret\"\n                    return 1\n             \
+                \   fi\n                log \"Successfully created $SECRET_NAME with\
+                \ credentials for $ECR_REGISTRY\"\n            fi\n            return\
+                \ 0\n        }\n\n        main() {\n            # Step 0: Check if\
+                \ this is a zero-egress cluster\n            if ! is_zero_egress_cluster;\
+                \ then\n                log \"Skipping - not a zero-egress cluster\"\
+                \n                exit 0\n            fi\n\n            # Step 1:\
+                \ Discover ECR registry\n            if ! discover_ecr_registry; then\n\
+                \                log \"FATAL - Could not determine ECR registry\"\n\
+                \                exit 1\n            fi\n\n            log \"Starting\
+                \ ECR credential refresh for $ECR_REGISTRY\"\n\n            # Step\
+                \ 2: Get ECR token using credential helper\n            if ! get_ecr_token;\
+                \ then\n                log \"FATAL - Could not get ECR token\"\n\
+                \                exit 1\n            fi\n\n            # Step 3: Update\
+                \ the secret\n            if ! update_secret; then\n             \
+                \   log \"FATAL - Could not update secret\"\n                exit\
+                \ 1\n            fi\n\n            log \"ECR credential refresh completed\
+                \ successfully\"\n        }\n\n        main \"$@\"\n- complianceType:\
+                \ mustonlyhave\n  metadataComplianceType: musthave\n  objectDefinition:\n\
+                \    apiVersion: batch/v1\n    kind: CronJob\n    metadata:\n    \
+                \  name: ecr-credential-refresh\n      namespace: kube-system\n  \
+                \    labels:\n        app: ecr-credential-refresh\n    spec:\n   \
+                \   schedule: \"0 */4 * * *\"\n      concurrencyPolicy: Forbid\n \
+                \     successfulJobsHistoryLimit: 3\n      failedJobsHistoryLimit:\
+                \ 3\n      jobTemplate:\n        spec:\n          backoffLimit: 3\n\
+                \          activeDeadlineSeconds: 300\n          template:\n     \
+                \       metadata:\n              labels:\n                app: ecr-credential-refresh\n\
+                \            spec:\n              serviceAccountName: ecr-credential-refresh\n\
+                \              restartPolicy: OnFailure\n              nodeSelector:\n\
+                \                node-role.kubernetes.io/worker: \"\"\n          \
+                \    tolerations:\n                - operator: Exists\n          \
+                \    hostNetwork: true\n              dnsPolicy: ClusterFirstWithHostNet\n\
+                \              containers:\n                - name: refresh\n    \
+                \              # Dynamic lookup: get image from node-resolver DaemonSet\n\
+                \                  # This image is guaranteed to be cached on worker\
+                \ nodes\n                  image: '{{ (lookup \"apps/v1\" \"DaemonSet\"\
+                \ \"openshift-dns\" \"node-resolver\").spec.template.spec.containers[0].image\
+                \ }}'\n                  imagePullPolicy: IfNotPresent\n         \
+                \         command:\n                    - /bin/bash\n            \
+                \        - /scripts/refresh.sh\n                  volumeMounts:\n\
+                \                    - name: script\n                      mountPath:\
+                \ /scripts\n                      readOnly: true\n               \
+                \     - name: host-root\n                      mountPath: /host\n\
+                \                      readOnly: true\n                  resources:\n\
+                \                    requests:\n                      cpu: 10m\n \
+                \                     memory: 64Mi\n                    limits:\n\
+                \                      cpu: 100m\n                      memory: 128Mi\n\
+                \                  securityContext:\n                    allowPrivilegeEscalation:\
+                \ false\n                    capabilities:\n                     \
+                \ drop:\n                        - ALL\n                    seccompProfile:\n\
+                \                      type: RuntimeDefault\n              volumes:\n\
+                \                - name: script\n                  configMap:\n  \
+                \                  name: ecr-credential-refresh-script\n         \
+                \           defaultMode: 0755\n                - name: host-root\n\
+                \                  hostPath:\n                    path: /\n      \
+                \              type: Directory\n"
+              pruneObjectBehavior: DeleteIfCreated
+              remediationAction: enforce
+              severity: low
+        remediationAction: enforce
+    - apiVersion: apps.open-cluster-management.io/v1
+      kind: PlacementRule
+      metadata:
+        name: placement-hcp-ze-ecr-creds
+        namespace: openshift-acm-policies
+      spec:
+        clusterSelector:
+          matchExpressions:
+          - key: hypershift.open-cluster-management.io/hosted-cluster
+            operator: In
+            values:
+            - 'true'
+          - key: openshiftVersion-major-minor
+            operator: NotIn
+            values:
+            - '4.14'
+            - '4.15'
+            - '4.16'
+            - '4.17'
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: PlacementBinding
+      metadata:
+        name: binding-hcp-ze-ecr-creds
+        namespace: openshift-acm-policies
+      placementRef:
+        apiGroup: apps.open-cluster-management.io
+        kind: PlacementRule
+        name: placement-hcp-ze-ecr-creds
+      subjects:
+      - apiGroup: policy.open-cluster-management.io
+        kind: Policy
+        name: hcp-ze-ecr-creds
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: Policy
+      metadata:
+        annotations:
+          policy.open-cluster-management.io/categories: CM Configuration Management
+          policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/standards: NIST SP 800-53
         name: hosted-uwm
         namespace: openshift-acm-policies
       spec:
