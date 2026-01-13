@@ -38434,6 +38434,36 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: osd-cluster-acks-ocp-4.20
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.19'
+      - key: api.openshift.com/gate-ocp
+        operator: In
+        values:
+        - '4.20'
+    resourceApplyMode: Upsert
+    resources:
+    - apiVersion: v1
+      data:
+        ack-4.19-admissionregistration-v1beta1-api-removals-in-4.20: 'true'
+      kind: ConfigMap
+      metadata:
+        name: admin-acks
+        namespace: openshift-config
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: osd-cluster-acks-ocp-4.9
   spec:
     clusterDeploymentSelector:
