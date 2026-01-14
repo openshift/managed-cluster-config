@@ -363,6 +363,73 @@ spec:
                                       hostPath:
                                         path: /
                                         type: Directory
+                    - complianceType: mustonlyhave
+                      metadataComplianceType: musthave
+                      objectDefinition:
+                        apiVersion: batch/v1
+                        kind: Job
+                        metadata:
+                          name: ecr-credential-refresh-initial
+                          namespace: kube-system
+                          labels:
+                            app: ecr-credential-refresh
+                            app.kubernetes.io/component: initial-refresh
+                        spec:
+                          backoffLimit: 3
+                          activeDeadlineSeconds: 300
+                          template:
+                            metadata:
+                              labels:
+                                app: ecr-credential-refresh
+                            spec:
+                              serviceAccountName: ecr-credential-refresh
+                              restartPolicy: OnFailure
+                              nodeSelector:
+                                node-role.kubernetes.io/worker: ""
+                              tolerations:
+                                - operator: Exists
+                              hostNetwork: true
+                              dnsPolicy: ClusterFirstWithHostNet
+                              containers:
+                                - name: refresh
+                                  # Dynamic lookup: get image from node-resolver DaemonSet
+                                  # This image is guaranteed to be cached on worker nodes
+                                  # Uses index function since ACM templates don't support bracket notation
+                                  image: '{{ (index (lookup "apps/v1" "DaemonSet" "openshift-dns" "node-resolver").spec.template.spec.containers 0).image }}'
+                                  imagePullPolicy: IfNotPresent
+                                  command:
+                                    - /bin/bash
+                                    - /scripts/refresh.sh
+                                  volumeMounts:
+                                    - name: script
+                                      mountPath: /scripts
+                                      readOnly: true
+                                    - name: host-root
+                                      mountPath: /host
+                                      readOnly: true
+                                  resources:
+                                    requests:
+                                      cpu: 10m
+                                      memory: 64Mi
+                                    limits:
+                                      cpu: 100m
+                                      memory: 128Mi
+                                  securityContext:
+                                    allowPrivilegeEscalation: false
+                                    capabilities:
+                                      drop:
+                                        - ALL
+                                    seccompProfile:
+                                      type: RuntimeDefault
+                              volumes:
+                                - name: script
+                                  configMap:
+                                    name: ecr-credential-refresh-script
+                                    defaultMode: 0755
+                                - name: host-root
+                                  hostPath:
+                                    path: /
+                                    type: Directory
                 pruneObjectBehavior: DeleteIfCreated
                 remediationAction: enforce
                 severity: low
