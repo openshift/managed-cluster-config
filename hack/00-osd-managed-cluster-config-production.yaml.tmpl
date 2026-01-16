@@ -49861,6 +49861,36 @@ objects:
             expr: "sum by (pod) (\n  rate(vector_component_sent_events_total{component_id=\"\
               hcp_logs\"}[5m])\n)\n/\nsum by (pod) (\n  rate(vector_component_received_events_total{component_id=\"\
               kubernetes_logs\"}[5m])\n)\n"
+        - name: sre-vector-log-forwarding-infrastructure-alerts
+          rules:
+          - alert: VectorPodDownSRE
+            expr: 'up{job="hypershift-control-plane-log-forwarding/control-plane-log-forwarding-cmo"}
+              == 0
+
+              '
+            for: 5m
+            labels:
+              severity: warning
+              namespace: openshift-monitoring
+            annotations:
+              summary: Vector pod {{ $labels.pod }} is down
+              description: Vector pod {{ $labels.pod }} on instance {{ $labels.instance
+                }} has been down for 5 minutes. Check pod status and logs.
+              SOP: https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/VectorPodDownSRE.md
+          - alert: VectorMetricsAbsentSRE
+            expr: 'absent(vector_component_received_events_total{component_id="vector_metrics"})
+
+              '
+            for: 5m
+            labels:
+              severity: critical
+              namespace: openshift-monitoring
+            annotations:
+              summary: Vector metrics completely absent from Prometheus
+              description: No Vector metrics are being scraped. Either all Vector
+                pods are down or Prometheus scraping is broken. Check Vector pod status,
+                PodMonitor configuration, and Prometheus scrape targets.
+              SOP: https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/VectorMetricsAbsentSRE.md
         - name: sre-vector-log-forwarding-critical-alerts
           rules:
           - alert: VectorNoLogsIngestedSRE
