@@ -49864,10 +49864,9 @@ objects:
         - name: sre-vector-log-forwarding-critical-alerts
           rules:
           - alert: VectorNoLogsIngestedSRE
-            expr: 'sum(rate(vector_component_received_events_total{component_id="kubernetes_logs"}[5m]))
-              == 0
-
-              '
+            expr: "(\n  count(kube_namespace_labels{label_hypershift_openshift_io_hosted_control_plane=\"\
+              true\"}) > 0\n  and\n  sum(rate(vector_component_received_events_total{component_id=\"\
+              kubernetes_logs\"}[5m])) == 0\n)\n"
             for: 5m
             labels:
               severity: warning
@@ -49878,10 +49877,9 @@ objects:
                 Vector pod status and k8s API connectivity.
               SOP: https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/VectorNoLogsIngestedSRE.md
           - alert: VectorS3WritesStoppedSRE
-            expr: 'sum(rate(vector_component_sent_events_total{component_id="hcp_logs"}[5m]))
-              == 0
-
-              '
+            expr: "(\n  sum(rate(vector_hcp_logs_events_total[5m])) > 0\n  and\n \
+              \ sum(rate(vector_component_sent_events_total{component_id=\"hcp_logs\"\
+              }[5m])) == 0\n)\n"
             for: 5m
             labels:
               severity: warning
@@ -49963,9 +49961,10 @@ objects:
                 rate. Buffer will grow over time. Check S3 write latency.
               SOP: https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/VectorS3WriteBackpressureSRE.md
           - alert: VectorPipelineLossSRE
-            expr: "(\n  sum(rate(vector_component_sent_events_total{component_id=\"\
-              hcp_logs\"}[5m]))\n  /\n  sum(rate(vector_component_received_events_total{component_id=\"\
-              kubernetes_logs\"}[5m]))\n) < 0.98\n"
+            expr: "(\n  count(kube_namespace_labels{label_hypershift_openshift_io_hosted_control_plane=\"\
+              true\"}) > 0\n  and\n  (\n    sum(rate(vector_component_sent_events_total{component_id=\"\
+              hcp_logs\"}[5m]))\n    /\n    sum(rate(vector_component_received_events_total{component_id=\"\
+              kubernetes_logs\"}[5m]))\n  ) < 0.98\n)\n"
             for: 30m
             labels:
               severity: warning

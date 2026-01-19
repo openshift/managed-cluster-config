@@ -122,11 +122,17 @@ spec:
 
     # CRITICAL: Vector has stopped collecting logs from HCP pods entirely
     # This indicates a complete failure of log collection
-    # Possible causes: Vector pods down, permissions issues, k8s API problems
+    # Only fires when HCP namespaces exist (checks kube-state-metrics for namespace labels)
+    # Detects functional failure of kubernetes_logs source independent of pod/infrastructure health
+    # Possible causes: RBAC/SCC issues, k8s API connectivity problems, source config errors
     # TEMPORARILY WARNING: Set to warning for initial validation
     - alert: VectorNoLogsIngestedSRE
       expr: |
-        sum(rate(vector_component_received_events_total{component_id="kubernetes_logs"}[5m])) == 0
+        (
+          count(kube_namespace_labels{label_hypershift_openshift_io_hosted_control_plane="true"}) > 0
+          and
+          sum(rate(vector_component_received_events_total{component_id="kubernetes_logs"}[5m])) == 0
+        )
       for: 5m
       labels:
         severity: warning
@@ -138,11 +144,17 @@ spec:
 
     # CRITICAL: Vector has stopped writing logs to S3 entirely
     # Logs are being collected but not delivered - they will be buffered until disk fills
+    # Only fires when HCP clusters exist and are actively generating logs
+    # Checks if HCP logs are being processed AND S3 writes have stopped
     # Possible causes: S3 connectivity issues, IAM role problems, S3 bucket access denied
     # TEMPORARILY WARNING: Set to warning for initial validation
     - alert: VectorS3WritesStoppedSRE
       expr: |
-        sum(rate(vector_component_sent_events_total{component_id="hcp_logs"}[5m])) == 0
+        (
+          sum(rate(vector_hcp_logs_events_total[5m])) > 0
+          and
+          sum(rate(vector_component_sent_events_total{component_id="hcp_logs"}[5m])) == 0
+        )
       for: 5m
       labels:
         severity: warning
@@ -254,14 +266,19 @@ spec:
 
     # WARNING: Logs are being dropped somewhere in the Vector pipeline
     # End-to-end delivery is less than what was collected from HCP pods
+    # Only fires when HCP namespaces exist (checks kube-state-metrics for namespace labels)
     # Possible causes: Transform errors, drops, or S3 sink issues
     - alert: VectorPipelineLossSRE
       expr: |
         (
-          sum(rate(vector_component_sent_events_total{component_id="hcp_logs"}[5m]))
-          /
-          sum(rate(vector_component_received_events_total{component_id="kubernetes_logs"}[5m]))
-        ) < 0.98
+          count(kube_namespace_labels{label_hypershift_openshift_io_hosted_control_plane="true"}) > 0
+          and
+          (
+            sum(rate(vector_component_sent_events_total{component_id="hcp_logs"}[5m]))
+            /
+            sum(rate(vector_component_received_events_total{component_id="kubernetes_logs"}[5m]))
+          ) < 0.98
+        )
       for: 30m
       labels:
         severity: warning
