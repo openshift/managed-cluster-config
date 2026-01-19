@@ -111,6 +111,46 @@ spec:
           rate(vector_component_received_events_total{component_id="kubernetes_logs"}[5m])
         )
 
+  - name: sre-vector-log-forwarding-infrastructure-alerts
+    rules:
+
+    # ============================================================================
+    # INFRASTRUCTURE ALERTS - Vector pod and monitoring health
+    # These alerts fire regardless of whether HCP clusters exist
+    # ============================================================================
+
+    # CRITICAL: Individual Vector pod is down
+    # Detects when specific Vector DaemonSet pods are not running or unreachable
+    # Provides pod-level granularity for troubleshooting
+    # Common causes: Node issues, resource constraints, image pull failures, crashloops
+    - alert: VectorPodDownSRE
+      expr: |
+        up{job="hypershift-control-plane-log-forwarding/control-plane-log-forwarding-cmo"} == 0
+      for: 5m
+      labels:
+        severity: warning
+        namespace: openshift-monitoring
+      annotations:
+        summary: "Vector pod {{ $labels.pod }} is down"
+        description: "Vector pod {{ $labels.pod }} on instance {{ $labels.instance }} has been down for 5 minutes. Check pod status and logs."
+        SOP: https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/VectorPodDownSRE.md
+
+    # CRITICAL: All Vector metrics are absent from Prometheus
+    # Detects complete monitoring failure - either all pods are down or Prometheus scraping is broken
+    # This is a safety net alert for catastrophic infrastructure failure
+    # If this fires, check Vector pod status AND Prometheus scraping (PodMonitor, RBAC, network)
+    - alert: VectorMetricsAbsentSRE
+      expr: |
+        absent(vector_component_received_events_total{component_id="vector_metrics"})
+      for: 5m
+      labels:
+        severity: warning
+        namespace: openshift-monitoring
+      annotations:
+        summary: Vector metrics completely absent from Prometheus
+        description: "No Vector metrics are being scraped. Either all Vector pods are down or Prometheus scraping is broken. Check Vector pod status, PodMonitor configuration, and Prometheus scrape targets."
+        SOP: https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/VectorMetricsAbsentSRE.md
+
   - name: sre-vector-log-forwarding-critical-alerts
     rules:
 
