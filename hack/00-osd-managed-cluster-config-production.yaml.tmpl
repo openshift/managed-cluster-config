@@ -32146,17 +32146,24 @@ objects:
           \ based on cluster/namespace/app/pod structure\n    key_prefix: '{{ \"{{\"\
           \ }} mc_cluster_id {{ \"}}\" }}/{{ \"{{\" }} namespace {{ \"}}\" }}/{{ \"\
           {{\" }} application {{ \"}}\" }}/{{ \"{{\" }} pod_name {{ \"}}\" }}/{{ \"\
-          {{\" }} container_name {{ \"}}\" }}/'\n    \n    # Request settings\n  \
-          \  request:\n      retry_attempts: 3\n      retry_initial_backoff_secs:\
-          \ 1\n      retry_max_duration_secs: 30\n      timeout_secs: 30\n    \n \
-          \   # Compression\n    compression: \"gzip\"\n    \n    # File format\n\
-          \    encoding:\n      codec: \"json\"\n      framing:\n        method: \"\
-          newline_delimited\"\n    \n    # Buffer configuration\n    buffer:\n   \
-          \   type: \"disk\"\n      max_size: 10737418240  # 10GB\n      when_full:\
-          \ \"block\"\n    \n    # Authentication via IRSA\n    auth:\n      assume_role:\
-          \ \"${S3_WRITER_ROLE_ARN}\"\n      \n    # Add timestamp to filename\n \
-          \   filename_append_uuid: true\n    filename_time_format: \"%Y%m%d-%H%M%S\"\
-          \n    filename_extension: \"json.gz\"\n"
+          {{\" }} container_name {{ \"}}\" }}/'\n\n    # Batch configuration - larger\
+          \ batches, faster timeout\n    batch:\n      max_bytes: 52428800       \
+          \ # 50 MB (up from 10 MB default)\n      timeout_secs: 60            # 1\
+          \ minute (down from 300s default)\n\n    # Request settings with tuned adaptive\
+          \ concurrency\n    request:\n      retry_attempts: 3\n      retry_initial_backoff_secs:\
+          \ 1\n      retry_max_duration_secs: 30\n      timeout_secs: 30\n      concurrency:\
+          \ adaptive\n      adaptive_concurrency:\n        initial_concurrency: 5\
+          \         # Start at 5 concurrent requests (default: 1)\n        max_concurrency_limit:\
+          \ 50      # Cap at 50 for safety (default: 200)\n        decrease_ratio:\
+          \ 0.95           # Less aggressive backoff (default: 0.9)\n\n    # Compression\n\
+          \    compression: \"gzip\"\n    \n    # File format\n    encoding:\n   \
+          \   codec: \"json\"\n      framing:\n        method: \"newline_delimited\"\
+          \n    \n    # Buffer configuration\n    buffer:\n      type: \"disk\"\n\
+          \      max_size: 10737418240  # 10GB\n      when_full: \"block\"\n    \n\
+          \    # Authentication via IRSA\n    auth:\n      assume_role: \"${S3_WRITER_ROLE_ARN}\"\
+          \n      \n    # Add timestamp to filename\n    filename_append_uuid: true\n\
+          \    filename_time_format: \"%Y%m%d-%H%M%S\"\n    filename_extension: \"\
+          json.gz\"\n"
     - apiVersion: apps/v1
       kind: DaemonSet
       metadata:

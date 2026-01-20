@@ -280,14 +280,24 @@ data:
         # go library
         # Dynamic key prefix based on cluster/namespace/app/pod structure
         key_prefix: '{{ "{{" }} mc_cluster_id {{ "}}" }}/{{ "{{" }} namespace {{ "}}" }}/{{ "{{" }} application {{ "}}" }}/{{ "{{" }} pod_name {{ "}}" }}/{{ "{{" }} container_name {{ "}}" }}/'
-        
-        # Request settings
+
+        # Batch configuration - larger batches, faster timeout
+        batch:
+          max_bytes: 52428800        # 50 MB (up from 10 MB default)
+          timeout_secs: 60            # 1 minute (down from 300s default)
+
+        # Request settings with tuned adaptive concurrency
         request:
           retry_attempts: 3
           retry_initial_backoff_secs: 1
           retry_max_duration_secs: 30
           timeout_secs: 30
-        
+          concurrency: adaptive
+          adaptive_concurrency:
+            initial_concurrency: 5         # Start at 5 concurrent requests (default: 1)
+            max_concurrency_limit: 50      # Cap at 50 for safety (default: 200)
+            decrease_ratio: 0.95           # Less aggressive backoff (default: 0.9)
+
         # Compression
         compression: "gzip"
         
