@@ -31783,6 +31783,57 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: hypershift-addon-agent-rbac
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: ext-hypershift.openshift.io/cluster-type
+        operator: In
+        values:
+        - management-cluster
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: hypershift-addon-agent-sa
+        namespace: open-cluster-management-agent-addon
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: hypershift-addon-agent
+      rules:
+      - apiGroups:
+        - apiextensions.k8s.io
+        resources:
+        - customresourcedefinitions
+        verbs:
+        - get
+        - list
+        - update
+        - patch
+        - create
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: hypershift-addon-agent
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: hypershift-addon-agent
+      subjects:
+      - kind: ServiceAccount
+        name: hypershift-addon-agent-sa
+        namespace: open-cluster-management-agent-addon
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: hypershift-autoscaler-podmonitor
   spec:
     clusterDeploymentSelector:
