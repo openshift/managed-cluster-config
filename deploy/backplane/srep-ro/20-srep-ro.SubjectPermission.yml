@@ -1,0 +1,18 @@
+apiVersion: managed.openshift.io/v1alpha1
+kind: SubjectPermission
+metadata:
+  name: backplane-srep-ro
+  namespace: openshift-rbac-permissions
+spec:
+  clusterPermissions:
+  - backplane-srep-ro-readers-cluster
+  - backplane-readers-cluster
+  permissions:
+  - clusterRoleName: backplane-srep-ro-readers-project
+    namespacesAllowedRegex: "(^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)"
+    namespacesDeniedRegex: openshift-backplane-cluster-admin
+  - clusterRoleName: dedicated-readers
+    namespacesAllowedRegex: "(^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)"
+    namespacesDeniedRegex: openshift-backplane-cluster-admin
+  subjectKind: Group
+  subjectName: system:serviceaccounts:openshift-backplane-srep-ro
