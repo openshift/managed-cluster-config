@@ -35031,6 +35031,109 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: ohss-50230-redhat-operators-recovery
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.16'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: ohss-50230-redhat-operators-recovery
+        namespace: openshift-marketplace
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: ohss-50230-redhat-operators-recovery
+        namespace: openshift-marketplace
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        verbs:
+        - get
+        - list
+        - delete
+    - kind: RoleBinding
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        name: ohss-50230-redhat-operators-recovery
+        namespace: openshift-marketplace
+      subjects:
+      - kind: ServiceAccount
+        name: ohss-50230-redhat-operators-recovery
+        namespace: openshift-marketplace
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: ohss-50230-redhat-operators-recovery
+    - apiVersion: batch/v1
+      kind: CronJob
+      metadata:
+        name: ohss-50230-redhat-operators-recovery
+        namespace: openshift-marketplace
+        annotations:
+          kubernetes.io/description: Remediate crash-looping redhat-operators pods
+            from corrupted catalog. See https://issues.redhat.com/browse/OHSS-50230
+      spec:
+        failedJobsHistoryLimit: 2
+        successfulJobsHistoryLimit: 2
+        concurrencyPolicy: Replace
+        schedule: 0 */3 * * *
+        jobTemplate:
+          spec:
+            ttlSecondsAfterFinished: 3600
+            activeDeadlineSeconds: 60
+            template:
+              metadata:
+                labels:
+                  app: ohss-50230-redhat-operators-recovery
+              spec:
+                affinity:
+                  nodeAffinity:
+                    preferredDuringSchedulingIgnoredDuringExecution:
+                    - preference:
+                        matchExpressions:
+                        - key: node-role.kubernetes.io/infra
+                          operator: Exists
+                      weight: 1
+                serviceAccountName: ohss-50230-redhat-operators-recovery
+                restartPolicy: Never
+                containers:
+                - name: ohss-50230-redhat-operators-recovery
+                  image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+                  imagePullPolicy: Always
+                  resources:
+                    requests:
+                      cpu: 100m
+                      memory: 100Mi
+                    limits:
+                      cpu: 100m
+                      memory: 100Mi
+                  command:
+                  - oc
+                  - delete
+                  - pods
+                  - --namespace=openshift-marketplace
+                  - --selector=catalogsource.operators.coreos.com/update=redhat-operators,olm.catalogSource=
+                  - --wait=false
+                  - --ignore-not-found
+                  - --grace-period=1
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: osd-25821-capa-annotator
   spec:
     clusterDeploymentSelector:

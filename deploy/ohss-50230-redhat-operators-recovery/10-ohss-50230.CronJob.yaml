@@ -1,0 +1,52 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: ohss-50230-redhat-operators-recovery
+  namespace: openshift-marketplace
+  annotations:
+    kubernetes.io/description: "Remediate crash-looping redhat-operators pods from corrupted catalog. See https://issues.redhat.com/browse/OHSS-50230"
+spec:
+  failedJobsHistoryLimit: 2
+  successfulJobsHistoryLimit: 2
+  concurrencyPolicy: Replace
+  schedule: "0 */3 * * *"
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: 3600
+      activeDeadlineSeconds: 60
+      template:
+        metadata:
+          labels:
+            app: ohss-50230-redhat-operators-recovery
+        spec:
+          affinity:
+            nodeAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+              - preference:
+                  matchExpressions:
+                  - key: node-role.kubernetes.io/infra
+                    operator: Exists
+                weight: 1
+          serviceAccountName: ohss-50230-redhat-operators-recovery
+          restartPolicy: Never
+          containers:
+          - name: ohss-50230-redhat-operators-recovery
+            image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+            imagePullPolicy: Always
+            resources:
+              requests:
+                cpu: 100m
+                memory: 100Mi
+              limits:
+                cpu: 100m
+                memory: 100Mi
+            command:
+            - oc
+            - delete
+            - pods
+            - --namespace=openshift-marketplace
+            - --selector=catalogsource.operators.coreos.com/update=redhat-operators,olm.catalogSource=
+            - --wait=false
+            - --ignore-not-found
+            - --grace-period=1
