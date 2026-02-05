@@ -49304,7 +49304,7 @@ objects:
               namespace: openshift-logging
           - alert: VectorDiskBufferUsageSRE
             annotations:
-              description: 'Granfathered openshift-logging collectors potentially
+              description: 'Grandfathered openshift-logging collectors potentially
                 consuming too much node disk, {{ $value }}% '
               summary: Detected consuming too much node disk on $labels.hostname host
             expr: "(label_replace(sum by(hostname) (vector_buffer_byte_size{component_kind='sink',\
@@ -49315,6 +49315,7 @@ objects:
             labels:
               service: collector
               severity: Warning
+              namespace: openshift-logging
           - alert: FluentDHighErrorRateSRE
             annotations:
               message: '{{ $value }}% of records have resulted in an error by fluentd
@@ -49360,6 +49361,7 @@ objects:
             labels:
               service: collector
               severity: critical
+              namespace: openshift-logging
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
