@@ -1,12 +1,14 @@
 deploymentMode: "SelectorSyncSet"
 selectorSyncSet:
   enableResourceTemplates: true
-  resourceApplyMode: "Sync"
+  resourceApplyMode: "Upsert"   # avoid pruning during migration to prevent config gaps
   matchExpressions:
   - key: ext-hypershift.openshift.io/cluster-type
     operator: In
     values: ["management-cluster"]
   - key: api.openshift.com/fedramp
     operator: NotIn
-    values: ["true"]  
-
+    values: ["true"]
+  - key: ext-hypershift.openshift.io/log-forwarding-flow
+    operator: NotIn
+    values: ["osdfm-managed"]
