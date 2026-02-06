@@ -49278,11 +49278,11 @@ objects:
           rules:
           - alert: FluentdNodeDownSRE
             annotations:
-              message: Prometheus could not scrape fluentd {{ $labels.instance }}
-                for more than 10m.
+              message: Prometheus could not scrape fluentd or vector pods {{ $labels.instance
+                }} for more than 10m.
               summary: Fluentd cannot be scraped
             expr: 'absent(up{job="collector"} == 1) and absent(up{job="fluentd"} ==
-              1)
+              1) and absent(up{app_kubernetes_io_component="collector"}==1)
 
               '
             for: 10m
@@ -49306,6 +49306,20 @@ objects:
               service: fluentd
               severity: error
               namespace: openshift-logging
+          - alert: VectorDiskBufferUsageSRE
+            annotations:
+              description: 'Grandfathered openshift-logging collectors potentially
+                consuming too much node disk, {{ $value }}% '
+              summary: Detected consuming too much node disk on $labels.hostname host
+            expr: "(label_replace(sum by(hostname) (vector_buffer_byte_size{component_kind='sink',\
+              \ buffer_type='disk'}), 'instance', '$1', 'hostname', '(.*)') \n/ on(instance)\
+              \ group_left() sum by(instance) (node_filesystem_size_bytes{mountpoint='/var'}))\
+              \ * 100  > 15\n"
+            for: 5m
+            labels:
+              service: collector
+              severity: Warning
+              namespace: openshift-logging
           - alert: FluentDHighErrorRateSRE
             annotations:
               message: '{{ $value }}% of records have resulted in an error by fluentd
@@ -49328,6 +49342,28 @@ objects:
               ) > 25\n"
             for: 15m
             labels:
+              severity: critical
+              namespace: openshift-logging
+          - alert: CollectorHigh403ForbiddenResponseRateSRE
+            annotations:
+              description: Grandfathered openshift-logging high rate of "HTTP 403
+                Forbidden" responses detected for collector "{{ $labels.app_kubernetes_io_instance
+                }}" in namespace {{ $labels.namespace }} for output "{{ $labels.component_id
+                }}". The rate of 403 responses is {{ printf "%.2f" $value }}% over
+                the last 2 minutes, persisting for more than 5 minutes. This could
+                indicate an authorization issue.
+              runbook_url: https://github.com/openshift/runbooks/blob/master/alerts/cluster-logging-operator/CollectorHigh403ForbiddenResponseRate.md
+              summary: At least 10% of sent requests responded with "HTTP 403 Forbidden"
+                for collector "{{ $labels.app_kubernetes_io_instance }}" in namespace
+                {{ $labels.namespace }} for output "{{ $labels.component_id }}"
+            expr: "sum(\n  irate(vector_http_client_responses_total{component_kind=\"\
+              sink\", status=\"403\"}[2m])\n) by (component_id, app_kubernetes_io_instance,\
+              \ namespace)\n/\nsum(\n  irate(vector_http_client_responses_total{component_kind=\"\
+              sink\"}[2m])\n) by (component_id, app_kubernetes_io_instance, namespace)\n\
+              * 100\n> 10\n"
+            for: 5m
+            labels:
+              service: collector
               severity: critical
               namespace: openshift-logging
 - apiVersion: hive.openshift.io/v1
