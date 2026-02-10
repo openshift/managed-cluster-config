@@ -1,0 +1,24 @@
+apiVersion: ocmagent.managed.openshift.io/v1alpha1
+kind: ManagedFleetNotification
+metadata:
+  name: customer-monitoring-operator-down
+  namespace: openshift-ocm-agent-operator
+spec:
+  fleetNotification:
+    name: customer-monitoring-operator-down
+    summary: Action Required - Service disruption of cluster monitoring stack
+    notificationMessage: |-
+      The Cluster Monitoring Operator on your environment is currently experiencing a service disruption.
+      This component is responsible for the deployment and lifecycle management of the monitoring stack,
+      including Prometheus and Alertmanager. Consequently, cluster metrics and alerting capabilities may
+      be inconsistent or entirely unavailable.
+
+      Please verify the status of the 'monitoring' ClusterOperator by running 'oc get co monitoring'.
+      If the operator is in unavailable state, you can check the logs of the cluster-monitoring-operator pod in the 'openshift-monitoring' namespace for further details.
+
+      For detailed troubleshooting guide, please refer to: https://access.redhat.com/articles/7137912
+
+      If you require assistance, please contact Red Hat Support or your account representative.
+    resendWait: 24
+    severity: Warning
+    limitedSupport: false
