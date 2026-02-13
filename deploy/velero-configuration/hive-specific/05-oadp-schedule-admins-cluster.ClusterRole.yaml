@@ -3,12 +3,23 @@ kind: ClusterRole
 metadata:
   labels:
     managed.openshift.io/aggregate-to-dedicated-admins: "cluster"
-  name: velero-schedule-admins-cluster
+  name: oadp-schedule-admins-cluster
 rules:
 - apiGroups:
   - velero.io
   attributeRestrictions: null
   resources:
   - schedules
+  - backups
+  - restores
   verbs:
   - "*"
+- apiGroups:
+  - oadp.openshift.io
+  attributeRestrictions: null
+  resources:
+  - dataprotectionapplications
+  verbs:
+  - get
+  - list
+  - watch

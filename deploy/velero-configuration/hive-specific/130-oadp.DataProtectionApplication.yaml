@@ -1,0 +1,35 @@
+apiVersion: oadp.openshift.io/v1alpha1
+kind: DataProtectionApplication
+metadata:
+  name: dpa-sample
+  namespace: openshift-adp
+spec:
+  configuration:
+    velero:
+      defaultPlugins:
+      - openshift
+      - aws
+      resourceAllocations:
+        limits:
+          cpu: "1"
+          memory: 1Gi
+        requests:
+          cpu: 500m
+          memory: 256Mi
+      logLevel: info
+      podConfig:
+        nodeSelector:
+          kubernetes.io/os: linux
+  backupLocations:
+  - velero:
+      provider: aws
+      default: true
+      config:
+        region: ${AWS_REGION}
+        profile: "default"
+      credential:
+        name: cloud-credentials
+        key: cloud
+      objectStorage:
+        bucket: ${OADP_BACKUP_BUCKET}
+        prefix: velero
