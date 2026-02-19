@@ -1,0 +1,152 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: backplane-srep-ro-readers-cluster
+rules:
+# Read-only access to nodes and node proxy (for getting node logs)
+- apiGroups:
+  - ""
+  resources:
+  - nodes
+  - nodes/proxy
+  - nodes/status
+  verbs:
+  - get
+  - list
+  - watch
+# Read-only access to machineconfigs, machineconfigpools, kubeletconfigs, controllerconfigs
+- apiGroups:
+  - machineconfiguration.openshift.io
+  resources:
+  - machineconfigs
+  - machineconfigpools
+  - kubeletconfigs
+  - containerruntimeconfigs
+  - controllerconfigs
+  verbs:
+  - get
+  - list
+  - watch
+# Read-only access to machines, machinehealthchecks, machinesets
+- apiGroups:
+  - machine.openshift.io
+  resources:
+  - machines
+  - machinesets
+  - machinehealthchecks
+  verbs:
+  - get
+  - list
+  - watch
+# Read-only access to clusterautoscalers and machineautoscalers
+- apiGroups:
+  - autoscaling.openshift.io
+  resources:
+  - clusterautoscalers
+  - machineautoscalers
+  verbs:
+  - get
+  - list
+  - watch
+# Read-only access to api request counts
+- apiGroups:
+  - apiserver.openshift.io
+  resources:
+  - apirequestcounts
+  verbs:
+  - get
+  - list
+  - watch
+# Read-only access to CSR objects
+- apiGroups:
+  - certificates.k8s.io
+  resources:
+  - certificatesigningrequests
+  verbs:
+  - get
+  - list
+  - watch
+# Read-only access to vpcendpoints
+- apiGroups:
+  - avo.openshift.io
+  resources:
+  - vpcendpoints
+  verbs:
+  - get
+  - list
+  - watch
+# Read-only access to authentication/authorization reviews (for diagnostics)
+- apiGroups:
+  - authentication.k8s.io
+  resources:
+  - tokenreviews
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - authorization.k8s.io
+  resources:
+  - localsubjectaccessreviews
+  - selfsubjectaccessreviews
+  - selfsubjectrulesreviews
+  - subjectaccessreviews
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - authorization.openshift.io
+  resources:
+  - localresourceaccessreviews
+  - localsubjectaccessreviews
+  - resourceaccessreviews
+  - selfsubjectrulesreviews
+  - subjectaccessreviews
+  - subjectrulesreviews
+  verbs:
+  - get
+  - list
+  - watch
+# Read-only access to persistent volumes
+- apiGroups:
+  - ""
+  resources:
+  - persistentvolumes
+  verbs:
+  - get
+  - list
+  - watch
+# Read-only access to projects/namespaces
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  - namespaces/status
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - config.openshift.io
+  - project.openshift.io
+  resources:
+  - projects
+  verbs:
+  - get
+  - list
+  - watch
+# Read-only access to non-resource URLs (metrics, healthz, etc.)
+- nonResourceURLs:
+  - /healthz
+  - /healthz/*
+  - /livez
+  - /livez/*
+  - /metrics
+  - /metrics/*
+  - /readyz
+  - /readyz/*
+  - /version
+  - /version/*
+  verbs:
+  - get
