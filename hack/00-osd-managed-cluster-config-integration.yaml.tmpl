@@ -40999,7 +40999,7 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: osd-fedramp-machineconfig-int-reg-trust
+    name: osd-fedramp-machineconfig-int-pre-4.15
   spec:
     clusterDeploymentSelector:
       matchLabels:
@@ -41016,10 +41016,12 @@ objects:
       - key: hive.openshift.io/version-major-minor
         operator: In
         values:
+        - '4.11'
+        - '4.12'
+        - '4.13'
+        - '4.14'
         - '4.15'
         - '4.16'
-        - '4.17'
-        - '4.18'
     resourceApplyMode: Sync
     resources:
     - apiVersion: machineconfiguration.openshift.io/v1
@@ -41136,6 +41138,82 @@ objects:
         config:
           ignition:
             version: 3.2.0
+          storage:
+            files:
+            - contents:
+                compression: gzip
+                source: data:;base64,H4sIAAAAAAAC/9yUP2vzMBDGd3+KQ7MV7dnywouHUDClSykZhHRxhKM/nC6lIuS7F8fGuKS00CntYHPiTs89v0HPuQIQFvf6dGSxhpcKAOB8/QMILgnFGoQLGc2JcGMMJt6EwgcXOnEdu1QAu3qQYdIhp0icxXrSEDaaHmk+AwjCzmWmstLGYM4rQnvQvDLRz/uXHj74yK4LaP8VUS+7PZanaaBpmy2WfNNvNR+GvkI2KvVOUfKyS516bB9k0zZy+/9Zjk4k4RF1RjFLXKZqV98wTOZdVGOlDBK7vUMrY0LSHEm6YPHtTthcfv0hV/T+FByXP8Y13feaeuR01AZ/N9fdv6ExM+plOkir0cewDInvMb6KpE8WVsN3qd4DAAD//9nSpWTvBAAA
+              mode: 420
+              overwrite: true
+              path: /etc/containers/policy.json
+            - contents:
+                compression: gzip
+                source: data:;base64,H4sIAAAAAAAC/3yVtw7bigFFd36FxgSMLXaRQByEvTexc2PvXWz6+sDO+IB31gvc7eDMe/p4PNYtwSCKeOI4jWI0iTwQCKZ+QOQPFAL2Jn/8lXeRP6Tk86+HPGY/H/+QHf/BTuMnacZifThNNTZj9VCL+5+Pf29FlvTF+vnvWuR18vmZTcN/AODHbxhelI2HJVoPy2M0mX2ofPRgNJNV/8wAMNiywQjwPGk2w9Os48ZLFIyQ/i7hNPaiFd3cKE5M7vlqj22MnrECTaNIxXTT8XDqjAB0SWs+2pWrYEz9pp+5ax/aF5NjkMMR+RaWOcMQTWVebGLm7aFNN98lX62kE55OesMHfL9Sz9wYYjIe1311wTEPikjunQVvsD1PvVVdZCb8IBa9390b7KiRx953I+UID9krDzAaOInz6NI3eeKpf5T3ejATHIkvaVkJUK1NxAGfJcF7MXEdEGh3TOSvUvxc4mb08xzI3gx8GOG6GcOkTAodXUEsexOMnoUm+VRJkslSFiUi+k0gS7YZRF+lFb93BFqsF8o3gOy8yMS5ISNpuRwJmIuQaS3a1Q7thZIUamlGR29qyl3Mp3nKS2cmELUeU6H78RCXMCCfG5gzpFspUrOsMw/yYkdlvPGiFhguons1BhjhoXYtevd1GOHH2h1qk7hS3jUI9GSgO/xGIWzU8TMurpv7i8uRrZ2KOsxZVHL5+vKoYKuSURPV8/vK02cHTq+wqxr25X13EFhjAqnqnkel+LQUBfnM2PTFvOP6LM8htDBliLpdES23wIom6fW1IZrNUeoImUq/FkSAo62lRsEEHbOQFZY83MQxZ9wwyfYpmfP8eH9fcf4+r4beR5h56+kuLnW98Pa4xOQRAT747q7PfViuhNgilDC9APlfHIbRA4Hp5aoyvK0a9t7F/iRqiZ0QNwmNTTNt+k3bNAN8OMqJA7tyRAHSWEZJB32X2Vrx4KiyEWrPRWFOB/+WBWOOEXxOh6xyEB9XHZrMEL8FouDqs/FNZ4PfJb9PBuNIXUKh24znT56lWV6g+z+usOKpi+zZycyps0ztyXTVqQB76gFd8axU8ayA0TRbdba4OSEPB60zqelxPp9BqExO6M2ydvLzEk5OWxLEEPY8lCrApSiSmOzwW6kl9OJAtko+7jO6I//KETV12uMev4puEkclC6nnxHDqZUEaYOaJGMpWA/BVkB1BBFW2n5Wb4bxO8ZzYNydZE9ByZovObPcyhgrjvwYnhT5oBXNVqd0s3F72GgEFbnajn4jMRb3xpJMjFKPht6J/EZCNtKe7C1gbT7gdSSsr0W7YV0Uw4t7qx+YkIXoAxBbWL5/xy70lL+MbsZBQ3kTQBv3mJGiF1LYrdB+SIQijJMMwzxbU0QSGYOXdSLggJgBGNn6HRQVxOm6/tuk9ro5gbbNykeSSJJKbm+9UwuK5i8NMXXX8s5TIl++J6ZpDaDoA4jpnM0yUSZ3Ylz5WZq8UKxlNmUTZiOTga/w8ThFRvstc7Yo/iHuPolPPN2JlONj4BKwW3bJo8okNP+B6U9olGOvb10hHBC3wvsVzOssOUqUcHPPzC4ZpcINgbnDIOgR2XgIZ5VmMJ6xYtRp7AuPrpX7lm1CyqVw0j7y55hnMZsN6HJd/yhTunSUulefh6hDHF0oOaJEgTaq+viuscsQJTVtxFpS4xuIcJYXnmDtPLugXmGaoIcShoL6w1LFfAqULZJhrNFC0vGotEsSj52hmHjTRc8uaQjcspFBM5oaupURToqCOCtcaYNaugeW6c+13haQlsgR47LEJuEFbEqVf4vQL+DUbJf//qPAG9zdJ+V8AAAD//57RbErxBgAA
+              mode: 420
+              overwrite: true
+              path: /etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-isv
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-fedramp-machineconfig-reg-trust-int
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/fedramp
+        operator: In
+        values:
+        - 'true'
+      - key: api.openshift.com/environment
+        operator: In
+        values:
+        - integration
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.17'
+        - '4.18'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: machineconfiguration.openshift.io/v1
+      kind: MachineConfig
+      metadata:
+        labels:
+          machineconfiguration.openshift.io/role: master
+        name: 51-master-rh-registry-trust
+      spec:
+        config:
+          ignition:
+            version: 3.4.0
+          storage:
+            files:
+            - contents:
+                compression: gzip
+                source: data:;base64,H4sIAAAAAAAC/9yUP2vzMBDGd3+KQ7MV7dnywouHUDClSykZhHRxhKM/nC6lIuS7F8fGuKS00CntYHPiTs89v0HPuQIQFvf6dGSxhpcKAOB8/QMILgnFGoQLGc2JcGMMJt6EwgcXOnEdu1QAu3qQYdIhp0icxXrSEDaaHmk+AwjCzmWmstLGYM4rQnvQvDLRz/uXHj74yK4LaP8VUS+7PZanaaBpmy2WfNNvNR+GvkI2KvVOUfKyS516bB9k0zZy+/9Zjk4k4RF1RjFLXKZqV98wTOZdVGOlDBK7vUMrY0LSHEm6YPHtTthcfv0hV/T+FByXP8Y13feaeuR01AZ/N9fdv6ExM+plOkir0cewDInvMb6KpE8WVsN3qd4DAAD//9nSpWTvBAAA
+              mode: 420
+              overwrite: true
+              path: /etc/containers/policy.json
+            - contents:
+                compression: gzip
+                source: data:;base64,H4sIAAAAAAAC/3yVtw7bigFFd36FxgSMLXaRQByEvTexc2PvXWz6+sDO+IB31gvc7eDMe/p4PNYtwSCKeOI4jWI0iTwQCKZ+QOQPFAL2Jn/8lXeRP6Tk86+HPGY/H/+QHf/BTuMnacZifThNNTZj9VCL+5+Pf29FlvTF+vnvWuR18vmZTcN/AODHbxhelI2HJVoPy2M0mX2ofPRgNJNV/8wAMNiywQjwPGk2w9Os48ZLFIyQ/i7hNPaiFd3cKE5M7vlqj22MnrECTaNIxXTT8XDqjAB0SWs+2pWrYEz9pp+5ax/aF5NjkMMR+RaWOcMQTWVebGLm7aFNN98lX62kE55OesMHfL9Sz9wYYjIe1311wTEPikjunQVvsD1PvVVdZCb8IBa9390b7KiRx953I+UID9krDzAaOInz6NI3eeKpf5T3ejATHIkvaVkJUK1NxAGfJcF7MXEdEGh3TOSvUvxc4mb08xzI3gx8GOG6GcOkTAodXUEsexOMnoUm+VRJkslSFiUi+k0gS7YZRF+lFb93BFqsF8o3gOy8yMS5ISNpuRwJmIuQaS3a1Q7thZIUamlGR29qyl3Mp3nKS2cmELUeU6H78RCXMCCfG5gzpFspUrOsMw/yYkdlvPGiFhguons1BhjhoXYtevd1GOHH2h1qk7hS3jUI9GSgO/xGIWzU8TMurpv7i8uRrZ2KOsxZVHL5+vKoYKuSURPV8/vK02cHTq+wqxr25X13EFhjAqnqnkel+LQUBfnM2PTFvOP6LM8htDBliLpdES23wIom6fW1IZrNUeoImUq/FkSAo62lRsEEHbOQFZY83MQxZ9wwyfYpmfP8eH9fcf4+r4beR5h56+kuLnW98Pa4xOQRAT747q7PfViuhNgilDC9APlfHIbRA4Hp5aoyvK0a9t7F/iRqiZ0QNwmNTTNt+k3bNAN8OMqJA7tyRAHSWEZJB32X2Vrx4KiyEWrPRWFOB/+WBWOOEXxOh6xyEB9XHZrMEL8FouDqs/FNZ4PfJb9PBuNIXUKh24znT56lWV6g+z+usOKpi+zZycyps0ztyXTVqQB76gFd8axU8ayA0TRbdba4OSEPB60zqelxPp9BqExO6M2ydvLzEk5OWxLEEPY8lCrApSiSmOzwW6kl9OJAtko+7jO6I//KETV12uMev4puEkclC6nnxHDqZUEaYOaJGMpWA/BVkB1BBFW2n5Wb4bxO8ZzYNydZE9ByZovObPcyhgrjvwYnhT5oBXNVqd0s3F72GgEFbnajn4jMRb3xpJMjFKPht6J/EZCNtKe7C1gbT7gdSSsr0W7YV0Uw4t7qx+YkIXoAxBbWL5/xy70lL+MbsZBQ3kTQBv3mJGiF1LYrdB+SIQijJMMwzxbU0QSGYOXdSLggJgBGNn6HRQVxOm6/tuk9ro5gbbNykeSSJJKbm+9UwuK5i8NMXXX8s5TIl++J6ZpDaDoA4jpnM0yUSZ3Ylz5WZq8UKxlNmUTZiOTga/w8ThFRvstc7Yo/iHuPolPPN2JlONj4BKwW3bJo8okNP+B6U9olGOvb10hHBC3wvsVzOssOUqUcHPPzC4ZpcINgbnDIOgR2XgIZ5VmMJ6xYtRp7AuPrpX7lm1CyqVw0j7y55hnMZsN6HJd/yhTunSUulefh6hDHF0oOaJEgTaq+viuscsQJTVtxFpS4xuIcJYXnmDtPLugXmGaoIcShoL6w1LFfAqULZJhrNFC0vGotEsSj52hmHjTRc8uaQjcspFBM5oaupURToqCOCtcaYNaugeW6c+13haQlsgR47LEJuEFbEqVf4vQL+DUbJf//qPAG9zdJ+V8AAAD//57RbErxBgAA
+              mode: 420
+              overwrite: true
+              path: /etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-isv
+    - apiVersion: machineconfiguration.openshift.io/v1
+      kind: MachineConfig
+      metadata:
+        labels:
+          machineconfiguration.openshift.io/role: worker
+        name: 51-worker-rh-registry-trust
+      spec:
+        config:
+          ignition:
+            version: 3.4.0
           storage:
             files:
             - contents:
