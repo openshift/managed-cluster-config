@@ -29745,6 +29745,406 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: backplane-srep-ro
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: openshift-backplane-srep-ro
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-srep-ro-readers-cluster
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - nodes
+        - nodes/proxy
+        - nodes/status
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - machineconfiguration.openshift.io
+        resources:
+        - machineconfigs
+        - machineconfigpools
+        - kubeletconfigs
+        - containerruntimeconfigs
+        - controllerconfigs
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machines
+        - machinesets
+        - machinehealthchecks
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - autoscaling.openshift.io
+        resources:
+        - clusterautoscalers
+        - machineautoscalers
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - apiserver.openshift.io
+        resources:
+        - apirequestcounts
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - certificates.k8s.io
+        resources:
+        - certificatesigningrequests
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - avo.openshift.io
+        resources:
+        - vpcendpoints
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - authentication.k8s.io
+        resources:
+        - tokenreviews
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - authorization.k8s.io
+        resources:
+        - localsubjectaccessreviews
+        - selfsubjectaccessreviews
+        - selfsubjectrulesreviews
+        - subjectaccessreviews
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - authorization.openshift.io
+        resources:
+        - localresourceaccessreviews
+        - localsubjectaccessreviews
+        - resourceaccessreviews
+        - selfsubjectrulesreviews
+        - subjectaccessreviews
+        - subjectrulesreviews
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - persistentvolumes
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - namespaces
+        - namespaces/status
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - config.openshift.io
+        - project.openshift.io
+        resources:
+        - projects
+        verbs:
+        - get
+        - list
+        - watch
+      - nonResourceURLs:
+        - /healthz
+        - /healthz/*
+        - /livez
+        - /livez/*
+        - /metrics
+        - /metrics/*
+        - /readyz
+        - /readyz/*
+        - /version
+        - /version/*
+        verbs:
+        - get
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-srep-ro-readers-project
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        - pods/status
+        - pods/log
+        - services
+        - endpoints
+        - persistentvolumeclaims
+        - events
+        - configmaps
+        - serviceaccounts
+        - replicationcontrollers
+        - replicationcontrollers/scale
+        - resourcequotas
+        - limitranges
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - apps
+        resources:
+        - deployments
+        - deployments/scale
+        - deployments/status
+        - daemonsets
+        - daemonsets/status
+        - replicasets
+        - replicasets/scale
+        - replicasets/status
+        - statefulsets
+        - statefulsets/scale
+        - statefulsets/status
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - batch
+        resources:
+        - jobs
+        - jobs/status
+        - cronjobs
+        - cronjobs/status
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - networking.k8s.io
+        resources:
+        - networkpolicies
+        - ingresses
+        - ingresses/status
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - rbac.authorization.k8s.io
+        resources:
+        - roles
+        - rolebindings
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - autoscaling
+        resources:
+        - horizontalpodautoscalers
+        - horizontalpodautoscalers/status
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - policy
+        resources:
+        - poddisruptionbudgets
+        - poddisruptionbudgets/status
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - apps.openshift.io
+        resources:
+        - deploymentconfigs
+        - deploymentconfigs/scale
+        - deploymentconfigs/log
+        - deploymentconfigs/status
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - build.openshift.io
+        resources:
+        - builds
+        - builds/log
+        - builds/details
+        - buildconfigs
+        - buildconfigs/webhooks
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - route.openshift.io
+        resources:
+        - routes
+        - routes/status
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - image.openshift.io
+        resources:
+        - imagestreams
+        - imagestreams/status
+        - imagestreamtags
+        - imagestreamimages
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - template.openshift.io
+        resources:
+        - templates
+        - templateinstances
+        - processedtemplates
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - servicemonitors
+        - podmonitors
+        - prometheusrules
+        - alertmanagers
+        - prometheuses
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - clusterserviceversions
+        - catalogsources
+        - installplans
+        - subscriptions
+        - operatorgroups
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - logging.openshift.io
+        resources:
+        - clusterloggings
+        - clusterlogforwarders
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - velero.io
+        resources:
+        - backups
+        - restores
+        - schedules
+        - backupstoragelocations
+        - volumesnapshotlocations
+        - deletebackuprequests
+        - downloadrequests
+        - podvolumebackups
+        - podvolumerestores
+        - resticrepositories
+        - serverstatusrequests
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machinehealthchecks
+        - machinesets
+        - machinesets/scale
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - upgrade.managed.openshift.io
+        resources:
+        - upgradeconfigs
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - security.openshift.io
+        resources:
+        - podsecuritypolicyreviews
+        - podsecuritypolicyselfsubjectreviews
+        - podsecuritypolicysubjectreviews
+        verbs:
+        - get
+        - list
+        - watch
+    - apiVersion: managed.openshift.io/v1alpha1
+      kind: SubjectPermission
+      metadata:
+        name: backplane-srep-ro
+        namespace: openshift-rbac-permissions
+      spec:
+        clusterPermissions:
+        - backplane-srep-ro-readers-cluster
+        - backplane-readers-cluster
+        permissions:
+        - clusterRoleName: backplane-srep-ro-readers-project
+          namespacesAllowedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: dedicated-readers
+          namespacesAllowedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        subjectKind: Group
+        subjectName: system:serviceaccounts:openshift-backplane-srep-ro
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: backplane-srep-dynatrace
   spec:
     clusterDeploymentSelector:

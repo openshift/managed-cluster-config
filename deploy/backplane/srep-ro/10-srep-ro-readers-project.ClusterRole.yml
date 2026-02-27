@@ -1,0 +1,239 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: backplane-srep-ro-readers-project
+rules:
+# Read-only access to core resources
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - pods/status
+  - pods/log
+  - services
+  - endpoints
+  - persistentvolumeclaims
+  - events
+  - configmaps
+  - serviceaccounts
+  - replicationcontrollers
+  - replicationcontrollers/scale
+  - resourcequotas
+  - limitranges
+  verbs:
+  - get
+  - list
+  - watch
+# Read-only access to apps resources
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  - deployments/scale
+  - deployments/status
+  - daemonsets
+  - daemonsets/status
+  - replicasets
+  - replicasets/scale
+  - replicasets/status
+  - statefulsets
+  - statefulsets/scale
+  - statefulsets/status
+  verbs:
+  - get
+  - list
+  - watch
+# Read-only access to batch resources
+- apiGroups:
+  - batch
+  resources:
+  - jobs
+  - jobs/status
+  - cronjobs
+  - cronjobs/status
+  verbs:
+  - get
+  - list
+  - watch
+# Read-only access to networking resources
+- apiGroups:
+  - networking.k8s.io
+  resources:
+  - networkpolicies
+  - ingresses
+  - ingresses/status
+  verbs:
+  - get
+  - list
+  - watch
+# Read-only access to RBAC resources
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - roles
+  - rolebindings
+  verbs:
+  - get
+  - list
+  - watch
+# Read-only access to autoscaling
+- apiGroups:
+  - autoscaling
+  resources:
+  - horizontalpodautoscalers
+  - horizontalpodautoscalers/status
+  verbs:
+  - get
+  - list
+  - watch
+# Read-only access to policy resources
+- apiGroups:
+  - policy
+  resources:
+  - poddisruptionbudgets
+  - poddisruptionbudgets/status
+  verbs:
+  - get
+  - list
+  - watch
+# Read-only access to OpenShift-specific resources
+- apiGroups:
+  - apps.openshift.io
+  resources:
+  - deploymentconfigs
+  - deploymentconfigs/scale
+  - deploymentconfigs/log
+  - deploymentconfigs/status
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - build.openshift.io
+  resources:
+  - builds
+  - builds/log
+  - builds/details
+  - buildconfigs
+  - buildconfigs/webhooks
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - route.openshift.io
+  resources:
+  - routes
+  - routes/status
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - image.openshift.io
+  resources:
+  - imagestreams
+  - imagestreams/status
+  - imagestreamtags
+  - imagestreamimages
+  verbs:
+  - get
+  - list
+  - watch
+# Read-only access to template resources
+- apiGroups:
+  - template.openshift.io
+  resources:
+  - templates
+  - templateinstances
+  - processedtemplates
+  verbs:
+  - get
+  - list
+  - watch
+# Read-only access to monitoring resources
+- apiGroups:
+  - monitoring.coreos.com
+  resources:
+  - servicemonitors
+  - podmonitors
+  - prometheusrules
+  - alertmanagers
+  - prometheuses
+  verbs:
+  - get
+  - list
+  - watch
+# Read-only access to operators
+- apiGroups:
+  - operators.coreos.com
+  resources:
+  - clusterserviceversions
+  - catalogsources
+  - installplans
+  - subscriptions
+  - operatorgroups
+  verbs:
+  - get
+  - list
+  - watch
+# Read-only access to logging resources
+- apiGroups:
+  - logging.openshift.io
+  resources:
+  - clusterloggings
+  - clusterlogforwarders
+  verbs:
+  - get
+  - list
+  - watch
+# Read-only access to velero/backup resources
+- apiGroups:
+  - velero.io
+  resources:
+  - backups
+  - restores
+  - schedules
+  - backupstoragelocations
+  - volumesnapshotlocations
+  - deletebackuprequests
+  - downloadrequests
+  - podvolumebackups
+  - podvolumerestores
+  - resticrepositories
+  - serverstatusrequests
+  verbs:
+  - get
+  - list
+  - watch
+# Read-only access to machine resources in namespace context
+- apiGroups:
+  - machine.openshift.io
+  resources:
+  - machinehealthchecks
+  - machinesets
+  - machinesets/scale
+  verbs:
+  - get
+  - list
+  - watch
+# Read-only access to upgrade configs
+- apiGroups:
+  - upgrade.managed.openshift.io
+  resources:
+  - upgradeconfigs
+  verbs:
+  - get
+  - list
+  - watch
+# Read-only access to security resources (for pod security policy review)
+- apiGroups:
+  - security.openshift.io
+  resources:
+  - podsecuritypolicyreviews
+  - podsecuritypolicyselfsubjectreviews
+  - podsecuritypolicysubjectreviews
+  verbs:
+  - get
+  - list
+  - watch
