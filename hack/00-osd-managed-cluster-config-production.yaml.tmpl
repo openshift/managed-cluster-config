@@ -6487,7 +6487,9 @@ objects:
                 \           fi\n\n            log \"Found ${#ECR_REGISTRIES[@]} unique\
                 \ ECR registry(s)\"\n            return 0\n        }\n\n        #\
                 \ Get ECR token using the credential helper and the first discovered\
-                \ registry.\n        # Sets ECR_PASSWORD on success.\n        get_ecr_token()\
+                \ registry, sets ECR_PASSWORD on success.\n        # Note: ECR auth\
+                \ tokens are per-IAM-principal, not per-registry. A single token works\
+                \ for all ECR registries the node's role can access.\n        get_ecr_token()\
                 \ {\n            local registry=\"${ECR_REGISTRIES[0]}\"\n       \
                 \     log \"Getting ECR authorization token via credential helper...\"\
                 \n\n            if [[ ! -x \"$HELPER_PATH\" ]]; then\n           \

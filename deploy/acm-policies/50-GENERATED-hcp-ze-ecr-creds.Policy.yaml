@@ -175,8 +175,8 @@ spec:
                                 return 0
                             }
 
-                            # Get ECR token using the credential helper and the first discovered registry.
-                            # Sets ECR_PASSWORD on success.
+                            # Get ECR token using the credential helper and the first discovered registry, sets ECR_PASSWORD on success.
+                            # Note: ECR auth tokens are per-IAM-principal, not per-registry. A single token works for all ECR registries the node's role can access.
                             get_ecr_token() {
                                 local registry="${ECR_REGISTRIES[0]}"
                                 log "Getting ECR authorization token via credential helper..."
