@@ -115,12 +115,14 @@ spec:
                             #
                             # ECR Credential Refresh Script for Zero-Egress HCP Clusters
                             #
-                            # Gets ECR authorization token using the node's ECR credential helper
+                            # Gets an ECR authorization token using the node's ECR credential helper
                             # and updates additional-pull-secret in kube-system namespace. HCCO then
                             # merges this with original credentials to create global-pull-secret.
                             #
                             # This script auto-detects zero-egress clusters by checking for IDMS.
                             # Non-zero-egress clusters exit early with success (no-op).
+                            #
+                            # Supports multiple ECR registries across all ImageDigestMirrorSets.
                             #
                             # SOP: https://github.com/openshift/ops-sop/blob/master/hypershift/knowledge_base/howto/zero-egress-ecr-credential-refresh.md
                             # Tracking: OHSS-49424
@@ -135,48 +137,48 @@ spec:
                                 echo "$(date '+%Y-%m-%d %H:%M:%S') - $1"
                             }
 
-                            # Check if this is a zero-egress cluster by detecting IDMS with ECR mirrors
-                            is_zero_egress_cluster() {
-                                log "Checking if cluster is zero-egress..."
-                                local mirror
-                                mirror=$(oc get imagedigestmirrorset -o jsonpath='{.items[0].spec.imageDigestMirrors[0].mirrors[0]}' 2>/dev/null || true)
-                                if [[ -n "$mirror" && "$mirror" =~ ^[0-9]+\.dkr\.ecr\.[a-z0-9-]+\.amazonaws\.com ]]; then
-                                    log "Zero-egress cluster detected (IDMS mirror: $mirror)"
-                                    return 0
+                            # Discover all unique ECR registries from ImageDigestMirrorSets.
+                            # Populates the ECR_REGISTRIES array. Returns 1 if none found.
+                            discover_ecr_registries() {
+                                log "Discovering ECR registries from cluster configuration..."
+                                ECR_REGISTRIES=()
+
+                                # Get every mirror URL across all IDMS items and all imageDigestMirrors entries
+                                local all_mirrors
+                                all_mirrors=$(oc get imagedigestmirrorset -o jsonpath='{.items[*].spec.imageDigestMirrors[*].mirrors[*]}' 2>/dev/null || true)
+
+                                if [[ -z "$all_mirrors" ]]; then
+                                    log "No IDMS mirrors found"
+                                    return 1
                                 fi
-                                log "Not a zero-egress cluster (no ECR IDMS found)"
-                                return 1
+
+                                # Extract unique ECR registry hostnames (account.dkr.ecr.region.amazonaws.com)
+                                local seen=""
+                                for mirror in $all_mirrors; do
+                                    if [[ "$mirror" =~ ^([0-9]+\.dkr\.ecr\.[a-z0-9-]+\.amazonaws\.com) ]]; then
+                                        local registry="${BASH_REMATCH[1]}"
+                                        # Deduplicate
+                                        if [[ " $seen " != *" $registry "* ]]; then
+                                            seen="$seen $registry"
+                                            ECR_REGISTRIES+=("$registry")
+                                            log "Discovered ECR registry: $registry"
+                                        fi
+                                    fi
+                                done
+
+                                if [[ ${#ECR_REGISTRIES[@]} -eq 0 ]]; then
+                                    log "No ECR registries found in IDMS mirrors"
+                                    return 1
+                                fi
+
+                                log "Found ${#ECR_REGISTRIES[@]} unique ECR registry(s)"
+                                return 0
                             }
 
-                            # Discover ECR registry from ImageDigestMirrorSet or environment
-                            discover_ecr_registry() {
-                                log "Discovering ECR registry from cluster configuration..."
-
-                                # Check environment variables first
-                                if [[ -n "${AWS_ACCOUNT_ID:-}" && -n "${AWS_REGION:-}" ]]; then
-                                    ECR_REGISTRY="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
-                                    log "Using ECR registry from environment: $ECR_REGISTRY"
-                                    return 0
-                                fi
-
-                                # Extract from ImageDigestMirrorSet
-                                local mirror
-                                mirror=$(oc get imagedigestmirrorset -o jsonpath='{.items[0].spec.imageDigestMirrors[0].mirrors[0]}' 2>/dev/null || true)
-                                if [[ "$mirror" =~ ^([0-9]+)\.dkr\.ecr\.([a-z0-9-]+)\.amazonaws\.com ]]; then
-                                    AWS_ACCOUNT_ID="${BASH_REMATCH[1]}"
-                                    AWS_REGION="${BASH_REMATCH[2]}"
-                                    # ECR registry is just the host, not including any path
-                                    ECR_REGISTRY="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
-                                    log "Discovered ECR registry: $ECR_REGISTRY"
-                                    return 0
-                                fi
-
-                                log "ERROR - Could not discover ECR registry"
-                                return 1
-                            }
-
-                            # Get ECR token using the credential helper
+                            # Get ECR token using the credential helper and the first discovered registry.
+                            # Sets ECR_PASSWORD on success.
                             get_ecr_token() {
+                                local registry="${ECR_REGISTRIES[0]}"
                                 log "Getting ECR authorization token via credential helper..."
 
                                 if [[ ! -x "$HELPER_PATH" ]]; then
@@ -184,8 +186,7 @@ spec:
                                     return 1
                                 fi
 
-                                # The helper expects a CredentialProviderRequest JSON with kind, apiVersion, and image
-                                local request='{"kind":"CredentialProviderRequest","apiVersion":"credentialprovider.kubelet.k8s.io/v1","image":"'"${ECR_REGISTRY}"'/test"}'
+                                local request='{"kind":"CredentialProviderRequest","apiVersion":"credentialprovider.kubelet.k8s.io/v1","image":"'"${registry}"'/test"}'
                                 local response
 
                                 if ! response=$(echo "$request" | "$HELPER_PATH" get-credentials 2>&1); then
@@ -193,9 +194,6 @@ spec:
                                     return 1
                                 fi
 
-                                # Extract password from CredentialProviderResponse using grep/sed (jq not available in CLI image)
-                                # Response format: {"kind":"CredentialProviderResponse",...,"auth":{"registry":{"username":"AWS","password":"..."}}}
-                                # The password is a base64-encoded string, so we extract between "password":" and the next "
                                 ECR_PASSWORD=$(echo "$response" | grep -o '"password":"[^"]*"' | head -1 | sed 's/"password":"//;s/"$//')
                                 if [[ -z "$ECR_PASSWORD" ]]; then
                                     log "ERROR - No password in credential helper response"
@@ -207,40 +205,36 @@ spec:
                                 return 0
                             }
 
-                            # Update additional-pull-secret with ECR credentials
+                            # Build a dockerconfigjson with auth entries for all ECR registries
+                            # using a single shared token, and write it into the additional-pull-secret.
                             update_secret() {
-                                log "Updating $SECRET_NAME in $NAMESPACE..."
+                                log "Updating $SECRET_NAME in $NAMESPACE with ${#ECR_REGISTRIES[@]} registry(s)..."
 
                                 local auth_token
                                 auth_token=$(echo -n "AWS:${ECR_PASSWORD}" | base64 -w0)
 
-                                local config_json
-                                config_json=$(cat <<EOF
-                            {
-                              "auths": {
-                                "$ECR_REGISTRY": {
-                                  "auth": "$auth_token",
-                                  "email": ""
-                                }
-                              }
-                            }
-                            EOF
-                            )
+                                # Build the auths JSON with the same token for each registry
+                                local auths_entries=""
+                                for registry in "${ECR_REGISTRIES[@]}"; do
+                                    if [[ -n "$auths_entries" ]]; then
+                                        auths_entries="${auths_entries},"
+                                    fi
+                                    auths_entries="${auths_entries}\"${registry}\":{\"auth\":\"${auth_token}\",\"email\":\"\"}"
+                                done
 
+                                local config_json="{\"auths\":{${auths_entries}}}"
                                 local config_b64
                                 config_b64=$(echo -n "$config_json" | base64 -w0)
 
                                 # Check if secret exists
                                 if oc get secret "$SECRET_NAME" -n "$NAMESPACE" &>/dev/null; then
-                                    # Patch existing secret
                                     if ! oc patch secret "$SECRET_NAME" -n "$NAMESPACE" \
                                         --type=merge -p '{"data":{".dockerconfigjson":"'"$config_b64"'"}}'; then
                                         log "ERROR - Failed to patch secret"
                                         return 1
                                     fi
-                                    log "Successfully patched $SECRET_NAME with credentials for $ECR_REGISTRY"
+                                    log "Successfully patched $SECRET_NAME"
                                 else
-                                    # Create new secret
                                     cat <<EOF | oc apply -f -
                             apiVersion: v1
                             kind: Secret
@@ -255,33 +249,31 @@ spec:
                                         log "ERROR - Failed to create secret"
                                         return 1
                                     fi
-                                    log "Successfully created $SECRET_NAME with credentials for $ECR_REGISTRY"
+                                    log "Successfully created $SECRET_NAME"
                                 fi
+
+                                for registry in "${ECR_REGISTRIES[@]}"; do
+                                    log "  - $registry"
+                                done
                                 return 0
                             }
 
                             main() {
-                                # Step 0: Check if this is a zero-egress cluster
-                                if ! is_zero_egress_cluster; then
-                                    log "Skipping - not a zero-egress cluster"
+                                # Step 1: Discover all ECR registries from IDMS
+                                if ! discover_ecr_registries; then
+                                    log "Skipping - no ECR IDMS mirrors found (not a zero-egress cluster)"
                                     exit 0
                                 fi
 
-                                # Step 1: Discover ECR registry
-                                if ! discover_ecr_registry; then
-                                    log "FATAL - Could not determine ECR registry"
-                                    exit 1
-                                fi
+                                log "Starting ECR credential refresh for ${#ECR_REGISTRIES[@]} registry(s)"
 
-                                log "Starting ECR credential refresh for $ECR_REGISTRY"
-
-                                # Step 2: Get ECR token using credential helper
+                                # Step 2: Get ECR token (same token works for all registries)
                                 if ! get_ecr_token; then
                                     log "FATAL - Could not get ECR token"
                                     exit 1
                                 fi
 
-                                # Step 3: Update the secret
+                                # Step 3: Update the secret with auth entries for all registries
                                 if ! update_secret; then
                                     log "FATAL - Could not update secret"
                                     exit 1

@@ -6448,112 +6448,109 @@ objects:
                 \ kube-system\n      labels:\n        app: ecr-credential-refresh\n\
                 \    data:\n      refresh.sh: |\n        #!/bin/bash\n        #\n\
                 \        # ECR Credential Refresh Script for Zero-Egress HCP Clusters\n\
-                \        #\n        # Gets ECR authorization token using the node's\
+                \        #\n        # Gets an ECR authorization token using the node's\
                 \ ECR credential helper\n        # and updates additional-pull-secret\
                 \ in kube-system namespace. HCCO then\n        # merges this with\
                 \ original credentials to create global-pull-secret.\n        #\n\
                 \        # This script auto-detects zero-egress clusters by checking\
                 \ for IDMS.\n        # Non-zero-egress clusters exit early with success\
-                \ (no-op).\n        #\n        # SOP: https://github.com/openshift/ops-sop/blob/master/hypershift/knowledge_base/howto/zero-egress-ecr-credential-refresh.md\n\
+                \ (no-op).\n        #\n        # Supports multiple ECR registries\
+                \ across all ImageDigestMirrorSets.\n        #\n        # SOP: https://github.com/openshift/ops-sop/blob/master/hypershift/knowledge_base/howto/zero-egress-ecr-credential-refresh.md\n\
                 \        # Tracking: OHSS-49424\n        #\n        set -euo pipefail\n\
                 \n        SECRET_NAME=\"${SECRET_NAME:-additional-pull-secret}\"\n\
                 \        NAMESPACE=\"${NAMESPACE:-kube-system}\"\n        HELPER_PATH=\"\
                 ${HELPER_PATH:-/host/usr/libexec/kubelet-image-credential-provider-plugins/ecr-credential-provider}\"\
                 \n\n        log() {\n            echo \"$(date '+%Y-%m-%d %H:%M:%S')\
-                \ - $1\"\n        }\n\n        # Check if this is a zero-egress cluster\
-                \ by detecting IDMS with ECR mirrors\n        is_zero_egress_cluster()\
-                \ {\n            log \"Checking if cluster is zero-egress...\"\n \
-                \           local mirror\n            mirror=$(oc get imagedigestmirrorset\
-                \ -o jsonpath='{.items[0].spec.imageDigestMirrors[0].mirrors[0]}'\
-                \ 2>/dev/null || true)\n            if [[ -n \"$mirror\" && \"$mirror\"\
-                \ =~ ^[0-9]+\\.dkr\\.ecr\\.[a-z0-9-]+\\.amazonaws\\.com ]]; then\n\
-                \                log \"Zero-egress cluster detected (IDMS mirror:\
-                \ $mirror)\"\n                return 0\n            fi\n         \
-                \   log \"Not a zero-egress cluster (no ECR IDMS found)\"\n      \
-                \      return 1\n        }\n\n        # Discover ECR registry from\
-                \ ImageDigestMirrorSet or environment\n        discover_ecr_registry()\
-                \ {\n            log \"Discovering ECR registry from cluster configuration...\"\
-                \n\n            # Check environment variables first\n            if\
-                \ [[ -n \"${AWS_ACCOUNT_ID:-}\" && -n \"${AWS_REGION:-}\" ]]; then\n\
-                \                ECR_REGISTRY=\"${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com\"\
-                \n                log \"Using ECR registry from environment: $ECR_REGISTRY\"\
-                \n                return 0\n            fi\n\n            # Extract\
-                \ from ImageDigestMirrorSet\n            local mirror\n          \
-                \  mirror=$(oc get imagedigestmirrorset -o jsonpath='{.items[0].spec.imageDigestMirrors[0].mirrors[0]}'\
-                \ 2>/dev/null || true)\n            if [[ \"$mirror\" =~ ^([0-9]+)\\\
-                .dkr\\.ecr\\.([a-z0-9-]+)\\.amazonaws\\.com ]]; then\n           \
-                \     AWS_ACCOUNT_ID=\"${BASH_REMATCH[1]}\"\n                AWS_REGION=\"\
-                ${BASH_REMATCH[2]}\"\n                # ECR registry is just the host,\
-                \ not including any path\n                ECR_REGISTRY=\"${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com\"\
-                \n                log \"Discovered ECR registry: $ECR_REGISTRY\"\n\
-                \                return 0\n            fi\n\n            log \"ERROR\
-                \ - Could not discover ECR registry\"\n            return 1\n    \
-                \    }\n\n        # Get ECR token using the credential helper\n  \
-                \      get_ecr_token() {\n            log \"Getting ECR authorization\
-                \ token via credential helper...\"\n\n            if [[ ! -x \"$HELPER_PATH\"\
-                \ ]]; then\n                log \"ERROR - ECR credential helper not\
-                \ found or not executable: $HELPER_PATH\"\n                return\
-                \ 1\n            fi\n\n            # The helper expects a CredentialProviderRequest\
-                \ JSON with kind, apiVersion, and image\n            local request='{\"\
-                kind\":\"CredentialProviderRequest\",\"apiVersion\":\"credentialprovider.kubelet.k8s.io/v1\"\
-                ,\"image\":\"'\"${ECR_REGISTRY}\"'/test\"}'\n            local response\n\
-                \n            if ! response=$(echo \"$request\" | \"$HELPER_PATH\"\
-                \ get-credentials 2>&1); then\n                log \"ERROR - Failed\
-                \ to get credentials from helper: $response\"\n                return\
-                \ 1\n            fi\n\n            # Extract password from CredentialProviderResponse\
-                \ using grep/sed (jq not available in CLI image)\n            # Response\
-                \ format: {\"kind\":\"CredentialProviderResponse\",...,\"auth\":{\"\
-                registry\":{\"username\":\"AWS\",\"password\":\"...\"}}}\n       \
-                \     # The password is a base64-encoded string, so we extract between\
-                \ \"password\":\" and the next \"\n            ECR_PASSWORD=$(echo\
-                \ \"$response\" | grep -o '\"password\":\"[^\"]*\"' | head -1 | sed\
-                \ 's/\"password\":\"//;s/\"$//')\n            if [[ -z \"$ECR_PASSWORD\"\
-                \ ]]; then\n                log \"ERROR - No password in credential\
-                \ helper response\"\n                log \"Response: $response\"\n\
-                \                return 1\n            fi\n\n            log \"Successfully\
-                \ retrieved ECR authorization token\"\n            return 0\n    \
-                \    }\n\n        # Update additional-pull-secret with ECR credentials\n\
-                \        update_secret() {\n            log \"Updating $SECRET_NAME\
-                \ in $NAMESPACE...\"\n\n            local auth_token\n           \
-                \ auth_token=$(echo -n \"AWS:${ECR_PASSWORD}\" | base64 -w0)\n\n \
-                \           local config_json\n            config_json=$(cat <<EOF\n\
-                \        {\n          \"auths\": {\n            \"$ECR_REGISTRY\"\
-                : {\n              \"auth\": \"$auth_token\",\n              \"email\"\
-                : \"\"\n            }\n          }\n        }\n        EOF\n     \
-                \   )\n\n            local config_b64\n            config_b64=$(echo\
-                \ -n \"$config_json\" | base64 -w0)\n\n            # Check if secret\
-                \ exists\n            if oc get secret \"$SECRET_NAME\" -n \"$NAMESPACE\"\
-                \ &>/dev/null; then\n                # Patch existing secret\n   \
-                \             if ! oc patch secret \"$SECRET_NAME\" -n \"$NAMESPACE\"\
-                \ \\\n                    --type=merge -p '{\"data\":{\".dockerconfigjson\"\
-                :\"'\"$config_b64\"'\"}}'; then\n                    log \"ERROR -\
-                \ Failed to patch secret\"\n                    return 1\n       \
-                \         fi\n                log \"Successfully patched $SECRET_NAME\
-                \ with credentials for $ECR_REGISTRY\"\n            else\n       \
-                \         # Create new secret\n                cat <<EOF | oc apply\
-                \ -f -\n        apiVersion: v1\n        kind: Secret\n        metadata:\n\
-                \          name: $SECRET_NAME\n          namespace: $NAMESPACE\n \
-                \       type: kubernetes.io/dockerconfigjson\n        data:\n    \
-                \      .dockerconfigjson: $config_b64\n        EOF\n             \
-                \   if [[ $? -ne 0 ]]; then\n                    log \"ERROR - Failed\
-                \ to create secret\"\n                    return 1\n             \
-                \   fi\n                log \"Successfully created $SECRET_NAME with\
-                \ credentials for $ECR_REGISTRY\"\n            fi\n            return\
-                \ 0\n        }\n\n        main() {\n            # Step 0: Check if\
-                \ this is a zero-egress cluster\n            if ! is_zero_egress_cluster;\
-                \ then\n                log \"Skipping - not a zero-egress cluster\"\
-                \n                exit 0\n            fi\n\n            # Step 1:\
-                \ Discover ECR registry\n            if ! discover_ecr_registry; then\n\
-                \                log \"FATAL - Could not determine ECR registry\"\n\
-                \                exit 1\n            fi\n\n            log \"Starting\
-                \ ECR credential refresh for $ECR_REGISTRY\"\n\n            # Step\
-                \ 2: Get ECR token using credential helper\n            if ! get_ecr_token;\
-                \ then\n                log \"FATAL - Could not get ECR token\"\n\
-                \                exit 1\n            fi\n\n            # Step 3: Update\
-                \ the secret\n            if ! update_secret; then\n             \
-                \   log \"FATAL - Could not update secret\"\n                exit\
-                \ 1\n            fi\n\n            log \"ECR credential refresh completed\
-                \ successfully\"\n        }\n\n        main \"$@\"\n- complianceType:\
+                \ - $1\"\n        }\n\n        # Discover all unique ECR registries\
+                \ from ImageDigestMirrorSets.\n        # Populates the ECR_REGISTRIES\
+                \ array. Returns 1 if none found.\n        discover_ecr_registries()\
+                \ {\n            log \"Discovering ECR registries from cluster configuration...\"\
+                \n            ECR_REGISTRIES=()\n\n            # Get every mirror\
+                \ URL across all IDMS items and all imageDigestMirrors entries\n \
+                \           local all_mirrors\n            all_mirrors=$(oc get imagedigestmirrorset\
+                \ -o jsonpath='{.items[*].spec.imageDigestMirrors[*].mirrors[*]}'\
+                \ 2>/dev/null || true)\n\n            if [[ -z \"$all_mirrors\" ]];\
+                \ then\n                log \"No IDMS mirrors found\"\n          \
+                \      return 1\n            fi\n\n            # Extract unique ECR\
+                \ registry hostnames (account.dkr.ecr.region.amazonaws.com)\n    \
+                \        local seen=\"\"\n            for mirror in $all_mirrors;\
+                \ do\n                if [[ \"$mirror\" =~ ^([0-9]+\\.dkr\\.ecr\\\
+                .[a-z0-9-]+\\.amazonaws\\.com) ]]; then\n                    local\
+                \ registry=\"${BASH_REMATCH[1]}\"\n                    # Deduplicate\n\
+                \                    if [[ \" $seen \" != *\" $registry \"* ]]; then\n\
+                \                        seen=\"$seen $registry\"\n              \
+                \          ECR_REGISTRIES+=(\"$registry\")\n                     \
+                \   log \"Discovered ECR registry: $registry\"\n                 \
+                \   fi\n                fi\n            done\n\n            if [[\
+                \ ${#ECR_REGISTRIES[@]} -eq 0 ]]; then\n                log \"No ECR\
+                \ registries found in IDMS mirrors\"\n                return 1\n \
+                \           fi\n\n            log \"Found ${#ECR_REGISTRIES[@]} unique\
+                \ ECR registry(s)\"\n            return 0\n        }\n\n        #\
+                \ Get ECR token using the credential helper and the first discovered\
+                \ registry.\n        # Sets ECR_PASSWORD on success.\n        get_ecr_token()\
+                \ {\n            local registry=\"${ECR_REGISTRIES[0]}\"\n       \
+                \     log \"Getting ECR authorization token via credential helper...\"\
+                \n\n            if [[ ! -x \"$HELPER_PATH\" ]]; then\n           \
+                \     log \"ERROR - ECR credential helper not found or not executable:\
+                \ $HELPER_PATH\"\n                return 1\n            fi\n\n   \
+                \         local request='{\"kind\":\"CredentialProviderRequest\",\"\
+                apiVersion\":\"credentialprovider.kubelet.k8s.io/v1\",\"image\":\"\
+                '\"${registry}\"'/test\"}'\n            local response\n\n       \
+                \     if ! response=$(echo \"$request\" | \"$HELPER_PATH\" get-credentials\
+                \ 2>&1); then\n                log \"ERROR - Failed to get credentials\
+                \ from helper: $response\"\n                return 1\n           \
+                \ fi\n\n            ECR_PASSWORD=$(echo \"$response\" | grep -o '\"\
+                password\":\"[^\"]*\"' | head -1 | sed 's/\"password\":\"//;s/\"$//')\n\
+                \            if [[ -z \"$ECR_PASSWORD\" ]]; then\n               \
+                \ log \"ERROR - No password in credential helper response\"\n    \
+                \            log \"Response: $response\"\n                return 1\n\
+                \            fi\n\n            log \"Successfully retrieved ECR authorization\
+                \ token\"\n            return 0\n        }\n\n        # Build a dockerconfigjson\
+                \ with auth entries for all ECR registries\n        # using a single\
+                \ shared token, and write it into the additional-pull-secret.\n  \
+                \      update_secret() {\n            log \"Updating $SECRET_NAME\
+                \ in $NAMESPACE with ${#ECR_REGISTRIES[@]} registry(s)...\"\n\n  \
+                \          local auth_token\n            auth_token=$(echo -n \"AWS:${ECR_PASSWORD}\"\
+                \ | base64 -w0)\n\n            # Build the auths JSON with the same\
+                \ token for each registry\n            local auths_entries=\"\"\n\
+                \            for registry in \"${ECR_REGISTRIES[@]}\"; do\n      \
+                \          if [[ -n \"$auths_entries\" ]]; then\n                \
+                \    auths_entries=\"${auths_entries},\"\n                fi\n   \
+                \             auths_entries=\"${auths_entries}\\\"${registry}\\\"\
+                :{\\\"auth\\\":\\\"${auth_token}\\\",\\\"email\\\":\\\"\\\"}\"\n \
+                \           done\n\n            local config_json=\"{\\\"auths\\\"\
+                :{${auths_entries}}}\"\n            local config_b64\n           \
+                \ config_b64=$(echo -n \"$config_json\" | base64 -w0)\n\n        \
+                \    # Check if secret exists\n            if oc get secret \"$SECRET_NAME\"\
+                \ -n \"$NAMESPACE\" &>/dev/null; then\n                if ! oc patch\
+                \ secret \"$SECRET_NAME\" -n \"$NAMESPACE\" \\\n                 \
+                \   --type=merge -p '{\"data\":{\".dockerconfigjson\":\"'\"$config_b64\"\
+                '\"}}'; then\n                    log \"ERROR - Failed to patch secret\"\
+                \n                    return 1\n                fi\n             \
+                \   log \"Successfully patched $SECRET_NAME\"\n            else\n\
+                \                cat <<EOF | oc apply -f -\n        apiVersion: v1\n\
+                \        kind: Secret\n        metadata:\n          name: $SECRET_NAME\n\
+                \          namespace: $NAMESPACE\n        type: kubernetes.io/dockerconfigjson\n\
+                \        data:\n          .dockerconfigjson: $config_b64\n       \
+                \ EOF\n                if [[ $? -ne 0 ]]; then\n                 \
+                \   log \"ERROR - Failed to create secret\"\n                    return\
+                \ 1\n                fi\n                log \"Successfully created\
+                \ $SECRET_NAME\"\n            fi\n\n            for registry in \"\
+                ${ECR_REGISTRIES[@]}\"; do\n                log \"  - $registry\"\n\
+                \            done\n            return 0\n        }\n\n        main()\
+                \ {\n            # Step 1: Discover all ECR registries from IDMS\n\
+                \            if ! discover_ecr_registries; then\n                log\
+                \ \"Skipping - no ECR IDMS mirrors found (not a zero-egress cluster)\"\
+                \n                exit 0\n            fi\n\n            log \"Starting\
+                \ ECR credential refresh for ${#ECR_REGISTRIES[@]} registry(s)\"\n\
+                \n            # Step 2: Get ECR token (same token works for all registries)\n\
+                \            if ! get_ecr_token; then\n                log \"FATAL\
+                \ - Could not get ECR token\"\n                exit 1\n          \
+                \  fi\n\n            # Step 3: Update the secret with auth entries\
+                \ for all registries\n            if ! update_secret; then\n     \
+                \           log \"FATAL - Could not update secret\"\n            \
+                \    exit 1\n            fi\n\n            log \"ECR credential refresh\
+                \ completed successfully\"\n        }\n\n        main \"$@\"\n- complianceType:\
                 \ mustonlyhave\n  metadataComplianceType: musthave\n  objectDefinition:\n\
                 \    apiVersion: batch/v1\n    kind: CronJob\n    metadata:\n    \
                 \  name: ecr-credential-refresh\n      namespace: kube-system\n  \
