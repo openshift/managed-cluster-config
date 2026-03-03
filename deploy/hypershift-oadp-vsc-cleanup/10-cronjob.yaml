@@ -1,0 +1,261 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: oadp-vsc-cleanup
+  namespace: openshift-adp
+spec:
+  schedule: "0 10 * * 2"  # 10:00 UTC on Tuesdays
+  suspend: true  # Suspended - won't run until manually triggered or schedule enabled
+  concurrencyPolicy: Forbid  # Don't run if previous still running
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: 604800  # Auto-delete Job after 7 days
+      backoffLimit: 0  # Don't retry on failure
+      template:
+        spec:
+          securityContext:
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+          affinity:
+            nodeAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+              - preference:
+                  matchExpressions:
+                  - key: node-role.kubernetes.io/infra
+                    operator: Exists
+                weight: 1
+          tolerations:
+            - effect: NoSchedule
+              key: node-role.kubernetes.io/infra
+              operator: Exists
+          containers:
+          - name: cleanup
+            image: image-registry.openshift-image-registry.svc:5000/openshift/tools:latest
+            imagePullPolicy: IfNotPresent
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                - ALL
+            resources:
+              requests:
+                memory: "100Mi"
+                cpu: "100m"
+            command:
+            - bash
+            - -c
+            - |
+              set -euo pipefail
+
+              echo "=============================================="
+              echo "  OADP VSC Cleanup Job"
+              echo "  Removes ALL legacy VolumeSnapshotContents (Retain policy)"
+              echo "=============================================="
+              echo ""
+              echo "Start time: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+              echo ""
+
+              # ============================================
+              # STEP 1: Gather Data
+              # ============================================
+              echo "STEP 1: Gathering Kubernetes data..."
+
+              TOTAL_VSC=$(oc get volumesnapshotcontents --no-headers 2>/dev/null | wc -l | tr -d ' ' || echo "0")
+              VELERO_VSC=$(oc get volumesnapshotcontents -l velero.io/backup-name --no-headers 2>/dev/null | wc -l | tr -d ' ' || echo "0")
+              RETAIN_VSC=$(oc get volumesnapshotcontents -l velero.io/backup-name -o json 2>/dev/null | \
+                  jq '[.items[] | select(.spec.deletionPolicy == "Retain")] | length' || echo "0")
+              ALL_VS=$(oc get volumesnapshots -A -o jsonpath='{range .items[*]}{.metadata.namespace}/{.metadata.name}{"\n"}{end}' 2>/dev/null || echo "")
+              VS_COUNT=$(echo "$ALL_VS" | grep -c . 2>/dev/null || true); VS_COUNT=${VS_COUNT:-0}
+
+              echo "  Total VSCs:           $TOTAL_VSC"
+              echo "  Velero VSCs:          $VELERO_VSC"
+              echo "  Velero VSCs (Retain): $RETAIN_VSC"
+              echo "  VolumeSnapshots:      $VS_COUNT"
+              echo ""
+
+              if [ "$RETAIN_VSC" = "0" ]; then
+                  echo "No VSCs with Retain policy found. Nothing to clean up."
+                  echo "End time: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+                  exit 0
+              fi
+
+              # ============================================
+              # STEP 2: Categorize Retain VSCs
+              # ============================================
+              echo "STEP 2: Categorizing Retain VSCs..."
+
+              VSC_WITH_VS="/tmp/vsc_with_vs.tsv"
+              VSC_NO_VS="/tmp/vsc_no_vs.tsv"
+
+              # Get all Retain VSCs with VS info (no pipe to while — loop runs in main shell)
+              RETAIN_TSV=$(oc get volumesnapshotcontents -l velero.io/backup-name -o json 2>/dev/null | \
+                  jq -r '.items[] | select(.spec.deletionPolicy == "Retain") |
+                     [.metadata.name, (.spec.volumeSnapshotRef.name // "none"), (.spec.volumeSnapshotRef.namespace // "none")] | @tsv' 2>/dev/null) || true
+              RETAIN_TSV=${RETAIN_TSV:-}
+              while IFS=$'\t' read -r vsc_name vs_name vs_namespace; do
+                  [ -z "$vsc_name" ] && continue
+                  VS_EXISTS=false
+                  if [ "$vs_name" != "none" ] && [ "$vs_namespace" != "none" ]; then
+                      echo "$ALL_VS" | grep -q "^${vs_namespace}/${vs_name}$" && VS_EXISTS=true || true
+                  fi
+                  if [ "$VS_EXISTS" = true ]; then
+                      echo -e "${vsc_name}\t${vs_name}\t${vs_namespace}" >> "$VSC_WITH_VS"
+                  else
+                      echo -e "${vsc_name}" >> "$VSC_NO_VS"
+                  fi
+              done <<< "$RETAIN_TSV"
+
+              # Ensure files exist
+              touch "$VSC_WITH_VS" "$VSC_NO_VS"
+
+              WITH_VS_COUNT=$(wc -l < "$VSC_WITH_VS" 2>/dev/null | tr -d ' '); WITH_VS_COUNT=${WITH_VS_COUNT:-0}
+              NO_VS_COUNT=$(wc -l < "$VSC_NO_VS" 2>/dev/null | tr -d ' '); NO_VS_COUNT=${NO_VS_COUNT:-0}
+
+              echo ""
+              echo "  Retain VSCs to clean: $RETAIN_VSC"
+              echo "    - Without VS (direct delete in Step 3): $NO_VS_COUNT"
+              echo "    - With VS (cascade via VS delete in Step 3): $WITH_VS_COUNT"
+              echo ""
+
+              CLEANED_DIRECT=0
+              FAILED_DIRECT=0
+              CLEANED_VS=0
+              FAILED_VS=0
+              CLEANED_FINAL=0
+              FAILED_FINAL=0
+
+              # ============================================
+              # STEP 3a: Direct delete — Retain VSCs without VolumeSnapshot
+              # ============================================
+              echo "STEP 3a: Cleaning Retain VSCs without VolumeSnapshot (direct VSC delete)..."
+              echo ""
+
+              if [ "$NO_VS_COUNT" = "0" ]; then
+                  echo "  No VSCs without VS to process."
+              else
+                  IDX=0
+                  while read -r vsc_name; do
+                      [ -z "$vsc_name" ] && continue
+                      IDX=$((IDX + 1))
+                      oc patch volumesnapshotcontent "$vsc_name" \
+                          --type merge -p '{"spec":{"deletionPolicy":"Delete"}}' >/dev/null 2>&1 || true
+                      if oc delete volumesnapshotcontent "$vsc_name" --wait=false >/dev/null 2>&1; then
+                          echo "  [$IDX/$NO_VS_COUNT] OK   VSC (no VS): $vsc_name"
+                          CLEANED_DIRECT=$((CLEANED_DIRECT + 1))
+                      else
+                          echo "  [$IDX/$NO_VS_COUNT] FAIL VSC: $vsc_name"
+                          FAILED_DIRECT=$((FAILED_DIRECT + 1))
+                      fi
+                      sleep 0.2
+                  done < "$VSC_NO_VS"
+              fi
+              echo ""
+              echo "  Direct (no VS): $CLEANED_DIRECT OK, $FAILED_DIRECT FAILED"
+              echo ""
+
+              # ============================================
+              # STEP 3b: Cascade delete — Retain VSCs with VolumeSnapshot (delete VS -> VSC)
+              # ============================================
+              echo "STEP 3b: Cleaning Retain VSCs with VolumeSnapshot (delete VS -> cascade to VSC)..."
+              echo ""
+
+              if [ "$WITH_VS_COUNT" = "0" ]; then
+                  echo "  No VSCs with VS to process."
+              else
+                  IDX=0
+                  while IFS=$'\t' read -r vsc_name vs_name vs_namespace; do
+                      [ -z "$vsc_name" ] && continue
+                      IDX=$((IDX + 1))
+                      if ! oc patch volumesnapshotcontent "$vsc_name" \
+                          --type merge -p '{"spec":{"deletionPolicy":"Delete"}}' >/dev/null 2>&1; then
+                          echo "  [$IDX/$WITH_VS_COUNT] FAIL patch: $vsc_name"
+                          FAILED_VS=$((FAILED_VS + 1))
+                          continue
+                      fi
+                      if oc delete volumesnapshot "$vs_name" -n "$vs_namespace" --wait=false >/dev/null 2>&1; then
+                          echo "  [$IDX/$WITH_VS_COUNT] OK   VS: $vs_namespace/$vs_name -> cascade"
+                          CLEANED_VS=$((CLEANED_VS + 1))
+                      else
+                          echo "  [$IDX/$WITH_VS_COUNT] FAIL VS: $vs_namespace/$vs_name"
+                          FAILED_VS=$((FAILED_VS + 1))
+                      fi
+                      sleep 0.2
+                  done < "$VSC_WITH_VS"
+              fi
+              echo ""
+              echo "  Cascade (with VS): $CLEANED_VS OK, $FAILED_VS FAILED"
+              echo ""
+
+              # ============================================
+              # STEP 4: Safeguard — re-scan for any remaining Retain VSCs (should be 0)
+              # ============================================
+              echo "STEP 4: Safeguard — re-scan for any remaining Retain VSCs..."
+              echo "         (catches: cascade slow/failed; ideally 0 remaining)"
+              echo ""
+              if [ "$WITH_VS_COUNT" != "0" ]; then
+                  echo "  Waiting 10s for cascade to settle (CSI may be busy)..."
+                  sleep 10
+                  echo ""
+              fi
+
+              REMAINING_RETAIN=$(oc get volumesnapshotcontents -l velero.io/backup-name -o json 2>/dev/null | \
+                  jq -r '.items[] | select(.spec.deletionPolicy == "Retain") | .metadata.name' || echo "")
+              REMAINING_COUNT=$(echo "$REMAINING_RETAIN" | grep -c . 2>/dev/null || true); REMAINING_COUNT=${REMAINING_COUNT:-0}
+
+              if [ "$REMAINING_COUNT" = "0" ]; then
+                  echo "  No remaining Retain VSCs."
+              else
+                  echo "  Found $REMAINING_COUNT remaining — cleaning directly."
+                  echo ""
+                  IDX=0
+                  while read -r vsc_name; do
+                      [ -z "$vsc_name" ] && continue
+                      IDX=$((IDX + 1))
+                      oc patch volumesnapshotcontent "$vsc_name" \
+                          --type merge -p '{"spec":{"deletionPolicy":"Delete"}}' >/dev/null 2>&1 || true
+                      if oc delete volumesnapshotcontent "$vsc_name" --wait=false >/dev/null 2>&1; then
+                          echo "  [$IDX/$REMAINING_COUNT] OK   VSC: $vsc_name"
+                          CLEANED_FINAL=$((CLEANED_FINAL + 1))
+                      else
+                          echo "  [$IDX/$REMAINING_COUNT] FAIL VSC: $vsc_name"
+                          FAILED_FINAL=$((FAILED_FINAL + 1))
+                      fi
+                      sleep 0.2
+                  done <<< "$REMAINING_RETAIN"
+              fi
+              echo ""
+              echo "  Safeguard: $CLEANED_FINAL OK, $FAILED_FINAL FAILED"
+
+              rm -f "$VSC_WITH_VS" "$VSC_NO_VS"
+
+              # ============================================
+              # STEP 5: Summary
+              # ============================================
+              TOTAL_CLEANED=$((CLEANED_DIRECT + CLEANED_VS + CLEANED_FINAL))
+              TOTAL_FAILED=$((FAILED_DIRECT + FAILED_VS + FAILED_FINAL))
+
+              echo ""
+              echo "=============================================="
+              echo "  CLEANUP COMPLETE"
+              echo "=============================================="
+              echo ""
+              echo "  Retain VSCs found:    $RETAIN_VSC"
+              echo "  Cleaned direct (no VS):  $CLEANED_DIRECT"
+              echo "  Cleaned via cascade:     $CLEANED_VS"
+              echo "  Cleaned in safeguard:    $CLEANED_FINAL"
+              echo "  Total cleaned:        $TOTAL_CLEANED"
+              echo "  Failures:             $TOTAL_FAILED"
+              echo ""
+              echo "End time: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+
+              # Final verification
+              FINAL_REMAIN=$(oc get volumesnapshotcontents -l velero.io/backup-name -o json 2>/dev/null | \
+                  jq '[.items[] | select(.spec.deletionPolicy == "Retain")] | length' || echo "0")
+              echo "Remaining Retain VSCs: $FINAL_REMAIN"
+
+          serviceAccountName: oadp-vsc-cleanup
+          restartPolicy: Never
