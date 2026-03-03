@@ -29742,6 +29742,406 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: backplane-srep-ro
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: openshift-backplane-srep-ro
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-srep-ro-readers-cluster
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - nodes
+        - nodes/proxy
+        - nodes/status
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - machineconfiguration.openshift.io
+        resources:
+        - machineconfigs
+        - machineconfigpools
+        - kubeletconfigs
+        - containerruntimeconfigs
+        - controllerconfigs
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machines
+        - machinesets
+        - machinehealthchecks
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - autoscaling.openshift.io
+        resources:
+        - clusterautoscalers
+        - machineautoscalers
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - apiserver.openshift.io
+        resources:
+        - apirequestcounts
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - certificates.k8s.io
+        resources:
+        - certificatesigningrequests
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - avo.openshift.io
+        resources:
+        - vpcendpoints
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - authentication.k8s.io
+        resources:
+        - tokenreviews
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - authorization.k8s.io
+        resources:
+        - localsubjectaccessreviews
+        - selfsubjectaccessreviews
+        - selfsubjectrulesreviews
+        - subjectaccessreviews
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - authorization.openshift.io
+        resources:
+        - localresourceaccessreviews
+        - localsubjectaccessreviews
+        - resourceaccessreviews
+        - selfsubjectrulesreviews
+        - subjectaccessreviews
+        - subjectrulesreviews
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - persistentvolumes
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - ''
+        resources:
+        - namespaces
+        - namespaces/status
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - config.openshift.io
+        - project.openshift.io
+        resources:
+        - projects
+        verbs:
+        - get
+        - list
+        - watch
+      - nonResourceURLs:
+        - /healthz
+        - /healthz/*
+        - /livez
+        - /livez/*
+        - /metrics
+        - /metrics/*
+        - /readyz
+        - /readyz/*
+        - /version
+        - /version/*
+        verbs:
+        - get
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: backplane-srep-ro-readers-project
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - pods
+        - pods/status
+        - pods/log
+        - services
+        - endpoints
+        - persistentvolumeclaims
+        - events
+        - configmaps
+        - serviceaccounts
+        - replicationcontrollers
+        - replicationcontrollers/scale
+        - resourcequotas
+        - limitranges
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - apps
+        resources:
+        - deployments
+        - deployments/scale
+        - deployments/status
+        - daemonsets
+        - daemonsets/status
+        - replicasets
+        - replicasets/scale
+        - replicasets/status
+        - statefulsets
+        - statefulsets/scale
+        - statefulsets/status
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - batch
+        resources:
+        - jobs
+        - jobs/status
+        - cronjobs
+        - cronjobs/status
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - networking.k8s.io
+        resources:
+        - networkpolicies
+        - ingresses
+        - ingresses/status
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - rbac.authorization.k8s.io
+        resources:
+        - roles
+        - rolebindings
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - autoscaling
+        resources:
+        - horizontalpodautoscalers
+        - horizontalpodautoscalers/status
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - policy
+        resources:
+        - poddisruptionbudgets
+        - poddisruptionbudgets/status
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - apps.openshift.io
+        resources:
+        - deploymentconfigs
+        - deploymentconfigs/scale
+        - deploymentconfigs/log
+        - deploymentconfigs/status
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - build.openshift.io
+        resources:
+        - builds
+        - builds/log
+        - builds/details
+        - buildconfigs
+        - buildconfigs/webhooks
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - route.openshift.io
+        resources:
+        - routes
+        - routes/status
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - image.openshift.io
+        resources:
+        - imagestreams
+        - imagestreams/status
+        - imagestreamtags
+        - imagestreamimages
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - template.openshift.io
+        resources:
+        - templates
+        - templateinstances
+        - processedtemplates
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - monitoring.coreos.com
+        resources:
+        - servicemonitors
+        - podmonitors
+        - prometheusrules
+        - alertmanagers
+        - prometheuses
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - operators.coreos.com
+        resources:
+        - clusterserviceversions
+        - catalogsources
+        - installplans
+        - subscriptions
+        - operatorgroups
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - logging.openshift.io
+        resources:
+        - clusterloggings
+        - clusterlogforwarders
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - velero.io
+        resources:
+        - backups
+        - restores
+        - schedules
+        - backupstoragelocations
+        - volumesnapshotlocations
+        - deletebackuprequests
+        - downloadrequests
+        - podvolumebackups
+        - podvolumerestores
+        - resticrepositories
+        - serverstatusrequests
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machinehealthchecks
+        - machinesets
+        - machinesets/scale
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - upgrade.managed.openshift.io
+        resources:
+        - upgradeconfigs
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - security.openshift.io
+        resources:
+        - podsecuritypolicyreviews
+        - podsecuritypolicyselfsubjectreviews
+        - podsecuritypolicysubjectreviews
+        verbs:
+        - get
+        - list
+        - watch
+    - apiVersion: managed.openshift.io/v1alpha1
+      kind: SubjectPermission
+      metadata:
+        name: backplane-srep-ro
+        namespace: openshift-rbac-permissions
+      spec:
+        clusterPermissions:
+        - backplane-srep-ro-readers-cluster
+        - backplane-readers-cluster
+        permissions:
+        - clusterRoleName: backplane-srep-ro-readers-project
+          namespacesAllowedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        - clusterRoleName: dedicated-readers
+          namespacesAllowedRegex: (^kube$|^kube-.*|^openshift$|^openshift-.*|^default$|^redhat-.*)
+          namespacesDeniedRegex: openshift-backplane-cluster-admin
+        subjectKind: Group
+        subjectName: system:serviceaccounts:openshift-backplane-srep-ro
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: backplane-srep-dynatrace
   spec:
     clusterDeploymentSelector:
@@ -33444,28 +33844,16 @@ objects:
       spec:
         fleetNotification:
           name: nodepool-provisioning-failure
-          summary: Action Required - EC2 instances are failing to join machine pool
-          notificationMessage: 'Your EC2 instances are not joining machine pool in
-            your ROSA HyperShift cluster. This can prevent your workloads from running
-            properly and may indicate configuration issues with your AWS environment.
-
-
-            Common causes include:
-
-            - Network connectivity issues (security groups, NACLs, firewall rules)
-
-            - DNS resolution problems
-
-            - Misconfigured KMS encryption key policies (either custom or default
-            EBS KMS key)
-
-            - AWS permissions or quota issues
-
-
-            For detailed troubleshooting steps, please refer to: https://access.redhat.com/articles/7132524
-
-
-            If you need assistance, please open a support case.'
+          summary: EC2 instances failed to be provisioned or accessible
+          notificationMessage: "Your EC2 instances are not joining machine pool in\
+            \ your ROSA cluster. This can prevent your workloads from running properly\
+            \ and may indicate configuration issues with your AWS environment.\n\n\
+            Common causes include:\n- Network connectivity issues (security groups,\
+            \ NACLs, firewall rules)\n- DNS resolution problems\n- Misconfigured KMS\
+            \ encryption key policies (either custom or default EBS KMS key)\n- AWS\
+            \ permissions or quota issues\n- EC2 instance is either stopped or terminated.\
+            \ \n\nFor detailed troubleshooting steps, please refer to: https://access.redhat.com/articles/7132524\n\
+            \nIf you need assistance, please open a support case."
           resendWait: 24
           severity: Warning
           limitedSupport: false
@@ -36180,6 +36568,7 @@ objects:
       spec:
         serviceName: com.amazonaws.vpce.us-gov-east-1.vpce-svc-0838533cd2d6d2b8b
         securityGroup:
+          useVpcCidr: true
           ingressRules:
           - fromPort: 9997
             toPort: 9997
@@ -36228,6 +36617,7 @@ objects:
       spec:
         serviceName: com.amazonaws.vpce.us-gov-west-1.vpce-svc-06225ed6e3620e8e1
         securityGroup:
+          useVpcCidr: true
           ingressRules:
           - fromPort: 9997
             toPort: 9997
@@ -41135,6 +41525,241 @@ objects:
         config:
           ignition:
             version: 3.2.0
+          storage:
+            files:
+            - contents:
+                compression: gzip
+                source: data:;base64,H4sIAAAAAAAC/9yUP2vzMBDGd3+KQ7MV7dnywouHUDClSykZhHRxhKM/nC6lIuS7F8fGuKS00CntYHPiTs89v0HPuQIQFvf6dGSxhpcKAOB8/QMILgnFGoQLGc2JcGMMJt6EwgcXOnEdu1QAu3qQYdIhp0icxXrSEDaaHmk+AwjCzmWmstLGYM4rQnvQvDLRz/uXHj74yK4LaP8VUS+7PZanaaBpmy2WfNNvNR+GvkI2KvVOUfKyS516bB9k0zZy+/9Zjk4k4RF1RjFLXKZqV98wTOZdVGOlDBK7vUMrY0LSHEm6YPHtTthcfv0hV/T+FByXP8Y13feaeuR01AZ/N9fdv6ExM+plOkir0cewDInvMb6KpE8WVsN3qd4DAAD//9nSpWTvBAAA
+              mode: 420
+              overwrite: true
+              path: /etc/containers/policy.json
+            - contents:
+                compression: gzip
+                source: data:;base64,H4sIAAAAAAAC/3yVtw7bigFFd36FxgSMLXaRQByEvTexc2PvXWz6+sDO+IB31gvc7eDMe/p4PNYtwSCKeOI4jWI0iTwQCKZ+QOQPFAL2Jn/8lXeRP6Tk86+HPGY/H/+QHf/BTuMnacZifThNNTZj9VCL+5+Pf29FlvTF+vnvWuR18vmZTcN/AODHbxhelI2HJVoPy2M0mX2ofPRgNJNV/8wAMNiywQjwPGk2w9Os48ZLFIyQ/i7hNPaiFd3cKE5M7vlqj22MnrECTaNIxXTT8XDqjAB0SWs+2pWrYEz9pp+5ax/aF5NjkMMR+RaWOcMQTWVebGLm7aFNN98lX62kE55OesMHfL9Sz9wYYjIe1311wTEPikjunQVvsD1PvVVdZCb8IBa9390b7KiRx953I+UID9krDzAaOInz6NI3eeKpf5T3ejATHIkvaVkJUK1NxAGfJcF7MXEdEGh3TOSvUvxc4mb08xzI3gx8GOG6GcOkTAodXUEsexOMnoUm+VRJkslSFiUi+k0gS7YZRF+lFb93BFqsF8o3gOy8yMS5ISNpuRwJmIuQaS3a1Q7thZIUamlGR29qyl3Mp3nKS2cmELUeU6H78RCXMCCfG5gzpFspUrOsMw/yYkdlvPGiFhguons1BhjhoXYtevd1GOHH2h1qk7hS3jUI9GSgO/xGIWzU8TMurpv7i8uRrZ2KOsxZVHL5+vKoYKuSURPV8/vK02cHTq+wqxr25X13EFhjAqnqnkel+LQUBfnM2PTFvOP6LM8htDBliLpdES23wIom6fW1IZrNUeoImUq/FkSAo62lRsEEHbOQFZY83MQxZ9wwyfYpmfP8eH9fcf4+r4beR5h56+kuLnW98Pa4xOQRAT747q7PfViuhNgilDC9APlfHIbRA4Hp5aoyvK0a9t7F/iRqiZ0QNwmNTTNt+k3bNAN8OMqJA7tyRAHSWEZJB32X2Vrx4KiyEWrPRWFOB/+WBWOOEXxOh6xyEB9XHZrMEL8FouDqs/FNZ4PfJb9PBuNIXUKh24znT56lWV6g+z+usOKpi+zZycyps0ztyXTVqQB76gFd8axU8ayA0TRbdba4OSEPB60zqelxPp9BqExO6M2ydvLzEk5OWxLEEPY8lCrApSiSmOzwW6kl9OJAtko+7jO6I//KETV12uMev4puEkclC6nnxHDqZUEaYOaJGMpWA/BVkB1BBFW2n5Wb4bxO8ZzYNydZE9ByZovObPcyhgrjvwYnhT5oBXNVqd0s3F72GgEFbnajn4jMRb3xpJMjFKPht6J/EZCNtKe7C1gbT7gdSSsr0W7YV0Uw4t7qx+YkIXoAxBbWL5/xy70lL+MbsZBQ3kTQBv3mJGiF1LYrdB+SIQijJMMwzxbU0QSGYOXdSLggJgBGNn6HRQVxOm6/tuk9ro5gbbNykeSSJJKbm+9UwuK5i8NMXXX8s5TIl++J6ZpDaDoA4jpnM0yUSZ3Ylz5WZq8UKxlNmUTZiOTga/w8ThFRvstc7Yo/iHuPolPPN2JlONj4BKwW3bJo8okNP+B6U9olGOvb10hHBC3wvsVzOssOUqUcHPPzC4ZpcINgbnDIOgR2XgIZ5VmMJ6xYtRp7AuPrpX7lm1CyqVw0j7y55hnMZsN6HJd/yhTunSUulefh6hDHF0oOaJEgTaq+viuscsQJTVtxFpS4xuIcJYXnmDtPLugXmGaoIcShoL6w1LFfAqULZJhrNFC0vGotEsSj52hmHjTRc8uaQjcspFBM5oaupURToqCOCtcaYNaugeW6c+13haQlsgR47LEJuEFbEqVf4vQL+DUbJf//qPAG9zdJ+V8AAAD//57RbErxBgAA
+              mode: 420
+              overwrite: true
+              path: /etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-isv
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-fedramp-machineconfig-reg-trust-int
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/fedramp
+        operator: In
+        values:
+        - 'true'
+      - key: api.openshift.com/environment
+        operator: In
+        values:
+        - integration
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.17'
+        - '4.18'
+        - '4.19'
+        - '4.20'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: machineconfiguration.openshift.io/v1
+      kind: MachineConfig
+      metadata:
+        labels:
+          machineconfiguration.openshift.io/role: master
+        name: 51-master-rh-registry-trust
+      spec:
+        config:
+          ignition:
+            version: 3.4.0
+          storage:
+            files:
+            - contents:
+                compression: gzip
+                source: data:;base64,H4sIAAAAAAAC/9yUP2vzMBDGd3+KQ7MV7dnywouHUDClSykZhHRxhKM/nC6lIuS7F8fGuKS00CntYHPiTs89v0HPuQIQFvf6dGSxhpcKAOB8/QMILgnFGoQLGc2JcGMMJt6EwgcXOnEdu1QAu3qQYdIhp0icxXrSEDaaHmk+AwjCzmWmstLGYM4rQnvQvDLRz/uXHj74yK4LaP8VUS+7PZanaaBpmy2WfNNvNR+GvkI2KvVOUfKyS516bB9k0zZy+/9Zjk4k4RF1RjFLXKZqV98wTOZdVGOlDBK7vUMrY0LSHEm6YPHtTthcfv0hV/T+FByXP8Y13feaeuR01AZ/N9fdv6ExM+plOkir0cewDInvMb6KpE8WVsN3qd4DAAD//9nSpWTvBAAA
+              mode: 420
+              overwrite: true
+              path: /etc/containers/policy.json
+            - contents:
+                compression: gzip
+                source: data:;base64,H4sIAAAAAAAC/3yVtw7bigFFd36FxgSMLXaRQByEvTexc2PvXWz6+sDO+IB31gvc7eDMe/p4PNYtwSCKeOI4jWI0iTwQCKZ+QOQPFAL2Jn/8lXeRP6Tk86+HPGY/H/+QHf/BTuMnacZifThNNTZj9VCL+5+Pf29FlvTF+vnvWuR18vmZTcN/AODHbxhelI2HJVoPy2M0mX2ofPRgNJNV/8wAMNiywQjwPGk2w9Os48ZLFIyQ/i7hNPaiFd3cKE5M7vlqj22MnrECTaNIxXTT8XDqjAB0SWs+2pWrYEz9pp+5ax/aF5NjkMMR+RaWOcMQTWVebGLm7aFNN98lX62kE55OesMHfL9Sz9wYYjIe1311wTEPikjunQVvsD1PvVVdZCb8IBa9390b7KiRx953I+UID9krDzAaOInz6NI3eeKpf5T3ejATHIkvaVkJUK1NxAGfJcF7MXEdEGh3TOSvUvxc4mb08xzI3gx8GOG6GcOkTAodXUEsexOMnoUm+VRJkslSFiUi+k0gS7YZRF+lFb93BFqsF8o3gOy8yMS5ISNpuRwJmIuQaS3a1Q7thZIUamlGR29qyl3Mp3nKS2cmELUeU6H78RCXMCCfG5gzpFspUrOsMw/yYkdlvPGiFhguons1BhjhoXYtevd1GOHH2h1qk7hS3jUI9GSgO/xGIWzU8TMurpv7i8uRrZ2KOsxZVHL5+vKoYKuSURPV8/vK02cHTq+wqxr25X13EFhjAqnqnkel+LQUBfnM2PTFvOP6LM8htDBliLpdES23wIom6fW1IZrNUeoImUq/FkSAo62lRsEEHbOQFZY83MQxZ9wwyfYpmfP8eH9fcf4+r4beR5h56+kuLnW98Pa4xOQRAT747q7PfViuhNgilDC9APlfHIbRA4Hp5aoyvK0a9t7F/iRqiZ0QNwmNTTNt+k3bNAN8OMqJA7tyRAHSWEZJB32X2Vrx4KiyEWrPRWFOB/+WBWOOEXxOh6xyEB9XHZrMEL8FouDqs/FNZ4PfJb9PBuNIXUKh24znT56lWV6g+z+usOKpi+zZycyps0ztyXTVqQB76gFd8axU8ayA0TRbdba4OSEPB60zqelxPp9BqExO6M2ydvLzEk5OWxLEEPY8lCrApSiSmOzwW6kl9OJAtko+7jO6I//KETV12uMev4puEkclC6nnxHDqZUEaYOaJGMpWA/BVkB1BBFW2n5Wb4bxO8ZzYNydZE9ByZovObPcyhgrjvwYnhT5oBXNVqd0s3F72GgEFbnajn4jMRb3xpJMjFKPht6J/EZCNtKe7C1gbT7gdSSsr0W7YV0Uw4t7qx+YkIXoAxBbWL5/xy70lL+MbsZBQ3kTQBv3mJGiF1LYrdB+SIQijJMMwzxbU0QSGYOXdSLggJgBGNn6HRQVxOm6/tuk9ro5gbbNykeSSJJKbm+9UwuK5i8NMXXX8s5TIl++J6ZpDaDoA4jpnM0yUSZ3Ylz5WZq8UKxlNmUTZiOTga/w8ThFRvstc7Yo/iHuPolPPN2JlONj4BKwW3bJo8okNP+B6U9olGOvb10hHBC3wvsVzOssOUqUcHPPzC4ZpcINgbnDIOgR2XgIZ5VmMJ6xYtRp7AuPrpX7lm1CyqVw0j7y55hnMZsN6HJd/yhTunSUulefh6hDHF0oOaJEgTaq+viuscsQJTVtxFpS4xuIcJYXnmDtPLugXmGaoIcShoL6w1LFfAqULZJhrNFC0vGotEsSj52hmHjTRc8uaQjcspFBM5oaupURToqCOCtcaYNaugeW6c+13haQlsgR47LEJuEFbEqVf4vQL+DUbJf//qPAG9zdJ+V8AAAD//57RbErxBgAA
+              mode: 420
+              overwrite: true
+              path: /etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-isv
+    - apiVersion: machineconfiguration.openshift.io/v1
+      kind: MachineConfig
+      metadata:
+        labels:
+          machineconfiguration.openshift.io/role: worker
+        name: 51-worker-rh-registry-trust
+      spec:
+        config:
+          ignition:
+            version: 3.4.0
+          storage:
+            files:
+            - contents:
+                compression: gzip
+                source: data:;base64,H4sIAAAAAAAC/9yUP2vzMBDGd3+KQ7MV7dnywouHUDClSykZhHRxhKM/nC6lIuS7F8fGuKS00CntYHPiTs89v0HPuQIQFvf6dGSxhpcKAOB8/QMILgnFGoQLGc2JcGMMJt6EwgcXOnEdu1QAu3qQYdIhp0icxXrSEDaaHmk+AwjCzmWmstLGYM4rQnvQvDLRz/uXHj74yK4LaP8VUS+7PZanaaBpmy2WfNNvNR+GvkI2KvVOUfKyS516bB9k0zZy+/9Zjk4k4RF1RjFLXKZqV98wTOZdVGOlDBK7vUMrY0LSHEm6YPHtTthcfv0hV/T+FByXP8Y13feaeuR01AZ/N9fdv6ExM+plOkir0cewDInvMb6KpE8WVsN3qd4DAAD//9nSpWTvBAAA
+              mode: 420
+              overwrite: true
+              path: /etc/containers/policy.json
+            - contents:
+                compression: gzip
+                source: data:;base64,H4sIAAAAAAAC/3yVtw7bigFFd36FxgSMLXaRQByEvTexc2PvXWz6+sDO+IB31gvc7eDMe/p4PNYtwSCKeOI4jWI0iTwQCKZ+QOQPFAL2Jn/8lXeRP6Tk86+HPGY/H/+QHf/BTuMnacZifThNNTZj9VCL+5+Pf29FlvTF+vnvWuR18vmZTcN/AODHbxhelI2HJVoPy2M0mX2ofPRgNJNV/8wAMNiywQjwPGk2w9Os48ZLFIyQ/i7hNPaiFd3cKE5M7vlqj22MnrECTaNIxXTT8XDqjAB0SWs+2pWrYEz9pp+5ax/aF5NjkMMR+RaWOcMQTWVebGLm7aFNN98lX62kE55OesMHfL9Sz9wYYjIe1311wTEPikjunQVvsD1PvVVdZCb8IBa9390b7KiRx953I+UID9krDzAaOInz6NI3eeKpf5T3ejATHIkvaVkJUK1NxAGfJcF7MXEdEGh3TOSvUvxc4mb08xzI3gx8GOG6GcOkTAodXUEsexOMnoUm+VRJkslSFiUi+k0gS7YZRF+lFb93BFqsF8o3gOy8yMS5ISNpuRwJmIuQaS3a1Q7thZIUamlGR29qyl3Mp3nKS2cmELUeU6H78RCXMCCfG5gzpFspUrOsMw/yYkdlvPGiFhguons1BhjhoXYtevd1GOHH2h1qk7hS3jUI9GSgO/xGIWzU8TMurpv7i8uRrZ2KOsxZVHL5+vKoYKuSURPV8/vK02cHTq+wqxr25X13EFhjAqnqnkel+LQUBfnM2PTFvOP6LM8htDBliLpdES23wIom6fW1IZrNUeoImUq/FkSAo62lRsEEHbOQFZY83MQxZ9wwyfYpmfP8eH9fcf4+r4beR5h56+kuLnW98Pa4xOQRAT747q7PfViuhNgilDC9APlfHIbRA4Hp5aoyvK0a9t7F/iRqiZ0QNwmNTTNt+k3bNAN8OMqJA7tyRAHSWEZJB32X2Vrx4KiyEWrPRWFOB/+WBWOOEXxOh6xyEB9XHZrMEL8FouDqs/FNZ4PfJb9PBuNIXUKh24znT56lWV6g+z+usOKpi+zZycyps0ztyXTVqQB76gFd8axU8ayA0TRbdba4OSEPB60zqelxPp9BqExO6M2ydvLzEk5OWxLEEPY8lCrApSiSmOzwW6kl9OJAtko+7jO6I//KETV12uMev4puEkclC6nnxHDqZUEaYOaJGMpWA/BVkB1BBFW2n5Wb4bxO8ZzYNydZE9ByZovObPcyhgrjvwYnhT5oBXNVqd0s3F72GgEFbnajn4jMRb3xpJMjFKPht6J/EZCNtKe7C1gbT7gdSSsr0W7YV0Uw4t7qx+YkIXoAxBbWL5/xy70lL+MbsZBQ3kTQBv3mJGiF1LYrdB+SIQijJMMwzxbU0QSGYOXdSLggJgBGNn6HRQVxOm6/tuk9ro5gbbNykeSSJJKbm+9UwuK5i8NMXXX8s5TIl++J6ZpDaDoA4jpnM0yUSZ3Ylz5WZq8UKxlNmUTZiOTga/w8ThFRvstc7Yo/iHuPolPPN2JlONj4BKwW3bJo8okNP+B6U9olGOvb10hHBC3wvsVzOssOUqUcHPPzC4ZpcINgbnDIOgR2XgIZ5VmMJ6xYtRp7AuPrpX7lm1CyqVw0j7y55hnMZsN6HJd/yhTunSUulefh6hDHF0oOaJEgTaq+viuscsQJTVtxFpS4xuIcJYXnmDtPLugXmGaoIcShoL6w1LFfAqULZJhrNFC0vGotEsSj52hmHjTRc8uaQjcspFBM5oaupURToqCOCtcaYNaugeW6c+13haQlsgR47LEJuEFbEqVf4vQL+DUbJf//qPAG9zdJ+V8AAAD//57RbErxBgAA
+              mode: 420
+              overwrite: true
+              path: /etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-isv
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-fedramp-machineconfig-reg-trust-prod
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/fedramp
+        operator: In
+        values:
+        - 'true'
+      - key: api.openshift.com/environment
+        operator: In
+        values:
+        - production
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.17'
+        - '4.18'
+        - '4.19'
+        - '4.20'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: machineconfiguration.openshift.io/v1
+      kind: MachineConfig
+      metadata:
+        labels:
+          machineconfiguration.openshift.io/role: master
+        name: 51-master-rh-registry-trust
+      spec:
+        config:
+          ignition:
+            version: 3.4.0
+          storage:
+            files:
+            - contents:
+                compression: gzip
+                source: data:;base64,H4sIAAAAAAAC/9yUP2vzMBDGd3+KQ7MV7dnywouHUDClSykZhHRxhKM/nC6lIuS7F8fGuKS00CntYHPiTs89v0HPuQIQFvf6dGSxhpcKAOB8/QMILgnFGoQLGc2JcGMMJt6EwgcXOnEdu1QAu3qQYdIhp0icxXrSEDaaHmk+AwjCzmWmstLGYM4rQnvQvDLRz/uXHj74yK4LaP8VUS+7PZanaaBpmy2WfNNvNR+GvkI2KvVOUfKyS516bB9k0zZy+/9Zjk4k4RF1RjFLXKZqV98wTOZdVGOlDBK7vUMrY0LSHEm6YPHtTthcfv0hV/T+FByXP8Y13feaeuR01AZ/N9fdv6ExM+plOkir0cewDInvMb6KpE8WVsN3qd4DAAD//9nSpWTvBAAA
+              mode: 420
+              overwrite: true
+              path: /etc/containers/policy.json
+            - contents:
+                compression: gzip
+                source: data:;base64,H4sIAAAAAAAC/3yVtw7bigFFd36FxgSMLXaRQByEvTexc2PvXWz6+sDO+IB31gvc7eDMe/p4PNYtwSCKeOI4jWI0iTwQCKZ+QOQPFAL2Jn/8lXeRP6Tk86+HPGY/H/+QHf/BTuMnacZifThNNTZj9VCL+5+Pf29FlvTF+vnvWuR18vmZTcN/AODHbxhelI2HJVoPy2M0mX2ofPRgNJNV/8wAMNiywQjwPGk2w9Os48ZLFIyQ/i7hNPaiFd3cKE5M7vlqj22MnrECTaNIxXTT8XDqjAB0SWs+2pWrYEz9pp+5ax/aF5NjkMMR+RaWOcMQTWVebGLm7aFNN98lX62kE55OesMHfL9Sz9wYYjIe1311wTEPikjunQVvsD1PvVVdZCb8IBa9390b7KiRx953I+UID9krDzAaOInz6NI3eeKpf5T3ejATHIkvaVkJUK1NxAGfJcF7MXEdEGh3TOSvUvxc4mb08xzI3gx8GOG6GcOkTAodXUEsexOMnoUm+VRJkslSFiUi+k0gS7YZRF+lFb93BFqsF8o3gOy8yMS5ISNpuRwJmIuQaS3a1Q7thZIUamlGR29qyl3Mp3nKS2cmELUeU6H78RCXMCCfG5gzpFspUrOsMw/yYkdlvPGiFhguons1BhjhoXYtevd1GOHH2h1qk7hS3jUI9GSgO/xGIWzU8TMurpv7i8uRrZ2KOsxZVHL5+vKoYKuSURPV8/vK02cHTq+wqxr25X13EFhjAqnqnkel+LQUBfnM2PTFvOP6LM8htDBliLpdES23wIom6fW1IZrNUeoImUq/FkSAo62lRsEEHbOQFZY83MQxZ9wwyfYpmfP8eH9fcf4+r4beR5h56+kuLnW98Pa4xOQRAT747q7PfViuhNgilDC9APlfHIbRA4Hp5aoyvK0a9t7F/iRqiZ0QNwmNTTNt+k3bNAN8OMqJA7tyRAHSWEZJB32X2Vrx4KiyEWrPRWFOB/+WBWOOEXxOh6xyEB9XHZrMEL8FouDqs/FNZ4PfJb9PBuNIXUKh24znT56lWV6g+z+usOKpi+zZycyps0ztyXTVqQB76gFd8axU8ayA0TRbdba4OSEPB60zqelxPp9BqExO6M2ydvLzEk5OWxLEEPY8lCrApSiSmOzwW6kl9OJAtko+7jO6I//KETV12uMev4puEkclC6nnxHDqZUEaYOaJGMpWA/BVkB1BBFW2n5Wb4bxO8ZzYNydZE9ByZovObPcyhgrjvwYnhT5oBXNVqd0s3F72GgEFbnajn4jMRb3xpJMjFKPht6J/EZCNtKe7C1gbT7gdSSsr0W7YV0Uw4t7qx+YkIXoAxBbWL5/xy70lL+MbsZBQ3kTQBv3mJGiF1LYrdB+SIQijJMMwzxbU0QSGYOXdSLggJgBGNn6HRQVxOm6/tuk9ro5gbbNykeSSJJKbm+9UwuK5i8NMXXX8s5TIl++J6ZpDaDoA4jpnM0yUSZ3Ylz5WZq8UKxlNmUTZiOTga/w8ThFRvstc7Yo/iHuPolPPN2JlONj4BKwW3bJo8okNP+B6U9olGOvb10hHBC3wvsVzOssOUqUcHPPzC4ZpcINgbnDIOgR2XgIZ5VmMJ6xYtRp7AuPrpX7lm1CyqVw0j7y55hnMZsN6HJd/yhTunSUulefh6hDHF0oOaJEgTaq+viuscsQJTVtxFpS4xuIcJYXnmDtPLugXmGaoIcShoL6w1LFfAqULZJhrNFC0vGotEsSj52hmHjTRc8uaQjcspFBM5oaupURToqCOCtcaYNaugeW6c+13haQlsgR47LEJuEFbEqVf4vQL+DUbJf//qPAG9zdJ+V8AAAD//57RbErxBgAA
+              mode: 420
+              overwrite: true
+              path: /etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-isv
+    - apiVersion: machineconfiguration.openshift.io/v1
+      kind: MachineConfig
+      metadata:
+        labels:
+          machineconfiguration.openshift.io/role: worker
+        name: 51-worker-rh-registry-trust
+      spec:
+        config:
+          ignition:
+            version: 3.4.0
+          storage:
+            files:
+            - contents:
+                compression: gzip
+                source: data:;base64,H4sIAAAAAAAC/9yUP2vzMBDGd3+KQ7MV7dnywouHUDClSykZhHRxhKM/nC6lIuS7F8fGuKS00CntYHPiTs89v0HPuQIQFvf6dGSxhpcKAOB8/QMILgnFGoQLGc2JcGMMJt6EwgcXOnEdu1QAu3qQYdIhp0icxXrSEDaaHmk+AwjCzmWmstLGYM4rQnvQvDLRz/uXHj74yK4LaP8VUS+7PZanaaBpmy2WfNNvNR+GvkI2KvVOUfKyS516bB9k0zZy+/9Zjk4k4RF1RjFLXKZqV98wTOZdVGOlDBK7vUMrY0LSHEm6YPHtTthcfv0hV/T+FByXP8Y13feaeuR01AZ/N9fdv6ExM+plOkir0cewDInvMb6KpE8WVsN3qd4DAAD//9nSpWTvBAAA
+              mode: 420
+              overwrite: true
+              path: /etc/containers/policy.json
+            - contents:
+                compression: gzip
+                source: data:;base64,H4sIAAAAAAAC/3yVtw7bigFFd36FxgSMLXaRQByEvTexc2PvXWz6+sDO+IB31gvc7eDMe/p4PNYtwSCKeOI4jWI0iTwQCKZ+QOQPFAL2Jn/8lXeRP6Tk86+HPGY/H/+QHf/BTuMnacZifThNNTZj9VCL+5+Pf29FlvTF+vnvWuR18vmZTcN/AODHbxhelI2HJVoPy2M0mX2ofPRgNJNV/8wAMNiywQjwPGk2w9Os48ZLFIyQ/i7hNPaiFd3cKE5M7vlqj22MnrECTaNIxXTT8XDqjAB0SWs+2pWrYEz9pp+5ax/aF5NjkMMR+RaWOcMQTWVebGLm7aFNN98lX62kE55OesMHfL9Sz9wYYjIe1311wTEPikjunQVvsD1PvVVdZCb8IBa9390b7KiRx953I+UID9krDzAaOInz6NI3eeKpf5T3ejATHIkvaVkJUK1NxAGfJcF7MXEdEGh3TOSvUvxc4mb08xzI3gx8GOG6GcOkTAodXUEsexOMnoUm+VRJkslSFiUi+k0gS7YZRF+lFb93BFqsF8o3gOy8yMS5ISNpuRwJmIuQaS3a1Q7thZIUamlGR29qyl3Mp3nKS2cmELUeU6H78RCXMCCfG5gzpFspUrOsMw/yYkdlvPGiFhguons1BhjhoXYtevd1GOHH2h1qk7hS3jUI9GSgO/xGIWzU8TMurpv7i8uRrZ2KOsxZVHL5+vKoYKuSURPV8/vK02cHTq+wqxr25X13EFhjAqnqnkel+LQUBfnM2PTFvOP6LM8htDBliLpdES23wIom6fW1IZrNUeoImUq/FkSAo62lRsEEHbOQFZY83MQxZ9wwyfYpmfP8eH9fcf4+r4beR5h56+kuLnW98Pa4xOQRAT747q7PfViuhNgilDC9APlfHIbRA4Hp5aoyvK0a9t7F/iRqiZ0QNwmNTTNt+k3bNAN8OMqJA7tyRAHSWEZJB32X2Vrx4KiyEWrPRWFOB/+WBWOOEXxOh6xyEB9XHZrMEL8FouDqs/FNZ4PfJb9PBuNIXUKh24znT56lWV6g+z+usOKpi+zZycyps0ztyXTVqQB76gFd8axU8ayA0TRbdba4OSEPB60zqelxPp9BqExO6M2ydvLzEk5OWxLEEPY8lCrApSiSmOzwW6kl9OJAtko+7jO6I//KETV12uMev4puEkclC6nnxHDqZUEaYOaJGMpWA/BVkB1BBFW2n5Wb4bxO8ZzYNydZE9ByZovObPcyhgrjvwYnhT5oBXNVqd0s3F72GgEFbnajn4jMRb3xpJMjFKPht6J/EZCNtKe7C1gbT7gdSSsr0W7YV0Uw4t7qx+YkIXoAxBbWL5/xy70lL+MbsZBQ3kTQBv3mJGiF1LYrdB+SIQijJMMwzxbU0QSGYOXdSLggJgBGNn6HRQVxOm6/tuk9ro5gbbNykeSSJJKbm+9UwuK5i8NMXXX8s5TIl++J6ZpDaDoA4jpnM0yUSZ3Ylz5WZq8UKxlNmUTZiOTga/w8ThFRvstc7Yo/iHuPolPPN2JlONj4BKwW3bJo8okNP+B6U9olGOvb10hHBC3wvsVzOssOUqUcHPPzC4ZpcINgbnDIOgR2XgIZ5VmMJ6xYtRp7AuPrpX7lm1CyqVw0j7y55hnMZsN6HJd/yhTunSUulefh6hDHF0oOaJEgTaq+viuscsQJTVtxFpS4xuIcJYXnmDtPLugXmGaoIcShoL6w1LFfAqULZJhrNFC0vGotEsSj52hmHjTRc8uaQjcspFBM5oaupURToqCOCtcaYNaugeW6c+13haQlsgR47LEJuEFbEqVf4vQL+DUbJf//qPAG9zdJ+V8AAAD//57RbErxBgAA
+              mode: 420
+              overwrite: true
+              path: /etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-isv
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-fedramp-machineconfig-reg-trust-stg
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/fedramp
+        operator: In
+        values:
+        - 'true'
+      - key: api.openshift.com/environment
+        operator: In
+        values:
+        - staging
+        - stage
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.17'
+        - '4.18'
+        - '4.19'
+        - '4.20'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: machineconfiguration.openshift.io/v1
+      kind: MachineConfig
+      metadata:
+        labels:
+          machineconfiguration.openshift.io/role: master
+        name: 51-master-rh-registry-trust
+      spec:
+        config:
+          ignition:
+            version: 3.4.0
+          storage:
+            files:
+            - contents:
+                compression: gzip
+                source: data:;base64,H4sIAAAAAAAC/9yUP2vzMBDGd3+KQ7MV7dnywouHUDClSykZhHRxhKM/nC6lIuS7F8fGuKS00CntYHPiTs89v0HPuQIQFvf6dGSxhpcKAOB8/QMILgnFGoQLGc2JcGMMJt6EwgcXOnEdu1QAu3qQYdIhp0icxXrSEDaaHmk+AwjCzmWmstLGYM4rQnvQvDLRz/uXHj74yK4LaP8VUS+7PZanaaBpmy2WfNNvNR+GvkI2KvVOUfKyS516bB9k0zZy+/9Zjk4k4RF1RjFLXKZqV98wTOZdVGOlDBK7vUMrY0LSHEm6YPHtTthcfv0hV/T+FByXP8Y13feaeuR01AZ/N9fdv6ExM+plOkir0cewDInvMb6KpE8WVsN3qd4DAAD//9nSpWTvBAAA
+              mode: 420
+              overwrite: true
+              path: /etc/containers/policy.json
+            - contents:
+                compression: gzip
+                source: data:;base64,H4sIAAAAAAAC/3yVtw7bigFFd36FxgSMLXaRQByEvTexc2PvXWz6+sDO+IB31gvc7eDMe/p4PNYtwSCKeOI4jWI0iTwQCKZ+QOQPFAL2Jn/8lXeRP6Tk86+HPGY/H/+QHf/BTuMnacZifThNNTZj9VCL+5+Pf29FlvTF+vnvWuR18vmZTcN/AODHbxhelI2HJVoPy2M0mX2ofPRgNJNV/8wAMNiywQjwPGk2w9Os48ZLFIyQ/i7hNPaiFd3cKE5M7vlqj22MnrECTaNIxXTT8XDqjAB0SWs+2pWrYEz9pp+5ax/aF5NjkMMR+RaWOcMQTWVebGLm7aFNN98lX62kE55OesMHfL9Sz9wYYjIe1311wTEPikjunQVvsD1PvVVdZCb8IBa9390b7KiRx953I+UID9krDzAaOInz6NI3eeKpf5T3ejATHIkvaVkJUK1NxAGfJcF7MXEdEGh3TOSvUvxc4mb08xzI3gx8GOG6GcOkTAodXUEsexOMnoUm+VRJkslSFiUi+k0gS7YZRF+lFb93BFqsF8o3gOy8yMS5ISNpuRwJmIuQaS3a1Q7thZIUamlGR29qyl3Mp3nKS2cmELUeU6H78RCXMCCfG5gzpFspUrOsMw/yYkdlvPGiFhguons1BhjhoXYtevd1GOHH2h1qk7hS3jUI9GSgO/xGIWzU8TMurpv7i8uRrZ2KOsxZVHL5+vKoYKuSURPV8/vK02cHTq+wqxr25X13EFhjAqnqnkel+LQUBfnM2PTFvOP6LM8htDBliLpdES23wIom6fW1IZrNUeoImUq/FkSAo62lRsEEHbOQFZY83MQxZ9wwyfYpmfP8eH9fcf4+r4beR5h56+kuLnW98Pa4xOQRAT747q7PfViuhNgilDC9APlfHIbRA4Hp5aoyvK0a9t7F/iRqiZ0QNwmNTTNt+k3bNAN8OMqJA7tyRAHSWEZJB32X2Vrx4KiyEWrPRWFOB/+WBWOOEXxOh6xyEB9XHZrMEL8FouDqs/FNZ4PfJb9PBuNIXUKh24znT56lWV6g+z+usOKpi+zZycyps0ztyXTVqQB76gFd8axU8ayA0TRbdba4OSEPB60zqelxPp9BqExO6M2ydvLzEk5OWxLEEPY8lCrApSiSmOzwW6kl9OJAtko+7jO6I//KETV12uMev4puEkclC6nnxHDqZUEaYOaJGMpWA/BVkB1BBFW2n5Wb4bxO8ZzYNydZE9ByZovObPcyhgrjvwYnhT5oBXNVqd0s3F72GgEFbnajn4jMRb3xpJMjFKPht6J/EZCNtKe7C1gbT7gdSSsr0W7YV0Uw4t7qx+YkIXoAxBbWL5/xy70lL+MbsZBQ3kTQBv3mJGiF1LYrdB+SIQijJMMwzxbU0QSGYOXdSLggJgBGNn6HRQVxOm6/tuk9ro5gbbNykeSSJJKbm+9UwuK5i8NMXXX8s5TIl++J6ZpDaDoA4jpnM0yUSZ3Ylz5WZq8UKxlNmUTZiOTga/w8ThFRvstc7Yo/iHuPolPPN2JlONj4BKwW3bJo8okNP+B6U9olGOvb10hHBC3wvsVzOssOUqUcHPPzC4ZpcINgbnDIOgR2XgIZ5VmMJ6xYtRp7AuPrpX7lm1CyqVw0j7y55hnMZsN6HJd/yhTunSUulefh6hDHF0oOaJEgTaq+viuscsQJTVtxFpS4xuIcJYXnmDtPLugXmGaoIcShoL6w1LFfAqULZJhrNFC0vGotEsSj52hmHjTRc8uaQjcspFBM5oaupURToqCOCtcaYNaugeW6c+13haQlsgR47LEJuEFbEqVf4vQL+DUbJf//qPAG9zdJ+V8AAAD//57RbErxBgAA
+              mode: 420
+              overwrite: true
+              path: /etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-isv
+    - apiVersion: machineconfiguration.openshift.io/v1
+      kind: MachineConfig
+      metadata:
+        labels:
+          machineconfiguration.openshift.io/role: worker
+        name: 51-worker-rh-registry-trust
+      spec:
+        config:
+          ignition:
+            version: 3.4.0
           storage:
             files:
             - contents:
