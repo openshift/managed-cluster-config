@@ -1,0 +1,33 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: oadp-vsc-cleanup
+rules:
+# VolumeSnapshotContent - cluster-scoped CSI resources
+- apiGroups:
+  - snapshot.storage.k8s.io
+  resources:
+  - volumesnapshotcontents
+  verbs:
+  - get
+  - list
+  - patch
+  - delete
+# VolumeSnapshot - namespaced CSI resources
+- apiGroups:
+  - snapshot.storage.k8s.io
+  resources:
+  - volumesnapshots
+  verbs:
+  - get
+  - list
+  - delete
+# Backup CRs - to check if backup still exists (orphan detection)
+- apiGroups:
+  - velero.io
+  resources:
+  - backups
+  verbs:
+  - get
+  - list
