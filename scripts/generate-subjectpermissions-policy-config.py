@@ -18,6 +18,7 @@ directories = [
         'backplane/mcs-tier-two',
         'backplane/mobb',
         'backplane/srep',
+        'backplane/srep-ro',
         'backplane/tam',
         'osd-delete-backplane-serviceaccounts',
         'osd-user-workload-monitoring',
