@@ -68,3 +68,108 @@ data:
                       payload_valid_reason: [status, conditions, "[type=ValidGeneratedPayload]", reason]
                       ign_server_reached: [status, conditions, "[type=ReachedIgnitionEndpoint]", status]
                       ign_server_reached_reason: [status, conditions, "[type=ReachedIgnitionEndpoint]", reason]
+        # ---- Velero Backup CRs ----
+        # Two metrics needed because newly enqueued backups have status: {}
+        # (no phase set yet), and KSM Info metrics are NOT emitted when the
+        # labelsFromPath path cannot resolve.
+        #
+        # "created" (Gauge): always emits for every Backup CR → gives total count.
+        # "info" (Info): only emits when status.phase exists → gives count by phase.
+        # Enqueued backups = count(created) - count(info).
+        - groupVersionKind:
+            group: velero.io
+            version: v1
+            kind: Backup
+          metricNamePrefix: velero_backup_cr
+          labelsFromPath:
+            backup_name:
+              - metadata
+              - name
+            exported_namespace:
+              - metadata
+              - namespace
+          metrics:
+            - name: "created"
+              help: "Creation timestamp of Velero backup CR (always emitted)."
+              each:
+                type: Gauge
+                gauge:
+                  path: [metadata, creationTimestamp]
+            - name: "info"
+              help: "Velero backup CR with phase label (only when phase exists)."
+              each:
+                type: Info
+                info:
+                  labelsFromPath:
+                    phase: [status, phase]
+        # ---- Velero DeleteBackupRequest CRs ----
+        # Same pattern as Backups: most DBRs have status: {} while enqueued,
+        # only the one actively being processed has status.phase: InProgress.
+        # "created" gives total count, "info" gives count by phase.
+        - groupVersionKind:
+            group: velero.io
+            version: v1
+            kind: DeleteBackupRequest
+          metricNamePrefix: velero_dbr_cr
+          labelsFromPath:
+            dbr_name:
+              - metadata
+              - name
+            exported_namespace:
+              - metadata
+              - namespace
+          metrics:
+            - name: "created"
+              help: "Creation timestamp of Velero DBR (always emitted)."
+              each:
+                type: Gauge
+                gauge:
+                  path: [metadata, creationTimestamp]
+            - name: "info"
+              help: "Velero DBR with phase label (only when phase exists)."
+              each:
+                type: Info
+                info:
+                  labelsFromPath:
+                    phase: [status, phase]
+        # ---- VolumeSnapshotContent (cluster-scoped) ----
+        # With deletionPolicy=Delete, VSCs should not persist.
+        # Any existing VSC is an orphan from a stuck deletion.
+        # Signal: count > 0 = problem.
+        - groupVersionKind:
+            group: snapshot.storage.k8s.io
+            version: v1
+            kind: VolumeSnapshotContent
+          metricNamePrefix: velero_vsc_cr
+          labelsFromPath:
+            vsc_name:
+              - metadata
+              - name
+          metrics:
+            - name: "created"
+              help: "Creation timestamp of VolumeSnapshotContent (always emitted)."
+              each:
+                type: Gauge
+                gauge:
+                  path: [metadata, creationTimestamp]
+        # ---- VolumeSnapshot (namespace-scoped) ----
+        # Same as VSC: should not persist with deletionPolicy=Delete.
+        - groupVersionKind:
+            group: snapshot.storage.k8s.io
+            version: v1
+            kind: VolumeSnapshot
+          metricNamePrefix: velero_vs_cr
+          labelsFromPath:
+            vs_name:
+              - metadata
+              - name
+            exported_namespace:
+              - metadata
+              - namespace
+          metrics:
+            - name: "created"
+              help: "Creation timestamp of VolumeSnapshot (always emitted)."
+              each:
+                type: Gauge
+                gauge:
+                  path: [metadata, creationTimestamp]
