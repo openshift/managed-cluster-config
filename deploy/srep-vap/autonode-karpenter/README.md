@@ -9,6 +9,9 @@ Enforces security baselines on Karpenter `NodePool` and `OpenshiftEC2NodeClass` 
 - Block tiny instance types (`.nano`, `.micro`, `.small`, `.medium`)
 - Block reserved node-role labels (`master`, `infra`, `control-plane`)
 
+### NodeClaim (`karpenter.sh/v1`)
+- Block tiny instance types (`.nano`, `.micro`, `.small`, `.medium`) selected by Karpenter at provisioning time
+
 ### OpenshiftEC2NodeClass (`karpenter.hypershift.openshift.io/v1beta1`)
 - EBS volume size >= 100Gi
 - EBS encryption required
