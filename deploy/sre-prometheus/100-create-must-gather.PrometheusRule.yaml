@@ -1,0 +1,24 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: sre-create-must-gather
+    role: alert-rules
+  name: sre-create-must-gather
+  namespace: openshift-monitoring
+spec:
+  groups:
+    - name: sre-create-must-gather
+      rules:
+        - alert: CreateMustGather
+          expr: max(ALERTS{alertname=~"api-ErrorBudgetBurn|InfraNodesNeedResizingSRE",alertstate="firing"}) > 0
+          for: 1m
+          keep_firing_for: 24h
+          labels:
+            severity: warning
+            namespace: openshift-monitoring
+            route-to-cad: "true"
+          annotations:
+            message: Create a must-gather for api-ErrorBudgetBurn or InfraNodesNeedResizingSRE alert
+            runbook_url: https://github.com/openshift/ops-sop/blob/master/v4/alerts/CreateMustGather.md
+            description: This alert fires when api-ErrorBudgetBurn or InfraNodesNeedResizingSRE is firing. This alert is meant to trigger configuration-anomaly-detection to create a must-gather
