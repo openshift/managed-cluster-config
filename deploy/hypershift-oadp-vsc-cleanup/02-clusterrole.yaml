@@ -14,7 +14,7 @@ rules:
   - list
   - patch
   - delete
-# VolumeSnapshot - namespaced CSI resources
+# VolumeSnapshot - namespaced CSI resources (patch needed for finalizer removal in B2.5)
 - apiGroups:
   - snapshot.storage.k8s.io
   resources:
@@ -22,8 +22,9 @@ rules:
   verbs:
   - get
   - list
+  - patch
   - delete
-# Backup CRs - to check if backup still exists (orphan detection)
+# Backup CRs - list and delete (hourly cleanup)
 - apiGroups:
   - velero.io
   resources:
@@ -31,3 +32,13 @@ rules:
   verbs:
   - get
   - list
+  - delete
+# DeleteBackupRequest - hourly cleanup
+- apiGroups:
+  - velero.io
+  resources:
+  - deletebackuprequests
+  verbs:
+  - get
+  - list
+  - delete
