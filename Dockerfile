@@ -15,7 +15,6 @@ COPY --from=promtool /bin/promtool /bin/
 # Install jq and git
 USER root
 RUN dnf install -y jq git && dnf clean all
-USER default
 
 # Environment
 ARG IN_CONTAINER="true"
@@ -32,9 +31,3 @@ RUN chmod +x /opt/app-root/bin/PolicyGenerator
 
 # Make
 RUN make
-
-# This image will be replaced by the openshift/release
-FROM openshift/origin-cli:4.12
-
-# Ensure make ran as expected
-COPY --from=runner /managed-cluster-config/deploy/ deploy
