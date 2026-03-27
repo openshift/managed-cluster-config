@@ -1,10 +1,10 @@
-FROM openshift/origin-cli:4.12 AS builder
+FROM registry.redhat.io/openshift4/ose-cli:v4.15 AS builder
 
 # Bring promtool from prometheus image
 FROM quay.io/prometheus/prometheus AS promtool
 
 # Multistage with python
-FROM ubi8/python-39 AS runner
+FROM registry.redhat.io/ubi9/python-312:9.7 AS runner
 
 # Bring oc binary to python image
 COPY --from=builder /bin/oc /bin/
@@ -12,9 +12,9 @@ COPY --from=builder /bin/oc /bin/
 # Bring promtool binary from prometheus image
 COPY --from=promtool /bin/promtool /bin/
 
-# Install jq and git
+# Install dependencies for PR checks and build
 USER root
-RUN dnf install -y jq git && dnf clean all
+RUN dnf install -y jq git diffutils && dnf clean all
 USER default
 
 # Environment
@@ -29,12 +29,3 @@ WORKDIR ${REPO_PATH}
 RUN pip install --disable-pip-version-check oyaml
 ADD --chown=default https://github.com/open-cluster-management-io/policy-generator-plugin/releases/download/v1.9.1/linux-amd64-PolicyGenerator /opt/app-root/bin/PolicyGenerator
 RUN chmod +x /opt/app-root/bin/PolicyGenerator
-
-# Make
-RUN make
-
-# This image will be replaced by the openshift/release
-FROM openshift/origin-cli:4.12
-
-# Ensure make ran as expected
-COPY --from=runner /managed-cluster-config/deploy/ deploy
