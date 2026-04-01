@@ -20,6 +20,15 @@ spec:
             !v.matches('\\.(nano|micro|small|medium)$')
           ))
       message: "Instance types ending in .nano, .micro, .small, or .medium are not allowed. Use .large or bigger."
+    # Require NotIn exclusion for blocked instance sizes
+    - expression: |
+        !has(object.spec.template.spec.requirements) ||
+        object.spec.template.spec.requirements.exists(r,
+          r.key == 'karpenter.k8s.aws/instance-size' &&
+          r.operator == 'NotIn' &&
+          ['nano', 'micro', 'small', 'medium'].all(size, r.values.exists(v, v == size))
+        )
+      message: "NodePool must include a NotIn requirement for karpenter.k8s.aws/instance-size excluding nano, micro, small, and medium. Example: {key: karpenter.k8s.aws/instance-size, operator: NotIn, values: [nano, micro, small, medium]}"
     # Block reserved node-role labels
     - expression: |
         !has(object.spec.template.metadata) ||
