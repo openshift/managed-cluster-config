@@ -31,37 +31,19 @@ spec:
             # We construct labels to match OLM format: exported_namespace, name, version, channel, package
               label_replace(sre:telemetry:managed_labels, "cluster_version", "$0", "version", ".*")
             * on () group_right (_id, cluster_version, provider)
-              (
-                sum by (exported_namespace, name, version, channel, package) (
-                    label_replace(
-                      label_replace(
-                        label_replace(
-                          label_replace(
-                            (package_operator_package_availability{pko_name=~"addon-operator|aws-vpce-operator|custom-domains-operator|managed-node-metadata-operator|managed-upgrade-operator|must-gather-operator|ocm-agent-operator|osd-metrics-exporter|rbac-permissions-operator|openshift-splunk-forwarder-operator|aws-account-operator|certman-operator|cloud-ingress-operator|configure-alertmanager-operator|deadmanssnitch-operator|deployment-validation-operator|dynatrace-operator|gcp-project-operator|managed-velero-operator|observability-operator|opentelemetry-operator|pagerduty-operator|route-monitor-operator"} == 1),
-                            "exported_namespace", "openshift-$1-operator", "pko_name", "(.*)-operator"
-                          ),
-                          "version", "$1", "image", ".*:(.+)"
-                        ),
-                        "channel", "pko", "", ""
-                      ),
-                      "package", "$1", "pko_name", "(.*)$"
-                    )
-                  )
-                or
-                sum by (exported_namespace, name, version, channel, package) (
+              sum by (exported_namespace, name, version, channel, package) (
+                label_replace(
                   label_replace(
                     label_replace(
                       label_replace(
-                        label_replace(
-                          (package_operator_package_availability{pko_name=~"addon-operator|aws-vpce-operator|custom-domains-operator|managed-node-metadata-operator|managed-upgrade-operator|must-gather-operator|ocm-agent-operator|osd-metrics-exporter|rbac-permissions-operator|openshift-splunk-forwarder-operator|aws-account-operator|certman-operator|cloud-ingress-operator|configure-alertmanager-operator|deadmanssnitch-operator|deployment-validation-operator|dynatrace-operator|gcp-project-operator|managed-velero-operator|observability-operator|opentelemetry-operator|pagerduty-operator|route-monitor-operator"} == 1),
-                          "exported_namespace", "openshift-$1", "pko_name", "(.*)"
-                        ),
-                        "version", "$1", "image", ".*:(.+)"
+                        (package_operator_package_availability{pko_name=~"addon-operator|aws-vpce-operator|custom-domains-operator|managed-node-metadata-operator|managed-upgrade-operator|must-gather-operator|ocm-agent-operator|osd-metrics-exporter|rbac-permissions-operator|openshift-splunk-forwarder-operator|aws-account-operator|certman-operator|cloud-ingress-operator|configure-alertmanager-operator|deadmanssnitch-operator|deployment-validation-operator|dynatrace-operator|gcp-project-operator|managed-velero-operator|observability-operator|opentelemetry-operator|pagerduty-operator|route-monitor-operator"} == 1),
+                        "exported_namespace", "openshift-$1", "pko_name", "(.*)"
                       ),
-                      "channel", "pko", "", ""
+                      "version", "$1", "image", ".*:(.+)"
                     ),
-                    "package", "$1", "pko_name", "(.*)$"
-                  )
+                    "channel", "pko", "", ""
+                  ),
+                  "package", "$1", "pko_name", "(.*)$"
                 )
               )
           record:
