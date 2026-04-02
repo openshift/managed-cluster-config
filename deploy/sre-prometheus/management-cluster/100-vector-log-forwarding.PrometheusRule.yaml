@@ -152,6 +152,13 @@ spec:
           }[5m])
         )
 
+    # Vector pods currently down (up == 0)
+    # Used for troubleshooting VectorPodDownSRE alert
+    # Query this to identify which specific pods are affected
+    - record: vector:pods:down
+      expr: |
+        up{job="hypershift-control-plane-log-forwarding/control-plane-log-forwarding-cmo"} == 0
+
   - name: sre-vector-log-forwarding-infrastructure-alerts
     rules:
 
@@ -160,21 +167,22 @@ spec:
     # These alerts fire regardless of whether HCP clusters exist
     # ============================================================================
 
-    # CRITICAL: Individual Vector pod is down
-    # Detects when specific Vector DaemonSet pods are not running or unreachable
-    # Provides pod-level granularity for troubleshooting
+    # CRITICAL: One or more Vector DaemonSet pods are down
+    # Consolidates per-pod down status into a single alert with count
+    # Use vector:pods:down recording rule to identify which specific pods are affected
     # Common causes: Node issues, resource constraints, image pull failures, crashloops
     - alert: VectorPodDownSRE
       expr: |
-        up{job="hypershift-control-plane-log-forwarding/control-plane-log-forwarding-cmo"} == 0
+        count(up{job="hypershift-control-plane-log-forwarding/control-plane-log-forwarding-cmo"} == 0) > 0
       for: 5m
       labels:
         severity: warning
         namespace: openshift-monitoring
       annotations:
-        summary: "Vector pod {{ $labels.pod }} is down"
-        description: "Vector pod {{ $labels.pod }} on instance {{ $labels.instance }} has been down for 5 minutes. Check pod status and logs."
+        summary: "{{ $value }} Vector pod(s) down"
+        description: "{{ $value }} Vector DaemonSet pod(s) have been unreachable for 5 minutes. Log collection is interrupted on affected nodes. Query vector:pods:down to see which specific pods are affected."
         SOP: https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/VectorPodDownSRE.md
+        query: up{job="hypershift-control-plane-log-forwarding/control-plane-log-forwarding-cmo"} == 0
 
     # CRITICAL: All Vector metrics are absent from Prometheus
     # Detects complete monitoring failure - either all pods are down or Prometheus scraping is broken
