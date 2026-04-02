@@ -51,87 +51,48 @@ spec:
             - |
               set -euo pipefail
 
-              NAMESPACE="openshift-adp"
-              PREFIX="hourly-full-backup"
-
               echo "=============================================="
               echo "  OADP VSC Cleanup Job"
-              echo "  Part A: Retain VSC cleanup (legacy)"
-              echo "  Part B: Hourly-full-backup cleanup (DBR/Backup/VSC/VS)"
+              echo "  Removes ALL legacy VolumeSnapshotContents (Retain policy)"
               echo "=============================================="
               echo ""
               echo "Start time: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
               echo ""
 
               # ============================================
-              # Gather Data (shared by Part A and Part B)
+              # STEP 1: Gather Data
               # ============================================
-              echo "Gathering Kubernetes data..."
+              echo "STEP 1: Gathering Kubernetes data..."
 
-              # --- Common: VSC and VS data (shared by Part A and B) ---
               TOTAL_VSC=$(oc get volumesnapshotcontents --no-headers 2>/dev/null | wc -l | tr -d ' ' || echo "0")
               VELERO_VSC=$(oc get volumesnapshotcontents -l velero.io/backup-name --no-headers 2>/dev/null | wc -l | tr -d ' ' || echo "0")
-              VSC_JSON=$(oc get volumesnapshotcontents -l velero.io/backup-name -o json 2>/dev/null || echo '{"items":[]}')
-              VS_JSON=$(oc get volumesnapshots -A -o json 2>/dev/null || echo '{"items":[]}')
-              ALL_VS=$(echo "$VS_JSON" | jq -r '.items[] | "\(.metadata.namespace)/\(.metadata.name)"' 2>/dev/null || echo "")
+              RETAIN_VSC=$(oc get volumesnapshotcontents -l velero.io/backup-name -o json 2>/dev/null | \
+                  jq '[.items[] | select(.spec.deletionPolicy == "Retain")] | length' || echo "0")
+              ALL_VS=$(oc get volumesnapshots -A -o jsonpath='{range .items[*]}{.metadata.namespace}/{.metadata.name}{"\n"}{end}' 2>/dev/null || echo "")
               VS_COUNT=$(echo "$ALL_VS" | grep -c . 2>/dev/null || true); VS_COUNT=${VS_COUNT:-0}
 
-              # --- Part A data: Retain VSCs ---
-              RETAIN_VSC=$(echo "$VSC_JSON" | jq '[.items[] | select(.spec.deletionPolicy == "Retain")] | length' 2>/dev/null || echo "0")
-
-              # --- Part B data: Hourly resources ---
-              DBR_JSON=$(oc get deletebackuprequests -n "$NAMESPACE" -o json 2>/dev/null || echo '{"items":[]}')
-              BACKUPS_JSON=$(oc get backups -n "$NAMESPACE" -o json 2>/dev/null || echo '{"items":[]}')
-              HOURLY_VSC=$(echo "$VSC_JSON" | jq --arg p "$PREFIX" \
-                  '[.items[] | select(.metadata.labels["velero.io/backup-name"] | startswith($p)) | select(.spec.deletionPolicy == "Delete")] | length' 2>/dev/null || echo "0")
-              HOURLY_DBR=$(echo "$DBR_JSON" | jq --arg p "$PREFIX" \
-                  '[.items[] | select(.spec.backupName | startswith($p))] | length' 2>/dev/null || echo "0")
-              HOURLY_BACKUP=$(echo "$BACKUPS_JSON" | jq --arg p "$PREFIX" \
-                  '[.items[] | select(.metadata.name | startswith($p))] | length' 2>/dev/null || echo "0")
-              HOURLY_VS=$(echo "$VS_JSON" | jq --arg p "$PREFIX" \
-                  '[.items[] | select((.metadata.labels["velero.io/backup-name"] // "") | startswith($p))] | length' 2>/dev/null || echo "0")
-
-              echo "  --- Common ---"
               echo "  Total VSCs:           $TOTAL_VSC"
               echo "  Velero VSCs:          $VELERO_VSC"
-              echo "  VolumeSnapshots:      $VS_COUNT"
-              echo "  --- Part A: Retain ---"
               echo "  Velero VSCs (Retain): $RETAIN_VSC"
-              echo "  --- Part B: Hourly (B1→B2→B3→B4) ---"
-              echo "  Hourly DBRs:          $HOURLY_DBR"
-              echo "  Hourly Backups:       $HOURLY_BACKUP"
-              echo "  Hourly VS:            $HOURLY_VS"
-              echo "  Hourly VSCs (Delete): $HOURLY_VSC"
+              echo "  VolumeSnapshots:      $VS_COUNT"
               echo ""
 
-              if [ "$RETAIN_VSC" = "0" ] && [ "$HOURLY_VSC" = "0" ] && [ "$HOURLY_DBR" = "0" ] && [ "$HOURLY_BACKUP" = "0" ] && [ "$HOURLY_VS" = "0" ]; then
-                  echo "No Retain VSCs or hourly resources to clean. Exiting."
+              if [ "$RETAIN_VSC" = "0" ]; then
+                  echo "No VSCs with Retain policy found. Nothing to clean up."
                   echo "End time: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
                   exit 0
               fi
 
-              TOTAL_CLEANED=0
-              TOTAL_FAILED=0
-
-              if [ "$RETAIN_VSC" != "0" ]; then
-
               # ============================================
-              # PART A: Retain VSC cleanup (legacy)
+              # STEP 2: Categorize Retain VSCs
               # ============================================
-              echo ""
-              echo "=============================================="
-              echo "  PART A: Retain VSC cleanup"
-              echo "=============================================="
-              echo ""
-
-              # --- A1: Categorize Retain VSCs ---
-              echo "A1: Categorizing Retain VSCs..."
+              echo "STEP 2: Categorizing Retain VSCs..."
 
               VSC_WITH_VS="/tmp/vsc_with_vs.tsv"
               VSC_NO_VS="/tmp/vsc_no_vs.tsv"
 
               # Get all Retain VSCs with VS info (no pipe to while — loop runs in main shell)
-              RETAIN_TSV=$(echo "$VSC_JSON" | \
+              RETAIN_TSV=$(oc get volumesnapshotcontents -l velero.io/backup-name -o json 2>/dev/null | \
                   jq -r '.items[] | select(.spec.deletionPolicy == "Retain") |
                      [.metadata.name, (.spec.volumeSnapshotRef.name // "none"), (.spec.volumeSnapshotRef.namespace // "none")] | @tsv' 2>/dev/null) || true
               RETAIN_TSV=${RETAIN_TSV:-}
@@ -167,8 +128,10 @@ spec:
               CLEANED_FINAL=0
               FAILED_FINAL=0
 
-              # --- A2a: Direct delete — Retain VSCs without VolumeSnapshot ---
-              echo "A2a: Cleaning Retain VSCs without VolumeSnapshot (direct VSC delete)..."
+              # ============================================
+              # STEP 3a: Direct delete — Retain VSCs without VolumeSnapshot
+              # ============================================
+              echo "STEP 3a: Cleaning Retain VSCs without VolumeSnapshot (direct VSC delete)..."
               echo ""
 
               if [ "$NO_VS_COUNT" = "0" ]; then
@@ -181,20 +144,11 @@ spec:
                       oc patch volumesnapshotcontent "$vsc_name" \
                           --type merge -p '{"spec":{"deletionPolicy":"Delete"}}' >/dev/null 2>&1 || true
                       if oc delete volumesnapshotcontent "$vsc_name" --wait=false >/dev/null 2>&1; then
-                          oc patch volumesnapshotcontent "$vsc_name" --type=json \
-                              -p='[{"op":"remove","path":"/metadata/finalizers"}]' >/dev/null 2>&1 || true
                           echo "  [$IDX/$NO_VS_COUNT] OK   VSC (no VS): $vsc_name"
                           CLEANED_DIRECT=$((CLEANED_DIRECT + 1))
                       else
-                          oc patch volumesnapshotcontent "$vsc_name" --type=json \
-                              -p='[{"op":"remove","path":"/metadata/finalizers"}]' >/dev/null 2>&1 || true
-                          if oc delete volumesnapshotcontent "$vsc_name" --wait=false >/dev/null 2>&1; then
-                              echo "  [$IDX/$NO_VS_COUNT] OK   VSC (finalizer patched): $vsc_name"
-                              CLEANED_DIRECT=$((CLEANED_DIRECT + 1))
-                          else
-                              echo "  [$IDX/$NO_VS_COUNT] FAIL VSC: $vsc_name"
-                              FAILED_DIRECT=$((FAILED_DIRECT + 1))
-                          fi
+                          echo "  [$IDX/$NO_VS_COUNT] FAIL VSC: $vsc_name"
+                          FAILED_DIRECT=$((FAILED_DIRECT + 1))
                       fi
                       sleep 0.2
                   done < "$VSC_NO_VS"
@@ -203,8 +157,10 @@ spec:
               echo "  Direct (no VS): $CLEANED_DIRECT OK, $FAILED_DIRECT FAILED"
               echo ""
 
-              # --- A2b: Cascade delete — Retain VSCs with VolumeSnapshot ---
-              echo "A2b: Cleaning Retain VSCs with VolumeSnapshot (delete VS -> cascade to VSC)..."
+              # ============================================
+              # STEP 3b: Cascade delete — Retain VSCs with VolumeSnapshot (delete VS -> VSC)
+              # ============================================
+              echo "STEP 3b: Cleaning Retain VSCs with VolumeSnapshot (delete VS -> cascade to VSC)..."
               echo ""
 
               if [ "$WITH_VS_COUNT" = "0" ]; then
@@ -234,93 +190,65 @@ spec:
               echo "  Cascade (with VS): $CLEANED_VS OK, $FAILED_VS FAILED"
               echo ""
 
-              # --- A3: Safeguard — re-scan for remaining Retain VSCs + bound VS ---
-              echo "A3: Safeguard — re-scan for remaining Retain VSCs + bound VS..."
+              # ============================================
+              # STEP 4: Safeguard — re-scan for any remaining Retain VSCs (should be 0)
+              # ============================================
+              echo "STEP 4: Safeguard — re-scan for any remaining Retain VSCs..."
               echo "         (catches: cascade slow/failed; ideally 0 remaining)"
               echo ""
-              CLEANED_VS_SAFE=0
-              FAILED_VS_SAFE=0
-
               if [ "$WITH_VS_COUNT" != "0" ]; then
                   echo "  Waiting 10s for cascade to settle (CSI may be busy)..."
                   sleep 10
                   echo ""
               fi
 
-              REMAINING_RETAIN_TSV=$(oc get volumesnapshotcontents -l velero.io/backup-name -o json 2>/dev/null | \
-                  jq -r '.items[] | select(.spec.deletionPolicy == "Retain") |
-                     [.metadata.name, (.spec.volumeSnapshotRef.name // "none"), (.spec.volumeSnapshotRef.namespace // "none")] | @tsv' 2>/dev/null || echo "")
-              REMAINING_RETAIN_TSV=${REMAINING_RETAIN_TSV:-}
-              REMAINING_COUNT=$(echo "$REMAINING_RETAIN_TSV" | grep -c . 2>/dev/null || true); REMAINING_COUNT=${REMAINING_COUNT:-0}
+              REMAINING_RETAIN=$(oc get volumesnapshotcontents -l velero.io/backup-name -o json 2>/dev/null | \
+                  jq -r '.items[] | select(.spec.deletionPolicy == "Retain") | .metadata.name' || echo "")
+              REMAINING_COUNT=$(echo "$REMAINING_RETAIN" | grep -c . 2>/dev/null || true); REMAINING_COUNT=${REMAINING_COUNT:-0}
 
               if [ "$REMAINING_COUNT" = "0" ]; then
                   echo "  No remaining Retain VSCs."
               else
-                  echo "  Found $REMAINING_COUNT remaining — cleaning (VS first, then VSC)."
+                  echo "  Found $REMAINING_COUNT remaining — cleaning directly."
                   echo ""
                   IDX=0
-                  while IFS=$'\t' read -r vsc_name vs_name vs_namespace; do
+                  while read -r vsc_name; do
                       [ -z "$vsc_name" ] && continue
                       IDX=$((IDX + 1))
-                      if [ "$vs_name" != "none" ] && [ "$vs_namespace" != "none" ]; then
-                          if oc delete volumesnapshot "$vs_name" -n "$vs_namespace" --wait=false >/dev/null 2>&1; then
-                              echo "  [$IDX/$REMAINING_COUNT] OK   VS: $vs_namespace/$vs_name"
-                              CLEANED_VS_SAFE=$((CLEANED_VS_SAFE + 1))
-                          else
-                              oc patch volumesnapshot "$vs_name" -n "$vs_namespace" --type=json \
-                                  -p='[{"op":"remove","path":"/metadata/finalizers"}]' >/dev/null 2>&1 || true
-                              if oc delete volumesnapshot "$vs_name" -n "$vs_namespace" --wait=false >/dev/null 2>&1; then
-                                  echo "  [$IDX/$REMAINING_COUNT] OK   VS (finalizer patched): $vs_namespace/$vs_name"
-                                  CLEANED_VS_SAFE=$((CLEANED_VS_SAFE + 1))
-                              else
-                                  echo "  [$IDX/$REMAINING_COUNT] FAIL VS: $vs_namespace/$vs_name"
-                                  FAILED_VS_SAFE=$((FAILED_VS_SAFE + 1))
-                              fi
-                          fi
-                      fi
                       oc patch volumesnapshotcontent "$vsc_name" \
                           --type merge -p '{"spec":{"deletionPolicy":"Delete"}}' >/dev/null 2>&1 || true
                       if oc delete volumesnapshotcontent "$vsc_name" --wait=false >/dev/null 2>&1; then
-                          oc patch volumesnapshotcontent "$vsc_name" --type=json \
-                              -p='[{"op":"remove","path":"/metadata/finalizers"}]' >/dev/null 2>&1 || true
                           echo "  [$IDX/$REMAINING_COUNT] OK   VSC: $vsc_name"
                           CLEANED_FINAL=$((CLEANED_FINAL + 1))
                       else
-                          oc patch volumesnapshotcontent "$vsc_name" --type=json \
-                              -p='[{"op":"remove","path":"/metadata/finalizers"}]' >/dev/null 2>&1 || true
-                          if oc delete volumesnapshotcontent "$vsc_name" --wait=false >/dev/null 2>&1; then
-                              echo "  [$IDX/$REMAINING_COUNT] OK   VSC (finalizer patched): $vsc_name"
-                              CLEANED_FINAL=$((CLEANED_FINAL + 1))
-                          else
-                              echo "  [$IDX/$REMAINING_COUNT] FAIL VSC: $vsc_name"
-                              FAILED_FINAL=$((FAILED_FINAL + 1))
-                          fi
+                          echo "  [$IDX/$REMAINING_COUNT] FAIL VSC: $vsc_name"
+                          FAILED_FINAL=$((FAILED_FINAL + 1))
                       fi
                       sleep 0.2
-                  done <<< "$REMAINING_RETAIN_TSV"
+                  done <<< "$REMAINING_RETAIN"
               fi
               echo ""
-              echo "  Safeguard VSCs: $CLEANED_FINAL OK, $FAILED_FINAL FAILED"
-              echo "  Safeguard VS:   $CLEANED_VS_SAFE OK, $FAILED_VS_SAFE FAILED"
+              echo "  Safeguard: $CLEANED_FINAL OK, $FAILED_FINAL FAILED"
 
               rm -f "$VSC_WITH_VS" "$VSC_NO_VS"
 
-              # --- A4: Part A Summary ---
-              TOTAL_CLEANED=$((CLEANED_DIRECT + CLEANED_VS + CLEANED_FINAL + CLEANED_VS_SAFE))
-              TOTAL_FAILED=$((FAILED_DIRECT + FAILED_VS + FAILED_FINAL + FAILED_VS_SAFE))
+              # ============================================
+              # STEP 5: Summary
+              # ============================================
+              TOTAL_CLEANED=$((CLEANED_DIRECT + CLEANED_VS + CLEANED_FINAL))
+              TOTAL_FAILED=$((FAILED_DIRECT + FAILED_VS + FAILED_FINAL))
 
               echo ""
               echo "=============================================="
-              echo "  PART A: RETAIN COMPLETE"
+              echo "  CLEANUP COMPLETE"
               echo "=============================================="
               echo ""
-              echo "  Retain VSCs found:       $RETAIN_VSC"
+              echo "  Retain VSCs found:    $RETAIN_VSC"
               echo "  Cleaned direct (no VS):  $CLEANED_DIRECT"
               echo "  Cleaned via cascade:     $CLEANED_VS"
-              echo "  VSCs safeguard:          $CLEANED_FINAL"
-              echo "  VS safeguard:            $CLEANED_VS_SAFE"
-              echo "  Total cleaned:           $TOTAL_CLEANED"
-              echo "  Failures:                $TOTAL_FAILED"
+              echo "  Cleaned in safeguard:    $CLEANED_FINAL"
+              echo "  Total cleaned:        $TOTAL_CLEANED"
+              echo "  Failures:             $TOTAL_FAILED"
               echo ""
               echo "End time: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
 
@@ -328,337 +256,6 @@ spec:
               FINAL_REMAIN=$(oc get volumesnapshotcontents -l velero.io/backup-name -o json 2>/dev/null | \
                   jq '[.items[] | select(.spec.deletionPolicy == "Retain")] | length' || echo "0")
               echo "Remaining Retain VSCs: $FINAL_REMAIN"
-
-              else
-                  echo ""
-                  echo "No Retain VSCs found. Skipping Part A."
-                  echo ""
-              fi
-
-              # ============================================
-              # PART B: Hourly-full-backup cleanup
-              # Order: DBR -> Backup -> VSC (no VS) -> VS+VSC (cascade) -> orphaned VS -> Safeguard
-              # ============================================
-              CLEANED_DBR=0
-              FAILED_DBR=0
-              CLEANED_BACKUP=0
-              FAILED_BACKUP=0
-              CLEANED_DIRECT_H=0
-              FAILED_DIRECT_H=0
-              CLEANED_VS_H=0
-              FAILED_VS_H=0
-              CLEANED_VS_ORPHAN_H=0
-              FAILED_VS_ORPHAN_H=0
-              CLEANED_FINAL_H=0
-              FAILED_FINAL_H=0
-              CLEANED_VS_SAFE_H=0
-              FAILED_VS_SAFE_H=0
-
-              echo ""
-              echo "=============================================="
-              echo "  PART B: Hourly-full-backup cleanup"
-              echo "=============================================="
-              echo ""
-
-              # --- B1: Delete hourly DeleteBackupRequests ---
-              echo "B1: Deleting hourly DBRs..."
-              DBR_LIST=$(echo "$DBR_JSON" | jq -r --arg p "$PREFIX" \
-                  '.items[] | select(.spec.backupName | startswith($p)) | .metadata.name' 2>/dev/null) || true
-              DBR_LIST=${DBR_LIST:-}
-              DBR_COUNT=$(echo "$DBR_LIST" | grep -c . 2>/dev/null || true); DBR_COUNT=${DBR_COUNT:-0}
-              echo "  DBRs found: $DBR_COUNT"
-              if [ "$DBR_COUNT" -gt 0 ]; then
-                  IDX=0
-                  while read -r name; do
-                      [ -z "$name" ] && continue
-                      IDX=$((IDX + 1))
-                      if oc delete deletebackuprequest "$name" -n "$NAMESPACE" --wait=false >/dev/null 2>&1; then
-                          echo "  [$IDX/$DBR_COUNT] OK   DBR: $name"
-                          CLEANED_DBR=$((CLEANED_DBR + 1))
-                      else
-                          echo "  [$IDX/$DBR_COUNT] FAIL DBR: $name"
-                          FAILED_DBR=$((FAILED_DBR + 1))
-                      fi
-                      sleep 0.2
-                  done <<< "$DBR_LIST"
-              fi
-              echo ""
-
-              # --- B2: Delete hourly Backups ---
-              echo "B2: Deleting hourly Backups..."
-              BACKUP_LIST=$(echo "$BACKUPS_JSON" | jq -r --arg p "$PREFIX" \
-                  '.items[] | select(.metadata.name | startswith($p)) | .metadata.name' 2>/dev/null) || true
-              BACKUP_LIST=${BACKUP_LIST:-}
-              BACKUP_CR_COUNT=$(echo "$BACKUP_LIST" | grep -c . 2>/dev/null || true); BACKUP_CR_COUNT=${BACKUP_CR_COUNT:-0}
-              echo "  Backups found: $BACKUP_CR_COUNT"
-              if [ "$BACKUP_CR_COUNT" -gt 0 ]; then
-                  IDX=0
-                  while read -r name; do
-                      [ -z "$name" ] && continue
-                      IDX=$((IDX + 1))
-                      if oc delete backup "$name" -n "$NAMESPACE" --wait=false >/dev/null 2>&1; then
-                          echo "  [$IDX/$BACKUP_CR_COUNT] OK   Backup: $name"
-                          CLEANED_BACKUP=$((CLEANED_BACKUP + 1))
-                      else
-                          echo "  [$IDX/$BACKUP_CR_COUNT] FAIL Backup: $name"
-                          FAILED_BACKUP=$((FAILED_BACKUP + 1))
-                      fi
-                      sleep 0.2
-                  done <<< "$BACKUP_LIST"
-              fi
-              echo ""
-
-              # --- B3: Categorize hourly Delete VSCs ---
-              echo "B3: Categorizing hourly Delete VSCs..."
-              HOURLY_TSV=$(echo "$VSC_JSON" | jq -r --arg p "$PREFIX" \
-                  '.items[] | select(.metadata.labels["velero.io/backup-name"] | startswith($p)) | select(.spec.deletionPolicy == "Delete") |
-                     [.metadata.name, (.spec.volumeSnapshotRef.name // "none"), (.spec.volumeSnapshotRef.namespace // "none")] | @tsv' 2>/dev/null) || true
-              HOURLY_TSV=${HOURLY_TSV:-}
-
-              HOURLY_VSC_NO_VS="/tmp/hourly_vsc_no_vs.lst"
-              HOURLY_VSC_WITH_VS="/tmp/hourly_vsc_with_vs.tsv"
-              : > "$HOURLY_VSC_NO_VS"
-              : > "$HOURLY_VSC_WITH_VS"
-
-              while IFS=$'\t' read -r vsc_name vs_name vs_namespace; do
-                  [ -z "$vsc_name" ] && continue
-                  VS_EXISTS=false
-                  if [ "$vs_name" != "none" ] && [ "$vs_namespace" != "none" ]; then
-                      echo "$ALL_VS" | grep -q "^${vs_namespace}/${vs_name}$" && VS_EXISTS=true || true
-                  fi
-                  if [ "$VS_EXISTS" = true ]; then
-                      echo -e "${vsc_name}\t${vs_name}\t${vs_namespace}" >> "$HOURLY_VSC_WITH_VS"
-                  else
-                      echo "$vsc_name" >> "$HOURLY_VSC_NO_VS"
-                  fi
-              done <<< "$HOURLY_TSV"
-
-              HOURLY_NO_VS_COUNT=$(wc -l < "$HOURLY_VSC_NO_VS" 2>/dev/null | tr -d ' '); HOURLY_NO_VS_COUNT=${HOURLY_NO_VS_COUNT:-0}
-              HOURLY_WITH_VS_COUNT=$(wc -l < "$HOURLY_VSC_WITH_VS" 2>/dev/null | tr -d ' '); HOURLY_WITH_VS_COUNT=${HOURLY_WITH_VS_COUNT:-0}
-
-              echo "  Hourly VSCs: $((HOURLY_NO_VS_COUNT + HOURLY_WITH_VS_COUNT))"
-              echo "    - Without VS (direct delete): $HOURLY_NO_VS_COUNT"
-              echo "    - With VS (cascade via VS delete): $HOURLY_WITH_VS_COUNT"
-              echo ""
-
-              # --- B3a: Direct delete — hourly VSCs without VolumeSnapshot ---
-              echo "B3a: Cleaning hourly VSCs without VolumeSnapshot (direct delete)..."
-              echo ""
-
-              if [ "$HOURLY_NO_VS_COUNT" = "0" ]; then
-                  echo "  No hourly VSCs without VS to process."
-              else
-                  IDX=0
-                  while read -r vsc_name; do
-                      [ -z "$vsc_name" ] && continue
-                      IDX=$((IDX + 1))
-                      if oc delete volumesnapshotcontent "$vsc_name" --wait=false >/dev/null 2>&1; then
-                          oc patch volumesnapshotcontent "$vsc_name" --type=json \
-                              -p='[{"op":"remove","path":"/metadata/finalizers"}]' >/dev/null 2>&1 || true
-                          echo "  [$IDX/$HOURLY_NO_VS_COUNT] OK   VSC (no VS): $vsc_name"
-                          CLEANED_DIRECT_H=$((CLEANED_DIRECT_H + 1))
-                      else
-                          oc patch volumesnapshotcontent "$vsc_name" --type=json \
-                              -p='[{"op":"remove","path":"/metadata/finalizers"}]' >/dev/null 2>&1 || true
-                          if oc delete volumesnapshotcontent "$vsc_name" --wait=false >/dev/null 2>&1; then
-                              echo "  [$IDX/$HOURLY_NO_VS_COUNT] OK   VSC (finalizer patched): $vsc_name"
-                              CLEANED_DIRECT_H=$((CLEANED_DIRECT_H + 1))
-                          else
-                              echo "  [$IDX/$HOURLY_NO_VS_COUNT] FAIL VSC: $vsc_name"
-                              FAILED_DIRECT_H=$((FAILED_DIRECT_H + 1))
-                          fi
-                      fi
-                      sleep 0.2
-                  done < "$HOURLY_VSC_NO_VS"
-              fi
-              echo ""
-              echo "  Direct (no VS): $CLEANED_DIRECT_H OK, $FAILED_DIRECT_H FAILED"
-              echo ""
-
-              # --- B3b: Cascade delete — hourly VSCs with VolumeSnapshot ---
-              echo "B3b: Cleaning hourly VSCs with VolumeSnapshot (delete VS -> cascade)..."
-              echo ""
-
-              if [ "$HOURLY_WITH_VS_COUNT" = "0" ]; then
-                  echo "  No hourly VSCs with VS to process."
-              else
-                  IDX=0
-                  while IFS=$'\t' read -r vsc_name vs_name vs_namespace; do
-                      [ -z "$vsc_name" ] && continue
-                      IDX=$((IDX + 1))
-                      if oc delete volumesnapshot "$vs_name" -n "$vs_namespace" --wait=false >/dev/null 2>&1; then
-                          echo "  [$IDX/$HOURLY_WITH_VS_COUNT] OK   VS: $vs_namespace/$vs_name -> cascade"
-                          CLEANED_VS_H=$((CLEANED_VS_H + 1))
-                      else
-                          oc patch volumesnapshot "$vs_name" -n "$vs_namespace" --type=json \
-                              -p='[{"op":"remove","path":"/metadata/finalizers"}]' >/dev/null 2>&1 || true
-                          if oc delete volumesnapshot "$vs_name" -n "$vs_namespace" --wait=false >/dev/null 2>&1; then
-                              echo "  [$IDX/$HOURLY_WITH_VS_COUNT] OK   VS (finalizer patched): $vs_namespace/$vs_name -> cascade"
-                              CLEANED_VS_H=$((CLEANED_VS_H + 1))
-                          else
-                              echo "  [$IDX/$HOURLY_WITH_VS_COUNT] FAIL VS: $vs_namespace/$vs_name"
-                              FAILED_VS_H=$((FAILED_VS_H + 1))
-                          fi
-                      fi
-                      sleep 0.2
-                  done < "$HOURLY_VSC_WITH_VS"
-              fi
-              echo ""
-              echo "  Cascade (with VS): $CLEANED_VS_H OK, $FAILED_VS_H FAILED"
-              echo ""
-
-              # --- B3c: Delete remaining hourly VS by label (orphaned, not bound to any VSC) ---
-              echo "B3c: Deleting remaining hourly VolumeSnapshots by label..."
-              ORPHAN_VS_H=$(oc get volumesnapshots -A -o json 2>/dev/null | \
-                  jq -r --arg p "$PREFIX" '.items[] | select((.metadata.labels["velero.io/backup-name"] // "") | startswith($p)) | "\(.metadata.namespace) \(.metadata.name)"' 2>/dev/null || echo "")
-              ORPHAN_VS_H=${ORPHAN_VS_H:-}
-              ORPHAN_VS_H_COUNT=$(echo "$ORPHAN_VS_H" | grep -c . 2>/dev/null || true); ORPHAN_VS_H_COUNT=${ORPHAN_VS_H_COUNT:-0}
-
-              if [ "$ORPHAN_VS_H_COUNT" = "0" ]; then
-                  echo "  No remaining hourly VS."
-              else
-                  echo "  Found $ORPHAN_VS_H_COUNT remaining hourly VS — cleaning."
-                  echo ""
-                  IDX=0
-                  while read -r vs_ns vs_name; do
-                      [ -z "$vs_name" ] && continue
-                      IDX=$((IDX + 1))
-                      if oc delete volumesnapshot "$vs_name" -n "$vs_ns" --wait=false >/dev/null 2>&1; then
-                          echo "  [$IDX/$ORPHAN_VS_H_COUNT] OK   VS: $vs_ns/$vs_name"
-                          CLEANED_VS_ORPHAN_H=$((CLEANED_VS_ORPHAN_H + 1))
-                      else
-                          oc patch volumesnapshot "$vs_name" -n "$vs_ns" --type=json \
-                              -p='[{"op":"remove","path":"/metadata/finalizers"}]' >/dev/null 2>&1 || true
-                          if oc delete volumesnapshot "$vs_name" -n "$vs_ns" --wait=false >/dev/null 2>&1; then
-                              echo "  [$IDX/$ORPHAN_VS_H_COUNT] OK   VS (finalizer patched): $vs_ns/$vs_name"
-                              CLEANED_VS_ORPHAN_H=$((CLEANED_VS_ORPHAN_H + 1))
-                          else
-                              echo "  [$IDX/$ORPHAN_VS_H_COUNT] FAIL VS: $vs_ns/$vs_name"
-                              FAILED_VS_ORPHAN_H=$((FAILED_VS_ORPHAN_H + 1))
-                          fi
-                      fi
-                      sleep 0.2
-                  done <<< "$ORPHAN_VS_H"
-              fi
-              echo ""
-              echo "  Orphaned VS: $CLEANED_VS_ORPHAN_H OK, $FAILED_VS_ORPHAN_H FAILED"
-              echo ""
-
-              # --- B4: Safeguard — remaining hourly Delete VSCs + orphaned VS ---
-              echo "B4: Safeguard — remaining hourly Delete VSCs + orphaned VS..."
-              echo ""
-              if [ "$HOURLY_WITH_VS_COUNT" != "0" ]; then
-                  echo "  Waiting 10s for cascade to settle..."
-                  sleep 10
-                  echo ""
-              fi
-
-              REMAINING_HOURLY=$(oc get volumesnapshotcontents -l velero.io/backup-name -o json 2>/dev/null | \
-                  jq -r --arg p "$PREFIX" '.items[] | select(.metadata.labels["velero.io/backup-name"] | startswith($p)) | select(.spec.deletionPolicy == "Delete") | .metadata.name' 2>/dev/null || echo "")
-              REMAINING_HOURLY=${REMAINING_HOURLY:-}
-              REMAINING_HOURLY_COUNT=$(echo "$REMAINING_HOURLY" | grep -c . 2>/dev/null || true); REMAINING_HOURLY_COUNT=${REMAINING_HOURLY_COUNT:-0}
-
-              if [ "$REMAINING_HOURLY_COUNT" = "0" ]; then
-                  echo "  No remaining hourly VSCs."
-              else
-                  echo "  Found $REMAINING_HOURLY_COUNT remaining VSCs — cleaning directly."
-                  echo ""
-                  IDX=0
-                  while read -r vsc_name; do
-                      [ -z "$vsc_name" ] && continue
-                      IDX=$((IDX + 1))
-                      if oc delete volumesnapshotcontent "$vsc_name" --wait=false >/dev/null 2>&1; then
-                          oc patch volumesnapshotcontent "$vsc_name" --type=json \
-                              -p='[{"op":"remove","path":"/metadata/finalizers"}]' >/dev/null 2>&1 || true
-                          echo "  [$IDX/$REMAINING_HOURLY_COUNT] OK   VSC: $vsc_name"
-                          CLEANED_FINAL_H=$((CLEANED_FINAL_H + 1))
-                      else
-                          oc patch volumesnapshotcontent "$vsc_name" --type=json \
-                              -p='[{"op":"remove","path":"/metadata/finalizers"}]' >/dev/null 2>&1 || true
-                          if oc delete volumesnapshotcontent "$vsc_name" --wait=false >/dev/null 2>&1; then
-                              echo "  [$IDX/$REMAINING_HOURLY_COUNT] OK   VSC (finalizer patched): $vsc_name"
-                              CLEANED_FINAL_H=$((CLEANED_FINAL_H + 1))
-                          else
-                              echo "  [$IDX/$REMAINING_HOURLY_COUNT] FAIL VSC: $vsc_name"
-                              FAILED_FINAL_H=$((FAILED_FINAL_H + 1))
-                          fi
-                      fi
-                      sleep 0.2
-                  done <<< "$REMAINING_HOURLY"
-              fi
-              echo ""
-              echo "  Safeguard VSCs: $CLEANED_FINAL_H OK, $FAILED_FINAL_H FAILED"
-              echo ""
-
-              echo "B4b: Safeguard — remaining hourly VolumeSnapshots..."
-              REMAINING_VS_H=$(oc get volumesnapshots -A -o json 2>/dev/null | \
-                  jq -r --arg p "$PREFIX" '.items[] | select((.metadata.labels["velero.io/backup-name"] // "") | startswith($p)) | "\(.metadata.namespace) \(.metadata.name)"' 2>/dev/null || echo "")
-              REMAINING_VS_H=${REMAINING_VS_H:-}
-              REMAINING_VS_H_COUNT=$(echo "$REMAINING_VS_H" | grep -c . 2>/dev/null || true); REMAINING_VS_H_COUNT=${REMAINING_VS_H_COUNT:-0}
-
-              if [ "$REMAINING_VS_H_COUNT" = "0" ]; then
-                  echo "  No remaining hourly VS."
-              else
-                  echo "  Found $REMAINING_VS_H_COUNT remaining VS — cleaning."
-                  echo ""
-                  IDX=0
-                  while read -r vs_ns vs_name; do
-                      [ -z "$vs_name" ] && continue
-                      IDX=$((IDX + 1))
-                      if oc delete volumesnapshot "$vs_name" -n "$vs_ns" --wait=false >/dev/null 2>&1; then
-                          echo "  [$IDX/$REMAINING_VS_H_COUNT] OK   VS: $vs_ns/$vs_name"
-                          CLEANED_VS_SAFE_H=$((CLEANED_VS_SAFE_H + 1))
-                      else
-                          oc patch volumesnapshot "$vs_name" -n "$vs_ns" --type=json \
-                              -p='[{"op":"remove","path":"/metadata/finalizers"}]' >/dev/null 2>&1 || true
-                          if oc delete volumesnapshot "$vs_name" -n "$vs_ns" --wait=false >/dev/null 2>&1; then
-                              echo "  [$IDX/$REMAINING_VS_H_COUNT] OK   VS (finalizer patched): $vs_ns/$vs_name"
-                              CLEANED_VS_SAFE_H=$((CLEANED_VS_SAFE_H + 1))
-                          else
-                              echo "  [$IDX/$REMAINING_VS_H_COUNT] FAIL VS: $vs_ns/$vs_name"
-                              FAILED_VS_SAFE_H=$((FAILED_VS_SAFE_H + 1))
-                          fi
-                      fi
-                      sleep 0.2
-                  done <<< "$REMAINING_VS_H"
-              fi
-              echo ""
-              echo "  Safeguard VS: $CLEANED_VS_SAFE_H OK, $FAILED_VS_SAFE_H FAILED"
-
-              rm -f "$HOURLY_VSC_NO_VS" "$HOURLY_VSC_WITH_VS"
-
-              # ============================================
-              # COMBINED SUMMARY
-              # ============================================
-              TOTAL_CLEANED_H=$((CLEANED_DBR + CLEANED_BACKUP + CLEANED_DIRECT_H + CLEANED_VS_H + CLEANED_VS_ORPHAN_H + CLEANED_FINAL_H + CLEANED_VS_SAFE_H))
-              TOTAL_FAILED_H=$((FAILED_DBR + FAILED_BACKUP + FAILED_DIRECT_H + FAILED_VS_H + FAILED_VS_ORPHAN_H + FAILED_FINAL_H + FAILED_VS_SAFE_H))
-
-              echo ""
-              echo "=============================================="
-              echo "  CLEANUP COMPLETE"
-              echo "=============================================="
-              echo ""
-              echo "  --- Part A: Retain ---"
-              echo "  Retain VSCs found:       $RETAIN_VSC"
-              echo "  Total cleaned (Retain):  $TOTAL_CLEANED"
-              echo "  Failures (Retain):       $TOTAL_FAILED"
-              echo ""
-              echo "  --- Part B: Hourly (B1→B2→B3→B4) ---"
-              echo "  DBRs cleaned:            $CLEANED_DBR  (failed: $FAILED_DBR)"
-              echo "  Backups cleaned:         $CLEANED_BACKUP  (failed: $FAILED_BACKUP)"
-              echo "  VSCs direct (B3a):       $CLEANED_DIRECT_H  (failed: $FAILED_DIRECT_H)"
-              echo "  VS+VSC cascade (B3b):    $CLEANED_VS_H  (failed: $FAILED_VS_H)"
-              echo "  VS orphaned (B3c):       $CLEANED_VS_ORPHAN_H  (failed: $FAILED_VS_ORPHAN_H)"
-              echo "  VSCs safeguard (B4):     $CLEANED_FINAL_H  (failed: $FAILED_FINAL_H)"
-              echo "  VS safeguard (B4b):      $CLEANED_VS_SAFE_H  (failed: $FAILED_VS_SAFE_H)"
-              echo "  Total cleaned (Hourly):  $TOTAL_CLEANED_H"
-              echo "  Failures (Hourly):       $TOTAL_FAILED_H"
-              echo ""
-              echo "  --- Grand Total ---"
-              echo "  Total cleaned:           $((TOTAL_CLEANED + TOTAL_CLEANED_H))"
-              echo "  Total failures:          $((TOTAL_FAILED + TOTAL_FAILED_H))"
-              echo ""
-              echo "End time: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
 
           serviceAccountName: oadp-vsc-cleanup
           restartPolicy: Never

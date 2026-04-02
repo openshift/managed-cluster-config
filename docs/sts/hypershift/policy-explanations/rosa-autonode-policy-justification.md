@@ -26,6 +26,14 @@ The ROSA Karpenter Controller policy follows the established ROSA security patte
 
 **Security**: Read operations pose minimal security risk and do not modify infrastructure.
 
+### SSMReadActions
+
+**Actions**: `ssm:GetParameter`
+**Resource**: `arn:aws:ssm:*::parameter/aws/service/*`
+**Justification**: Required to access AWS-managed SSM parameters containing official AMI IDs for different instance types and regions. This ensures Karpenter Controller uses only validated, supported AMIs for ROSA worker nodes.
+
+**Security**: Limited to AWS service parameters only, preventing access to customer SSM parameters.
+
 ### PricingReadActions
 
 **Actions**: `pricing:GetProducts`

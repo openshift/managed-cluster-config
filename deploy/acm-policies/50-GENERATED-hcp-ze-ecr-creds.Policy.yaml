@@ -367,7 +367,7 @@ spec:
                             app: ecr-credential-refresh
                             app.kubernetes.io/component: initial-refresh
                         spec:
-                          activeDeadlineSeconds: 3600
+                          activeDeadlineSeconds: 300
                           ttlSecondsAfterFinished: 3600
                           template:
                             metadata:
@@ -375,7 +375,7 @@ spec:
                                 app: ecr-credential-refresh
                             spec:
                               serviceAccountName: ecr-credential-refresh
-                              restartPolicy: Never
+                              restartPolicy: OnFailure
                               nodeSelector:
                                 node-role.kubernetes.io/worker: ""
                               tolerations:

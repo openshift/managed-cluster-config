@@ -45,7 +45,6 @@ directories = [
         'rosa-console-legacy-branding-configmap',
         'rosa-ingress-certificate-policies',
         'rosa-ingress-certificate-check',
-        "srep-vap/autonode-karpenter",
         "srep-vap/hcp-node-label",
         "srep-vap/vcpu-overcommit",
         ]
