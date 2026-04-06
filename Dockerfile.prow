@@ -1,0 +1,17 @@
+# CI image for Prow pr-check. Provides python3 (with oyaml),
+# promtool, jq, git, oc, and PolicyGenerator — everything hack/pr_check.sh needs.
+FROM openshift/origin-cli:4.12 AS oc
+FROM quay.io/prometheus/prometheus AS promtool
+
+FROM registry.access.redhat.com/ubi9/python-312
+
+COPY --from=oc /bin/oc /bin/
+COPY --from=promtool /bin/promtool /bin/
+
+USER root
+RUN dnf install -y jq git make diffutils && dnf clean all
+USER default
+
+RUN pip install --disable-pip-version-check oyaml
+
+ADD --chmod=755 https://github.com/open-cluster-management-io/policy-generator-plugin/releases/download/v1.12.4/linux-amd64-PolicyGenerator /opt/app-root/bin/PolicyGenerator
