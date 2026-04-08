@@ -207,6 +207,8 @@ spec:
 
                             # Build a dockerconfigjson with auth entries for all ECR registries
                             # using a single shared token, and write it into the additional-pull-secret.
+                            # When the secret already exists, merges ECR entries with existing customer
+                            # entries to preserve any user-added pull secrets (SREP-4339).
                             update_secret() {
                                 log "Updating $SECRET_NAME in $NAMESPACE with ${#ECR_REGISTRIES[@]} registry(s)..."
 
@@ -222,19 +224,51 @@ spec:
                                     auths_entries="${auths_entries}\"${registry}\":{\"auth\":\"${auth_token}\",\"email\":\"\"}"
                                 done
 
-                                local config_json="{\"auths\":{${auths_entries}}}"
-                                local config_b64
-                                config_b64=$(echo -n "$config_json" | base64 -w0)
+                                local ecr_json="{\"auths\":{${auths_entries}}}"
 
                                 # Check if secret exists
                                 if oc get secret "$SECRET_NAME" -n "$NAMESPACE" &>/dev/null; then
+                                    # Read existing secret and merge to preserve customer-added entries (SREP-4339)
+                                    local existing_b64
+                                    if ! existing_b64=$(oc get secret "$SECRET_NAME" -n "$NAMESPACE" -o jsonpath='{.data.\.dockerconfigjson}'); then
+                                        log "ERROR - Failed to read existing .dockerconfigjson from $SECRET_NAME"
+                                        return 1
+                                    fi
+                                    if [[ -z "$existing_b64" ]]; then
+                                        log "ERROR - $SECRET_NAME is missing .dockerconfigjson"
+                                        return 1
+                                    fi
+                                    local existing_json
+                                    if ! existing_json=$(printf '%s' "$existing_b64" | base64 -d 2>/dev/null); then
+                                        log "ERROR - Existing .dockerconfigjson is not valid base64"
+                                        return 1
+                                    fi
+
+                                    # Merge using python3: remove only IDMS-discovered registries (managed
+                                    # by this script), preserve all other entries including any customer-owned
+                                    # ECR registries. Handles any valid dockerconfigjson regardless of field
+                                    # ordering or auth format.
+                                    local managed_registries
+                                    managed_registries=$(IFS=,; echo "${ECR_REGISTRIES[*]}")
+
+                                    local merged_json
+                                    if ! merged_json=$(MANAGED="$managed_registries" EXISTING="$existing_json" ECR="$ecr_json" python3 -c 'import json,os,sys;managed=set(os.environ["MANAGED"].split(","));existing=json.loads(os.environ["EXISTING"]);ecr=json.loads(os.environ["ECR"]);existing["auths"]={k:v for k,v in existing.get("auths",{}).items() if k not in managed};existing["auths"].update(ecr.get("auths",{}));print(json.dumps(existing))' 2>&1); then
+                                        log "ERROR - Failed to merge pull secret entries: $merged_json"
+                                        return 1
+                                    fi
+
+                                    local merged_b64
+                                    merged_b64=$(echo -n "$merged_json" | base64 -w0)
+
                                     if ! oc patch secret "$SECRET_NAME" -n "$NAMESPACE" \
-                                        --type=merge -p '{"data":{".dockerconfigjson":"'"$config_b64"'"}}'; then
+                                        --type=merge -p '{"data":{".dockerconfigjson":"'"$merged_b64"'"}}'; then
                                         log "ERROR - Failed to patch secret"
                                         return 1
                                     fi
-                                    log "Successfully patched $SECRET_NAME"
+                                    log "Successfully patched $SECRET_NAME (merged with existing entries)"
                                 else
+                                    local config_b64
+                                    config_b64=$(echo -n "$ecr_json" | base64 -w0)
                                     cat <<EOF | oc apply -f -
                             apiVersion: v1
                             kind: Secret
