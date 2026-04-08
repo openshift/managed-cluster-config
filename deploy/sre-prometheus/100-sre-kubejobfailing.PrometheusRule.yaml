@@ -19,21 +19,21 @@ spec:
       expr: |
         clamp_max(job:kube_job_status_start_time:max, 1)
         * ON(job_name) GROUP_LEFT()
-        (kube_job_status_failed{namespace=~"(openshift-.*|kube-.*|default)",job="kube-state-metrics"} > 0)
+        (kube_job_status_failed{namespace=~"(openshift-.*|kube-.*|default)",job="kube-state-metrics",job_name!="osd-cluster-ready"} > 0)
     - record: job:kube_job_status_start_time:max
       expr: |
         max(
-         kube_job_status_start_time{namespace=~"(openshift-.*|kube-.*|default)",job="kube-state-metrics"}
+         kube_job_status_start_time{namespace=~"(openshift-.*|kube-.*|default)",job="kube-state-metrics",job_name!="osd-cluster-ready"}
          * ON(job_name,namespace) GROUP_RIGHT()
          kube_job_owner{owner_name!="",owner_name!="<none>"}
-        )   
+        )
         BY (job_name, owner_name, namespace)
         == ON(owner_name) GROUP_LEFT()
         max(
-         kube_job_status_start_time{namespace=~"(openshift-.*|kube-.*|default)",job="kube-state-metrics"}
+         kube_job_status_start_time{namespace=~"(openshift-.*|kube-.*|default)",job="kube-state-metrics",job_name!="osd-cluster-ready"}
          * ON(job_name,namespace) GROUP_RIGHT()
          kube_job_owner{owner_name!="",owner_name!="<none>"}
-        )   
+        )
         BY (owner_name)
   - name: sre-kubejobfailing
     rules:
