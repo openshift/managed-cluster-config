@@ -10,123 +10,29 @@ spec:
   groups:
     - name: sre-operators-deployment-missing
       rules:
-        # Route Monitor Operator - controller-manager deployment
-        - alert: RouteMonitorOperatorDeploymentMissingSRE
+        # Single alert covering all SRE-managed operator deployments
+        # Fires once per operator when its deployment is missing
+        - alert: SREOperatorDeploymentMissingSRE
           expr: |
-            # Namespace exists
-            kube_namespace_labels{namespace="openshift-route-monitor-operator"}
-            # But controller deployment doesn't
+            # Operator namespace exists
+            count by (namespace) (
+              kube_namespace_labels{
+                namespace=~"openshift-(route-monitor-operator|managed-upgrade-operator|ocm-agent-operator|must-gather-operator|velero|managed-node-metadata-operator)"
+              }
+            )
+            # But expected deployment doesn't exist
             unless on (namespace)
-            kube_deployment_status_replicas{
-              namespace="openshift-route-monitor-operator",
-              deployment="route-monitor-operator-controller-manager"
-            }
+            count by (namespace) (
+              kube_deployment_status_replicas{
+                namespace=~"openshift-(route-monitor-operator|managed-upgrade-operator|ocm-agent-operator|must-gather-operator|velero|managed-node-metadata-operator)",
+                deployment=~"route-monitor-operator-controller-manager|managed-upgrade-operator|ocm-agent-operator|must-gather-operator|managed-velero-operator|managed-node-metadata-operator"
+              }
+            )
           for: 30m
           labels:
             severity: critical
-            namespace: openshift-route-monitor-operator
+            namespace: '{{ $labels.namespace }}'
+            link: "https://github.com/openshift/ops-sop/blob/master/v4/alerts/SREOperatorDeploymentMissingSRE.md"
           annotations:
-            summary: "Route Monitor Operator controller deployment missing"
-            description: "Namespace openshift-route-monitor-operator exists but route-monitor-operator-controller-manager deployment is absent for 30+ minutes."
-
-        # Managed Upgrade Operator
-        - alert: ManagedUpgradeOperatorDeploymentMissingSRE
-          expr: |
-            kube_namespace_labels{namespace="openshift-managed-upgrade-operator"}
-            unless on (namespace)
-            kube_deployment_status_replicas{
-              namespace="openshift-managed-upgrade-operator",
-              deployment="managed-upgrade-operator"
-            }
-          for: 30m
-          labels:
-            severity: critical
-            namespace: openshift-managed-upgrade-operator
-          annotations:
-            summary: "Managed Upgrade Operator deployment missing"
-            description: "Namespace openshift-managed-upgrade-operator exists but managed-upgrade-operator deployment is absent for 30+ minutes."
-
-        # OCM Agent Operator
-        - alert: OCMAgentOperatorDeploymentMissingSRE
-          expr: |
-            kube_namespace_labels{namespace="openshift-ocm-agent-operator"}
-            unless on (namespace)
-            kube_deployment_status_replicas{
-              namespace="openshift-ocm-agent-operator",
-              deployment="ocm-agent-operator"
-            }
-          for: 30m
-          labels:
-            severity: critical
-            namespace: openshift-ocm-agent-operator
-          annotations:
-            summary: "OCM Agent Operator deployment missing"
-            description: "Namespace openshift-ocm-agent-operator exists but ocm-agent-operator deployment is absent for 30+ minutes."
-
-        # Must Gather Operator
-        - alert: MustGatherOperatorDeploymentMissingSRE
-          expr: |
-            kube_namespace_labels{namespace="openshift-must-gather-operator"}
-            unless on (namespace)
-            kube_deployment_status_replicas{
-              namespace="openshift-must-gather-operator",
-              deployment="must-gather-operator"
-            }
-          for: 30m
-          labels:
-            severity: critical
-            namespace: openshift-must-gather-operator
-          annotations:
-            summary: "Must Gather Operator deployment missing"
-            description: "Namespace openshift-must-gather-operator exists but must-gather-operator deployment is absent for 30+ minutes."
-
-        # Managed Velero Operator
-        - alert: ManagedVeleroOperatorDeploymentMissingSRE
-          expr: |
-            kube_namespace_labels{namespace="openshift-velero"}
-            unless on (namespace)
-            kube_deployment_status_replicas{
-              namespace="openshift-velero",
-              deployment="managed-velero-operator"
-            }
-          for: 30m
-          labels:
-            severity: critical
-            namespace: openshift-velero
-          annotations:
-            summary: "Managed Velero Operator deployment missing"
-            description: "Namespace openshift-velero exists but managed-velero-operator deployment is absent for 30+ minutes."
-
-        # Configure Alertmanager Operator
-        - alert: ConfigureAlertmanagerOperatorDeploymentMissingSRE
-          expr: |
-            kube_namespace_labels{namespace="openshift-monitoring"}
-            unless on (namespace)
-            kube_deployment_status_replicas{
-              namespace="openshift-monitoring",
-              deployment="configure-alertmanager-operator"
-            }
-          for: 30m
-          labels:
-            severity: critical
-            namespace: openshift-monitoring
-          annotations:
-            summary: "Configure Alertmanager Operator deployment missing"
-            description: "Namespace openshift-monitoring exists but configure-alertmanager-operator deployment is absent for 30+ minutes."
-
-        # Managed Node Metadata Operator
-        - alert: ManagedNodeMetadataOperatorDeploymentMissingSRE
-          expr: |
-            kube_namespace_labels{namespace="openshift-managed-node-metadata-operator"}
-            unless on (namespace)
-            kube_deployment_status_replicas{
-              namespace="openshift-managed-node-metadata-operator",
-              deployment="managed-node-metadata-operator"
-            }
-          for: 30m
-          labels:
-            severity: critical
-            namespace: openshift-managed-node-metadata-operator
-          annotations:
-            summary: "Managed Node Metadata Operator deployment missing"
-            description: "Namespace openshift-managed-node-metadata-operator exists but managed-node-metadata-operator deployment is absent for 30+ minutes."
+            summary: "SRE operator deployment missing in {{ $labels.namespace }}"
+            description: "Namespace {{ $labels.namespace }} exists but its expected operator deployment is absent for 30+ minutes."
