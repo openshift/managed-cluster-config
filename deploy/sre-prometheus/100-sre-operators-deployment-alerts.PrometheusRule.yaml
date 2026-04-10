@@ -17,15 +17,15 @@ spec:
             # Operator namespace exists
             count by (namespace) (
               kube_namespace_labels{
-                namespace=~"openshift-(route-monitor-operator|managed-upgrade-operator|ocm-agent-operator|must-gather-operator|velero|managed-node-metadata-operator)"
+                namespace=~"openshift-(route-monitor-operator|managed-upgrade-operator|ocm-agent-operator|must-gather-operator|velero|managed-node-metadata-operator|monitoring)"
               }
             )
             # But expected deployment doesn't exist
             unless on (namespace)
             count by (namespace) (
               kube_deployment_status_replicas{
-                namespace=~"openshift-(route-monitor-operator|managed-upgrade-operator|ocm-agent-operator|must-gather-operator|velero|managed-node-metadata-operator)",
-                deployment=~"route-monitor-operator-controller-manager|managed-upgrade-operator|ocm-agent-operator|must-gather-operator|managed-velero-operator|managed-node-metadata-operator"
+                namespace=~"openshift-(route-monitor-operator|managed-upgrade-operator|ocm-agent-operator|must-gather-operator|velero|managed-node-metadata-operator|monitoring)",
+                deployment=~"route-monitor-operator-controller-manager|managed-upgrade-operator|ocm-agent-operator|must-gather-operator|managed-velero-operator|managed-node-metadata-operator|configure-alertmanager-operator"
               }
             )
           for: 30m
