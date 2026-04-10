@@ -67,15 +67,19 @@ spec:
         - expr: |
             count by (namespace) (
               kube_namespace_labels{
-                namespace=~"openshift-(route-monitor-operator|managed-upgrade-operator|ocm-agent-operator|managed-node-metadata-operator|monitoring)"
+                namespace=~"openshift-(aws-vpce-operator|cloud-ingress-operator|deadmanssnitch-operator|managed-upgrade-operator|ocm-agent-operator|pagerduty-operator|route-monitor-operator|splunk-forwarder-operator|monitoring)"
               }
             )
             unless on (namespace)
             count by (namespace) (
-              kube_deployment_status_replicas{namespace="openshift-route-monitor-operator", deployment="route-monitor-operator-controller-manager"}
+              kube_deployment_status_replicas{namespace="openshift-aws-vpce-operator", deployment="aws-vpce-operator"}
+              or kube_deployment_status_replicas{namespace="openshift-cloud-ingress-operator", deployment="cloud-ingress-operator"}
+              or kube_deployment_status_replicas{namespace="openshift-deadmanssnitch-operator", deployment="deadmanssnitch-operator"}
               or kube_deployment_status_replicas{namespace="openshift-managed-upgrade-operator", deployment="managed-upgrade-operator"}
               or kube_deployment_status_replicas{namespace="openshift-ocm-agent-operator", deployment="ocm-agent-operator"}
-              or kube_deployment_status_replicas{namespace="openshift-managed-node-metadata-operator", deployment="managed-node-metadata-operator"}
+              or kube_deployment_status_replicas{namespace="openshift-pagerduty-operator", deployment="pagerduty-operator"}
+              or kube_deployment_status_replicas{namespace="openshift-route-monitor-operator", deployment="route-monitor-operator-controller-manager"}
+              or kube_deployment_status_replicas{namespace="openshift-splunk-forwarder-operator", deployment="splunk-forwarder-operator"}
               or kube_deployment_status_replicas{namespace="openshift-monitoring", deployment="configure-alertmanager-operator"}
             )
           record: sre:operators:deployment_missing
