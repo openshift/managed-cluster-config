@@ -62,3 +62,19 @@ spec:
             or on(_id, name)
             sre:operators:succeeded:raw{exported_namespace !~ "openshift-.*"}
           record: sre:operators:succeeded
+        # Detect missing critical operator deployments
+        # Returns 1 for each namespace where deployment is expected but missing
+        - expr: |
+            count by (namespace) (
+              kube_namespace_labels{
+                namespace=~"openshift-(route-monitor-operator|managed-upgrade-operator|ocm-agent-operator|must-gather-operator|velero|managed-node-metadata-operator|monitoring)"
+              }
+            )
+            unless on (namespace)
+            count by (namespace) (
+              kube_deployment_status_replicas{
+                namespace=~"openshift-(route-monitor-operator|managed-upgrade-operator|ocm-agent-operator|must-gather-operator|velero|managed-node-metadata-operator|monitoring)",
+                deployment=~"route-monitor-operator-controller-manager|managed-upgrade-operator|ocm-agent-operator|must-gather-operator|managed-velero-operator|managed-node-metadata-operator|configure-alertmanager-operator"
+              }
+            )
+          record: sre:operators:deployment_missing
