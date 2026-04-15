@@ -68,8 +68,7 @@ spec:
             label_replace(sre:telemetry:managed_labels, "cluster_version", "$0", "version", ".*")
             * on () group_right (_id, cluster_version, provider)
             (
-              label_replace(absent(kube_deployment_status_replicas{namespace="openshift-aws-vpce-operator", deployment="aws-vpce-operator"}) * 1, "namespace", "openshift-aws-vpce-operator", "", "")
-              or label_replace(absent(kube_deployment_status_replicas{namespace="openshift-managed-upgrade-operator", deployment="managed-upgrade-operator"}) * 1, "namespace", "openshift-managed-upgrade-operator", "", "")
+              label_replace(absent(kube_deployment_status_replicas{namespace="openshift-managed-upgrade-operator", deployment="managed-upgrade-operator"}) * 1, "namespace", "openshift-managed-upgrade-operator", "", "")
               or label_replace(absent(kube_deployment_status_replicas{namespace="openshift-ocm-agent-operator", deployment="ocm-agent-operator"}) * 1, "namespace", "openshift-ocm-agent-operator", "", "")
               or label_replace(absent(kube_deployment_status_replicas{namespace="openshift-route-monitor-operator", deployment="route-monitor-operator-controller-manager"}) * 1, "namespace", "openshift-route-monitor-operator", "", "")
               or label_replace(absent(kube_deployment_status_replicas{namespace="openshift-splunk-forwarder-operator", deployment="splunk-forwarder-operator"}) * 1, "namespace", "openshift-splunk-forwarder-operator", "", "")
