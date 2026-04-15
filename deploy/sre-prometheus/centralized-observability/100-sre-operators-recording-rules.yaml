@@ -62,3 +62,16 @@ spec:
             or on(_id, name)
             sre:operators:succeeded:raw{exported_namespace !~ "openshift-.*"}
           record: sre:operators:succeeded
+        # Detect missing critical operator deployments
+        # Returns 1 for each operator where deployment is missing (namespace may or may not exist)
+        - expr: |
+            label_replace(sre:telemetry:managed_labels, "cluster_version", "$0", "version", ".*")
+            * on () group_right (_id, cluster_version, provider)
+            (
+              label_replace(absent(kube_deployment_status_replicas{namespace="openshift-managed-upgrade-operator", deployment="managed-upgrade-operator"}) * 1, "namespace", "openshift-managed-upgrade-operator", "", "")
+              or label_replace(absent(kube_deployment_status_replicas{namespace="openshift-ocm-agent-operator", deployment="ocm-agent-operator"}) * 1, "namespace", "openshift-ocm-agent-operator", "", "")
+              or label_replace(absent(kube_deployment_status_replicas{namespace="openshift-route-monitor-operator", deployment="route-monitor-operator-controller-manager"}) * 1, "namespace", "openshift-route-monitor-operator", "", "")
+              or label_replace(absent(kube_deployment_status_replicas{namespace="openshift-splunk-forwarder-operator", deployment="splunk-forwarder-operator"}) * 1, "namespace", "openshift-splunk-forwarder-operator", "", "")
+              or label_replace(absent(kube_deployment_status_replicas{namespace="openshift-monitoring", deployment="configure-alertmanager-operator"}) * 1, "namespace", "openshift-monitoring", "", "")
+            )
+          record: sre:operators:deployment_missing
