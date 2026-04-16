@@ -120,6 +120,50 @@ spec:
           }[5m])
         )
 
+    # Per-cluster log ingestion rate
+    # Identifies which HCP clusters are generating the most log volume
+    # >2000 events/sec may indicate runaway logging or cluster degradation
+    # Previously alert VectorClusterExcessiveLogsSRE — demoted to recording rule
+    - record: vector:cluster:ingestion_rate
+      expr: |
+        sum by (pod_namespace) (
+          rate(vector_component_received_events_total{component_id="kubernetes_logs"}[5m])
+        )
+
+    # S3 write error rate
+    # Non-zero indicates S3 API errors (throttling, connectivity, IAM issues)
+    # Errors may be retried successfully — check S3 delivery ratio for actual impact
+    # Previously alert VectorS3ErrorsSRE — demoted to recording rule
+    - record: vector:s3:error_rate
+      expr: |
+        sum(rate(vector_component_errors_total{component_id="hcp_logs"}[5m]))
+
+    # Per-pod buffer growth rate (bytes/sec)
+    # Positive = buffer growing, negative = buffer shrinking
+    # >1,677,721.6 bytes/sec = >100 MB/min growth
+    # Previously alert VectorBufferGrowingRapidlySRE — demoted to recording rule
+    - record: vector:buffer:growth_rate:by_pod
+      expr: |
+        deriv(vector_buffer_byte_size{buffer_id="hcp_logs"}[5m])
+
+    # Per-component VRL transform error rate
+    # Identifies which transform stage is experiencing errors
+    # Impact caught by per-cluster pipeline EBB alerts
+    # Previously alert VectorTransformErrorsSRE — demoted to recording rule
+    - record: vector:transform:error_rate:by_component
+      expr: |
+        sum by (component_id) (
+          rate(vector_component_errors_total{
+            component_id=~"enrich_metadata|parse_json_logs|parse_plain_text_timestamps"
+          }[5m])
+        )
+
+    # Buffer saturation per pod (0.0 = empty, 1.0 = full)
+    # 10GB max buffer size
+    - record: vector:s3_sink:buffer_saturation:by_pod
+      expr: |
+        vector_buffer_byte_size{buffer_id="hcp_logs"} / 10737418240
+
     # Vector pods currently down (up == 0)
     # Used for troubleshooting VectorPodDownSRE alert
     # Query this to identify which specific pods are affected
@@ -270,95 +314,4 @@ spec:
         description: "Buffer size: {{ $value | humanize1024 }}B (>7GB threshold). If buffer reaches 10GB, log collection will be blocked."
         SOP: https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/VectorBufferNearCapacitySRE.md
 
-    # WARNING: S3 write operations are experiencing errors
-    # Some logs may be retried successfully, but persistent errors indicate problems
-    # Possible causes: Throttling, temporary connectivity issues, partial IAM permissions
-    - alert: VectorS3ErrorsSRE
-      expr: |
-        sum(rate(vector_component_errors_total{component_id="hcp_logs"}[5m])) > 0
-      for: 5m
-      labels:
-        severity: warning
-        namespace: openshift-monitoring
-      annotations:
-        summary: Vector is experiencing S3 write errors
-        description: "S3 error rate: {{ $value | humanize }} errors/sec. Check Vector logs and S3 service status."
-        SOP: https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/VectorS3ErrorsSRE.md
-
-    # WARNING: Disk buffer is growing rapidly (>100MB/min)
-    # Uses deriv() to calculate buffer growth RATE (bytes/sec change over 5 minutes)
-    # Threshold: 1,677,721.6 bytes/sec = 100 MB/min = 6 GB/hour
-    # IMPORTANT - Understanding deriv() values:
-    #   - Positive values = buffer GROWING (e.g., 3,000,000 bytes/sec = 180 MB/min growth)
-    #   - Higher values = faster growth (buffer filling rapidly)
-    #   - Lower positive values = slower growth (buffer still growing, just slower)
-    #   - Negative values = buffer SHRINKING (not shown in this alert, filtered out by > threshold)
-    #   - Alert appears/disappears as growth rate crosses threshold
-    # Early warning that S3 writes are falling behind - fires before VectorBufferNearCapacity
-    # Could indicate S3 throttling, increasing log volume, or insufficient S3 write capacity
-    - alert: VectorBufferGrowingRapidlySRE
-      expr: |
-        deriv(vector_buffer_byte_size{buffer_id="hcp_logs"}[5m]) > 1677721.6
-      for: 10m
-      labels:
-        severity: warning
-        namespace: openshift-monitoring
-      annotations:
-        summary: "Vector buffer growing rapidly on pod {{ $labels.pod }}"
-        description: "Buffer growth rate: {{ $value | humanize }}B/sec (>100MB/min threshold). IMPORTANT: This value is the GROWTH RATE (how fast buffer is filling), not the buffer size."
-        SOP: https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/VectorBufferGrowingRapidlySRE.md
-
-    # WARNING: Errors detected in Vector transform components
-    # Transform components process logs using VRL (Vector Remap Language) scripts to:
-    #   - enrich_metadata: Extract namespace, pod, container info from kubernetes metadata
-    #   - parse_json_logs: Parse JSON-formatted logs and extract timestamps
-    #   - parse_plain_text_timestamps: Parse timestamps from plain text log messages
-    # Errors in these transforms can cause:
-    #   - Log drops (if transform cannot process log event)
-    #   - Missing metadata (logs delivered without proper namespace/pod labels)
-    #   - Incorrect timestamps (logs using Vector ingestion time instead of log time)
-    # Common causes: Invalid log formats, missing expected fields, VRL script bugs
-    - alert: VectorTransformErrorsSRE
-      expr: |
-        sum by (component_id) (
-          rate(vector_component_errors_total{
-            component_id=~"enrich_metadata|parse_json_logs|parse_plain_text_timestamps"
-          }[5m])
-        ) > 0
-      for: 5m
-      labels:
-        severity: warning
-        namespace: openshift-monitoring
-      annotations:
-        summary: "Vector transform {{ $labels.component_id }} is experiencing errors"
-        description: "Transform error rate: {{ $value | humanize }} errors/sec. Logs may be dropped or delivered with incomplete metadata."
-        SOP: https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/VectorTransformErrorsSRE.md
-
-    # WARNING: A specific HCP cluster is generating excessive logs
-    # Threshold: 2000 events/sec from a single HCP cluster namespace
-    # Normal log volume varies by cluster activity, but sustained >2000 events/sec may indicate:
-    #   - Runaway logging (operator in crash loop, error logging loops)
-    #   - Debug logging left enabled on control plane components
-    #   - Cluster degradation (repeated failures generating error logs)
-    #   - Heavy API activity (excessive audit logs - may be expected for some clusters)
-    #   - Noisy applications deployed to cluster
-    # High log volume from a cluster can:
-    #   - Fill Vector buffer faster than S3 can write (causes VectorBufferNearCapacity on that node)
-    #   - Increase costs (S3 storage, data transfer)
-    #   - Make troubleshooting harder (signal-to-noise ratio)
-    # Note: Audit logs (container_name="audit-logs") are typically the highest volume contributor
-    #   - Query audit logs specifically with: container_name="audit-logs" label filter
-    - alert: VectorClusterExcessiveLogsSRE
-      expr: |
-        sum by (pod_namespace) (
-          rate(vector_component_received_events_total{component_id="kubernetes_logs"}[5m])
-        ) > 2000
-      for: 15m
-      labels:
-        severity: warning
-        namespace: openshift-monitoring
-      annotations:
-        summary: "HCP cluster {{ $labels.pod_namespace }} generating excessive logs"
-        description: "Log rate: {{ $value | humanize }} events/sec (>2000 threshold). This may be normal during high activity or indicate logging issues."
-        SOP: https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/VectorClusterExcessiveLogsSRE.md
 
