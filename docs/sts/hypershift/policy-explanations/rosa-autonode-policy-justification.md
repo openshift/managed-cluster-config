@@ -140,7 +140,7 @@ The ROSA Karpenter Controller policy follows the established ROSA security patte
 **Actions**: `iam:CreateInstanceProfile`, `iam:TagInstanceProfile`
 **Resource**: `arn:aws:iam::*:instance-profile/rosa-service-managed-*`, `arn:aws:iam::*:instance-profile/*-worker`
 **Condition**: None (boundary is ARN scope only; we do not require `aws:RequestTag/red-hat-managed` on these IAM APIs per review).
-**Justification**: Karpenter Controller needs to create and tag new instance profiles for node configurations without depending on the controller sending `red-hat-managed` on the IAM request.
+**Justification**: Karpenter Controller needs to create and tag new instance profiles for node configurations without depending on the controller sending `red-hat-managed` on the IAM request. This **differs on purpose** from `sts_hcp_installer_permission_policy.json` (including FedRAMP copies), where `CreateInstanceProfile` / `TagInstanceProfile` use `aws:RequestTag/red-hat-managed`: the installer can rely on tags on that API path, but reviewers asked not to require the same for this controller policy—ARN patterns are the boundary here instead of request-tag parity.
 
 **Security**: Service boundary enforced through resource ARN restriction to known ROSA / HyperShift worker instance profile name patterns.
 
