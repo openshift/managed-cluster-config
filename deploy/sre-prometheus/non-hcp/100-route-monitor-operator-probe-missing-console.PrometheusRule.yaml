@@ -1,0 +1,23 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: sre-route-monitor-operator-probe-missing-console
+    role: alert-rules
+  name: sre-route-monitor-operator-probe-missing-console
+  namespace: openshift-monitoring
+spec:
+  groups:
+  - name: sre-route-monitor-operator-probe-missing-console
+    rules:
+    - alert: ConsoleProbeSuccessMetricMissingSRE
+      expr: absent(probe_success{probe_url=~"^https://console.+"})
+      for: 15m
+      labels:
+        severity: warning
+        namespace: openshift-route-monitor-operator
+      annotations:
+        summary: "Console probe_success metric is missing"
+        description: "The probe_success metric for console endpoint from Route Monitor Operator has been absent for 15 minutes. This metric is critical for evaluating cluster health and SLO calculations. The Route Monitor Operator or its monitoring operands may not be functioning properly."
+        message: "probe_success metric for console endpoint is missing from Prometheus. Investigate Route Monitor Operator deployment and RouteMonitor resources in openshift-route-monitor-operator namespace."
+        link: "https://github.com/openshift/ops-sop/blob/master/v4/alerts/ConsoleProbeSuccessMetricMissingSRE.md"
