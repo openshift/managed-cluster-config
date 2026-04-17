@@ -26,23 +26,11 @@ spec:
         /
         sum(rate(vector_component_received_events_total{component_id="kubernetes_logs"}[5m]))
 
-    # Same as above but broken down per HCP cluster namespace
-    # Used for per-cluster error budget burn alerts
-    # Value should be ~1.0 (100% delivery success per cluster)
-    - record: vector:log_delivery:success_ratio:by_cluster
-      expr: |
-        sum by (pod_namespace) (
-          rate(vector_component_sent_events_total{component_id="hcp_logs"}[5m])
-        )
-        /
-        sum by (pod_namespace) (
-          rate(vector_component_received_events_total{component_id="kubernetes_logs"}[5m])
-        )
-
     # Pipeline processing ratio per HCP cluster namespace
     # Measures pipeline processing ratio per cluster (logs through transforms / logs received)
-    # NOTE: This uses custom metric created BEFORE S3 sink, so it measures transform pipeline health, not S3 delivery success
+    # Uses custom metric created BEFORE S3 sink - measures transform pipeline health
     # Value should be ~1.0 (logs making it through transforms)
+    # Used by VectorClusterPipelineEBBFastSRE and VectorClusterPipelineEBBSlowSRE alerts
     - record: vector:log_delivery:pipeline_ratio:by_cluster
       expr: |
         sum by (pod_namespace) (
@@ -128,26 +116,6 @@ spec:
         sum by (pod) (
           rate(vector_component_sent_events_total{
             component_id="hcp_logs",
-            namespace="hypershift-control-plane-log-forwarding"
-          }[5m])
-        )
-
-    # Per-cluster pipeline success ratio (S3 delivery / collection)
-    # Should be ~1.0 (100%)
-    # <0.95 indicates delivery issues for a specific HCP cluster
-    # Used by VectorPipelineLossPerClusterSRE alert
-    - record: vector:pipeline:success_ratio:by_cluster
-      expr: |
-        sum by (pod_namespace) (
-          rate(vector_component_sent_events_total{
-            component_id="hcp_logs",
-            namespace="hypershift-control-plane-log-forwarding"
-          }[5m])
-        )
-        /
-        sum by (pod_namespace) (
-          rate(vector_component_received_events_total{
-            component_id="kubernetes_logs",
             namespace="hypershift-control-plane-log-forwarding"
           }[5m])
         )
@@ -252,23 +220,6 @@ spec:
         summary: Vector has stopped writing logs to S3
         description: No logs have been written to S3 in the last 5 minutes. Buffer will eventually fill. Check S3 access and IAM roles.
         SOP: https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/VectorS3WritesStoppedSRE.md
-
-    # CRITICAL: Log delivery success rate below 95% SLO (per HCP cluster) - Fast detection
-    # Threshold: 0.05 = 5% failure rate (logs not delivered to S3)
-    # Success ratio < 95% indicates SLO violation requiring immediate investigation
-    # Fires per HCP cluster - pod_namespace label identifies affected cluster
-    # TEMPORARILY WARNING: Set to warning for initial validation
-    - alert: VectorErrorBudgetBurnFastSRE
-      expr: |
-        (1 - vector:log_delivery:success_ratio:by_cluster) > 0.05
-      for: 15m
-      labels:
-        severity: warning
-        namespace: openshift-monitoring
-      annotations:
-        summary: "Vector log delivery below 95% SLO for cluster {{ $labels.pod_namespace }}"
-        description: "HCP cluster {{ $labels.pod_namespace }} delivery failure rate: {{ $value | humanizePercentage }}. Success rate has been below 95% SLO for 15 minutes."
-        SOP: https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/VectorErrorBudgetBurnFastSRE.md
 
     # CRITICAL: Vector is missing MC_CLUSTER_ID environment variable
     # This indicates the ClusterDeployment label 'api.openshift.com/id' is missing
@@ -411,35 +362,3 @@ spec:
         description: "Log rate: {{ $value | humanize }} events/sec (>2000 threshold). This may be normal during high activity or indicate logging issues."
         SOP: https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/VectorClusterExcessiveLogsSRE.md
 
-    # WARNING: Per-pod event loss detection
-    # Detects which specific Vector pod is not delivering events to S3
-    # Uses rate-based measurement (received - sent) to avoid ratio flapping
-    # Positive values > 50 events/sec sustained for 15m = events accumulating
-    # Validated against production: normal variance is ±5 events/sec
-    - alert: VectorEventLossPerPodSRE
-      expr: |
-        vector:hcp_logs:event_loss_rate:by_pod > 50
-      for: 15m
-      labels:
-        severity: warning
-        namespace: openshift-monitoring
-      annotations:
-        summary: "Vector pod {{ $labels.pod }} not delivering events to S3"
-        description: "Pod {{ $labels.pod }} is receiving {{ $value | humanize }} more events/sec than it's sending to S3. Events are accumulating in buffer or being lost. Check S3 write latency and buffer size."
-        SOP: https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/VectorEventLossPerPodSRE.md
-
-    # WARNING: Per-cluster pipeline loss detection
-    # Identifies which specific HCP cluster is experiencing log delivery issues
-    # Uses S3 delivery ratio (sent/received) per cluster namespace
-    # <0.95 for 30m indicates sustained delivery problems for that cluster
-    - alert: VectorPipelineLossPerClusterSRE
-      expr: |
-        vector:pipeline:success_ratio:by_cluster < 0.95
-      for: 30m
-      labels:
-        severity: warning
-        namespace: openshift-monitoring
-      annotations:
-        summary: "HCP cluster {{ $labels.pod_namespace }} experiencing log delivery issues"
-        description: "Cluster {{ $labels.pod_namespace }} end-to-end delivery rate: {{ $value | humanizePercentage }} (threshold: 95%). Logs from this cluster are being lost between collection and S3 delivery."
-        SOP: https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/VectorPipelineLossPerClusterSRE.md
