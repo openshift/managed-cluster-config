@@ -265,7 +265,12 @@ spec:
 
 
                             def update_secret(registries, ecr_password):
-                                """Update additional-pull-secret with ECR credentials for all registries."""
+                                """Update additional-pull-secret with ECR credentials for all registries.
+
+                                When the secret already exists, merges fresh ECR entries with
+                                existing customer entries to preserve any user-added pull secrets
+                                (SREP-4339).
+                                """
                                 log(f"Updating {SECRET_NAME} in {NAMESPACE} with {len(registries)} registry(s)...")
 
                                 auth_token = base64.b64encode(f"AWS:{ecr_password}".encode()).decode()
@@ -274,9 +279,6 @@ spec:
                                     for registry in registries
                                 }
                                 ecr_dockerconfig = {"auths": ecr_auths}
-                                config_b64 = base64.b64encode(
-                                    json.dumps(ecr_dockerconfig).encode()
-                                ).decode()
 
                                 # Check if secret exists
                                 result = run(
@@ -285,17 +287,49 @@ spec:
                                 )
 
                                 if result.returncode == 0:
-                                    # Secret exists — patch it
+                                    # Secret exists — read, merge, and patch
+                                    result = run([
+                                        "oc", "get", "secret", SECRET_NAME, "-n", NAMESPACE,
+                                        "-o", "jsonpath={.data.\\.dockerconfigjson}",
+                                    ])
+                                    existing_b64 = result.stdout.strip()
+                                    if not existing_b64:
+                                        raise RuntimeError(f"{SECRET_NAME} is missing .dockerconfigjson")
+
+                                    try:
+                                        existing_json = base64.b64decode(existing_b64).decode()
+                                        existing = json.loads(existing_json)
+                                    except (ValueError, json.JSONDecodeError) as e:
+                                        raise RuntimeError(
+                                            f"Existing .dockerconfigjson is not valid: {e}"
+                                        )
+
+                                    managed = set(registries)
+                                    merged_auths = {
+                                        k: v for k, v in (existing.get("auths") or {}).items()
+                                        if k not in managed
+                                    }
+                                    merged_auths.update(ecr_auths)
+                                    existing["auths"] = merged_auths
+
+                                    merged_b64 = base64.b64encode(
+                                        json.dumps(existing).encode()
+                                    ).decode()
+
                                     patch_data = json.dumps({
-                                        "data": {".dockerconfigjson": config_b64}
+                                        "data": {".dockerconfigjson": merged_b64}
                                     })
                                     run([
                                         "oc", "patch", "secret", SECRET_NAME, "-n", NAMESPACE,
                                         "--type=merge", "-p", patch_data,
                                     ], redact_args=True)
-                                    log(f"Successfully patched {SECRET_NAME}")
+                                    log(f"Successfully patched {SECRET_NAME} (merged with existing entries)")
                                 else:
                                     # Secret does not exist — create it
+                                    config_b64 = base64.b64encode(
+                                        json.dumps(ecr_dockerconfig).encode()
+                                    ).decode()
+
                                     secret_manifest = json.dumps({
                                         "apiVersion": "v1",
                                         "kind": "Secret",
