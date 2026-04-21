@@ -13,7 +13,7 @@ The ROSA Karpenter Controller policy follows the established ROSA security patte
 - **Resource modification**: Requires existing resource tags for managed resources
 - **Combined operations**: Uses both request and resource tag conditions where appropriate
 
-**Note (EC2 vs IAM)**: Several EC2 statements use `aws:RequestTag/red-hat-managed`, which only applies when the API sends that tag. `iam:CreateInstanceProfile` / `iam:TagInstanceProfile` in this policy are **not** gated on request tags; review feedback was to avoid requiring that on the IAM path, so those actions are limited by **instance profile ARN patterns** only.
+**Note (request tags on IAM create)**: `aws:RequestTag/red-hat-managed` is evaluated only when the **IAM API request** includes that tag (it is not the same as resource tags already stored on an object). For managed ROSA/HyperShift clusters, tags from `HostedControlPlane.spec.platform.aws` (including `red-hat-managed`) are merged into the guest `EC2NodeClass` and are intended to be passed when the upstream Karpenter AWS provider creates or tags instance profiles. This matches `sts_hcp_installer_permission_policy.json` for `CreateInstanceProfile` / `TagInstanceProfile`. **Validation**: confirm via CloudTrail (`CreateInstanceProfile` / `TagInstanceProfile` `requestParameters`) that tags are present on the request where this condition applies.
 
 ## Permission Groups and Justifications
 
@@ -139,10 +139,10 @@ The ROSA Karpenter Controller policy follows the established ROSA security patte
 
 **Actions**: `iam:CreateInstanceProfile`, `iam:TagInstanceProfile`
 **Resource**: `arn:aws:iam::*:instance-profile/rosa-service-managed-*`, `arn:aws:iam::*:instance-profile/*-worker`
-**Condition**: None (boundary is ARN scope only; we do not require `aws:RequestTag/red-hat-managed` on these IAM APIs per review).
-**Justification**: Karpenter Controller needs to create and tag new instance profiles for node configurations without depending on the controller sending `red-hat-managed` on the IAM request. This **differs on purpose** from `sts_hcp_installer_permission_policy.json` (including FedRAMP copies), where `CreateInstanceProfile` / `TagInstanceProfile` use `aws:RequestTag/red-hat-managed`: the installer can rely on tags on that API path, but reviewers asked not to require the same for this controller policy—ARN patterns are the boundary here instead of request-tag parity.
+**Condition**: `aws:RequestTag/red-hat-managed: "true"`
+**Justification**: Same pattern as `sts_hcp_installer_permission_policy.json`: new instance profiles must be created/tagged with the ROSA management tag on the **request**. Platform tags from `HostedControlPlane.spec.platform.aws.resourceTags` (including `red-hat-managed`) flow into the guest `EC2NodeClass` and into the provider’s IAM calls when supported. **Operational validation**: use CloudTrail to confirm `requestParameters` include the expected tags on `CreateInstanceProfile` / `TagInstanceProfile` for the controller role.
 
-**Security**: Service boundary enforced through resource ARN restriction to known ROSA / HyperShift worker instance profile name patterns.
+**Security**: Service boundary enforced through resource ARN restriction plus required `red-hat-managed` request tag on create/tag calls (aligned with HCP installer policy).
 
 ### ListInstanceProfiles
 
@@ -181,4 +181,4 @@ ROSA Karpenter Controller operates as a cluster component with the following wor
 6. Handles scaling down and resource cleanup when demand decreases
 7. Responds to interruption events for graceful node replacement
 
-EC2 lifecycle and tagging use `red-hat-managed` (request and/or resource conditions) as the primary service boundary where those statements apply; IAM instance profile create/tag is scoped by **ARN patterns** instead of request tags.
+EC2 lifecycle and tagging use `red-hat-managed` (request and/or resource conditions) as the primary service boundary where those statements apply; IAM instance profile **create/tag** uses **ARN patterns** plus **`aws:RequestTag/red-hat-managed`**, consistent with the HCP installer managed policy.
