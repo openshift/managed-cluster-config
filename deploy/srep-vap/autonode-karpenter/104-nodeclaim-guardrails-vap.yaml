@@ -13,6 +13,7 @@ spec:
   validations:
     # Block tiny instance types (.nano, .micro, .small, .medium) on NodeClaims
     - expression: |
+        !has(object.spec) ||
         !has(object.spec.requirements) ||
         object.spec.requirements
           .filter(r, r.key == 'node.kubernetes.io/instance-type' && r.operator == 'In')

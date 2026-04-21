@@ -13,6 +13,9 @@ spec:
   validations:
     # Block tiny instance types (.nano, .micro, .small, .medium)
     - expression: |
+        !has(object.spec) ||
+        !has(object.spec.template) ||
+        !has(object.spec.template.spec) ||
         !has(object.spec.template.spec.requirements) ||
         object.spec.template.spec.requirements
           .filter(r, r.key == 'node.kubernetes.io/instance-type' && r.operator == 'In')
@@ -22,6 +25,8 @@ spec:
       message: "Instance types ending in .nano, .micro, .small, or .medium are not allowed. Use .large or bigger."
     # Block reserved node-role labels
     - expression: |
+        !has(object.spec) ||
+        !has(object.spec.template) ||
         !has(object.spec.template.metadata) ||
         !has(object.spec.template.metadata.labels) ||
         !('node-role.kubernetes.io/master' in object.spec.template.metadata.labels) &&

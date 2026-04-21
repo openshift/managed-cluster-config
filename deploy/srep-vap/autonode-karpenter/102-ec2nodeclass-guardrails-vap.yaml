@@ -13,6 +13,7 @@ spec:
   validations:
     # Minimum disk size: EBS volumes must be >= 100Gi
     - expression: |
+        !has(object.spec) ||
         !has(object.spec.blockDeviceMappings) ||
         object.spec.blockDeviceMappings.all(bdm,
           !has(bdm.ebs) ||
@@ -22,6 +23,7 @@ spec:
       message: "EBS volume size must be at least 100Gi."
     # Require EBS encryption on all volumes
     - expression: |
+        !has(object.spec) ||
         !has(object.spec.blockDeviceMappings) ||
         object.spec.blockDeviceMappings.all(bdm,
           !has(bdm.ebs) ||
@@ -30,6 +32,7 @@ spec:
       message: "All EBS volumes must have encryption enabled (encrypted: true)."
     # Block reserved tags
     - expression: |
+        !has(object.spec) ||
         !has(object.spec.tags) ||
         object.spec.tags.all(key,
           key != 'red-hat-managed' &&
@@ -39,6 +42,7 @@ spec:
       message: "Tags 'red-hat-managed', 'api.openshift.com/*', and 'kubernetes.io/cluster/*' are reserved and cannot be set."
     # Block public IP association
     - expression: |
+        !has(object.spec) ||
         !has(object.spec.associatePublicIPAddress) ||
         object.spec.associatePublicIPAddress != true
       message: "Public IP address association is not allowed. Set associatePublicIPAddress to false or remove it."
