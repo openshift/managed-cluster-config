@@ -3,13 +3,6 @@ kind: ClusterRole
 metadata:
   name: backplane-srep-admins-cluster
 rules:
-# SRE can manage nodes
-- apiGroups:
-  - ""
-  resources:
-  - nodes
-  verbs:
-  - patch
 # SRE can get node-logs
 - apiGroups:
   - ""
@@ -17,17 +10,14 @@ rules:
   - nodes/proxy
   verbs:
   - get
-# SRE can manage projects
+# SRE can view projects
 - apiGroups:
   - config.openshift.io
   resources:
   - projects
   verbs:
-  - create
   - get
   - list
-  - patch
-  - update
   - watch
 - apiGroups:
   - project.openshift.io
@@ -35,39 +25,24 @@ rules:
   - projects
   - projectrequests
   verbs:
-  - create
   - get
   - list
-  - patch
-  - update
   - watch
-  - delete
-# SRE can manage namespaces
+# SRE can view namespaces
 - apiGroups:
   - ""
   resources:
   - namespaces
   - namespaces/finalize
   verbs:
-  - create
   - get
   - list
-  - patch
-  - update
   - watch
-  - delete
-# SRE can approve Certificate Signing Requests (CSR)
-- apiGroups:
-  - certificates.k8s.io
-  resources:
-  - certificatesigningrequests/approval
-  verbs:
-  - update
-# SRE can get and post to all endpoints
+# SRE can get all endpoints
 - nonResourceURLs:
   - '*'
   verbs:
-  - '*'
+  - get
 #### Start - more perms for srep
 # https://issues.redhat.com/browse/OSD-5537
 # SRE can create authz/n reviews
@@ -124,13 +99,6 @@ rules:
   - get
   - list
   - watch
-# SRE can delete machines
-- apiGroups:
-  - machine.openshift.io
-  resources:
-  - machines
-  verbs:
-  - delete
 # SRE can view api request counts
 - apiGroups:
   - apiserver.openshift.io
@@ -140,7 +108,7 @@ rules:
   - get
   - list
   - watch
-# SRE can view/delete CSR objects
+# SRE can view CSR objects
 - apiGroups:
   - certificates.k8s.io
   resources:
@@ -149,8 +117,7 @@ rules:
   - get
   - list
   - watch
-  - delete
-# SRE can view/delete vpcendpoints
+# SRE can view vpcendpoints
 - apiGroups:
   - avo.openshift.io
   resources:
@@ -159,4 +126,3 @@ rules:
   - get
   - list
   - watch
-  - delete

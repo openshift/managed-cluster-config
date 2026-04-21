@@ -11,18 +11,26 @@ spec:
     - name: sre-slo.rules
       rules:
         - expr: |
-            sre:telemetry:managed_labels
-            * on (sre) group_left(probe_url)
-            bottomk by (sre) (1,
-              label_replace(probe_success{probe_url=~"^https://api.+"}, "sre", "true", "", "")
+            (
+              sre:telemetry:managed_labels
+              * on (sre) group_left(probe_url)
+              bottomk by (sre) (1,
+                label_replace(probe_success{probe_url=~"^https://api.+"}, "sre", "true", "", "")
+              )
             )
+            or on(_id, provider, region, version, sre)
+            (sre:telemetry:managed_labels * -1)
           record: sre:slo:probe_success_api
         - expr: |
-            sre:telemetry:managed_labels
-            * on (sre) group_left(probe_url)
-            bottomk by (sre) (1,
-              label_replace(probe_success{probe_url=~"^https://console.+"}, "sre", "true", "", "")
+            (
+              sre:telemetry:managed_labels
+              * on (sre) group_left(probe_url)
+              bottomk by (sre) (1,
+                label_replace(probe_success{probe_url=~"^https://console.+"}, "sre", "true", "", "")
+              )
             )
+            or on(_id, provider, region, version, sre)
+            (sre:telemetry:managed_labels * -1)
           record: sre:slo:probe_success_console
         - expr: label_replace(sum by (code, method) (imageregistry_http_requests_total), "sre", "true", "", "") * on (sre) group_left(_id,provider,region,version) sre:telemetry:managed_labels
           record: sre:slo:imageregistry_http_requests_total
