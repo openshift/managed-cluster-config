@@ -13,6 +13,8 @@ The ROSA Karpenter Controller policy follows the established ROSA security patte
 - **Resource modification**: Requires existing resource tags for managed resources
 - **Combined operations**: Uses both request and resource tag conditions where appropriate
 
+**Note (request tags on IAM create)**: `aws:RequestTag/red-hat-managed` is evaluated only when the **IAM API request** includes that tag (it is not the same as resource tags already stored on an object). For managed ROSA/HyperShift clusters, tags from `HostedControlPlane.spec.platform.aws` (including `red-hat-managed`) are merged into the guest `EC2NodeClass` and are intended to be passed when the upstream Karpenter AWS provider creates or tags instance profiles. This matches `sts_hcp_installer_permission_policy.json` for `CreateInstanceProfile` / `TagInstanceProfile`. **Validation**: confirm via CloudTrail (`CreateInstanceProfile` / `TagInstanceProfile` `requestParameters`) that tags are present on the request where this condition applies.
+
 ## Permission Groups and Justifications
 
 ### ReadPermissions
@@ -37,19 +39,20 @@ The ROSA Karpenter Controller policy follows the established ROSA security patte
 ### KMSPermissions
 
 **Actions**: `kms:DescribeKey`, `kms:Encrypt`, `kms:Decrypt`, `kms:ReEncrypt*`, `kms:GenerateDataKey*`
-**Resource**: `*`
+**Resource**: `arn:aws:kms:*:*:key/*`
+**Condition**: `aws:ResourceTag/red-hat: "true"`
 **Justification**: Required for EBS volume encryption when customers specify customer-managed KMS keys for node storage encryption. Karpenter Controller needs to encrypt volumes during instance creation and access encrypted volumes for node operations.
 
-**Security**: Standard KMS operations for volume encryption. No administrative permissions like key creation or deletion.
+**Security**: Limited to KMS keys tagged with `red-hat: true`. Standard KMS operations for volume encryption with no administrative permissions like key creation or deletion.
 
 ### KMSGrantPermissions
 
 **Actions**: `kms:CreateGrant`, `kms:ListGrants`, `kms:RevokeGrant`
-**Resource**: `*`
-**Condition**: `kms:GrantIsForAWSResource: "true"`
+**Resource**: `arn:aws:kms:*:*:key/*`
+**Condition**: `Bool` / `kms:GrantIsForAWSResource`: JSON boolean `true`; `StringLike` / `kms:ViaService`: `ec2.*.amazonaws.com`
 **Justification**: Enables Karpenter Controller to create KMS grants for AWS services (like EC2) to use customer-managed keys for EBS volume encryption. Grants allow services to perform cryptographic operations on behalf of the principal.
 
-**Security**: Grant operations are restricted to AWS resources only through the condition, preventing grants to external principals.
+**Security**: Grant operations restricted to KMS keys and limited to AWS resources only through conditions, preventing grants to external principals.
 
 ### CreateEC2Resources
 
@@ -126,29 +129,28 @@ The ROSA Karpenter Controller policy follows the established ROSA security patte
 
 ### ManageInstanceProfiles
 
-**Actions**: `iam:CreateInstanceProfile`, `iam:TagInstanceProfile`, `iam:AddRoleToInstanceProfile`, `iam:RemoveRoleFromInstanceProfile`, `iam:DeleteInstanceProfile`
-**Resource**: `arn:aws:iam::*:instance-profile/*`
+**Actions**: `iam:AddRoleToInstanceProfile`, `iam:RemoveRoleFromInstanceProfile`, `iam:DeleteInstanceProfile`, `iam:GetInstanceProfile`
+**Resource**: `arn:aws:iam::*:instance-profile/rosa-service-managed-*`, `arn:aws:iam::*:instance-profile/*-worker`
+**Justification**: Karpenter Controller needs to attach, detach, and remove roles on existing instance profiles and read profile metadata for node provisioning. These operations are scoped by **resource ARN** (no request-tag condition): the profile must already exist and match the allowed name patterns. `rosa-service-managed-*` matches the HCP installer instance profile pattern; `*-worker` covers HyperShift worker-style profile names used in this flow.
+
+**Security**: Service boundary enforced through resource ARN restriction. Only instance profiles matching these naming patterns can be read or modified.
+
+### CreateInstanceProfiles
+
+**Actions**: `iam:CreateInstanceProfile`, `iam:TagInstanceProfile`
+**Resource**: `arn:aws:iam::*:instance-profile/rosa-service-managed-*`, `arn:aws:iam::*:instance-profile/*-worker`
 **Condition**: `aws:RequestTag/red-hat-managed: "true"`
-**Justification**: Karpenter Controller needs to create and manage instance profiles dynamically for different node configurations and scaling scenarios.
+**Justification**: Same pattern as `sts_hcp_installer_permission_policy.json`: new instance profiles must be created/tagged with the ROSA management tag on the **request**. Platform tags from `HostedControlPlane.spec.platform.aws.resourceTags` (including `red-hat-managed`) flow into the guest `EC2NodeClass` and into the provider’s IAM calls when supported. **Operational validation**: use CloudTrail to confirm `requestParameters` include the expected tags on `CreateInstanceProfile` / `TagInstanceProfile` for the controller role.
 
-**Security**: Service boundary enforced through required ROSA management tag on new instance profiles.
+**Security**: Service boundary enforced through resource ARN restriction plus required `red-hat-managed` request tag on create/tag calls (aligned with HCP installer policy).
 
-### ManageInstanceProfilesExisting
+### ListInstanceProfiles
 
-**Actions**: `iam:TagInstanceProfile`, `iam:AddRoleToInstanceProfile`, `iam:RemoveRoleFromInstanceProfile`, `iam:DeleteInstanceProfile`
-**Resource**: `arn:aws:iam::*:instance-profile/*`
-**Condition**: `aws:ResourceTag/red-hat-managed: "true"`
-**Justification**: Management operations on existing ROSA-managed instance profiles for role updates and cleanup.
-
-**Security**: Limited to existing ROSA-managed instance profiles through resource tag condition.
-
-### ReadInstanceProfiles
-
-**Actions**: `iam:GetInstanceProfile`, `iam:ListInstanceProfiles`
+**Actions**: `iam:ListInstanceProfiles`
 **Resource**: `*`
-**Justification**: Required to validate instance profile configurations and discover existing profiles for reuse.
+**Justification**: Required to discover existing instance profiles for reuse and validation.
 
-**Security**: Read-only operations pose minimal security risk.
+**Security**: Read-only list operation poses minimal security risk.
 
 ### InterruptionQueueActions
 
@@ -179,4 +181,4 @@ ROSA Karpenter Controller operates as a cluster component with the following wor
 6. Handles scaling down and resource cleanup when demand decreases
 7. Responds to interruption events for graceful node replacement
 
-All operations maintain the `red-hat-managed: "true"` tag as the primary service boundary, ensuring clear separation between ROSA-managed and customer-owned infrastructure.
+EC2 lifecycle and tagging use `red-hat-managed` (request and/or resource conditions) as the primary service boundary where those statements apply; IAM instance profile **create/tag** uses **ARN patterns** plus **`aws:RequestTag/red-hat-managed`**, consistent with the HCP installer managed policy.
