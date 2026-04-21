@@ -224,28 +224,39 @@ spec:
     # CRITICAL: A specific HCP cluster has stopped producing logs
     # Detects per-cluster ingestion failure by comparing current rate to 15m ago
     # Only fires if the cluster was actively producing logs (>10 events/sec) 15 minutes ago
-    # and has now dropped to zero
+    # and has now dropped to zero AND the HCP namespace still exists
+    # The namespace existence check (via label_replace to match pod_namespace to namespace)
+    # prevents false alerts during intentional cluster teardowns
     # We own the HCP control plane, so cluster-specific collection failures are our responsibility
     # Possible causes: HCP pods crashed, node hosting the cluster went down, RBAC change
     # TEMPORARILY WARNING: Set to warning for initial validation
     - alert: VectorClusterIngestionFailureSRE
       expr: |
         (
-          sum by (pod_namespace) (
-            rate(vector_component_received_events_total{
-              component_id="kubernetes_logs",
-              namespace="hypershift-control-plane-log-forwarding"
-            }[5m]) offset 15m
-          ) > 10
+          (
+            sum by (pod_namespace) (
+              rate(vector_component_received_events_total{
+                component_id="kubernetes_logs",
+                namespace="hypershift-control-plane-log-forwarding"
+              }[5m]) offset 15m
+            ) > 10
+          )
+          unless
+          (
+            sum by (pod_namespace) (
+              rate(vector_component_received_events_total{
+                component_id="kubernetes_logs",
+                namespace="hypershift-control-plane-log-forwarding"
+              }[5m])
+            ) > 0
+          )
         )
-        unless
+        and on(pod_namespace)
         (
-          sum by (pod_namespace) (
-            rate(vector_component_received_events_total{
-              component_id="kubernetes_logs",
-              namespace="hypershift-control-plane-log-forwarding"
-            }[5m])
-          ) > 0
+          label_replace(
+            kube_namespace_labels{label_hypershift_openshift_io_hosted_control_plane="true"},
+            "pod_namespace", "$1", "namespace", "(.*)"
+          )
         )
       for: 5m
       labels:
@@ -370,7 +381,7 @@ spec:
         namespace: openshift-monitoring
       annotations:
         summary: "HCP cluster {{ $labels.pod_namespace }} pipeline below 99% with active transform errors"
-        description: "Cluster {{ $labels.pod_namespace }} pipeline ratio: {{ $value | humanizePercentage }} while VRL transform errors are occurring. Logs are being dropped or corrupted in the transform pipeline."
+        description: "Cluster {{ $labels.pod_namespace }} pipeline ratio: {{ $value | humanizePercentage }}. VRL transform errors are occurring on this MC. Transforms are MC-wide — all clusters on this MC are affected."
         SOP: https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/VectorClusterPipelineEBBFastSRE.md
 
     # WARNING: Per-cluster pipeline error budget burn - slow detection
@@ -392,7 +403,7 @@ spec:
         namespace: openshift-monitoring
       annotations:
         summary: "HCP cluster {{ $labels.pod_namespace }} pipeline below 99% with transform errors for 3h"
-        description: "Cluster {{ $labels.pod_namespace }} pipeline ratio: {{ $value | humanizePercentage }}. Sustained transform errors for 3 hours."
+        description: "Cluster {{ $labels.pod_namespace }} pipeline ratio: {{ $value | humanizePercentage }}. Sustained VRL transform errors on this MC for 3 hours. Transforms are MC-wide — all clusters on this MC are affected."
         SOP: https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/VectorClusterPipelineEBBSlowSRE.md
 
     # WARNING: Per-pod S3 delivery error budget burn
