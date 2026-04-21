@@ -334,6 +334,110 @@ spec:
     # WARNING ALERTS - Investigation needed but not immediately critical
     # ============================================================================
 
+    # CRITICAL: Per-cluster pipeline error budget burn - fast detection
+    # Combined condition: pipeline ratio below 99% AND VRL transform errors exist
+    #
+    # Why combined? The pipeline ratio alone produces false positives due to measurement timing:
+    # - The ratio compares two metrics (vector_hcp_logs_events_total vs kubernetes_logs received)
+    #   sampled at different pipeline stages within the same 5m rate window
+    # - Low-volume clusters (50-100 events/sec) routinely show 93-98% ratio with zero actual loss
+    # - Validated: 8-9 clusters in int consistently sit at 95-98% with zero transform errors
+    #   and zero discarded events — the gap is measurement noise, not log loss
+    #
+    # The transform errors condition gates on real VRL failures. When a VRL script encounters
+    # a log format it can't handle, vector_component_errors_total increments. Even 1 error/sec
+    # on a 76 events/sec cluster pushes the ratio below 99%.
+    #
+    # The errors condition uses on() (empty label match) because transforms are MC-wide —
+    # there is no per-cluster transform config. If any transform is erroring, all clusters
+    # on the MC are affected.
+    #
+    # We own the HCP control plane — transform failures are our VRL bug to fix
+    # Possible causes: VRL script bug, unexpected log format from HCP component update
+    # TEMPORARILY WARNING: Set to warning for initial validation
+    - alert: VectorClusterPipelineEBBFastSRE
+      expr: |
+        (vector:log_delivery:pipeline_ratio:by_cluster < 0.99)
+        and on()
+        (
+          sum(rate(vector_component_errors_total{
+            component_id=~"enrich_metadata|parse_json_logs|parse_plain_text_timestamps"
+          }[5m])) > 0
+        )
+      for: 15m
+      labels:
+        severity: warning
+        namespace: openshift-monitoring
+      annotations:
+        summary: "HCP cluster {{ $labels.pod_namespace }} pipeline below 99% with active transform errors"
+        description: "Cluster {{ $labels.pod_namespace }} pipeline ratio: {{ $value | humanizePercentage }} while VRL transform errors are occurring. Logs are being dropped or corrupted in the transform pipeline."
+        SOP: https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/VectorClusterPipelineEBBFastSRE.md
+
+    # WARNING: Per-cluster pipeline error budget burn - slow detection
+    # Same combined condition as fast burn but with longer duration
+    # Catches sustained low-rate transform errors that the fast burn's 15m window might miss
+    # if errors are intermittent but persistent over hours
+    - alert: VectorClusterPipelineEBBSlowSRE
+      expr: |
+        (vector:log_delivery:pipeline_ratio:by_cluster < 0.99)
+        and on()
+        (
+          sum(rate(vector_component_errors_total{
+            component_id=~"enrich_metadata|parse_json_logs|parse_plain_text_timestamps"
+          }[5m])) > 0
+        )
+      for: 3h
+      labels:
+        severity: warning
+        namespace: openshift-monitoring
+      annotations:
+        summary: "HCP cluster {{ $labels.pod_namespace }} pipeline below 99% with transform errors for 3h"
+        description: "Cluster {{ $labels.pod_namespace }} pipeline ratio: {{ $value | humanizePercentage }}. Sustained transform errors for 3 hours."
+        SOP: https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/VectorClusterPipelineEBBSlowSRE.md
+
+    # WARNING: Per-pod S3 delivery error budget burn
+    # Combined condition: write ratio below 99% AND buffer actively growing AND buffer above 10MB
+    #
+    # Why combined? The write ratio alone produces false positives due to Vector's batch behavior:
+    # - Vector accumulates events for up to 60s (batch timeout), then flushes to S3 in a burst
+    # - During accumulation, sent rate drops while received stays constant, creating ratio dips
+    # - A pod can show 77% write ratio at any instant but have empty buffers and 100% delivery
+    # - The buffer conditions confirm actual delivery degradation, not just batching variance
+    #
+    # Why 99%? The buffer growth condition does the heavy lifting for precision. At 99% with
+    # buffer >10MB and growing, only pods with genuinely stuck/growing buffers match. Pods with
+    # normal batching oscillation (200MB bouncing up and down) won't sustain the condition for 1h.
+    # Validated against int (750m CPU, healthy) and stage (300m CPU, throttled):
+    # - Int: 0-1 pods match instant query, none sustain for 1h
+    # - Stage: 8-13 match instant query, only pods with full buffers (9.8GB) sustain
+    #
+    # The buffer >10MB filter excludes pods with tiny/empty buffers where the ratio dip is harmless
+    # The deriv >0 over 30m confirms the buffer is actively growing, not just sitting with residual data
+    # The for: 1h duration ensures this is sustained, not a transient burst
+    #
+    # No separate slow burn variant — VectorBufferNearCapacitySRE (buffer >7GB, for 10m) serves as
+    # the natural escalation. If the delivery EBB fires at 10MB+ buffer growing and the problem
+    # persists, the buffer capacity alert fires when it hits 7GB. Together they form the progression:
+    # delivery degradation detected (this alert) → buffer filling (VectorBufferNearCapacitySRE)
+    #
+    # S3 delivery failures affect all clusters on the pod equally (same sink, same IAM, same bucket)
+    # Possible causes: S3 throttling, IAM issues, CPU throttling, network issues
+    - alert: VectorS3DeliveryEBBSRE
+      expr: |
+        (vector:logs:write_ratio:by_pod < 0.99)
+        and on(pod)
+        (deriv(vector_buffer_byte_size{buffer_id="hcp_logs"}[30m]) > 0)
+        and on(pod)
+        (vector_buffer_byte_size{buffer_id="hcp_logs"} > 10485760)
+      for: 1h
+      labels:
+        severity: warning
+        namespace: openshift-monitoring
+      annotations:
+        summary: "Vector pod {{ $labels.pod }} S3 delivery below 99% with growing buffer for 1h"
+        description: "Pod {{ $labels.pod }} S3 delivery ratio: {{ $value | humanizePercentage }} with buffer actively growing above 10MB. S3 sink cannot keep up with ingestion. Check CPU throttling, S3 errors, and buffer size."
+        SOP: https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/VectorS3DeliveryEBBSRE.md
+
     # WARNING: Disk buffer is >70% full (7GB of 10GB)
     # Buffer filling indicates S3 writes are slower than log ingestion
     # If buffer reaches 100%, Vector will BLOCK log collection (when_full: block)
