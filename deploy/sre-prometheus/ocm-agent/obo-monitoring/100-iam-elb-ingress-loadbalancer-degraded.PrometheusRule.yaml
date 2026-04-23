@@ -1,0 +1,51 @@
+---
+apiVersion: monitoring.rhobs/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: iam-elb-ingress-loadbalancer-degraded
+    role: alert-rules
+  name: iam-elb-ingress-loadbalancer-degraded
+  namespace: openshift-observability-rhobs
+spec:
+  groups:
+    - name: IAMELBIngressLoadBalancerDegraded
+      interval: 60s
+      rules:
+        - alert: IngressLoadBalancerProvisioningFailedNotification
+          annotations:
+            description: >-
+              Ingress for cluster {{ $labels._id }} has been degraded for more than 30 minutes.
+              The default IngressController LoadBalancer has not been provisioned (LoadBalancerReady=False,
+              reason=LoadBalancerPending), which typically indicates missing or insufficient AWS IAM
+              permissions for ELB management.
+            summary: "Ingress LoadBalancer provisioning failed — possible IAM ELB permission issue"
+          expr: |-
+            (
+              max by (exported_namespace, _id, namespace) (
+                cluster_operator_conditions{
+                  name="ingress",
+                  condition="Degraded",
+                  reason="IngressDegraded",
+                  status="True"
+                }
+              ) == 1
+            )
+            and on (exported_namespace) max by (exported_namespace, _id, namespace) (
+              cluster_operator_conditions{
+                name="ingress",
+                condition="LoadBalancerReady",
+                reason="LoadBalancerPending",
+                status="False"
+              }
+            ) == 1
+            unless on (exported_namespace) (
+              hypershift_cluster_waiting_initial_avaibility_duration_seconds
+              or hypershift_cluster_deleting_duration_seconds
+            )
+          for: 30m
+          labels:
+            severity: warning
+            send_managed_notification: "true"
+            managed_notification_template: ingress-loadbalancer-provisioning-failed
+            namespace: "{{ $labels.namespace }}"
