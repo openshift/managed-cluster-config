@@ -5,17 +5,14 @@ metadata:
   labels:
     managed.openshift.io/aggregate-to-lpsre-admins: "cluster"
 rules:
-# LP SRE can manage projects
+# LP SRE can view projects
 - apiGroups:
   - config.openshift.io
   resources:
   - projects
   verbs:
-  - create
   - get
   - list
-  - patch
-  - update
   - watch
 # LP SRE can get infrastructure details (cluster)
 - apiGroups:
@@ -25,17 +22,14 @@ rules:
   - oauths
   verbs:
   - 'get'
-# LP SRE can manage namespaces / projects
+# LP SRE can view namespaces / projects
 - apiGroups:
   - project.openshift.io
   resources:
   - projects
   verbs:
-  - create
   - get
   - list
-  - patch
-  - update
   - watch
 - apiGroups:
   - ""
@@ -43,22 +37,17 @@ rules:
   - namespaces
   - namespaces/finalize
   verbs:
-  - create
   - get
   - list
-  - patch
-  - update
   - watch
-# LP SRE can update existing groups (enables break glass)
+# LP SRE can view existing groups
 - apiGroups:
   - user.openshift.io
   resources:
   - groups
   verbs:
-  - patch
-  - update
   - get
-# LP SRE manage the following list of apigroups
+# LP SRE can view the following list of apigroups
 - apiGroups:
   - "apiextensions.k8s.io"
   - "applicationmonitoring.integreatly.org"
@@ -69,9 +58,6 @@ rules:
   resources:
   - '*'
   verbs:
-  - create
   - get
-  - list 
-  - patch 
-  - update 
+  - list
   - watch
