@@ -50,9 +50,9 @@ spec:
                                     object.spec.template.spec.requirements
                                       .filter(r, r.key == 'node.kubernetes.io/instance-type' && r.operator == 'In')
                                       .all(r, r.values.all(v,
-                                        !v.matches('\\.(nano|micro|small|medium)$')
+                                        !v.matches('\\.(nano|micro|small|medium|large)$')
                                       ))
-                                  message: Instance types ending in .nano, .micro, .small, or .medium are not allowed. Use .large or bigger.
+                                  message: Instance types ending in .nano, .micro, .small, .medium, or .large are not allowed. Use .xlarge or bigger.
                                 - expression: |
                                     !has(object.spec) ||
                                     !has(object.spec.template) ||
@@ -163,9 +163,9 @@ spec:
                                     object.spec.requirements
                                       .filter(r, r.key == 'node.kubernetes.io/instance-type' && r.operator == 'In')
                                       .all(r, r.values.all(v,
-                                        !v.matches('\\.(nano|micro|small|medium)$')
+                                        !v.matches('\\.(nano|micro|small|medium|large)$')
                                       ))
-                                  message: Instance types ending in .nano, .micro, .small, or .medium are not supported for OpenShift nodes.
+                                  message: Instance types ending in .nano, .micro, .small, .medium, or .large are not supported for OpenShift nodes.
                     - complianceType: mustonlyhave
                       metadataComplianceType: musthave
                       objectDefinition:

@@ -11,7 +11,7 @@ spec:
         operations: ["CREATE", "UPDATE"]
         resources: ["nodepools"]
   validations:
-    # Block tiny instance types (.nano, .micro, .small, .medium)
+    # Block undersized instance types (.nano, .micro, .small, .medium, .large)
     - expression: |
         !has(object.spec) ||
         !has(object.spec.template) ||
@@ -20,9 +20,9 @@ spec:
         object.spec.template.spec.requirements
           .filter(r, r.key == 'node.kubernetes.io/instance-type' && r.operator == 'In')
           .all(r, r.values.all(v,
-            !v.matches('\\.(nano|micro|small|medium)$')
+            !v.matches('\\.(nano|micro|small|medium|large)$')
           ))
-      message: "Instance types ending in .nano, .micro, .small, or .medium are not allowed. Use .large or bigger."
+      message: "Instance types ending in .nano, .micro, .small, .medium, or .large are not allowed. Use .xlarge or bigger."
     # Block reserved node-role labels
     - expression: |
         !has(object.spec) ||
