@@ -17,13 +17,13 @@ spec:
             # ensure value of 1 to use as bool against other metrics
             sum by (_id, provider, region, version, sre)
             (
-            label_replace(cluster_id, "sre", "true", "", "")
+            max by (sre, _id) (label_replace(cluster_id, "sre", "true", "", ""))
             * on (sre) group_left(provider, region, version)
-            (
+            max by (sre, version) (
             label_replace(cluster_version{type="current"}, "sre", "true", "", "")
             )
             * on (sre) group_left(provider, region)
-            label_replace(sum without (type) (label_replace(cluster_infrastructure_provider, "provider", "$1", "type", "(.*)")), "sre", "true", "", "")
+            max by (sre, provider, region) (label_replace(sum without (type) (label_replace(cluster_infrastructure_provider, "provider", "$1", "type", "(.*)")), "sre", "true", "", ""))
             ) > bool 0
             # sre:telemetry:managed_labels{_id="not-a-real-cluster-id", provider="AWS", region="ap-southeast-2", sre="true", version="4.10.18"} => 1654679854 @[1655873133.121]
           record:
