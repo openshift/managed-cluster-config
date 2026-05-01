@@ -47112,7 +47112,7 @@ objects:
               "version", ".*") * on () group_right (_id, cluster_version, provider)
               sum by (exported_namespace, name, version, channel, package) ( label_replace(csv_succeeded,
               "name", "$1", "name", "([^.]+).*") ^ on (name) group_left (channel,
-              package) subscription_sync_total{name=~"addon-operator|aws-vpce-operator|custom-domains-operator|managed-node-metadata-operator|managed-upgrade-operator|must-gather-operator|ocm-agent-operator|osd-metrics-exporter|rbac-permissions-operator|openshift-splunk-forwarder-operator|aws-account-operator|certman-operator|cloud-ingress-operator|configure-alertmanager-operator|deadmanssnitch-operator|deployment-validation-operator|dynatrace-operator|gcp-project-operator|managed-velero-operator|observability-operator|opentelemetry-operator|pagerduty-operator|route-monitor-operator"}
+              package) max by (name, channel, package) (subscription_sync_total{name=~"addon-operator|aws-vpce-operator|custom-domains-operator|managed-node-metadata-operator|managed-upgrade-operator|must-gather-operator|ocm-agent-operator|osd-metrics-exporter|rbac-permissions-operator|openshift-splunk-forwarder-operator|aws-account-operator|certman-operator|cloud-ingress-operator|configure-alertmanager-operator|deadmanssnitch-operator|deployment-validation-operator|dynatrace-operator|gcp-project-operator|managed-velero-operator|observability-operator|opentelemetry-operator|pagerduty-operator|route-monitor-operator"})
               )
             record: sre:operators:succeeded:olm
           - expr: label_replace(sre:telemetry:managed_labels, "cluster_version", "$0",
@@ -47214,12 +47214,13 @@ objects:
         groups:
         - name: sre-telemetry-managed-labels.rules
           rules:
-          - expr: sum by (_id, provider, region, version, sre) ( label_replace(cluster_id,
-              "sre", "true", "", "") * on (sre) group_left(provider, region, version)
-              ( label_replace(cluster_version{type="current"}, "sre", "true", "",
-              "") ) * on (sre) group_left(provider, region) label_replace(sum without
-              (type) (label_replace(cluster_infrastructure_provider, "provider", "$1",
-              "type", "(.*)")), "sre", "true", "", "") ) > bool 0
+          - expr: sum by (_id, provider, region, version, sre) ( max by (sre, _id)
+              (label_replace(cluster_id, "sre", "true", "", "")) * on (sre) group_left(provider,
+              region, version) max by (sre, version) ( label_replace(cluster_version{type="current"},
+              "sre", "true", "", "") ) * on (sre) group_left(provider, region) max
+              by (sre, provider, region) (label_replace(sum without (type) (label_replace(cluster_infrastructure_provider,
+              "provider", "$1", "type", "(.*)")), "sre", "true", "", "")) ) > bool
+              0
             record: sre:telemetry:managed_labels
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
