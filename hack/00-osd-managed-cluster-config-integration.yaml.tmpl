@@ -31350,6 +31350,52 @@ objects:
     - apiVersion: ocmagent.managed.openshift.io/v1alpha1
       kind: ManagedFleetNotification
       metadata:
+        name: ingress-loadbalancer-provisioning-failed
+        namespace: openshift-ocm-agent-operator
+      spec:
+        fleetNotification:
+          name: ingress-loadbalancer-provisioning-failed
+          summary: Action Required - Ingress LoadBalancer cannot be provisioned due
+            to IAM permission issues
+          notificationMessage: 'Your ROSA HyperShift cluster''s ingress LoadBalancer
+            has failed to provision for more than 30 minutes. This prevents external
+            traffic from reaching your cluster and is likely caused by missing or
+            insufficient AWS IAM permissions for Elastic Load Balancing (ELB).
+
+
+            Common causes include:
+
+            - Missing IAM permissions for ELB management (e.g., elasticloadbalancing:CreateLoadBalancer,
+            elasticloadbalancing:DescribeLoadBalancers)
+
+            - Service-linked role for ELB not created in your AWS account
+
+            - VPC or subnet configuration preventing LoadBalancer provisioning
+
+
+            To resolve this issue:
+
+            1. Review the IAM permissions attached to your cluster''s worker node
+            role and ensure ELB permissions are present.
+
+            2. Verify the AWS service-linked role for ELB exists: aws iam get-role
+            --role-name AWSServiceRoleForElasticLoadBalancing
+
+            3. If the role is missing, create it: aws iam create-service-linked-role
+            --aws-service-name elasticloadbalancing.amazonaws.com
+
+
+            For detailed troubleshooting steps and required IAM policies, please refer
+            to: https://docs.openshift.com/rosa/rosa_architecture/rosa-sts-about-iam-resources.html
+
+
+            If you need assistance, please open a support case.'
+          resendWait: 24
+          severity: Warning
+          limitedSupport: false
+    - apiVersion: ocmagent.managed.openshift.io/v1alpha1
+      kind: ManagedFleetNotification
+      metadata:
         name: nodepool-provisioning-failure
         namespace: openshift-ocm-agent-operator
       spec:
@@ -49218,6 +49264,42 @@ objects:
               severity: info
               send_managed_notification: 'true'
               managed_notification_template: audit-webhook-error-putting-minimized-cloudwatch-log
+              namespace: '{{ $labels.namespace }}'
+    - apiVersion: monitoring.rhobs/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
+          prometheus: iam-elb-ingress-loadbalancer-degraded
+          role: alert-rules
+        name: iam-elb-ingress-loadbalancer-degraded
+        namespace: openshift-observability-rhobs
+      spec:
+        groups:
+        - name: IAMELBIngressLoadBalancerDegraded
+          interval: 60s
+          rules:
+          - alert: IngressLoadBalancerProvisioningFailedNotification
+            annotations:
+              description: Ingress for cluster {{ $labels._id }} has been degraded
+                for more than 30 minutes. The default IngressController LoadBalancer
+                has not been provisioned (LoadBalancerReady=False, reason=LoadBalancerPending),
+                which typically indicates missing or insufficient AWS IAM permissions
+                for ELB management.
+              summary: "Ingress LoadBalancer provisioning failed \u2014 possible IAM\
+                \ ELB permission issue"
+            expr: "(\n  max by (exported_namespace, _id, namespace) (\n    cluster_operator_conditions{\n\
+              \      name=\"ingress\",\n      condition=\"Degraded\",\n      reason=\"\
+              IngressDegraded\",\n      status=\"True\"\n    }\n  ) == 1\n)\nand on\
+              \ (exported_namespace) max by (exported_namespace, _id, namespace) (\n\
+              \  cluster_operator_conditions{\n    name=\"ingress\",\n    condition=\"\
+              LoadBalancerReady\",\n    reason=\"LoadBalancerPending\",\n    status=\"\
+              False\"\n  }\n) == 1\nunless on (exported_namespace) (\n  hypershift_cluster_waiting_initial_avaibility_duration_seconds\n\
+              \  or hypershift_cluster_deleting_duration_seconds\n)"
+            for: 30m
+            labels:
+              severity: warning
+              send_managed_notification: 'true'
+              managed_notification_template: ingress-loadbalancer-provisioning-failed
               namespace: '{{ $labels.namespace }}'
     - apiVersion: monitoring.rhobs/v1
       kind: PrometheusRule
