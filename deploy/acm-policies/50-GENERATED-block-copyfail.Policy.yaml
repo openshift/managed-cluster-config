@@ -1,0 +1,131 @@
+---
+apiVersion: policy.open-cluster-management.io/v1
+kind: Policy
+metadata:
+    annotations:
+        policy.open-cluster-management.io/categories: CM Configuration Management
+        policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+        policy.open-cluster-management.io/standards: NIST SP 800-53
+    name: block-copyfail
+    namespace: openshift-acm-policies
+spec:
+    disabled: false
+    policy-templates:
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+                name: block-copyfail
+            spec:
+                evaluationInterval:
+                    compliant: 2h
+                    noncompliant: 45s
+                object-templates:
+                    - complianceType: musthave
+                      metadataComplianceType: musthave
+                      objectDefinition:
+                        apiVersion: v1
+                        kind: Namespace
+                        metadata:
+                            labels:
+                                pod-security.kubernetes.io/audit: privileged
+                                pod-security.kubernetes.io/enforce: privileged
+                                pod-security.kubernetes.io/warn: privileged
+                            name: block-copyfail
+                    - complianceType: musthave
+                      metadataComplianceType: musthave
+                      objectDefinition:
+                        apiVersion: rbac.authorization.k8s.io/v1
+                        kind: RoleBinding
+                        metadata:
+                            name: system:openshift:scc:privileged
+                            namespace: block-copyfail
+                        roleRef:
+                            apiGroup: rbac.authorization.k8s.io
+                            kind: ClusterRole
+                            name: system:openshift:scc:privileged
+                        subjects:
+                            - kind: ServiceAccount
+                              name: default
+                              namespace: block-copyfail
+                    - complianceType: musthave
+                      metadataComplianceType: musthave
+                      objectDefinition:
+                        apiVersion: apps/v1
+                        kind: DaemonSet
+                        metadata:
+                            labels:
+                                app: block-copyfail
+                            name: block-copyfail
+                            namespace: block-copyfail
+                        spec:
+                            selector:
+                                matchLabels:
+                                    app: block-copyfail
+                            template:
+                                metadata:
+                                    labels:
+                                        app: block-copyfail
+                                spec:
+                                    containers:
+                                        - image: quay.io/openshift/block-copyfail@sha256:bbf0b19bfb63d79bab6adc47cae70f15c62f83a4a6bcc6f41509656cf0dae52f
+                                          name: blocker
+                                          resources:
+                                            limits:
+                                                cpu: 100m
+                                                memory: 64Mi
+                                            requests:
+                                                cpu: 10m
+                                                memory: 32Mi
+                                          securityContext:
+                                            privileged: true
+                                          volumeMounts:
+                                            - mountPath: /sys/fs/bpf
+                                              name: bpf
+                                            - mountPath: /sys/kernel/btf/vmlinux
+                                              name: btf
+                                              readOnly: true
+                                    priorityClassName: system-node-critical
+                                    terminationGracePeriodSeconds: 5
+                                    tolerations:
+                                        - operator: Exists
+                                    volumes:
+                                        - hostPath:
+                                            path: /sys/fs/bpf
+                                            type: DirectoryOrCreate
+                                          name: bpf
+                                        - hostPath:
+                                            path: /sys/kernel/btf/vmlinux
+                                            type: File
+                                          name: btf
+                pruneObjectBehavior: DeleteIfCreated
+                remediationAction: enforce
+                severity: low
+    remediationAction: enforce
+---
+apiVersion: apps.open-cluster-management.io/v1
+kind: PlacementRule
+metadata:
+    name: placement-block-copyfail
+    namespace: openshift-acm-policies
+spec:
+    clusterSelector:
+        matchExpressions:
+            - key: hypershift.open-cluster-management.io/hosted-cluster
+              operator: In
+              values:
+                - "true"
+---
+apiVersion: policy.open-cluster-management.io/v1
+kind: PlacementBinding
+metadata:
+    name: binding-block-copyfail
+    namespace: openshift-acm-policies
+placementRef:
+    apiGroup: apps.open-cluster-management.io
+    kind: PlacementRule
+    name: placement-block-copyfail
+subjects:
+    - apiGroup: policy.open-cluster-management.io
+      kind: Policy
+      name: block-copyfail
