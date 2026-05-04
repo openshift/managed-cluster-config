@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: block-copyfail
+  namespace: block-copyfail
+  labels:
+    app: block-copyfail
+spec:
+  selector:
+    matchLabels:
+      app: block-copyfail
+  template:
+    metadata:
+      labels:
+        app: block-copyfail
+    spec:
+      priorityClassName: system-node-critical
+      tolerations:
+      - operator: Exists
+      containers:
+      - name: blocker
+        image: quay.io/openshift/block-copyfail@sha256:bbf0b19bfb63d79bab6adc47cae70f15c62f83a4a6bcc6f41509656cf0dae52f
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - name: bpf
+          mountPath: /sys/fs/bpf
+        - name: btf
+          mountPath: /sys/kernel/btf/vmlinux
+          readOnly: true
+        resources:
+          requests:
+            cpu: 10m
+            memory: 32Mi
+          limits:
+            cpu: 100m
+            memory: 64Mi
+      volumes:
+      - name: bpf
+        hostPath:
+          path: /sys/fs/bpf
+          type: DirectoryOrCreate
+      - name: btf
+        hostPath:
+          path: /sys/kernel/btf/vmlinux
+          type: File
+      terminationGracePeriodSeconds: 5

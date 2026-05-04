@@ -17,6 +17,7 @@ directories = [
         'backplane/cee',
         'backplane/cse',
         'backplane/csm',
+        'block-copyfail',
         'hosted-uwm',
         'backplane/elevated-sre',
         'backplane/lpsre',
