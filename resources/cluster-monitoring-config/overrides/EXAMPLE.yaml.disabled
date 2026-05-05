@@ -1,0 +1,46 @@
+# Example CMO config override file.
+#
+# Copy this file, remove the .disabled suffix, and customize.
+# The script generate-cmo-config.py will pick up all *.yaml files
+# in this directory and generate:
+#   1. A deploy subdirectory with the override ConfigMap
+#   2. A config.yaml with the In selector targeting these clusters/orgs
+#   3. NotIn exclusions on all default config.yaml files
+#
+# Override files support deep-merging into the base monitoring config.
+# Only the fields you specify will be overridden; everything else is
+# inherited from the base config.
+
+# Unique name for this override (becomes the subdirectory name)
+name: example-override
+
+# Which deploy trees this override applies to.
+# "uwm" = cluster-monitoring-config (UWM enabled clusters)
+# "non-uwm" = cluster-monitoring-config-non-uwm
+# "both" = generates overrides in both trees
+# "fedramp" = osd-fedramp-cluster-monitoring-config
+appliesTo: uwm
+
+# Targeting: how to select clusters for this override
+target:
+  # type: "cluster" uses api.openshift.com/id
+  # type: "organization" uses api.openshift.com/legal-entity-id
+  type: organization
+
+  # Values can be a list of literal IDs or a template parameter reference.
+  # Template parameter: use ${{PARAM_NAME}} syntax -- must be registered
+  # in scripts/templates/template.yaml.
+  # Literal list: ["org-123", "org-456"]
+  values: "${{CMO_EXAMPLE_ORG_IDS}}"
+
+# Config overrides -- deep-merged onto the base monitoring config.
+# Only specify fields you want to change.
+configOverrides:
+  prometheusK8s:
+    retention: 30d
+    retentionSize: 200GB
+    volumeClaimTemplate:
+      spec:
+        resources:
+          requests:
+            storage: 500Gi
