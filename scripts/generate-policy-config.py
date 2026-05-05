@@ -14,6 +14,7 @@ base_directory = "./deploy/"
 directories = [
         'backplane',
         'backplane/acs',
+        'backplane/ai-agent',
         'backplane/cee',
         'backplane/cse',
         'backplane/csm',
