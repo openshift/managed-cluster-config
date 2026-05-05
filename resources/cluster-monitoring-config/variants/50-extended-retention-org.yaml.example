@@ -1,0 +1,34 @@
+# Extended monitoring retention for a specific organization.
+#
+# Some organizations may require longer Prometheus retention or larger
+# storage volumes due to compliance, debugging, or capacity planning needs.
+#
+# To activate:
+#   1. Copy this file without the .example suffix.
+#   2. Replace the organization IDs and adjust values as needed.
+#   3. Register the template parameter in scripts/templates/template.yaml
+#      (or use a literal list of IDs instead).
+#   4. Run: uv run scripts/generate-cmo-config.py
+#
+# The targeted clusters will receive only this config; they are automatically
+# excluded from the parent variant's SelectorSyncSet via a NotIn expression.
+
+# The parent variant this override specializes — must match a deployDir value.
+parent: cluster-monitoring-config
+
+# Which clusters receive this override.
+target:
+  type: organization  # uses label api.openshift.com/legal-entity-id
+  values: "${{CMO_EXTENDED_RETENTION_ORG_IDS}}"
+
+# Only the fields listed here are changed; everything else is inherited
+# from the parent variant (UWM-enabled 4.16+ defaults).
+configOverrides:
+  prometheusK8s:
+    retention: 30d
+    retentionSize: 200GB
+    volumeClaimTemplate:
+      spec:
+        resources:
+          requests:
+            storage: 500Gi
