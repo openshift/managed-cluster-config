@@ -8,10 +8,10 @@ its config transformations (what monitoring config those clusters get).
 There are two kinds of variants:
   - Base variants: have a "selector" field. They define the default config for a
     class of clusters (e.g. UWM 4.16+, non-UWM pre-4.11, FedRAMP).
-  - Override variants: have a "parent" and "target" field. They specialize a base
-    variant for specific clusters or organizations. The script automatically adds
-    a NotIn exclusion on the parent's selector so targeted clusters don't receive
-    two conflicting configs.
+  - Override variants: have a "parent" and "matchExpressions" field. They specialize
+    a base variant for specific clusters. The matchExpressions are appended to the
+    parent's selector (as In filters) and auto-negated on the parent (as NotIn
+    exclusions) so no cluster receives two conflicting configs.
 """
 
 import copy
@@ -27,10 +27,12 @@ DEPLOY_DIR = os.path.join(BASE_DIR, "deploy")
 INPUT_FILE_PATH = os.path.join(RESOURCES_DIR, "config.yaml")
 VARIANTS_DIR = os.path.join(RESOURCES_DIR, "variants")
 
-# Label keys used for cluster/org targeting
-TARGET_LABEL_KEYS = {
-    "cluster": "api.openshift.com/id",
-    "organization": "api.openshift.com/legal-entity-id",
+# Operators that can be auto-negated for parent exclusions
+NEGATE_OPERATOR = {
+    "In": "NotIn",
+    "NotIn": "In",
+    "Exists": "DoesNotExist",
+    "DoesNotExist": "Exists",
 }
 
 
@@ -66,6 +68,18 @@ def remove_dotted_key(config, dotted_key):
     obj.pop(parts[-1], None)
 
 
+def negate_expression(expr):
+    """Negate a single matchExpression (In<->NotIn, Exists<->DoesNotExist)."""
+    op = expr["operator"]
+    if op not in NEGATE_OPERATOR:
+        raise ValueError(
+            f"Cannot auto-negate operator '{op}' in expression for key '{expr['key']}'. "
+            f"Supported operators: {list(NEGATE_OPERATOR.keys())}")
+    negated = copy.deepcopy(expr)
+    negated["operator"] = NEGATE_OPERATOR[op]
+    return negated
+
+
 # --- Loading ---
 
 def load_base_config():
@@ -78,8 +92,8 @@ def load_variants():
     """Load all variant definitions from the variants directory.
 
     Returns (base_variants, override_variants) where:
-      - base_variants: list of variants with a 'selector' (no 'target')
-      - override_variants: list of variants with a 'parent' and 'target'
+      - base_variants: list of variants with a 'selector' (no 'matchExpressions')
+      - override_variants: list of variants with 'parent' and 'matchExpressions'
     """
     base_variants = []
     override_variants = []
@@ -93,19 +107,25 @@ def load_variants():
 
         variant["_source"] = os.path.basename(filepath)
 
-        if "target" in variant:
+        if "matchExpressions" in variant:
             # Override variant
-            for field in ("parent", "target"):
-                if field not in variant:
-                    raise ValueError(
-                        f"{filepath}: override variant missing required field '{field}'")
-            target = variant["target"]
-            if target["type"] not in TARGET_LABEL_KEYS:
+            if "parent" not in variant:
                 raise ValueError(
-                    f"{filepath}: invalid target type '{target['type']}'. "
-                    f"Must be one of: {list(TARGET_LABEL_KEYS.keys())}")
-            if "values" not in target:
-                raise ValueError(f"{filepath}: target missing 'values'")
+                    f"{filepath}: override variant with matchExpressions "
+                    f"must also specify 'parent'")
+            match_exprs = variant["matchExpressions"]
+            if not isinstance(match_exprs, list) or len(match_exprs) == 0:
+                raise ValueError(
+                    f"{filepath}: matchExpressions must be a non-empty list")
+            for expr in match_exprs:
+                for field in ("key", "operator"):
+                    if field not in expr:
+                        raise ValueError(
+                            f"{filepath}: matchExpression missing '{field}'")
+                if expr["operator"] not in NEGATE_OPERATOR:
+                    raise ValueError(
+                        f"{filepath}: unsupported operator '{expr['operator']}'. "
+                        f"Must be one of: {list(NEGATE_OPERATOR.keys())}")
             if not variant.get("configOverrides") and not variant.get("removeKeys") and not variant.get("copyKeys"):
                 raise ValueError(
                     f"{filepath}: override must specify at least one of: "
@@ -195,15 +215,12 @@ def generate(base_config, base_variants, override_variants):
             DEPLOY_DIR, deploy_dir, "50-GENERATED-cluster-monitoring-config.yaml")
         write_yaml(build_configmap(variant_config), configmap_path)
 
-        # Build selector with NotIn exclusions for any overrides targeting this variant
+        # Build selector with negated exclusions for any overrides targeting this variant
         selector = copy.deepcopy(variant["selector"])
         for ov in overrides_by_parent.get(deploy_dir, []):
-            target = ov["target"]
-            selector["selectorSyncSet"]["matchExpressions"].append({
-                "key": TARGET_LABEL_KEYS[target["type"]],
-                "operator": "NotIn",
-                "values": target["values"],
-            })
+            for expr in ov["matchExpressions"]:
+                selector["selectorSyncSet"]["matchExpressions"].append(
+                    negate_expression(expr))
 
         config_path = os.path.join(DEPLOY_DIR, deploy_dir, "config.yaml")
         write_yaml(selector, config_path)
@@ -212,7 +229,6 @@ def generate(base_config, base_variants, override_variants):
     for ov in override_variants:
         parent_dir = ov["parent"]
         parent = base_by_dir[parent_dir]
-        target = ov["target"]
 
         # Derive the deploy subdirectory name from the override filename
         override_name = ov["_source"].replace(".yaml", "")
@@ -227,13 +243,11 @@ def generate(base_config, base_variants, override_variants):
             DEPLOY_DIR, override_dir, "50-GENERATED-cluster-monitoring-config.yaml")
         write_yaml(build_configmap(config), configmap_path)
 
-        # Write config.yaml: parent's selector + In for the targeted clusters
+        # Write config.yaml: parent's selector + override's matchExpressions
         selector = copy.deepcopy(parent["selector"])
-        selector["selectorSyncSet"]["matchExpressions"].append({
-            "key": TARGET_LABEL_KEYS[target["type"]],
-            "operator": "In",
-            "values": target["values"],
-        })
+        for expr in ov["matchExpressions"]:
+            selector["selectorSyncSet"]["matchExpressions"].append(
+                copy.deepcopy(expr))
 
         config_path = os.path.join(DEPLOY_DIR, override_dir, "config.yaml")
         write_yaml(selector, config_path)

@@ -11,15 +11,19 @@
 #   4. Run: uv run scripts/generate-cmo-config.py
 #
 # The targeted clusters will receive only this config; they are automatically
-# excluded from the parent variant's SelectorSyncSet via a NotIn expression.
+# excluded from the parent variant's SelectorSyncSet via negated expressions.
 
 # The parent variant this override specializes — must match a deployDir value.
 parent: cluster-monitoring-config
 
-# Which clusters receive this override.
-target:
-  type: organization  # uses label api.openshift.com/legal-entity-id
-  values: "${{CMO_EXTENDED_RETENTION_ORG_IDS}}"
+# Additional matchExpressions that narrow which clusters receive this override.
+# These are appended to the parent's existing selector expressions.
+# The script auto-generates NotIn exclusions on the parent so no cluster
+# receives both configs.
+matchExpressions:
+  - key: api.openshift.com/legal-entity-id
+    operator: In
+    values: "${{CMO_EXTENDED_RETENTION_ORG_IDS}}"
 
 # Only the fields listed here are changed; everything else is inherited
 # from the parent variant (UWM-enabled 4.16+ defaults).
