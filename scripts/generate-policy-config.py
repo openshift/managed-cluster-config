@@ -55,7 +55,7 @@ config_filename = "config.yaml"
 #go into each directory and copy a subset of manifests that are not SubjectPermissions or config.yaml into a /tmp dir
 for directory in sorted(directories, key=str.casefold):
     # default to targeting hosted clusters
-    cluster_selectors = {'hypershift.open-cluster-management.io/hosted-cluster': 'true'}
+    label_selectors = {'hypershift.open-cluster-management.io/hosted-cluster': 'true'}
     namespace_selectors = {}
     #extract the directory name
     policy_name = directory.replace("/", "-")
@@ -72,8 +72,8 @@ for directory in sorted(directories, key=str.casefold):
         if entry.name == config_filename:
             with open(entry.path) as config_file:
                 config = yaml.safe_load(config_file)
-                if 'clusterSelectors' in config:
-                    cluster_selectors = config['clusterSelectors']
+                if 'labelSelectors' in config:
+                    label_selectors = config['labelSelectors']
                 if 'namespaceSelector' in config:
                     namespace_selectors = config['namespaceSelector']
     #create a dir in /resources to hold the newly generated policy-generator-config.yaml
@@ -98,7 +98,19 @@ for directory in sorted(directories, key=str.casefold):
         p['name'] = policy_name
         for m in p['manifests']:
             m['path'] = path
-    policy_template['policyDefaults']['placement']['clusterSelectors'] = cluster_selectors
+    
+    # Transform old labelSelectors format to new labelSelector format
+    match_expressions = []
+    for key, value in label_selectors.items():
+        match_expressions.append({
+            'key': key,
+            'operator': 'In',
+            'values': [value]
+        })
+    policy_template['policyDefaults']['placement']['labelSelector'] = {
+        'matchExpressions': match_expressions
+    }
+    
     if not len(namespace_selectors) == 0:
         policy_template['policyDefaults']['namespaceSelector'] = namespace_selectors
     with open(os.path.join(temp_directory, "policy-generator-config.yaml"),'w+') as output_file:
