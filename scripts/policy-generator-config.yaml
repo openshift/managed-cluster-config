@@ -5,8 +5,12 @@ metadata:
 policyDefaults:
     namespace: openshift-acm-policies
     placement:
-        clusterSelectors:
-          hypershift.open-cluster-management.io/hosted-cluster: "true" # Can be overridden by script
+        labelSelector:
+            matchExpressions:
+            - key: hypershift.open-cluster-management.io/hosted-cluster
+              operator: In
+              values:
+                - "true" # Can be overridden by script
     remediationAction: enforce
     evaluationInterval:
         compliant: 2h
