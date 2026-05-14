@@ -46177,66 +46177,144 @@ objects:
         groups:
         - name: sre-infra-resource-consumption-recording.rules
           rules:
-          - expr: ( avg ( avg by (instance) ( sum by (cpu, instance) ( rate( node_cpu_seconds_total{mode!="idle"}[1h]
-              ) ) ) * on (instance) ( label_replace ( kube_node_role{role ="infra"},
-              "instance", "$1", "node", "(.*)" ) ) ) > ( scalar ( ( count ( cluster:nodes_roles{label_node_role_kubernetes_io
-              ="infra"} ) - 1 ) / count ( cluster:nodes_roles{label_node_role_kubernetes_io
-              ="infra"} ) ) ) )
-            record: sre:node_infra:excessive_consumption_cpu
-          - expr: ( 1 - sum ( node_memory_MemFree_bytes + node_memory_Buffers_bytes
-              + node_memory_Cached_bytes AND on (instance) label_replace( kube_node_role{role="infra"},
-              "instance", "$1", "node", "(.+)" ) ) / sum ( node_memory_MemTotal_bytes
-              AND on (instance) label_replace( kube_node_role{role="infra"}, "instance",
-              "$1", "node", "(.+)" ) ) ) > ( scalar ( ( count ( cluster:nodes_roles{label_node_role_kubernetes_io
-              ="infra"} ) - 1 ) / count ( cluster:nodes_roles{label_node_role_kubernetes_io
-              ="infra"} ) ) )
-            record: sre:node_infra:excessive_consumption_memory
-          - expr: ( count( ALERTS{alertname="cpu-InfraNodesExcessiveResourceConsumptionSRE1h",
-              alertstate="firing"} OR ALERTS{alertname="memory-InfraNodesExcessiveResourceConsumptionSRE",
-              alertstate="firing"} ) >= 1 )
-            record: sre:node_infras:need_resize
+          - expr: "avg by (instance) (\n  sum by (cpu, instance) (\n    rate(node_cpu_seconds_total{mode!=\"\
+              idle\"}[1h])\n  )\n)\n* on (instance) (\n  label_replace(\n    kube_node_role{role=\"\
+              infra\"}, \"instance\", \"$1\", \"node\", \"(.*)\"\n  )\n)\n"
+            record: sre:node_infra:cpu_utilization_per_node
+          - expr: "(\n  1 -\n  (node_memory_MemFree_bytes + node_memory_Buffers_bytes\
+              \ + node_memory_Cached_bytes)\n  / node_memory_MemTotal_bytes\n)\n*\
+              \ on (instance) (\n  label_replace(\n    kube_node_role{role=\"infra\"\
+              }, \"instance\", \"$1\", \"node\", \"(.*)\"\n  )\n)\n"
+            record: sre:node_infra:memory_utilization_per_node
         - name: sre-infra-resizing-alerts
           rules:
-          - alert: cpu-InfraNodesExcessiveResourceConsumptionSRE1h
-            expr: sre:node_infra:excessive_consumption_cpu > 0
-            for: 1h
+          - alert: cpu-InfraNodesExcessiveResourceConsumptionSRE2h
+            expr: 'count(sre:node_infra:cpu_utilization_per_node > 0.85)
+
+              >=
+
+              count(cluster:nodes_roles{label_node_role_kubernetes_io="infra"}) -
+              1
+
+              '
+            for: 10m
             labels:
               severity: warning
               namespace: openshift-monitoring
             annotations:
-              message: The cluster's infrastructure nodes have been consuming excessive
-                CPU for 1 hours and may need to be vertically scaled to support the
-                existing workers. See linked SOP for details.
-          - alert: cpu-InfraNodesExcessiveResourceConsumptionSRE
-            expr: sre:node_infra:excessive_consumption_cpu > 0
-            for: 16h
+              message: At least N-1 infrastructure nodes have had CPU utilization
+                above 85% for 10 minutes. See linked SOP for details.
+          - alert: cpu-InfraNodesExcessiveResourceConsumptionSRE12h
+            expr: 'count(sre:node_infra:cpu_utilization_per_node > 0.75)
+
+              >=
+
+              count(cluster:nodes_roles{label_node_role_kubernetes_io="infra"}) -
+              1
+
+              '
+            for: 10m
             labels:
               severity: warning
               namespace: openshift-monitoring
             annotations:
-              message: The cluster's infrastructure nodes have been consuming excessive
-                CPU for 16 hours and may need to be vertically scaled to support the
-                existing workers. See linked SOP for details.
-          - alert: memory-InfraNodesExcessiveResourceConsumptionSRE
-            expr: sre:node_infra:excessive_consumption_memory > 0
-            for: 24h
+              message: At least N-1 infrastructure nodes have had CPU utilization
+                above 75% for 10 minutes. See linked SOP for details.
+          - alert: memory-InfraNodesExcessiveResourceConsumptionSRE2h
+            expr: 'count(sre:node_infra:memory_utilization_per_node > 0.80)
+
+              >=
+
+              count(cluster:nodes_roles{label_node_role_kubernetes_io="infra"}) -
+              1
+
+              '
+            for: 10m
             labels:
               severity: warning
               namespace: openshift-monitoring
             annotations:
-              message: The cluster's infrastructure nodes have been consuming excessive
-                memory for 24 hours and may need to be vertically scaled to support
-                the existing workers. See linked SOP for details.
+              message: At least N-1 infrastructure nodes have had memory utilization
+                above 80% for 10 minutes. See linked SOP for details.
+          - alert: memory-InfraNodesExcessiveResourceConsumptionSRE12h
+            expr: 'count(sre:node_infra:memory_utilization_per_node > 0.70)
+
+              >=
+
+              count(cluster:nodes_roles{label_node_role_kubernetes_io="infra"}) -
+              1
+
+              '
+            for: 10m
+            labels:
+              severity: warning
+              namespace: openshift-monitoring
+            annotations:
+              message: At least N-1 infrastructure nodes have had memory utilization
+                above 70% for 10 minutes. See linked SOP for details.
+          - alert: cpu-InfraNodesNeedResizingSRE2h
+            expr: 'count(ALERTS{alertname="cpu-InfraNodesExcessiveResourceConsumptionSRE2h",
+              alertstate="firing"}) >= 1
+
+              '
+            for: 1h50m
+            labels:
+              severity: warning
+              namespace: openshift-monitoring
+            annotations:
+              message: At least N-1 infrastructure nodes have had CPU utilization
+                above 85% for 2 hours. Infrastructure nodes should be resized. See
+                linked SOP for details.
+          - alert: cpu-InfraNodesNeedResizingSRE12h
+            expr: 'count(ALERTS{alertname="cpu-InfraNodesExcessiveResourceConsumptionSRE12h",
+              alertstate="firing"}) >= 1
+
+              '
+            for: 11h50m
+            labels:
+              severity: warning
+              namespace: openshift-monitoring
+            annotations:
+              message: At least N-1 infrastructure nodes have had CPU utilization
+                above 75% for 12 hours. Infrastructure nodes should be resized. See
+                linked SOP for details.
+          - alert: memory-InfraNodesNeedResizingSRE2h
+            expr: 'count(ALERTS{alertname="memory-InfraNodesExcessiveResourceConsumptionSRE2h",
+              alertstate="firing"}) >= 1
+
+              '
+            for: 1h50m
+            labels:
+              severity: warning
+              namespace: openshift-monitoring
+            annotations:
+              message: At least N-1 infrastructure nodes have had memory utilization
+                above 80% for 2 hours. Infrastructure nodes should be resized. See
+                linked SOP for details.
+          - alert: memory-InfraNodesNeedResizingSRE12h
+            expr: 'count(ALERTS{alertname="memory-InfraNodesExcessiveResourceConsumptionSRE12h",
+              alertstate="firing"}) >= 1
+
+              '
+            for: 11h50m
+            labels:
+              severity: warning
+              namespace: openshift-monitoring
+            annotations:
+              message: At least N-1 infrastructure nodes have had memory utilization
+                above 70% for 12 hours. Infrastructure nodes should be resized. See
+                linked SOP for details.
           - alert: InfraNodesNeedResizingSRE
-            expr: sre:node_infras:need_resize > 0
-            for: 5m
+            expr: "count(\n  ALERTS{alertname=~\"(cpu|memory)-InfraNodesNeedResizingSRE.+\"\
+              , alertstate=\"firing\"}\n) >= 1\n"
+            for: 1m
             labels:
               severity: critical
               namespace: openshift-monitoring
             annotations:
-              message: The cluster's infrastructure nodes have been undersized for
-                2 hours and must be vertically scaled to support the existing workers.  See
-                linked SOP for details.
+              message: The cluster's infrastructure nodes are undersized and must
+                be vertically scaled to support the existing workload. See linked
+                SOP for details.
     - apiVersion: monitoring.coreos.com/v1
       kind: PrometheusRule
       metadata:
