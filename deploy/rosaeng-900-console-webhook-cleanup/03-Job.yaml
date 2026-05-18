@@ -7,11 +7,13 @@ metadata:
     kubernetes.io/description: "ROSAENG-900: Remove console-conversion-webhook deployment from 4.17+ clusters"
 spec:
   backoffLimit: 3
+  ttlSecondsAfterFinished: 43200
+  activeDeadlineSeconds: 300
   template:
     metadata:
       name: console-webhook-cleanup
     spec:
-      serviceAccountName: console-webhook-cleanup
+      serviceAccountName: console-webhook-cleanup-sa
       restartPolicy: Never
       containers:
       - name: cleanup
