@@ -1,0 +1,27 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: sre-create-must-gather
+    role: alert-rules
+  name: sre-create-must-gather
+  namespace: openshift-monitoring
+spec:
+  groups:
+    - name: sre-create-must-gather
+      rules:
+        - alert: CreateMustGather
+          expr: |
+            max(ALERTS{alertstate="firing",alertname!="CreateMustGather",namespace=~"openshift-.*|kube-.*|default|redhat-.*",severity!~"info|alert|none",namespace!~"openshift-customer-monitoring|openshift-operators|openshift-storage|openshift-compliance|openshift-operators-redhat|openshift-user-workload-monitoring",alertname!~"Watchdog|CannotRetrieveUpdates|KubeQuotaExceeded|KubeQuotaFullyUsed|CPUThrottlingHigh|NodeFilesystemSpaceFillingUp|NodeFilesystemFilesFillingUp|NodeFilesystemAlmostOutOfSpace|NodeFilesystemAlmostOutOfFiles|NodeFileDescriptorLimit|CustomResourceDetected|ImagePruningDisabled|PodDisruptionBudgetLimit|KubeJobFailed|PrometheusRuleFailures|HAProxyDown|HAProxyReloadFail|CertificateIsAboutToExpire|KubeAPIErrorBudgetBurn"}) > 0
+            and on() absent(cluster_version{type="updating"})
+            and on() (time() - max(cluster_version{type="completed"}) > 14400)
+          for: 15m
+          labels:
+            severity: warning
+            namespace: openshift-monitoring
+            route_to_cad: "true"
+          annotations:
+            message: Create a must-gather for a non-silenced firing alert in a managed namespace
+            runbook_url: https://github.com/openshift/ops-sop/blob/master/v4/alerts/CreateMustGather.md
+            summary: 'This alert is a trigger for CAD to create a must-gather.'
+            description: This alert fires when a non-silenced alert is firing in a managed namespace. This alert is meant to trigger configuration-anomaly-detection to create a must-gather
