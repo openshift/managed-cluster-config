@@ -10,128 +10,152 @@ spec:
   groups:
   - name: sre-infra-resource-consumption-recording.rules
     rules:
-    ## Expression Explanation:
-    ## Average of value of
-    ## the Average (per node) rate of change of CPU time spent in non-idle modes, totalled by CPU, looking back across the past 1h,
-    ## "*" applies a label replace to limit output to infra nodes
-    ## Greater than (>) is the threshold
-    ## Count of the infra nodes - 1, divided by the total infra nodes gives the max percent CPU utilization free required to handle a full node failure, as a decimal value: 0.%%
-    ## Scalar converts the percent value from a vector to allow comparison with the rate vector
-      - expr: ( 
-                avg (
-                  avg by (instance) (
-                    sum by (cpu, instance) (
-                      rate(
-                        node_cpu_seconds_total{mode!="idle"}[1h]
-                      )
-                    )
-                  )
-                  *
-                  on (instance) (
-                    label_replace (
-                      kube_node_role{role ="infra"}, "instance", "$1", "node", "(.*)"
-                    )
-                  )
-                )
-                >
-                (
-                  scalar (
-                    (
-                      count (
-                        cluster:nodes_roles{label_node_role_kubernetes_io ="infra"}
-                      )
-                      - 1
-                    )
-                    /
-                    count (
-                      cluster:nodes_roles{label_node_role_kubernetes_io ="infra"}
-                    )
-                  )
-                )
-              )
-        record: sre:node_infra:excessive_consumption_cpu
-      ## Expression Explanation: 
-      ## 1, minus the total amount of free memory divided by the total amount of memory for the infra node type, gives us the percent used memory as a decimal value: 0.%%
-      ## Greater than (>) is the threshold
-      ## Count of the infra nodes - 1, divided by the total infra nodes gives the max percent memory utilization free required to handle a full node failure, as a decimal value: 0.%%
-      ## Scalar converts the percent value from a vector to allow comparison with the rate vector
-      - expr: ( 1 -
-                sum (
-                    node_memory_MemFree_bytes +
-                    node_memory_Buffers_bytes +
-                    node_memory_Cached_bytes
-                    AND on (instance) label_replace(
-                        kube_node_role{role="infra"}, "instance", "$1", "node", "(.+)"
-                    )
-                ) 
-                / 
-                sum (
-                    node_memory_MemTotal_bytes
-                    AND on (instance) label_replace(
-                        kube_node_role{role="infra"}, "instance", "$1", "node", "(.+)"
-                    )
-                )
-            ) 
-            > 
-            (
-              scalar (
-                (
-                  count (
-                    cluster:nodes_roles{label_node_role_kubernetes_io ="infra"}
-                  )
-                  - 1
-                )
-                /
-                count (
-                  cluster:nodes_roles{label_node_role_kubernetes_io ="infra"}
-                )
-              )
-            )
-        record: sre:node_infra:excessive_consumption_memory
-      ## If either of the CPU or Memory resource consumption alerts (see below) fire, then trigger an alert for SRE
-      - expr: (
-                count(
-                  ALERTS{alertname="cpu-InfraNodesExcessiveResourceConsumptionSRE1h", alertstate="firing"}
-                  OR
-                  ALERTS{alertname="memory-InfraNodesExcessiveResourceConsumptionSRE", alertstate="firing"}
-                ) >= 1
-              )
-        record: sre:node_infras:need_resize
+    ## Per-node CPU utilization for infra nodes.
+    ## Computes the average CPU utilization (non-idle) across all cores on each infra node over the past 1h.
+    ## Returns a value between 0 and 1 per infra node instance.
+    - expr: |
+        avg by (instance) (
+          sum by (cpu, instance) (
+            rate(node_cpu_seconds_total{mode!="idle"}[1h])
+          )
+        )
+        * on (instance) (
+          label_replace(
+            kube_node_role{role="infra"}, "instance", "$1", "node", "(.*)"
+          )
+        )
+      record: sre:node_infra:cpu_utilization_per_node
+    ## Per-node memory utilization for infra nodes.
+    ## Computes 1 - (free + buffers + cached) / total for each infra node.
+    ## Returns a value between 0 and 1 per infra node instance.
+    - expr: |
+        (
+          1 -
+          (node_memory_MemFree_bytes + node_memory_Buffers_bytes + node_memory_Cached_bytes)
+          / node_memory_MemTotal_bytes
+        )
+        * on (instance) (
+          label_replace(
+            kube_node_role{role="infra"}, "instance", "$1", "node", "(.*)"
+          )
+        )
+      record: sre:node_infra:memory_utilization_per_node
   - name: sre-infra-resizing-alerts
     rules:
-      - alert: cpu-InfraNodesExcessiveResourceConsumptionSRE1h
-        expr: sre:node_infra:excessive_consumption_cpu > 0
-        for: 1h
-        labels:
-          severity: warning
-          namespace: openshift-monitoring
-        annotations:
-          message: "The cluster's infrastructure nodes have been consuming excessive CPU for 1 hours and may need to be vertically scaled to support the existing workers. See linked SOP for details."
-      ## While individual spikes in CPU usage are acceptable, even if spikes are flappy, because CPU is a renewable resource,
-      ## long term (8h) CPU consumption above the threshold indicates CPU consumption has outgrown the cluster
-      - alert: cpu-InfraNodesExcessiveResourceConsumptionSRE
-        expr: sre:node_infra:excessive_consumption_cpu > 0
-        for: 16h
-        labels:
-          severity: warning
-          namespace: openshift-monitoring
-        annotations:
-          message: "The cluster's infrastructure nodes have been consuming excessive CPU for 16 hours and may need to be vertically scaled to support the existing workers. See linked SOP for details."
-      ## Given memory may be allocated but unused, 24h is good enough to catch gradual outgrowing of the cluster with critical node failures alerting via other alerts
-      - alert: memory-InfraNodesExcessiveResourceConsumptionSRE
-        expr: sre:node_infra:excessive_consumption_memory > 0
-        for: 24h
-        labels:
-          severity: warning
-          namespace: openshift-monitoring
-        annotations:
-          message: "The cluster's infrastructure nodes have been consuming excessive memory for 24 hours and may need to be vertically scaled to support the existing workers. See linked SOP for details."
-      ## If the CPU or Memory related "InfraNodesExcessiveResourceConsumptionSRE" alerts are firing, raise a critical ticket to SRE to scale the infra nodes up
-      - alert: InfraNodesNeedResizingSRE
-        expr: sre:node_infras:need_resize > 0
-        for: 5m
-        labels:
-          severity: critical
-          namespace: openshift-monitoring
-        annotations:
-          message: "The cluster's infrastructure nodes have been undersized for 2 hours and must be vertically scaled to support the existing workers.  See linked SOP for details."
+    ##
+    ## Tier 1: Initial threshold breach warnings.
+    ## These fire after 10m to confirm the condition is not a momentary blip.
+    ##
+    ## CPU short window: N-1 infra nodes exceed 85% CPU utilization.
+    - alert: cpu-InfraNodesExcessiveResourceConsumptionSRE2h
+      expr: |
+        count(sre:node_infra:cpu_utilization_per_node > 0.85)
+        >=
+        count(cluster:nodes_roles{label_node_role_kubernetes_io="infra"}) - 1
+      for: 10m
+      labels:
+        severity: warning
+        namespace: openshift-monitoring
+      annotations:
+        message: "At least N-1 infrastructure nodes have had CPU utilization above 85% for 10 minutes. See linked SOP for details."
+    ## CPU long window: N-1 infra nodes exceed 75% CPU utilization.
+    - alert: cpu-InfraNodesExcessiveResourceConsumptionSRE12h
+      expr: |
+        count(sre:node_infra:cpu_utilization_per_node > 0.75)
+        >=
+        count(cluster:nodes_roles{label_node_role_kubernetes_io="infra"}) - 1
+      for: 10m
+      labels:
+        severity: warning
+        namespace: openshift-monitoring
+      annotations:
+        message: "At least N-1 infrastructure nodes have had CPU utilization above 75% for 10 minutes. See linked SOP for details."
+    ## Memory short window: N-1 infra nodes exceed 80% memory utilization.
+    - alert: memory-InfraNodesExcessiveResourceConsumptionSRE2h
+      expr: |
+        count(sre:node_infra:memory_utilization_per_node > 0.80)
+        >=
+        count(cluster:nodes_roles{label_node_role_kubernetes_io="infra"}) - 1
+      for: 10m
+      labels:
+        severity: warning
+        namespace: openshift-monitoring
+      annotations:
+        message: "At least N-1 infrastructure nodes have had memory utilization above 80% for 10 minutes. See linked SOP for details."
+    ## Memory long window: N-1 infra nodes exceed 70% memory utilization.
+    - alert: memory-InfraNodesExcessiveResourceConsumptionSRE12h
+      expr: |
+        count(sre:node_infra:memory_utilization_per_node > 0.70)
+        >=
+        count(cluster:nodes_roles{label_node_role_kubernetes_io="infra"}) - 1
+      for: 10m
+      labels:
+        severity: warning
+        namespace: openshift-monitoring
+      annotations:
+        message: "At least N-1 infrastructure nodes have had memory utilization above 70% for 10 minutes. See linked SOP for details."
+    ##
+    ## Tier 2: Sustained threshold breach warnings.
+    ## These fire after the tier 1 warning has persisted for the full reference window,
+    ## confirming the capacity problem is sustained and not a transient spike.
+    ##
+    ## CPU short window sustained: 85% CPU exceeded on N-1 nodes for 2h.
+    ## for: 1h50m accounts for the 10m tier 1 duration (1h50m + 10m + 1m tier 3 ≈ 2h total).
+    - alert: cpu-InfraNodesNeedResizingSRE2h
+      expr: |
+        count(ALERTS{alertname="cpu-InfraNodesExcessiveResourceConsumptionSRE2h", alertstate="firing"}) >= 1
+      for: 1h50m
+      labels:
+        severity: warning
+        namespace: openshift-monitoring
+      annotations:
+        message: "At least N-1 infrastructure nodes have had CPU utilization above 85% for 2 hours. Infrastructure nodes should be resized. See linked SOP for details."
+    ## CPU long window sustained: 75% CPU exceeded on N-1 nodes for 12h.
+    ## for: 11h50m accounts for the 10m tier 1 duration (11h50m + 10m + 1m tier 3 ≈ 12h total).
+    - alert: cpu-InfraNodesNeedResizingSRE12h
+      expr: |
+        count(ALERTS{alertname="cpu-InfraNodesExcessiveResourceConsumptionSRE12h", alertstate="firing"}) >= 1
+      for: 11h50m
+      labels:
+        severity: warning
+        namespace: openshift-monitoring
+      annotations:
+        message: "At least N-1 infrastructure nodes have had CPU utilization above 75% for 12 hours. Infrastructure nodes should be resized. See linked SOP for details."
+    ## Memory short window sustained: 80% memory exceeded on N-1 nodes for 2h.
+    ## for: 1h50m accounts for the 10m tier 1 duration (1h50m + 10m + 1m tier 3 ≈ 2h total).
+    - alert: memory-InfraNodesNeedResizingSRE2h
+      expr: |
+        count(ALERTS{alertname="memory-InfraNodesExcessiveResourceConsumptionSRE2h", alertstate="firing"}) >= 1
+      for: 1h50m
+      labels:
+        severity: warning
+        namespace: openshift-monitoring
+      annotations:
+        message: "At least N-1 infrastructure nodes have had memory utilization above 80% for 2 hours. Infrastructure nodes should be resized. See linked SOP for details."
+    ## Memory long window sustained: 70% memory exceeded on N-1 nodes for 12h.
+    ## for: 11h50m accounts for the 10m tier 1 duration (11h50m + 10m + 1m tier 3 ≈ 12h total).
+    - alert: memory-InfraNodesNeedResizingSRE12h
+      expr: |
+        count(ALERTS{alertname="memory-InfraNodesExcessiveResourceConsumptionSRE12h", alertstate="firing"}) >= 1
+      for: 11h50m
+      labels:
+        severity: warning
+        namespace: openshift-monitoring
+      annotations:
+        message: "At least N-1 infrastructure nodes have had memory utilization above 70% for 12 hours. Infrastructure nodes should be resized. See linked SOP for details."
+    ##
+    ## Tier 3: Composite paging alert.
+    ## Fires when any tier 2 sustained warning is active, indicating infrastructure nodes
+    ## must be resized. This is the single alert that pages SRE.
+    ##
+    - alert: InfraNodesNeedResizingSRE
+      expr: |
+        count(
+          ALERTS{alertname=~"(cpu|memory)-InfraNodesNeedResizingSRE.+", alertstate="firing"}
+        ) >= 1
+      for: 1m
+      labels:
+        severity: critical
+        namespace: openshift-monitoring
+      annotations:
+        message: "The cluster's infrastructure nodes are undersized and must be vertically scaled to support the existing workload. See linked SOP for details."
