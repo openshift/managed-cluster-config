@@ -1,0 +1,15 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: console-webhook-cleanup-role
+  namespace: openshift-console-operator
+rules:
+- apiGroups:
+  - "apps"
+  resources:
+  - deployments
+  verbs:
+  - get
+  - delete
+  resourceNames:
+  - console-conversion-webhook
