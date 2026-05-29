@@ -12,33 +12,43 @@ spec:
     rules:
     ## Per-node CPU utilization for infra nodes.
     ## Computes the average CPU utilization (non-idle) across all cores on each infra node over the past 1h.
-    ## Returns a value between 0 and 1 per infra node instance.
-      - expr: |
-            avg by (instance) (
-              sum by (cpu, instance) (
-                rate(node_cpu_seconds_total{mode!="idle"}[1h])
-              )
-            )
-            * on (instance) (
-              label_replace(
-                kube_node_role{role="infra"}, "instance", "$1", "node", "(.*)"
-              )
-            )
-        record: sre:node_infra:cpu_utilization_per_node
-    ## Per-node memory utilization for infra nodes.
-    ## Computes 1 - (free + buffers + cached) / total for each infra node.
+    ## Joins with sre:telemetry:managed_labels to pick up _id for centralized observability.
     ## Returns a value between 0 and 1 per infra node instance.
       - expr: |
             (
-              1 -
-              (node_memory_MemFree_bytes + node_memory_Buffers_bytes + node_memory_Cached_bytes)
-              / node_memory_MemTotal_bytes
-            )
-            * on (instance) (
-              label_replace(
-                kube_node_role{role="infra"}, "instance", "$1", "node", "(.*)"
+              avg by (instance) (
+                sum by (cpu, instance) (
+                  rate(node_cpu_seconds_total{mode!="idle"}[1h])
+                )
+              )
+              * on (instance) (
+                label_replace(
+                  kube_node_role{role="infra"}, "instance", "$1", "node", "(.*)"
+                )
               )
             )
+            * on () group_left (_id)
+            sre:telemetry:managed_labels
+        record: sre:node_infra:cpu_utilization_per_node
+    ## Per-node memory utilization for infra nodes.
+    ## Computes 1 - (free + buffers + cached) / total for each infra node.
+    ## Joins with sre:telemetry:managed_labels to pick up _id for centralized observability.
+    ## Returns a value between 0 and 1 per infra node instance.
+      - expr: |
+            (
+              (
+                1 -
+                (node_memory_MemFree_bytes + node_memory_Buffers_bytes + node_memory_Cached_bytes)
+                / node_memory_MemTotal_bytes
+              )
+              * on (instance) (
+                label_replace(
+                  kube_node_role{role="infra"}, "instance", "$1", "node", "(.*)"
+                )
+              )
+            )
+            * on () group_left (_id)
+            sre:telemetry:managed_labels
         record: sre:node_infra:memory_utilization_per_node
   - name: sre-infra-per-node-resizing-alerts
     rules:
