@@ -33,11 +33,15 @@ spec:
             image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
             imagePullPolicy: Always
             command:
-            - oc
-            - adm
-            - prune
-            - builds
-            - --keep-younger-than=24h
-            - --keep-complete=1
-            - --keep-failed=1
-            - --confirm
+            - /bin/bash
+            - -c
+            - |
+              for ns in $(oc get namespaces -o name | grep 'namespace/openshift-' | cut -d'/' -f2); do
+                echo "Pruning builds in namespace: $ns"
+                oc adm prune builds \
+                  --namespace="$ns" \
+                  --keep-younger-than=24h \
+                  --keep-complete=1 \
+                  --keep-failed=1 \
+                  --confirm
+              done
