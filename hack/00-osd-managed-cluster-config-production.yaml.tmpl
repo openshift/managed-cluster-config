@@ -49851,6 +49851,7 @@ objects:
         resources:
         - pods
         - replicationcontrollers
+        - namespaces
         verbs:
         - list
         - get
@@ -49932,14 +49933,13 @@ objects:
                   image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
                   imagePullPolicy: Always
                   command:
-                  - oc
-                  - adm
-                  - prune
-                  - builds
-                  - --keep-younger-than=24h
-                  - --keep-complete=1
-                  - --keep-failed=1
-                  - --confirm
+                  - /bin/bash
+                  - -c
+                  - "for ns in $(oc get namespaces -o name | grep 'namespace/openshift-'\
+                    \ | cut -d'/' -f2); do\n  echo \"Pruning builds in namespace:\
+                    \ $ns\"\n  oc adm prune builds \\\n    --namespace=\"$ns\" \\\n\
+                    \    --keep-younger-than=24h \\\n    --keep-complete=1 \\\n  \
+                    \  --keep-failed=1 \\\n    --confirm\ndone\n"
     - apiVersion: batch/v1
       kind: CronJob
       metadata:
@@ -49974,14 +49974,13 @@ objects:
                   image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
                   imagePullPolicy: Always
                   command:
-                  - oc
-                  - adm
-                  - prune
-                  - deployments
-                  - --keep-complete=1
-                  - --keep-younger-than=24h
-                  - --keep-failed=1
-                  - --confirm
+                  - /bin/bash
+                  - -c
+                  - "for ns in $(oc get namespaces -o name | grep 'namespace/openshift-'\
+                    \ | cut -d'/' -f2); do\n  echo \"Pruning deployments in namespace:\
+                    \ $ns\"\n  oc adm prune deployments \\\n    --namespace=\"$ns\"\
+                    \ \\\n    --keep-complete=1 \\\n    --keep-younger-than=24h \\\
+                    \n    --keep-failed=1 \\\n    --confirm\ndone\n"
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
