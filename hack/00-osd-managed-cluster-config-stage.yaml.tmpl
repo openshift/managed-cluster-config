@@ -49935,11 +49935,11 @@ objects:
                   command:
                   - /bin/bash
                   - -c
-                  - "for ns in $(oc get namespaces -o name | grep 'namespace/openshift-'\
-                    \ | cut -d'/' -f2); do\n  echo \"Pruning builds in namespace:\
-                    \ $ns\"\n  oc adm prune builds \\\n    --namespace=\"$ns\" \\\n\
-                    \    --keep-younger-than=24h \\\n    --keep-complete=1 \\\n  \
-                    \  --keep-failed=1 \\\n    --confirm\ndone\n"
+                  - "set -euo pipefail\nfor ns in $(oc get namespaces -o name | grep\
+                    \ 'namespace/openshift-' | cut -d'/' -f2); do\n  echo \"Pruning\
+                    \ builds in namespace: $ns\"\n  oc adm prune builds \\\n    --namespace=\"\
+                    $ns\" \\\n    --keep-younger-than=24h \\\n    --keep-complete=1\
+                    \ \\\n    --keep-failed=1 \\\n    --confirm\ndone\n"
     - apiVersion: batch/v1
       kind: CronJob
       metadata:
@@ -49976,11 +49976,12 @@ objects:
                   command:
                   - /bin/bash
                   - -c
-                  - "for ns in $(oc get namespaces -o name | grep 'namespace/openshift-'\
-                    \ | cut -d'/' -f2); do\n  echo \"Pruning deployments in namespace:\
-                    \ $ns\"\n  oc adm prune deployments \\\n    --namespace=\"$ns\"\
-                    \ \\\n    --keep-complete=1 \\\n    --keep-younger-than=24h \\\
-                    \n    --keep-failed=1 \\\n    --confirm\ndone\n"
+                  - "set -euo pipefail\nfor ns in $(oc get namespaces -o name | grep\
+                    \ 'namespace/openshift-' | cut -d'/' -f2); do\n  echo \"Pruning\
+                    \ deployments in namespace: $ns\"\n  oc adm prune deployments\
+                    \ \\\n    --namespace=\"$ns\" \\\n    --keep-complete=1 \\\n \
+                    \   --keep-younger-than=24h \\\n    --keep-failed=1 \\\n    --confirm\n\
+                    done\n"
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
