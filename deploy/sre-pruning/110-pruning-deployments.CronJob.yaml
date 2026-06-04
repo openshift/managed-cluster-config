@@ -36,6 +36,7 @@ spec:
             - /bin/bash
             - -c
             - |
+              set -euo pipefail
               for ns in $(oc get namespaces -o name | grep 'namespace/openshift-' | cut -d'/' -f2); do
                 echo "Pruning deployments in namespace: $ns"
                 oc adm prune deployments \
