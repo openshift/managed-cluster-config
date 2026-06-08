@@ -13,13 +13,13 @@ spec:
       The most common cause on ROSA HyperShift clusters is missing or insufficient AWS IAM permissions for Elastic Load Balancing (ELB), which prevents the default IngressController's LoadBalancer from being provisioned.
 
       To check for IAM-related issues:
-      1. Review the IAM permissions attached to your cluster's worker node role and ensure ELB permissions are present.
+      1. Review the IAM permissions attached to your cluster's ingress operator role (the STS role used by the ingress operator for ELB management) and ensure ELB permissions are present.
       2. Verify the AWS service-linked role for ELB exists: aws iam get-role --role-name AWSServiceRoleForElasticLoadBalancing
       3. If the role is missing, create it: aws iam create-service-linked-role --aws-service-name elasticloadbalancing.amazonaws.com
 
       Other possible causes include VPC or subnet misconfiguration and IngressController resource conflicts. Check the ingress operator logs and IngressController status for more detail.
 
-      For detailed troubleshooting steps and required IAM policies, please refer to: https://docs.openshift.com/rosa/rosa_architecture/rosa-sts-about-iam-resources.html
+      For detailed troubleshooting steps and required IAM policies, please refer to: https://docs.openshift.com/rosa/rosa_hcp/rosa-hcp-sts-creating-a-cluster-quickly.html
 
       If you need assistance, please open a support case.
     resendWait: 24
