@@ -18,7 +18,7 @@ spec:
     - record: job:kube_job_status_failed:sum
       expr: |
         clamp_max(job:kube_job_status_start_time:max, 1)
-        * ON(job_name) GROUP_LEFT()
+        * ON(job_name, namespace) GROUP_LEFT()
         (kube_job_status_failed{namespace=~"(openshift-.*|kube-.*|default)",job="kube-state-metrics",job_name!="osd-cluster-ready"} > 0)
     - record: job:kube_job_status_start_time:max
       expr: |

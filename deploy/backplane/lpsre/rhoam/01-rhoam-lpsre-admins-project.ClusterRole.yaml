@@ -17,22 +17,6 @@ rules:
   - pods/portforward
   verbs:
   - create
-# LP SRE can delete jobs and builds
-- apiGroups:
-  - batch
-  resources:
-  - jobs
-  - cronjobs
-  verbs:
-  - delete
-  - deletecollection
-- apiGroups:
-  - build.openshift.io
-  resources:
-  - builds
-  verbs:
-  - delete
-  - deletecollection
 # LP SRE can get pod logs
 - apiGroups:
   - ""
@@ -41,13 +25,6 @@ rules:
   - pods/log
   verbs:
   - get
-# LP SRE can delete pods
-- apiGroups:
-  - ""
-  resources:
-  - pods
-  verbs:
-  - delete
 # LP SRE can interact with RHMI
 - apiGroups:
   - integreatly.org
@@ -60,26 +37,16 @@ rules:
   - patch
   - update
   - watch
-# LP SRE can interact with configmaps and PVC's
+# LP SRE can view configmaps and PVC's
 - apiGroups:
   - ""
   resources:
   - configmaps
   - persistentvolumeclaims
   verbs:
-  - create
   - get
   - list
-  - patch
-  - update
   - watch
-# LP SRE can interact with installplans
-- apiGroups:
-  - "operators.coreos.com"
-  resources:
-  - installplans
-  verbs:
-  - "patch"
 # LP SRE can list/get PDB
 - apiGroups:
   - policy
@@ -112,38 +79,12 @@ rules:
   verbs:
   - list
   - get
-# LP SRE can manage openshift pipelines
+# LP SRE can view openshift pipelines
 - apiGroups:
   - tekton.dev
   resources:
   - '*'
   verbs:
-  - '*'
-# LP SRE can scale deployments
-- apiGroups:
-  - apps
-  resources:
-  - deployments/scale
-  verbs:
-  - patch
-# LP SRE can restart deployments/statefulsets/deploymentconfigs
-- apiGroups:
-  - apps
-  resources:
-  - statefulsets
-  - deployments
-  verbs:
-  - patch
-- apiGroups:
-  - apps.openshift.io
-  resources:
-  - deploymentconfigs
-  verbs:
-  - patch
-# LP SRE can patch routes
-- apiGroups:
-  - route.openshift.io
-  resources:
-  - routes
-  verbs:
-  - patch  
+  - get
+  - list
+  - watch

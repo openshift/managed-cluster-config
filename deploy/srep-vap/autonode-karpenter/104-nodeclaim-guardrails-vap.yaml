@@ -11,13 +11,13 @@ spec:
         operations: ["CREATE", "UPDATE"]
         resources: ["nodeclaims"]
   validations:
-    # Block tiny instance types (.nano, .micro, .small, .medium) on NodeClaims
+    # Block undersized instance types (.nano, .micro, .small, .medium, .large) on NodeClaims
     - expression: |
         !has(object.spec) ||
         !has(object.spec.requirements) ||
         object.spec.requirements
           .filter(r, r.key == 'node.kubernetes.io/instance-type' && r.operator == 'In')
           .all(r, r.values.all(v,
-            !v.matches('\\.(nano|micro|small|medium)$')
+            !v.matches('\\.(nano|micro|small|medium|large)$')
           ))
-      message: "Instance types ending in .nano, .micro, .small, or .medium are not supported for OpenShift nodes."
+      message: "Instance types ending in .nano, .micro, .small, .medium, or .large are not supported for OpenShift nodes."

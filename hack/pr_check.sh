@@ -8,30 +8,7 @@ set -exvo pipefail
 
 trap "rm -f sorted-before*.yaml.tmpl sorted-after*.yaml.tmpl" EXIT
 
-# all custom alerts must have a namespace label
-MISSING_NS="false"
-for F in $(find ./deploy/sre-prometheus -type f -iname '*prometheusrule.yaml')
-do
-    MISSING_NS_COUNT=$(python3 -c 'import json, sys, yaml ; y=yaml.safe_load(sys.stdin.read()) ; print(json.dumps(y))' < "$F" | jq -r '.spec.groups[].rules[] | select(.alert != null) | select(.namespace == null) and select(.labels.namespace == null)' | wc -l)
-
-    if [ "$MISSING_NS_COUNT" != "0" ]
-    then
-        echo "ERROR: Rule missing 'namespace' in file '$F'"
-        MISSING_NS="true"
-    fi
-
-    JSON_RULESFILE="$(python3 -c 'import json, sys, yaml ; y=yaml.safe_load(sys.stdin.read()) ; print(json.dumps(y))' < "$F" | jq -r '.spec')"
-    if ! echo "$JSON_RULESFILE" | promtool check rules --lint="all" --lint-fatal; then
-      echo "Invalid rules file: '$F'"
-      exit 1
-    fi
-done
-
-if [ "$MISSING_NS" == "true" ]
-then
-    echo "ERROR: one or more files missing 'namespace' label, see 'ERROR' output in above logs"
-    exit 2
-fi
+python3 scripts/check-prometheusrules.py
 
 # if running `make` changes anything, fail the build
 # order is inconsistent across systems, sort the template file.. it's not perfect but it's better than nothing

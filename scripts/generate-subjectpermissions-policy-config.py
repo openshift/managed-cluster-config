@@ -11,6 +11,7 @@ base_directory = "./deploy/"
 # Alphanumeric order is used to limit the risk of conflict when adding new directories in parallel.
 # This script doesn't walk the sub-directories.
 directories = [
+        'backplane/ai-agent',
         'backplane/cee',
         'backplane/cse',
         'backplane/csm',
