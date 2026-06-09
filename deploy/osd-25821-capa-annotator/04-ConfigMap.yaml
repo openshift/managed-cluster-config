@@ -16,6 +16,8 @@ data:
       exit 1
     fi
 
+    MAX_RETRIES=3
+
     # Get all manifestwork objects and extract their names
     managedclusters=$(oc get managedclusters -l openshiftVersion-major-minor=${MAJOR_MINOR_VER} -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}')
 
@@ -39,28 +41,55 @@ data:
       # usually because the local cluster + service cluster are registered as "managedcluster"s.
       if [ "$namespace" == "null" ] || [ "$namespace" == "" ]; then
         echo "skipping cluster $clusterID because it is a management or local cluster"
-        break
+        continue
       fi
 
-      kinds=$(oc get manifestwork -n "$namespace" "$clusterID" -o json | jq -r '.spec.workload.manifests[].kind')
-      num=0
-      for kind in $kinds;do
-        if [[ $kind == "HostedCluster" ]]; then
-            echo "patching cluster: $clusterID"
+      echo "patching cluster: $clusterID"
 
-            if [[ $cleanup = "true" ]]; then
-              json_payload='[{"op":"remove","path":"/spec/workload/manifests/'"$num"'/metadata/annotations/hypershift.openshift.io~1capi-provider-aws-image"}]'
-            else
-              json_payload='[{"op":"replace","path":"/spec/workload/manifests/'"$num"'/metadata/annotations/hypershift.openshift.io~1capi-provider-aws-image","value":"'"$IMAGE"'"}]'
-            fi
-
-            echo "oc patch manifestwork $clusterID -n $namespace --type='json' -p "$json_payload""
-            oc patch manifestwork "$clusterID" -n "$namespace" --type='json' -p "$json_payload"
-            echo "-------------------------------------------------------------------------"
-            break
+      # Atomic read-modify-write with retry to avoid racing on manifest array indices.
+      # Reads the full ManifestWork, transforms via jq (by kind, not index), and replaces.
+      # oc replace fails on resourceVersion conflict, so we retry.
+      for attempt in $(seq 1 $MAX_RETRIES); do
+        if [[ $cleanup == "true" ]]; then
+          modified=$(oc get manifestwork "$clusterID" -n "$namespace" -o json | jq '
+            .spec.workload.manifests |= map(
+              if .kind == "HostedCluster" then
+                del(.metadata.annotations["hypershift.openshift.io/capi-provider-aws-image"])
+              else . end
+            )
+          ')
+        else
+          modified=$(oc get manifestwork "$clusterID" -n "$namespace" -o json | jq --arg image "$IMAGE" '
+            .spec.workload.manifests |= map(
+              if .kind == "HostedCluster" then
+                .metadata.annotations["hypershift.openshift.io/capi-provider-aws-image"] = $image
+              else . end
+            )
+          ')
         fi
-      (( num++))
+
+        replace_output=$(echo "$modified" | oc replace -f - 2>&1)
+        replace_rc=$?
+
+        if [[ $replace_rc -eq 0 ]]; then
+          echo "successfully patched cluster $clusterID"
+          break
+        fi
+
+        if echo "$replace_output" | grep -qi "conflict\|the object has been modified"; then
+          echo "conflict on attempt $attempt/$MAX_RETRIES for cluster $clusterID, retrying..."
+        else
+          echo "ERROR: failed to replace manifestwork for cluster $clusterID: $replace_output"
+          exit 1
+        fi
       done
+
+      if [[ $replace_rc -ne 0 ]]; then
+        echo "ERROR: failed to patch cluster $clusterID after $MAX_RETRIES attempts: $replace_output"
+        exit 1
+      fi
+
+      echo "-------------------------------------------------------------------------"
     done
   should_patch.py: "#!/usr/bin/env python3\n\n# NOTE: If you update this script, run
     `./generate_configmap.sh`\n\nimport sys\n\n# should_patch.py takes two arguments:
@@ -82,6 +111,5 @@ data:
     \       sys.exit(1)\n\nif __name__==\"__main__\":\n    main()\n"
 kind: ConfigMap
 metadata:
-  creationTimestamp: null
   name: capa-annotator
   namespace: openshift-capa-annotator
