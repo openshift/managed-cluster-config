@@ -21,7 +21,7 @@ spec:
       expr: |
         count(ALERTS{alertname="etcdMembersDown", alertstate="firing"}) >= 1
           and on()
-        count(kube_node_role{role=~"master|control-plane"}) <= 3
+        (count(kube_node_role{role="control-plane"}) or vector(0)) <= 3
       labels:
         severity: critical
         namespace: openshift-etcd
