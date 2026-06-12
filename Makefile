@@ -39,7 +39,7 @@ ifndef CHECK_SSS_CONFLICTS
 $(error CHECK_SSS_CONFLICTS is not set; check project.mk file)
 endif
 
-POLICYGEN_VERSION=v1.12.4
+POLICYGEN_VERSION=v1.17.1
 
 VOLUME_MOUNT_FLAGS = :z
 CONTAINER_ENGINE?=$(shell command -v docker 2>/dev/null || command -v podman 2>/dev/null)
