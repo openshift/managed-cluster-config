@@ -1,0 +1,222 @@
+# OCPBUGS-88685: metrics-proxy memory limit workaround
+#
+# The metrics-proxy deployment on 4.22 HCP clusters has unbounded memory
+# growth with no limits set, causing RequestServingNodesNeedUpscale alerts
+# on request-serving nodes.
+#
+# This CronJob patches metrics-proxy deployments across all HCP namespaces
+# to add a 512Mi memory limit. The CPO does not override manually set limits.
+#
+# Tracking: OCPBUGS-88685
+apiVersion: policy.open-cluster-management.io/v1
+kind: ConfigurationPolicy
+metadata:
+  name: ocpbugs-88685-metrics-proxy-memory-limit
+spec:
+  evaluationInterval:
+    compliant: 2h
+    noncompliant: 45s
+  object-templates-raw: |
+    - complianceType: mustonlyhave
+      metadataComplianceType: musthave
+      objectDefinition:
+        apiVersion: v1
+        kind: ServiceAccount
+        metadata:
+          name: metrics-proxy-memory-limit
+          namespace: openshift-monitoring
+          labels:
+            app: metrics-proxy-memory-limit
+    - complianceType: mustonlyhave
+      metadataComplianceType: musthave
+      objectDefinition:
+        apiVersion: rbac.authorization.k8s.io/v1
+        kind: ClusterRole
+        metadata:
+          name: metrics-proxy-memory-limit
+          labels:
+            app: metrics-proxy-memory-limit
+        rules:
+          - apiGroups: ["apps"]
+            resources: ["deployments"]
+            verbs: ["get", "list", "patch"]
+          - apiGroups: ["hypershift.openshift.io"]
+            resources: ["hostedcontrolplanes"]
+            verbs: ["get", "list"]
+    - complianceType: mustonlyhave
+      metadataComplianceType: musthave
+      objectDefinition:
+        apiVersion: rbac.authorization.k8s.io/v1
+        kind: ClusterRoleBinding
+        metadata:
+          name: metrics-proxy-memory-limit
+          labels:
+            app: metrics-proxy-memory-limit
+        subjects:
+          - kind: ServiceAccount
+            name: metrics-proxy-memory-limit
+            namespace: openshift-monitoring
+        roleRef:
+          kind: ClusterRole
+          name: metrics-proxy-memory-limit
+          apiGroup: rbac.authorization.k8s.io
+    - complianceType: mustonlyhave
+      metadataComplianceType: musthave
+      objectDefinition:
+        apiVersion: v1
+        kind: ConfigMap
+        metadata:
+          name: metrics-proxy-memory-limit-script
+          namespace: openshift-monitoring
+          labels:
+            app: metrics-proxy-memory-limit
+        data:
+          patch.sh: |
+            #!/bin/bash
+            set -uo pipefail
+
+            MIN_MINOR=22
+            MEMORY_LIMIT="${MEMORY_LIMIT:-512Mi}"
+            patched=0
+            skipped=0
+            errors=0
+
+            for ns in $(oc get hostedcontrolplanes --all-namespaces --no-headers \
+              -o custom-columns=NS:.metadata.namespace 2>/dev/null); do
+
+              version=$(oc get hostedcontrolplane -n "$ns" \
+                -o jsonpath='{.items[0].status.versionStatus.desired.version}' 2>/dev/null)
+
+              if [ -z "$version" ]; then
+                echo "Skipping $ns (unable to determine HCP version)"
+                skipped=$((skipped + 1))
+                continue
+              fi
+
+              minor=$(echo "$version" | cut -d. -f2)
+              if [ "$minor" -lt "$MIN_MINOR" ] 2>/dev/null; then
+                echo "Skipping $ns (version $version < 4.$MIN_MINOR)"
+                skipped=$((skipped + 1))
+                continue
+              fi
+
+              if ! oc get deployment metrics-proxy -n "$ns" &>/dev/null; then
+                echo "Skipping $ns (no metrics-proxy deployment)"
+                skipped=$((skipped + 1))
+                continue
+              fi
+
+              names=$(oc get deployment metrics-proxy -n "$ns" \
+                -o jsonpath='{range .spec.template.spec.containers[*]}{.name}{"\n"}{end}' 2>/dev/null)
+              idx=-1
+              i=0
+              while IFS= read -r cname; do
+                if [ "$cname" = "metrics-proxy" ]; then
+                  idx=$i
+                  break
+                fi
+                i=$((i + 1))
+              done <<< "$names"
+
+              if [ "$idx" -eq -1 ]; then
+                echo "Skipping $ns (no metrics-proxy container found)"
+                skipped=$((skipped + 1))
+                continue
+              fi
+
+              current=$(oc get deployment metrics-proxy -n "$ns" \
+                -o jsonpath="{.spec.template.spec.containers[$idx].resources.limits.memory}" 2>/dev/null)
+
+              if [ -z "$current" ]; then
+                echo "Patching metrics-proxy in $ns (version $version, container index $idx, setting memory limit to $MEMORY_LIMIT)"
+                if oc patch deployment metrics-proxy -n "$ns" --type=json \
+                  -p='[{"op":"add","path":"/spec/template/spec/containers/'"$idx"'/resources/limits","value":{"memory":"'"$MEMORY_LIMIT"'"}}]'; then
+                  patched=$((patched + 1))
+                else
+                  echo "ERROR: Failed to patch metrics-proxy in $ns"
+                  errors=$((errors + 1))
+                fi
+              else
+                echo "Skipping $ns (limit already set: $current)"
+                skipped=$((skipped + 1))
+              fi
+            done
+
+            echo "Done. Patched: $patched, Skipped: $skipped, Errors: $errors"
+            [ "$errors" -eq 0 ]
+    - complianceType: mustonlyhave
+      metadataComplianceType: musthave
+      objectDefinition:
+        apiVersion: batch/v1
+        kind: CronJob
+        metadata:
+          name: metrics-proxy-memory-limit
+          namespace: openshift-monitoring
+          labels:
+            app: metrics-proxy-memory-limit
+          annotations:
+            kubernetes.io/description: "Mitigate OCPBUGS-88685 by adding memory limits to metrics-proxy deployments"
+        spec:
+          schedule: "*/30 * * * *"
+          concurrencyPolicy: Forbid
+          successfulJobsHistoryLimit: 3
+          failedJobsHistoryLimit: 3
+          jobTemplate:
+            spec:
+              backoffLimit: 1
+              activeDeadlineSeconds: 300
+              ttlSecondsAfterFinished: 3600
+              template:
+                metadata:
+                  labels:
+                    app: metrics-proxy-memory-limit
+                spec:
+                  serviceAccountName: metrics-proxy-memory-limit
+                  restartPolicy: Never
+                  affinity:
+                    nodeAffinity:
+                      preferredDuringSchedulingIgnoredDuringExecution:
+                        - preference:
+                            matchExpressions:
+                              - key: node-role.kubernetes.io/infra
+                                operator: Exists
+                          weight: 1
+                  tolerations:
+                    - operator: Exists
+                  containers:
+                    - name: patcher
+                      image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+                      imagePullPolicy: Always
+                      command:
+                        - /bin/bash
+                        - /scripts/patch.sh
+                      env:
+                        - name: MEMORY_LIMIT
+                          value: "512Mi"
+                      volumeMounts:
+                        - name: script
+                          mountPath: /scripts
+                          readOnly: true
+                      resources:
+                        requests:
+                          cpu: 10m
+                          memory: 64Mi
+                        limits:
+                          cpu: 100m
+                          memory: 128Mi
+                      securityContext:
+                        allowPrivilegeEscalation: false
+                        capabilities:
+                          drop:
+                            - ALL
+                        runAsNonRoot: true
+                        seccompProfile:
+                          type: RuntimeDefault
+                  volumes:
+                    - name: script
+                      configMap:
+                        name: metrics-proxy-memory-limit-script
+                        defaultMode: 0755
+  pruneObjectBehavior: DeleteIfCreated
+  remediationAction: enforce
+  severity: high
