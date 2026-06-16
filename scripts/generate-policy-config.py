@@ -31,6 +31,7 @@ directories = [
         'hcp-ze-ecr-creds',
         'hypershift-ovn-logging',
         'osd-cluster-admin',
+        'ocpbugs-88685-metrics-proxy-memory-limit',
         'osd-customer-monitoring',
         'osd-delete-backplane-script-resources',
         'osd-delete-backplane-serviceaccounts',
