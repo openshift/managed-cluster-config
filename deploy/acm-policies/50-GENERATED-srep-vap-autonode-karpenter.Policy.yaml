@@ -99,18 +99,18 @@ spec:
                                     !has(object.spec.blockDeviceMappings) ||
                                     object.spec.blockDeviceMappings.all(bdm,
                                       !has(bdm.ebs) ||
-                                      !has(bdm.ebs.volumeSize) ||
-                                      int(string(bdm.ebs.volumeSize).replace('Gi', '').replace('G', '')) >= 100
+                                      !has(bdm.ebs.volumeSizeGiB) ||
+                                      bdm.ebs.volumeSizeGiB >= 100
                                     )
-                                  message: EBS volume size must be at least 100Gi.
+                                  message: EBS volume size must be at least 100 GiB.
                                 - expression: |
                                     !has(object.spec) ||
                                     !has(object.spec.blockDeviceMappings) ||
                                     object.spec.blockDeviceMappings.all(bdm,
                                       !has(bdm.ebs) ||
-                                      (has(bdm.ebs.encrypted) && bdm.ebs.encrypted == true)
+                                      (has(bdm.ebs.encrypted) && bdm.ebs.encrypted == 'Encrypted')
                                     )
-                                  message: 'All EBS volumes must have encryption enabled (encrypted: true).'
+                                  message: 'All EBS volumes must have encryption enabled (encrypted: "Encrypted").'
                                 - expression: |
                                     !has(object.spec) ||
                                     !has(object.spec.tags) ||
