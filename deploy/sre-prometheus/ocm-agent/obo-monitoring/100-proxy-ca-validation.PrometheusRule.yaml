@@ -1,0 +1,74 @@
+---
+apiVersion: monitoring.rhobs/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: proxy-ca-validation
+    role: alert-rules
+  name: proxy-ca-validation
+  namespace: openshift-observability-rhobs
+spec:
+  groups:
+    - name: ProxyCAValidationFleetNotification
+      interval: 60s
+      rules:
+        - alert: AdditionalTrustBundleCAInvalidFleetNotification
+          annotations:
+            description: "Cluster proxy CA has failed validation. The Additional Trust Bundle CA certificate must be PEM-encoded X.509."
+            summary: "Additional Trust Bundle CA Invalid"
+          expr: |
+            cluster_operator_conditions{
+              job="cluster-version-operator",
+              name="network",
+              condition="Degraded",
+              reason="TrustBundleValidationFailure",
+              namespace=~"ocm-.*"
+            } == 1
+          for: 5m
+          labels:
+            severity: info
+            send_managed_notification: "true"
+            managed_notification_template: additional-trust-bundle-ca-invalid
+            namespace: "{{ $labels.namespace }}"
+        - alert: ClusterProxyNetworkDegradedFleetNotification
+          annotations:
+            description: "Cluster proxy is failing network readiness endpoint checks and may be misconfigured or not running."
+            summary: "Cluster-wide Proxy failing readiness checks"
+          expr: |
+            cluster_operator_conditions{
+              job="cluster-version-operator",
+              name="network",
+              condition="Degraded",
+              reason="InvalidProxyConfig",
+              namespace=~"ocm-.*"
+            } == 1
+          for: 10m
+          labels:
+            severity: info
+            send_managed_notification: "true"
+            managed_notification_template: cluster-proxy-network-degraded
+            namespace: "{{ $labels.namespace }}"
+        - alert: HyperShiftAdditionalTrustBundleCAExpiringFleetNotification
+          annotations:
+            description: "Additional Trust Bundle CA certificate will expire in {{ $value | humanizeDuration }}. Ensure new certificate is provided prior to expiration to avoid cluster degradation and/or unavailability."
+            summary: "Additional Trust Bundle CA Expiring"
+          expr: |
+            hypershift_cluster_proxy_ca_expiry_timestamp - time() < 86400 * 30 > 0
+          for: 10m
+          labels:
+            severity: info
+            send_managed_notification: "true"
+            managed_notification_template: additional-trust-bundle-ca-expiring
+            namespace: "{{ $labels.exported_namespace }}"
+        - alert: HyperShiftAdditionalTrustBundleCAExpiredFleetNotification
+          annotations:
+            description: "Additional Trust Bundle CA certificate has expired. Ensure new certificate is provided immediately to avoid cluster degradation and/or unavailability."
+            summary: "Additional Trust Bundle CA Expired"
+          expr: |
+            hypershift_cluster_proxy_ca_expiry_timestamp - time() <= 0
+          for: 10m
+          labels:
+            severity: info
+            send_managed_notification: "true"
+            managed_notification_template: additional-trust-bundle-ca-expired
+            namespace: "{{ $labels.exported_namespace }}"
