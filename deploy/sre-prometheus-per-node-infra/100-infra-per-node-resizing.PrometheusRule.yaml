@@ -34,12 +34,15 @@ spec:
     ## Computes 1 - (free + buffers + cached) / total for each infra node.
     ## Joins with sre:telemetry:managed_labels to pick up _id for centralized observability.
     ## Returns a value between 0 and 1 per infra node instance.
+    ## Uses last_over_time to carry forward the last known value across scrape gaps
+    ## of up to 10 minutes, preventing MemoryPressure-induced scrape failures from
+    ## resetting downstream alert 'for' timers.
       - expr: |
             (
               (
                 1 -
-                (node_memory_MemFree_bytes + node_memory_Buffers_bytes + node_memory_Cached_bytes)
-                / node_memory_MemTotal_bytes
+                (last_over_time(node_memory_MemFree_bytes[10m]) + last_over_time(node_memory_Buffers_bytes[10m]) + last_over_time(node_memory_Cached_bytes[10m]))
+                / last_over_time(node_memory_MemTotal_bytes[10m])
               )
               * on (instance) (
                 label_replace(
