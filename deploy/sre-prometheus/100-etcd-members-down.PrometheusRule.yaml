@@ -1,0 +1,31 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: sre-etcd-members-down-alerts
+    role: alert-rules
+  name: sre-etcd-members-down
+  namespace: openshift-monitoring
+spec:
+  groups:
+  - name: sre-etcd-members-down-alerts
+    rules:
+    - alert: etcdMembersDownSRE
+      # Fire etcdMembersDown only when CPMS is not scaling up control plane nodes.
+      # With 4+ master nodes, CPMS is joining a new node into etcd quorum,
+      # which transiently triggers etcdMembersDown.
+      # No `for` duration here — the upstream etcdMembersDown already waits 20m
+      # before firing, so this preserves the same timing while only firing when
+      # the control plane node count is what we expect (<=3).
+      expr: |
+        count(ALERTS{alertname="etcdMembersDown", alertstate="firing"}) >= 1
+          and on()
+        (count(kube_node_role{role="control-plane"}) or vector(0)) <= 3
+      labels:
+        severity: critical
+        namespace: openshift-etcd
+      annotations:
+        summary: etcd cluster members are down.
+        description: "etcdMembersDown is firing and the cluster has 3 or fewer control plane nodes, ruling out a ControlPlaneMachineSet scale-up as the cause."
+        runbook_url: https://github.com/openshift/ops-sop/blob/master/v4/alerts/etcdMembersDown.md
