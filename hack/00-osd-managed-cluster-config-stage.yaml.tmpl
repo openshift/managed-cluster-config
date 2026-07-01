@@ -30014,7 +30014,18 @@ objects:
           \          - metadata\n          - namespace\n      metrics:\n        -\
           \ name: \"created\"\n          help: \"Creation timestamp of VolumeSnapshot\
           \ (always emitted).\"\n          each:\n            type: Gauge\n      \
-          \      gauge:\n              path: [metadata, creationTimestamp]"
+          \      gauge:\n              path: [metadata, creationTimestamp]\n    #\
+          \ ---- cert-manager Challenge CRs ----\n    - groupVersionKind:\n      \
+          \  group: acme.cert-manager.io\n        version: v1\n        kind: Challenge\n\
+          \      metricNamePrefix: certmanager_challenge_cr\n      labelsFromPath:\n\
+          \        challenge_name:\n          - metadata\n          - name\n     \
+          \   exported_namespace:\n          - metadata\n          - namespace\n \
+          \     metrics:\n        - name: \"created\"\n          help: \"Creation\
+          \ timestamp of cert-manager Challenge CR.\"\n          each:\n         \
+          \   type: Gauge\n            gauge:\n              path: [metadata, creationTimestamp]\n\
+          \        - name: \"info\"\n          help: \"cert-manager Challenge CR with\
+          \ state label.\"\n          each:\n            type: Info\n            info:\n\
+          \              labelsFromPath:\n                state: [status, state]"
     - apiVersion: v1
       kind: ServiceAccount
       metadata:
@@ -30066,6 +30077,14 @@ objects:
         resources:
         - volumesnapshotcontents
         - volumesnapshots
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - acme.cert-manager.io
+        resources:
+        - challenges
         verbs:
         - get
         - list
