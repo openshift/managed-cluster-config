@@ -35,6 +35,9 @@ endif
 ifndef GEN_CMO_CONFIG
 $(error GEN_CMO_CONFIG is not set; check project.mk file)
 endif
+ifndef CHECK_SSS_CONFLICTS
+$(error CHECK_SSS_CONFLICTS is not set; check project.mk file)
+endif
 
 POLICYGEN_VERSION=v1.12.4
 
@@ -58,7 +61,7 @@ OC := $(CONTAINER_ENGINE) run $(CONTAINER_RUN_FLAGS) quay.io/openshift/origin-cl
 endif
 
 .PHONY: default
-default: enforce-backplane-rules generate-oauth-templates generate-rosa-brand-logo generate-hive-templates
+default: check-sss-conflicts enforce-backplane-rules generate-oauth-templates generate-rosa-brand-logo generate-hive-templates
 
 .PHONY: generate-oauth-templates
 generate-oauth-templates:
@@ -93,6 +96,14 @@ enforce-backplane-rules:
 		$(CONTAINER_ENGINE) run $(CONTAINER_RUN_FLAGS) registry.access.redhat.com/ubi8/python-39 /bin/bash -xc "cd `pwd -P`; pip install --disable-pip-version-check oyaml; ${ENFORCE_BACKPLANE_RULES}"; \
 	else \
 		${ENFORCE_BACKPLANE_RULES};\
+	fi
+
+.PHONY: check-sss-conflicts
+check-sss-conflicts:
+	if [ -z ${IN_CONTAINER} ]; then \
+		$(CONTAINER_ENGINE) run $(CONTAINER_RUN_FLAGS) registry.access.redhat.com/ubi8/python-39 /bin/bash -xc "cd `pwd -P`; pip install --disable-pip-version-check oyaml; ${CHECK_SSS_CONFLICTS}"; \
+	else \
+		${CHECK_SSS_CONFLICTS};\
 	fi
 
 .PHONY: checklinks
