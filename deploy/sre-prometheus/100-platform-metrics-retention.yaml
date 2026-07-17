@@ -1,0 +1,37 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: prometheus-k8s-prometheus-rules
+  namespace: openshift-monitoring
+spec:
+  groups:
+  - name: prometheus
+    rules:
+    - alert: ShortEstimatedMetricsRetentionSRE
+      annotations:
+        description: A Prometheus PVC can only store an estimate of less than 5 days of metrics.
+        summary: Estimated metrics retention low on a prometheus PVC
+      expr: |
+        # Based on https://access.redhat.com/solutions/7134117
+        # 1. Dynamically inject a "pod" label into the capacity metric based on the PVC name
+        label_replace(
+          kubelet_volume_stats_capacity_bytes{persistentvolumeclaim=~"prometheus-data-prometheus-k8s-[0-9]+"},
+          "pod", "$1", "persistentvolumeclaim", "prometheus-data-(.*)"
+        )
+        / on(pod) group_left()
+        (
+          # 2. Calculate daily ingestion rate (in Bytes) grouped by pod
+          1.2 * 86400 * (
+            sum by (pod) (rate(prometheus_tsdb_head_samples_appended_total{type="float", pod=~"prometheus-k8s-[0-9]+"}[1d]))
+            *
+            sum by (pod) (rate(prometheus_tsdb_compaction_chunk_size_bytes_sum{pod=~"prometheus-k8s-[0-9]+"}[1d]))
+            /
+            sum by (pod) (rate(prometheus_tsdb_compaction_chunk_samples_sum{pod=~"prometheus-k8s-[0-9]+"}[1d]))
+          )
+        )
+        # We would use up all storage in less than 5 days leading to rotation.
+        < 5
+      for: 60m
+      labels:
+        severity: warning
+        namespace: openshift-monitoring
