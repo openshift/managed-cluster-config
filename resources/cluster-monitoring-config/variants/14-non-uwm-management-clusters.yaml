@@ -1,0 +1,24 @@
+# Non-UWM management clusters
+deployDir: cluster-monitoring-config-non-uwm/management-clusters
+category: non-uwm
+
+selector:
+  deploymentMode: "SelectorSyncSet"
+  selectorSyncSet:
+    matchExpressions:
+      - key: hive.openshift.io/version-major-minor
+        operator: NotIn
+        values: ["4.5"]
+      - key: ext-managed.openshift.io/uwm-disabled
+        operator: In
+        values: ["true"]
+      - key: ext-hypershift.openshift.io/cluster-type
+        operator: In
+        values: ["management-cluster"]
+
+configOverrides:
+  enableUserWorkload: false
+  prometheusK8s:
+    retention: 7d
+removeKeys:
+  - k8sPrometheusAdapter

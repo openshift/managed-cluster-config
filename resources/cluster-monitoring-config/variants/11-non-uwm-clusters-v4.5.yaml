@@ -1,0 +1,18 @@
+# Non-UWM clusters on 4.5
+deployDir: cluster-monitoring-config-non-uwm/clusters-v4.5
+category: non-uwm
+
+selector:
+  deploymentMode: "SelectorSyncSet"
+  selectorSyncSet:
+    matchExpressions:
+      - key: hive.openshift.io/version-major-minor
+        operator: In
+        values: ["4.5"]
+
+configOverrides:
+  enableUserWorkload: false
+  prometheusK8s:
+    retention: 11d
+copyKeys:
+  grafana: prometheusOperator
