@@ -173,3 +173,30 @@ data:
                 type: Gauge
                 gauge:
                   path: [metadata, creationTimestamp]
+        # ---- cert-manager Challenge CRs ----
+        - groupVersionKind:
+            group: acme.cert-manager.io
+            version: v1
+            kind: Challenge
+          metricNamePrefix: certmanager_challenge_cr
+          labelsFromPath:
+            challenge_name:
+              - metadata
+              - name
+            exported_namespace:
+              - metadata
+              - namespace
+          metrics:
+            - name: "created"
+              help: "Creation timestamp of cert-manager Challenge CR."
+              each:
+                type: Gauge
+                gauge:
+                  path: [metadata, creationTimestamp]
+            - name: "info"
+              help: "cert-manager Challenge CR with state label."
+              each:
+                type: Info
+                info:
+                  labelsFromPath:
+                    state: [status, state]
