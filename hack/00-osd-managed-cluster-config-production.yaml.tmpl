@@ -30747,44 +30747,48 @@ objects:
           , reason]\n                  ign_server_reached: [status, conditions, \"\
           [type=ReachedIgnitionEndpoint]\", status]\n                  ign_server_reached_reason:\
           \ [status, conditions, \"[type=ReachedIgnitionEndpoint]\", reason]\n   \
-          \ # ---- Velero Backup CRs ----\n    # Two metrics needed because newly\
-          \ enqueued backups have status: {}\n    # (no phase set yet), and KSM Info\
-          \ metrics are NOT emitted when the\n    # labelsFromPath path cannot resolve.\n\
-          \    #\n    # \"created\" (Gauge): always emits for every Backup CR \u2192\
-          \ gives total count.\n    # \"info\" (Info): only emits when status.phase\
-          \ exists \u2192 gives count by phase.\n    # Enqueued backups = count(created)\
-          \ - count(info).\n    - groupVersionKind:\n        group: velero.io\n  \
-          \      version: v1\n        kind: Backup\n      metricNamePrefix: velero_backup_cr\n\
-          \      labelsFromPath:\n        backup_name:\n          - metadata\n   \
-          \       - name\n        exported_namespace:\n          - metadata\n    \
-          \      - namespace\n      metrics:\n        - name: \"created\"\n      \
-          \    help: \"Creation timestamp of Velero backup CR (always emitted).\"\n\
-          \          each:\n            type: Gauge\n            gauge:\n        \
-          \      path: [metadata, creationTimestamp]\n        - name: \"info\"\n \
-          \         help: \"Velero backup CR with phase label (only when phase exists).\"\
-          \n          each:\n            type: Info\n            info:\n         \
-          \     labelsFromPath:\n                phase: [status, phase]\n    # ----\
-          \ Velero DeleteBackupRequest CRs ----\n    # Same pattern as Backups: most\
-          \ DBRs have status: {} while enqueued,\n    # only the one actively being\
-          \ processed has status.phase: InProgress.\n    # \"created\" gives total\
-          \ count, \"info\" gives count by phase.\n    - groupVersionKind:\n     \
-          \   group: velero.io\n        version: v1\n        kind: DeleteBackupRequest\n\
-          \      metricNamePrefix: velero_dbr_cr\n      labelsFromPath:\n        dbr_name:\n\
-          \          - metadata\n          - name\n        exported_namespace:\n \
-          \         - metadata\n          - namespace\n      metrics:\n        - name:\
-          \ \"created\"\n          help: \"Creation timestamp of Velero DBR (always\
-          \ emitted).\"\n          each:\n            type: Gauge\n            gauge:\n\
-          \              path: [metadata, creationTimestamp]\n        - name: \"info\"\
-          \n          help: \"Velero DBR with phase label (only when phase exists).\"\
-          \n          each:\n            type: Info\n            info:\n         \
-          \     labelsFromPath:\n                phase: [status, phase]\n    # ----\
-          \ VolumeSnapshotContent (cluster-scoped) ----\n    # With deletionPolicy=Delete,\
-          \ VSCs should not persist.\n    # Any existing VSC is an orphan from a stuck\
-          \ deletion.\n    # Signal: count > 0 = problem.\n    - groupVersionKind:\n\
-          \        group: snapshot.storage.k8s.io\n        version: v1\n        kind:\
-          \ VolumeSnapshotContent\n      metricNamePrefix: velero_vsc_cr\n      labelsFromPath:\n\
-          \        vsc_name:\n          - metadata\n          - name\n      metrics:\n\
-          \        - name: \"created\"\n          help: \"Creation timestamp of VolumeSnapshotContent\
+          \     - name: \"spec_info\"\n          help: \"Static spec-derived info\
+          \ for a nodepool\"\n          each:\n            type: Info\n          \
+          \  info:\n                labelsFromPath:\n                  market_type:\
+          \ [spec, platform, aws, placement, marketType]\n    # ---- Velero Backup\
+          \ CRs ----\n    # Two metrics needed because newly enqueued backups have\
+          \ status: {}\n    # (no phase set yet), and KSM Info metrics are NOT emitted\
+          \ when the\n    # labelsFromPath path cannot resolve.\n    #\n    # \"created\"\
+          \ (Gauge): always emits for every Backup CR \u2192 gives total count.\n\
+          \    # \"info\" (Info): only emits when status.phase exists \u2192 gives\
+          \ count by phase.\n    # Enqueued backups = count(created) - count(info).\n\
+          \    - groupVersionKind:\n        group: velero.io\n        version: v1\n\
+          \        kind: Backup\n      metricNamePrefix: velero_backup_cr\n      labelsFromPath:\n\
+          \        backup_name:\n          - metadata\n          - name\n        exported_namespace:\n\
+          \          - metadata\n          - namespace\n      metrics:\n        -\
+          \ name: \"created\"\n          help: \"Creation timestamp of Velero backup\
+          \ CR (always emitted).\"\n          each:\n            type: Gauge\n   \
+          \         gauge:\n              path: [metadata, creationTimestamp]\n  \
+          \      - name: \"info\"\n          help: \"Velero backup CR with phase label\
+          \ (only when phase exists).\"\n          each:\n            type: Info\n\
+          \            info:\n              labelsFromPath:\n                phase:\
+          \ [status, phase]\n    # ---- Velero DeleteBackupRequest CRs ----\n    #\
+          \ Same pattern as Backups: most DBRs have status: {} while enqueued,\n \
+          \   # only the one actively being processed has status.phase: InProgress.\n\
+          \    # \"created\" gives total count, \"info\" gives count by phase.\n \
+          \   - groupVersionKind:\n        group: velero.io\n        version: v1\n\
+          \        kind: DeleteBackupRequest\n      metricNamePrefix: velero_dbr_cr\n\
+          \      labelsFromPath:\n        dbr_name:\n          - metadata\n      \
+          \    - name\n        exported_namespace:\n          - metadata\n       \
+          \   - namespace\n      metrics:\n        - name: \"created\"\n         \
+          \ help: \"Creation timestamp of Velero DBR (always emitted).\"\n       \
+          \   each:\n            type: Gauge\n            gauge:\n              path:\
+          \ [metadata, creationTimestamp]\n        - name: \"info\"\n          help:\
+          \ \"Velero DBR with phase label (only when phase exists).\"\n          each:\n\
+          \            type: Info\n            info:\n              labelsFromPath:\n\
+          \                phase: [status, phase]\n    # ---- VolumeSnapshotContent\
+          \ (cluster-scoped) ----\n    # With deletionPolicy=Delete, VSCs should not\
+          \ persist.\n    # Any existing VSC is an orphan from a stuck deletion.\n\
+          \    # Signal: count > 0 = problem.\n    - groupVersionKind:\n        group:\
+          \ snapshot.storage.k8s.io\n        version: v1\n        kind: VolumeSnapshotContent\n\
+          \      metricNamePrefix: velero_vsc_cr\n      labelsFromPath:\n        vsc_name:\n\
+          \          - metadata\n          - name\n      metrics:\n        - name:\
+          \ \"created\"\n          help: \"Creation timestamp of VolumeSnapshotContent\
           \ (always emitted).\"\n          each:\n            type: Gauge\n      \
           \      gauge:\n              path: [metadata, creationTimestamp]\n    #\
           \ ---- VolumeSnapshot (namespace-scoped) ----\n    # Same as VSC: should\
