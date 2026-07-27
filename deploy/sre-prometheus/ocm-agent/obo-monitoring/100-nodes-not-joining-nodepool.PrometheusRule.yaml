@@ -18,6 +18,10 @@ spec:
               (
                 (
                   (hypershift_nodepools_available_replicas / hypershift_nodepools_size < 1)
+                  unless on (exported_namespace, name) label_replace(
+                    hypershift_nodepool_spec_info{market_type="Spot"},
+                    "name", "$1", "nodepool_name", "(.*)"
+                  )
                   unless on (_id) (
                     hypershift_nodepools_size == 0
                     or
