@@ -47309,162 +47309,198 @@ objects:
       kind: PrometheusRule
       metadata:
         labels:
-          prometheus: sre-obo-stack
+          prometheus: sre-coo-stack
           role: alert-rules
-        name: sre-obo-stack
+        name: sre-coo-stack
         namespace: openshift-monitoring
       spec:
         groups:
-        - name: sre-obo-stack-failing
+        - name: sre-coo-stack
           rules:
-          - alert: OpenshiftObservabilityOperatorStackDownSRE
-            expr: "absent(kube_deployment_status_replicas{deployment=\"obo-prometheus-operator\"\
-              , namespace=\"openshift-observability-operator\"}) or\nabsent(kube_deployment_status_replicas{deployment=\"\
-              obo-prometheus-operator-admission-webhook\", namespace=\"openshift-observability-operator\"\
-              }) or\nabsent(kube_deployment_status_replicas{deployment=\"observability-operator\"\
-              , namespace=\"openshift-observability-operator\"}) or\nabsent(kube_statefulset_status_replicas{statefulset=\"\
-              prometheus-hypershift-monitoring-stack\", namespace=\"openshift-observability-operator\"\
-              }) or\nabsent(kube_statefulset_status_replicas{statefulset=\"alertmanager-hypershift-monitoring-stack\"\
-              , namespace=\"openshift-observability-operator\"}) \n"
+          - alert: COOStackMissingSRE
+            expr: 'absent(kube_deployment_status_replicas{deployment="obo-prometheus-operator",
+              namespace="openshift-operators"}) or
+
+              absent(kube_deployment_status_replicas{deployment="obo-prometheus-operator-admission-webhook",
+              namespace="openshift-operators"}) or
+
+              absent(kube_deployment_status_replicas{deployment="observability-operator",
+              namespace="openshift-operators"})
+
+              '
             for: 15m
             labels:
-              namespace: openshift-observability-operator
-              severity: warning
+              severity: critical
+              namespace: openshift-operators
             annotations:
-              summary: The Openshift Observability Operator Workload(s) are absent
-                or have failed to deploy on the Management Cluster
-              description: 'The following Openshift Observability Operator Workload(s)
-                are absent or have failed to be deployed the Management Cluster for
+              summary: Cluster Observability Operator or one of its component is absent
+                from the Management Cluster
+              description: 'The following Cluster Observability Operator (COO) component
+                is absent or has failed to be deployed in the Management Cluster for
                 last 15 mins:
 
-                {{ if $labels.deployment }} {{$labels.deployment}} Deployment {{end}}
-
-                {{ if $labels.statefulset }} {{$labels.statefulset}} Statefulset {{end}}
+                {{$labels.deployment}} deployment
 
                 '
-              SOP: https://github.com/openshift/ops-sop/blob/master/hypershift/alerts/OpenshiftObservabilityOperatorStackDownSRE.md
-        - name: sre-obo-stack-degraded
+              runbook_url: https://github.com/openshift/ops-sop/blob/master/hypershift/alerts/COOStackMissingSRE.md
+          - alert: COOStackDegradedSRE
+            expr: (sum(kube_deployment_spec_replicas{deployment=~"(obo.*)|(observability-operator)",
+              namespace="openshift-operators"}) without (instance, pod)) - (sum(kube_deployment_status_replicas_available{deployment=~"(obo.*)|(observability-operator)",
+              namespace="openshift-operators"}) without (instance, pod)) > 0
+            for: 15m
+            labels:
+              severity: critical
+              namespace: openshift-operators
+            annotations:
+              summary: Cluster Observability Operator or one of its component is not
+                ready
+              description: '{{$value}} replicas are not ready out of total required
+                replicas for the Cluster Observability Operator (COO) {{$labels.deployment}}
+                deployment'
+              runbook_url: https://github.com/openshift/ops-sop/blob/master/hypershift/alerts/COOStackDegradedSRE.md
+        - name: sre-coo-workload
           rules:
-          - alert: ObservabilityOperatorPrometheusDegradedSRE
-            expr: (sum(kube_deployment_spec_replicas{deployment="obo-prometheus-operator",
-              namespace="openshift-observability-operator"}) without (deployment,
-              instance, pod)) - (sum(kube_deployment_status_replicas_available{deployment="obo-prometheus-operator",
-              namespace="openshift-observability-operator"}) without (deployment,
-              instance, pod)) > 0
+          - alert: COOWorkloadMissingSRE
+            expr: 'absent(kube_statefulset_status_replicas{statefulset="prometheus-hypershift-monitoring-stack",
+              namespace="openshift-observability-operator"}) or
+
+              absent(kube_statefulset_status_replicas{statefulset="alertmanager-hypershift-monitoring-stack",
+              namespace="openshift-observability-operator"}) or
+
+              absent(kube_statefulset_status_replicas{statefulset="prometheus-rhobs-hypershift-monitoring-stack",
+              namespace="openshift-observability-operator"}) or
+
+              absent(kube_statefulset_status_replicas{statefulset="alertmanager-rhobs-hypershift-monitoring-stack",
+              namespace="openshift-observability-operator"})
+
+              '
             for: 15m
             labels:
+              severity: critical
               namespace: openshift-observability-operator
-              severity: warning
             annotations:
-              summary: The Openshift Observability Prometheus Operator is Degraded
-              description: '{{$value}} replicas are not running out of total required
-                replicas for the Openshift Observability Prometheus Operator'
-              SOP: https://github.com/openshift/ops-sop/blob/master/hypershift/alerts/ObservabilityOperatorPrometheusDegradedSRE.md
-          - alert: OpenshiftObservabilityPrometheusOperatorAdmissionWebhookDegradedSRE
-            expr: (sum(kube_deployment_spec_replicas{deployment="obo-prometheus-operator-admission-webhook",
-              namespace="openshift-observability-operator"}) without (deployment,
-              instance, pod)) - (sum(kube_deployment_status_replicas_available{deployment="obo-prometheus-operator-admission-webhook",
-              namespace="openshift-observability-operator"}) without (deployment,
-              instance, pod)) > 0
-            for: 15m
-            labels:
-              namespace: openshift-observability-operator
-              severity: warning
-            annotations:
-              summary: Openshift Observability Prometheus Operator Admission Webhook
-                is Degraded
-              description: '{{$value}} replicas are not running out of total required
-                replicas for the Openshift Observability Prometheus Operator Admission
-                Webhook'
-              SOP: https://github.com/openshift/ops-sop/blob/master/hypershift/alerts/OpenshiftObservabilityPrometheusOperatorAdmissionWebhookDegradedSRE.md
-          - alert: OpenshiftObservabilityOperatorDegradedSRE
-            expr: (sum(kube_deployment_spec_replicas{deployment="observability-operator",
-              namespace="openshift-observability-operator"}) without (deployment,
-              instance, pod)) - (sum(kube_deployment_status_replicas_available{deployment="openshift-observability-operator",
-              namespace="openshift-observability-operator"}) without (deployment,
-              instance, pod)) > 0
-            for: 15m
-            labels:
-              namespace: openshift-observability-operator
-              severity: warning
-            annotations:
-              summary: The Openshift Observability Operator is Degraded
-              description: '{{$value}} replicas are not running out of total required
-                replicas for the Openshift Observability Operator'
-              SOP: https://github.com/openshift/ops-sop/blob/master/hypershift/alerts/OpenshiftObservabilityOperatorDegradedSRE.md
-          - alert: OBOPodRestartsStuckSRE
-            expr: kube_pod_container_status_restarts_total{namespace="openshift-observability-operator"}
-              > 0 and increase(kube_pod_container_status_restarts_total{namespace="openshift-observability-operator"}[15m])
+              summary: Cluster Observability Operator workload is absent from the
+                Management Cluster
+              description: 'The following Cluster Observability Operator (COO) workload
+                is absent or has failed to be deployed in the Management Cluster for
+                last 15 mins:
+
+                {{$labels.statefulset}} statefulset
+
+                '
+              runbook_url: https://github.com/openshift/ops-sop/blob/master/hypershift/alerts/COOWorkloadMissingSRE.md
+          - alert: COOWorkloadDegradedSRE
+            expr: (kube_statefulset_replicas{namespace="openshift-observability-operator"}
+              - kube_statefulset_status_replicas_ready{namespace="openshift-observability-operator"})
               > 0
+            for: 60m
+            labels:
+              severity: critical
+              namespace: openshift-observability-operator
+              cause: Pods in the 'openshift-observability-operator' namespace are
+                not all ready
+            annotations:
+              summary: Some pods in the 'openshift-observability-operator' namespace
+                are not ready
+              description: At least one pod in the 'openshift-observability-operator'
+                namespace has not been ready for the last 60 minutes.
+              runbook_url: https://github.com/openshift/ops-sop/blob/master/hypershift/alerts/COOWorkloadDegradedSRE.md
+          - alert: COOWorkloadDegradedSRE
+            expr: increase(kube_pod_container_status_restarts_total{namespace="openshift-observability-operator"}[10m])
+              > 0
+            for: 30m
+            labels:
+              severity: critical
+              namespace: openshift-observability-operator
+              cause: Pod containers in the 'openshift-observability-operator' namespace
+                are restarting
+            annotations:
+              summary: Some pod in the 'openshift-observability-operator' namespace
+                is stuck in a restart loop
+              description: Pod {{$labels.pod}} in the 'openshift-observability-operator'
+                namespace has been stuck in restarts for the last 30 minutes.
+              runbook_url: https://github.com/openshift/ops-sop/blob/master/hypershift/alerts/COOWorkloadDegradedSRE.md
+          - alert: COOWorkloadDegradedSRE
+            expr: 'rate(prometheus_remote_storage_samples_failed_total{namespace="openshift-observability-operator"}[5m])
+              / rate(prometheus_remote_storage_samples_total{namespace="openshift-observability-operator"}[5m])
+              > 0.001
+
+              '
             for: 15m
             labels:
+              severity: critical
               namespace: openshift-observability-operator
-              severity: warning
+              cause: Prometheus pods in the 'openshift-observability-operator' namespace
+                cannot remote write to telemeter or RHOBS
             annotations:
-              summary: Pod Restarts Stuck Alert
-              description: At least one pod in the 'openshift-observability-operator'
-                namespace has been stuck in restarts for the last 15 minutes.
-              SOP: https://github.com/openshift/ops-sop/blob/master/hypershift/alerts/OpenshiftObservabilityOperatorPodRestartsStuckSRE.md
-          - alert: OpenshiftObservabilityOperatorAlertmanagerComponentsMissingSRE
-            expr: count(kube_statefulset_replicas{namespace="openshift-observability-operator",
-              statefulset=~"alertmanager-hypershift-monitoring-stack.+"})
-            for: 60m
-            labels:
-              namespace: openshift-observability-operator
-              severity: warning
-              statefulset: alertmanager-hypershift-monitoring-stack
-              state: missing
-            annotations:
-              summary: alertmanager-hypershift-monitoring-stack statefulset missing
-              description: alertmanager-hypershift-monitoring-stack statefulset in
-                the 'openshift-observability-operator' namespace is missing for 60
-                minutes.
-              SOP: https://github.com/openshift/ops-sop/blob/master/hypershift/alerts/OpenshiftObservabilityOperatorAlertmanagerComponentsMissingSRE.md
-          - alert: OpenshiftObservabilityOperatorAlertmanagerComponentsDegradedSRE
-            expr: (kube_statefulset_replicas{namespace="openshift-observability-operator",
-              statefulset=~"alertmanager-hypershift-monitoring-stack.+"} - kube_statefulset_status_replicas_ready{namespace="openshift-observability-operator",
-              statefulset=~"alertmanager-hypershift-monitoring-stack.+"}) > 0
-            for: 60m
-            labels:
-              namespace: openshift-observability-operator
-              severity: warning
-              statefulset: alertmanager-hypershift-monitoring-stack
-              state: degraded
-            annotations:
-              summary: Alertmanager Hypershift Monitoring Stack pods degraded
-              description: At least one activegate pod in the 'alertmanager-hypershift-monitoring-stack'
-                namespace is not available for 60 minutes.
-              SOP: https://github.com/openshift/ops-sop/blob/master/hypershift/alerts/OpenshiftObservabilityOperatorAlertmanagerComponentsDegradedSRE.md
-          - alert: OpenshiftObservabilityOperatorPrometheusComponentsMissingSRE
-            expr: count(kube_statefulset_replicas{namespace="openshift-observability-operator",
-              statefulset=~"prometheus-hypershift-monitoring-stack.+"})
-            for: 60m
-            labels:
-              namespace: openshift-observability-operator
-              severity: warning
-              statefulset: prometheus-hypershift-monitoring-stack
-              state: missing
-            annotations:
-              summary: prometheus-hypershift-monitoring-stack statefulset missing
-              description: prometheus-hypershift-monitoring-stack statefulset in the
-                'openshift-observability-operator' namespace is missing for 60 minutes.
-              SOP: https://github.com/openshift/ops-sop/blob/master/hypershift/alerts/OpenshiftObservabilityOperatorPrometheusComponentsMissingSRE.md
-          - alert: OpenshiftObservabilityOperatorAlertmanagerComponentsDegradedSRE
-            expr: (kube_statefulset_replicas{namespace="openshift-observability-operator",
-              statefulset=~"prometheus-hypershift-monitoring-stack.+"} - kube_statefulset_status_replicas_ready{namespace="openshift-observability-operator",
-              statefulset=~"prometheus-hypershift-monitoring-stack.+"}) > 0
-            for: 60m
-            labels:
-              namespace: openshift-observability-operator
-              severity: warning
-              statefulset: prometheus-hypershift-monitoring-stack
-              state: degraded
-            annotations:
-              summary: Prometheus Hypershift Monitoring Stack pods degraded
-              description: At least one pod in the 'prometheus-hypershift-monitoring-stack'
-                stateful set in the 'openshift-observability-operator' namespace is
-                not available for 60 minutes.
-              SOP: https://github.com/openshift/ops-sop/blob/master/hypershift/alerts/OpenshiftObservabilityOperatorAlertmanagerComponentsDegradedSRE.md
+              summary: Some pods in the 'openshift-observability-operator' namespace
+                cannot remote write to telemeter or RHOBS
+              description: '{{ $value | humanizePercentage }} of the time series cannot
+                be sent to {{$labels.url}}
+
+                '
+              runbook_url: https://github.com/openshift/ops-sop/blob/master/hypershift/alerts/COOWorkloadDegradedSRE.md
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: Role
+      metadata:
+        name: prometheus-k8s
+        namespace: openshift-observability-operator
+      rules:
+      - apiGroups:
+        - ''
+        resources:
+        - services
+        - endpoints
+        - pods
+        verbs:
+        - get
+        - list
+        - watch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: RoleBinding
+      metadata:
+        name: prometheus-k8s
+        namespace: openshift-observability-operator
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: Role
+        name: prometheus-k8s
+      subjects:
+      - kind: ServiceAccount
+        name: prometheus-k8s
+        namespace: openshift-monitoring
+    - apiVersion: monitoring.coreos.com/v1
+      kind: ServiceMonitor
+      metadata:
+        name: rhobs-hypershift-monitoring-stack-prometheus
+        namespace: openshift-observability-operator
+      spec:
+        endpoints:
+        - interval: 30s
+          metricRelabelings:
+          - sourceLabels:
+            - __name__
+            regex: prometheus_remote_.*
+            action: keep
+        selector:
+          matchLabels:
+            app.kubernetes.io/name: rhobs-hypershift-monitoring-stack-prometheus
+    - apiVersion: monitoring.coreos.com/v1
+      kind: ServiceMonitor
+      metadata:
+        name: hypershift-monitoring-stack-prometheus
+        namespace: openshift-observability-operator
+      spec:
+        endpoints:
+        - interval: 30s
+          metricRelabelings:
+          - sourceLabels:
+            - __name__
+            regex: prometheus_remote_.*
+            action: keep
+        selector:
+          matchLabels:
+            app.kubernetes.io/name: hypershift-monitoring-stack-prometheus
     - apiVersion: monitoring.coreos.com/v1
       kind: PrometheusRule
       metadata:
