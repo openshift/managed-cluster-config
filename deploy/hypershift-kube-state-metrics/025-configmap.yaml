@@ -68,6 +68,13 @@ data:
                       payload_valid_reason: [status, conditions, "[type=ValidGeneratedPayload]", reason]
                       ign_server_reached: [status, conditions, "[type=ReachedIgnitionEndpoint]", status]
                       ign_server_reached_reason: [status, conditions, "[type=ReachedIgnitionEndpoint]", reason]
+            - name: "spec_info"
+              help: "Static spec-derived info for a nodepool"
+              each:
+                type: Info
+                info:
+                    labelsFromPath:
+                      market_type: [spec, platform, aws, placement, marketType]
         # ---- Velero Backup CRs ----
         # Two metrics needed because newly enqueued backups have status: {}
         # (no phase set yet), and KSM Info metrics are NOT emitted when the
