@@ -11,7 +11,7 @@ spec:
     - name: sre-operators.rules
       rules:
         # OLM-based operators
-        - expr:
+        - expr: |
             # csv_succeeded has a value of 1 or 0
             # subscription_sync_total is an integer with value >0
             # joining them with the operator ^ returns a value of 1 or 0
@@ -35,7 +35,7 @@ spec:
             sre:operators:succeeded:olm
         # PKO-based operators
         # Uses package_operator_package_availability metric exported by package-operator itself
-        - expr:
+        - expr: |
             # package_operator_package_availability=1 means operator is successfully deployed
             # We construct labels to match OLM format: exported_namespace, name, version, channel, package
               label_replace(sre:telemetry:managed_labels, "cluster_version", "$0", "version", ".*")
@@ -61,11 +61,11 @@ spec:
           record:
             sre:operators:succeeded:pko
         # evaulate raw metric success on success of either olm or pko
-        - expr:
+        - expr: |
             sre:operators:succeeded:olm or sre:operators:succeeded:pko
           record:
             sre:operators:succeeded:raw
-        - expr:
+        - expr: |
             # making sure that operators installed in user workload namespaces are ignored in case the same operator is installed in an openshift namespace
             sre:operators:succeeded:raw{exported_namespace =~ "openshift-.*"}
             or on(_id, name)
