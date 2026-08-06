@@ -31,6 +31,8 @@ _VALID_SEVERITY_RE = re.compile(r'^(critical|warning|info)$')
 
 _SEARCH_DIRS = [
     Path('.', 'deploy/sre-prometheus'),
+    Path('.', 'deploy/sre-prometheus-must-gather'),
+    Path('.', 'deploy/sre-prometheus-per-node-infra'),
 ]
 
 # Pre-existing alerts with missing or invalid severity labels.
