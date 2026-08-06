@@ -30,9 +30,7 @@ import oyaml as yaml
 _VALID_SEVERITY_RE = re.compile(r'^(critical|warning|info)$')
 
 _SEARCH_DIRS = [
-    Path('.', 'deploy/sre-prometheus'),
-    Path('.', 'deploy/sre-prometheus-must-gather'),
-    Path('.', 'deploy/sre-prometheus-per-node-infra'),
+    Path('.', 'deploy'),
 ]
 
 # Pre-existing alerts with missing or invalid severity labels.
@@ -372,6 +370,11 @@ def main():
         default=_SEARCH_DIRS,
         help='Directories to search for PrometheusRule YAML files',
     )
+    parser.add_argument(
+        '-v', '--verbose',
+        action='store_true',
+        help='Print each file and alerting rule as it is checked',
+    )
     args = parser.parse_args()
 
     prom_files, file_errors = _find_prometheusrule_files(args.directories)
@@ -386,9 +389,13 @@ def main():
     all_violations = []
 
     for path, doc in prom_files:
+        if args.verbose:
+            print(f'  Checking file: {path}')
         alerting_rules = _extract_alerting_rules(doc)
         for group_name, rule in alerting_rules:
             alert_name = rule.get('alert', '<unnamed>')
+            if args.verbose:
+                print(f'    Checking alert: {alert_name} (group: {group_name})')
             for check in _CHECKS:
                 for violation in check(alert_name, rule):
                     all_violations.append(
