@@ -1,0 +1,123 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ocmagent-finalizer-cleanup
+  namespace: openshift-monitoring
+  annotations:
+    kubernetes.io/description: "Remove finalizers from OcmAgent CRs blocking namespace termination"
+spec:
+  backoffLimit: 3
+  ttlSecondsAfterFinished: 43200
+  activeDeadlineSeconds: 300
+  template:
+    metadata:
+      name: ocmagent-finalizer-cleanup
+    spec:
+      serviceAccountName: ocmagent-finalizer-cleanup-sa
+      restartPolicy: Never
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - preference:
+              matchExpressions:
+              - key: node-role.kubernetes.io/infra
+                operator: Exists
+            weight: 1
+      tolerations:
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/infra
+        operator: Exists
+      containers:
+      - name: cleanup
+        image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          runAsNonRoot: true
+        command:
+        - /bin/bash
+        - -c
+        - |
+          #!/bin/bash
+          set -euo pipefail
+
+          NAMESPACE="openshift-ocm-agent-operator"
+          CR_RESOURCE="ocmagents.ocmagent.managed.openshift.io"
+
+          echo "=========================================="
+          echo "OcmAgent Finalizer Cleanup"
+          echo "=========================================="
+          echo "Timestamp: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          echo ""
+
+          # Step 1: Check if the namespace exists and is in Terminating state
+          NS_OUTPUT=$(oc get namespace "${NAMESPACE}" --ignore-not-found -o jsonpath='{.status.phase}')
+
+          if [ -z "${NS_OUTPUT}" ]; then
+            echo "Namespace ${NAMESPACE} does not exist. Nothing to do."
+            exit 0
+          fi
+
+          echo "Namespace ${NAMESPACE} phase: ${NS_OUTPUT}"
+
+          if [ "${NS_OUTPUT}" != "Terminating" ]; then
+            echo "Namespace is not in Terminating state. No action needed."
+            exit 0
+          fi
+
+          echo "Namespace is Terminating. Checking for OcmAgent CRs with finalizers..."
+          echo ""
+
+          # Step 2: Get all OcmAgent CRs in the namespace
+          CR_NAMES=$(oc get ${CR_RESOURCE} -n "${NAMESPACE}" --ignore-not-found -o jsonpath='{.items[*].metadata.name}')
+
+          if [ -z "${CR_NAMES}" ]; then
+            echo "No OcmAgent CRs found in namespace ${NAMESPACE}."
+            echo "Namespace may be blocked by other resources."
+            exit 0
+          fi
+
+          # Step 3: Remove finalizers from each CR
+          CLEANED=0
+          FAILED=0
+          SKIPPED=0
+
+          for name in ${CR_NAMES}; do
+            CR_JSON=$(oc get ${CR_RESOURCE} "${name}" -n "${NAMESPACE}" --ignore-not-found -o jsonpath='{.metadata.deletionTimestamp}{"\t"}{.metadata.finalizers}')
+            DELETION_TS=$(echo "${CR_JSON}" | cut -f1)
+            FINALIZERS=$(echo "${CR_JSON}" | cut -f2)
+
+            if [ -z "${DELETION_TS}" ]; then
+              echo "[SKIP] ${name} - no deletionTimestamp, not pending deletion"
+              SKIPPED=$((SKIPPED + 1))
+              continue
+            fi
+
+            if [ -z "${FINALIZERS}" ] || [ "${FINALIZERS}" = "[]" ]; then
+              echo "[SKIP] ${name} - no finalizers"
+              SKIPPED=$((SKIPPED + 1))
+              continue
+            fi
+
+            echo "[PATCH] ${name} - deletionTimestamp=${DELETION_TS}, removing finalizers: ${FINALIZERS}"
+            if oc patch ${CR_RESOURCE} "${name}" -n "${NAMESPACE}" --type=merge -p '{"metadata":{"finalizers":null}}'; then
+              echo "  OK: finalizers removed"
+              CLEANED=$((CLEANED + 1))
+            else
+              echo "  FAIL: could not remove finalizers"
+              FAILED=$((FAILED + 1))
+            fi
+          done
+
+          echo ""
+          echo "=========================================="
+          echo "Summary: cleaned=${CLEANED} skipped=${SKIPPED} failed=${FAILED}"
+          echo "Timestamp: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          echo "=========================================="
+
+          if [ "${FAILED}" -gt 0 ]; then
+            exit 1
+          fi
