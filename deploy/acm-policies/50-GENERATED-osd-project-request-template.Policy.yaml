@@ -5,6 +5,7 @@ metadata:
     annotations:
         policy.open-cluster-management.io/categories: CM Configuration Management
         policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+        policy.open-cluster-management.io/description: ""
         policy.open-cluster-management.io/standards: NIST SP 800-53
     name: osd-project-request-template
     namespace: openshift-acm-policies
@@ -59,18 +60,25 @@ spec:
                 severity: low
     remediationAction: enforce
 ---
-apiVersion: apps.open-cluster-management.io/v1
-kind: PlacementRule
+apiVersion: cluster.open-cluster-management.io/v1beta1
+kind: Placement
 metadata:
     name: placement-osd-project-request-template
     namespace: openshift-acm-policies
 spec:
-    clusterSelector:
-        matchExpressions:
-            - key: hypershift.open-cluster-management.io/hosted-cluster
-              operator: In
-              values:
-                - "true"
+    predicates:
+        - requiredClusterSelector:
+            labelSelector:
+                matchExpressions:
+                    - key: hypershift.open-cluster-management.io/hosted-cluster
+                      operator: In
+                      values:
+                        - "true"
+    tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
 ---
 apiVersion: policy.open-cluster-management.io/v1
 kind: PlacementBinding
@@ -78,8 +86,8 @@ metadata:
     name: binding-osd-project-request-template
     namespace: openshift-acm-policies
 placementRef:
-    apiGroup: apps.open-cluster-management.io
-    kind: PlacementRule
+    apiGroup: cluster.open-cluster-management.io
+    kind: Placement
     name: placement-osd-project-request-template
 subjects:
     - apiGroup: policy.open-cluster-management.io
