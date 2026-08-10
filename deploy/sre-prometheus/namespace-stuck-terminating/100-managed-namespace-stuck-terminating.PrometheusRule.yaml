@@ -1,0 +1,26 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: sre-managed-namespace-terminating
+    role: alert-rules
+  name: sre-managed-namespace-stuck-terminating
+  namespace: openshift-monitoring
+spec:
+  groups:
+  - name: sre-namespace-stuck-terminating
+    rules:
+    - expr: |
+        kube_namespace_status_phase{namespace=~"openshift-.*", phase="Terminating"}
+      record: sre:record:namespace_stuck_terminating
+    - alert: ManagedNamespaceStuckTerminatingSRE
+      expr: |
+        sre:record:namespace_stuck_terminating
+      for: 1h
+      labels:
+        severity: warning
+        namespace: "{{ $labels.namespace }}"
+      annotations:
+        summary: "Namespace {{ $labels.namespace }} stuck in Terminating state"
+        message: "Managed namespace {{ $labels.namespace }} has been stuck in Terminating state for more than 1 hour."
+        description: "The namespace {{ $labels.namespace }} is stuck in Terminating phase. This typically indicates resources with finalizers that are preventing deletion. Check for stuck custom resources, APIService issues, or webhook problems."
