@@ -8,15 +8,18 @@ metadata:
   namespace: openshift-monitoring
 spec:
   groups:
-  - name: sre-managed-namespace-stuck-terminating
+  - name: sre-namespace-stuck-terminating
     rules:
+    - expr: |
+        kube_namespace_status_phase{namespace=~"openshift-.*", phase="Terminating"}
+      record: sre:record:namespace_stuck_terminating
     - alert: ManagedNamespaceStuckTerminatingSRE
       expr: |
-        kube_namespace_status_phase{namespace=~"openshift-.*", phase="Terminating"}
+        sre:record:namespace_stuck_terminating
       for: 1h
       labels:
-        severity: info
+        severity: warning
         namespace: openshift-monitoring
       annotations:
-        message: "Managed namespace {{ $labels.namespace }} has been stuck in Terminating state for more than 30 minutes."
+        message: "Managed namespace {{ $labels.namespace }} has been stuck in Terminating state for more than 1 hour."
         description: "The namespace {{ $labels.namespace }} is stuck in Terminating phase. This typically indicates resources with finalizers that are preventing deletion. Check for stuck custom resources, APIService issues, or webhook problems."
