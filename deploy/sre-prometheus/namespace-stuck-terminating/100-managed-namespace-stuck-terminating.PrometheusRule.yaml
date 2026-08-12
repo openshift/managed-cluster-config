@@ -11,10 +11,13 @@ spec:
   - name: sre-namespace-stuck-terminating
     rules:
     - expr: |
-        max by (namespace) (
+        max by (namespace, phase) (
           kube_namespace_status_phase{namespace=~"openshift-.*", phase="Terminating"} == 1
           or
-          kube_namespace_status_condition{namespace=~"openshift-.*", condition=~"NamespaceContentRemaining|NamespaceFinalizersRemaining", status="true"} == 1
+          label_replace(
+            kube_namespace_status_condition{namespace=~"openshift-.*", condition=~"NamespaceContentRemaining|NamespaceFinalizersRemaining", status="true"} == 1,
+            "phase", "Terminating", "", ""
+          )
         )
       record: sre:record:namespace_stuck_terminating
     - alert: ManagedNamespaceStuckTerminatingSRE
