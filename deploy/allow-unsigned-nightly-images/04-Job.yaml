@@ -1,0 +1,70 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: allow-unsigned-nightly-images
+  namespace: allow-unsigned-nightly-images
+  annotations:
+    kubernetes.io/description: "Allow unsigned nightly OCP images on staging/int MCs for HCP CI testing. 4.22 MCs enforce ClusterImagePolicy signature verification which rejects unsigned nightly images used by HCP control plane pods."
+spec:
+  backoffLimit: 3
+  activeDeadlineSeconds: 300
+  template:
+    metadata:
+      name: allow-unsigned-nightly-images
+    spec:
+      serviceAccountName: allow-unsigned-nightly-images
+      restartPolicy: Never
+      containers:
+      - name: allow-unsigned-nightly-images
+        image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          runAsNonRoot: true
+        command:
+        - /bin/bash
+        - -c
+        - |
+          #!/bin/bash
+          set -euo pipefail
+
+          echo "============================================"
+          echo "Allow unsigned nightly images on staging MCs"
+          echo "============================================"
+          echo "Timestamp: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          echo ""
+
+          # Step 1: Add CVO override to unmanage ClusterImagePolicy
+          echo "Adding CVO override for ClusterImagePolicy..."
+          oc patch clusterversion version --type=merge -p '{
+            "spec": {
+              "overrides": [
+                {
+                  "kind": "ClusterImagePolicy",
+                  "group": "config.openshift.io",
+                  "name": "openshift",
+                  "namespace": "",
+                  "unmanaged": true
+                }
+              ]
+            }
+          }'
+          echo "CVO override added."
+
+          # Step 2: Patch ClusterImagePolicy to only enforce signatures on released payloads
+          # Remove ocp-v4.0-art-dev and ocp-v5.0-art-dev scopes (nightly images)
+          # Keep ocp-release scope (signed released payloads)
+          echo "Patching ClusterImagePolicy scopes..."
+          oc patch clusterimagepolicy openshift --type=json -p '[
+            {"op": "replace", "path": "/spec/scopes", "value": ["quay.io/openshift-release-dev/ocp-release"]}
+          ]'
+          echo "ClusterImagePolicy patched."
+
+          echo ""
+          echo "Verifying..."
+          oc get clusterimagepolicy openshift -o jsonpath='{.spec.scopes}'
+          echo ""
+          echo "Done. Unsigned nightly images from ocp-v4.0-art-dev and ocp-v5.0-art-dev are now allowed."
