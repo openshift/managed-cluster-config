@@ -11873,6 +11873,122 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: allow-unsigned-nightly-images
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: ext-hypershift.openshift.io/cluster-type
+        operator: In
+        values:
+        - management-cluster
+      - key: api.openshift.com/environment
+        operator: In
+        values:
+        - staging
+        - integration
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: allow-unsigned-nightly-images
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: allow-unsigned-nightly-images
+        namespace: allow-unsigned-nightly-images
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: allow-unsigned-nightly-images
+      rules:
+      - apiGroups:
+        - config.openshift.io
+        resources:
+        - clusterversions
+        - clusterimagepolicies
+        verbs:
+        - get
+        - list
+        - patch
+        - update
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: allow-unsigned-nightly-images
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: allow-unsigned-nightly-images
+      subjects:
+      - kind: ServiceAccount
+        name: allow-unsigned-nightly-images
+        namespace: allow-unsigned-nightly-images
+    - apiVersion: batch/v1
+      kind: Job
+      metadata:
+        name: allow-unsigned-nightly-images
+        namespace: allow-unsigned-nightly-images
+        annotations:
+          kubernetes.io/description: Allow unsigned nightly OCP images on staging/int
+            MCs for HCP CI testing. 4.22 MCs enforce ClusterImagePolicy signature
+            verification which rejects unsigned nightly images used by HCP control
+            plane pods.
+      spec:
+        backoffLimit: 3
+        activeDeadlineSeconds: 300
+        template:
+          metadata:
+            name: allow-unsigned-nightly-images
+          spec:
+            serviceAccountName: allow-unsigned-nightly-images
+            restartPolicy: Never
+            containers:
+            - name: allow-unsigned-nightly-images
+              image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+              imagePullPolicy: IfNotPresent
+              securityContext:
+                allowPrivilegeEscalation: false
+                capabilities:
+                  drop:
+                  - ALL
+                runAsNonRoot: true
+              command:
+              - /bin/bash
+              - -c
+              - "#!/bin/bash\nset -euo pipefail\n\necho \"============================================\"\
+                \necho \"Allow unsigned nightly images on staging MCs\"\necho \"============================================\"\
+                \necho \"Timestamp: $(date -u +%Y-%m-%dT%H:%M:%SZ)\"\necho \"\"\n\n\
+                # Step 1: Add CVO override to unmanage ClusterImagePolicy\necho \"\
+                Adding CVO override for ClusterImagePolicy...\"\noc patch clusterversion\
+                \ version --type=merge -p '{\n  \"spec\": {\n    \"overrides\": [\n\
+                \      {\n        \"kind\": \"ClusterImagePolicy\",\n        \"group\"\
+                : \"config.openshift.io\",\n        \"name\": \"openshift\",\n   \
+                \     \"namespace\": \"\",\n        \"unmanaged\": true\n      }\n\
+                \    ]\n  }\n}'\necho \"CVO override added.\"\n\n# Step 2: Patch ClusterImagePolicy\
+                \ to only enforce signatures on released payloads\n# Remove ocp-v4.0-art-dev\
+                \ and ocp-v5.0-art-dev scopes (nightly images)\n# Keep ocp-release\
+                \ scope (signed released payloads)\necho \"Patching ClusterImagePolicy\
+                \ scopes...\"\noc patch clusterimagepolicy openshift --type=json -p\
+                \ '[\n  {\"op\": \"replace\", \"path\": \"/spec/scopes\", \"value\"\
+                : [\"quay.io/openshift-release-dev/ocp-release\"]}\n]'\necho \"ClusterImagePolicy\
+                \ patched.\"\n\necho \"\"\necho \"Verifying...\"\noc get clusterimagepolicy\
+                \ openshift -o jsonpath='{.spec.scopes}'\necho \"\"\necho \"Done.\
+                \ Unsigned nightly images from ocp-v4.0-art-dev and ocp-v5.0-art-dev\
+                \ are now allowed.\"\n"
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: aws-ssm-agent
   spec:
     clusterDeploymentSelector:
