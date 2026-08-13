@@ -38,15 +38,53 @@ spec:
                 "^(.*?)-(.*?)-(.*?)-.*$"
               )
             )
+        - record: sre:nodepool:provisioning_failure_notify_spot
+          expr: |-
+            sum by (_id, cluster_name, exported_namespace, namespace) (
+              (
+                (
+                  (hypershift_nodepools_available_replicas / hypershift_nodepools_size < 1)
+                  and on (exported_namespace, name) label_replace(
+                    hypershift_nodepool_spec_info{market_type="Spot"},
+                    "name", "$1", "nodepool_name", "(.*)"
+                  )
+                  unless on (_id) (
+                    hypershift_nodepools_size == 0
+                    or
+                    hypershift_cluster_limited_support_enabled == 1
+                  )
+                )
+                unless on (exported_namespace) last_over_time(hypershift_cluster_deleting_duration_seconds[10m])
+              )
+              unless on (exported_namespace) label_replace(
+                capi_machine_info{status_phase="Deleting"},
+                "exported_namespace",
+                "$1-$2-$3",
+                "exported_namespace",
+                "^(.*?)-(.*?)-(.*?)-.*$"
+              )
+            )
         - alert: NodepoolFailureNotification
           annotations:
-            description: "One or more nodepool for cluster {{ $labels._id }} has not reached its target size for more than 1 hour"
-            summary: "NodePool provisioning Failure"
+            description: "One or more on-demand nodepool for cluster {{ $labels._id }} has not reached its target size for more than 1 hour"
+            summary: "On-demand NodePool provisioning Failure"
           expr: (sre:nodepool:provisioning_failure_notify and on (exported_namespace) (sre:nodepool:all_components_available == 1)) unless on (exported_namespace) sre:nodepool:invalid_payload_nodepool_provision_failure
           for: 60m
           labels:
             severity: critical
             send_managed_notification: "true"
             managed_notification_template: nodepool-provisioning-failure
+            cluster_id: "{{ $labels._id }}"
+            namespace: "{{ $labels.namespace }}"
+        - alert: SpotNodepoolFailureNotification
+          annotations:
+            description: "One or more spot instance nodepool for cluster {{ $labels._id }} has not reached its target size for more than 1 hour"
+            summary: "Spot NodePool provisioning Failure"
+          expr: (sre:nodepool:provisioning_failure_notify_spot and on (exported_namespace) (sre:nodepool:all_components_available == 1)) unless on (exported_namespace) sre:nodepool:invalid_payload_nodepool_provision_failure
+          for: 60m
+          labels:
+            severity: warning
+            send_managed_notification: "true"
+            managed_notification_template: nodepool-provisioning-failure-spot
             cluster_id: "{{ $labels._id }}"
             namespace: "{{ $labels.namespace }}"
