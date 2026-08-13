@@ -47984,11 +47984,10 @@ objects:
         groups:
         - name: sre-namespace-stuck-terminating
           rules:
-          - expr: "max by (namespace, phase) (\n  kube_namespace_status_phase{namespace=~\"\
-              openshift-.*\", phase=\"Terminating\"} == 1\n  or\n  label_replace(\n\
-              \    kube_namespace_status_condition{namespace=~\"openshift-.*\", condition=~\"\
-              NamespaceContentRemaining|NamespaceFinalizersRemaining\", status=\"\
-              true\"} == 1,\n    \"phase\", \"Terminating\", \"\", \"\"\n  )\n)\n"
+          - expr: 'kube_namespace_status_phase{namespace=~"openshift-.*", phase="Terminating"}
+              == 1
+
+              '
             record: sre:record:namespace_stuck_terminating
           - alert: ManagedNamespaceStuckTerminatingSRE
             expr: 'sre:record:namespace_stuck_terminating
