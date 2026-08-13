@@ -32277,7 +32277,7 @@ objects:
           name: nodepool-provisioning-failure-spot
           summary: Spot instance nodepool has not reached its desired size
           notificationMessage: 'One or more Spot instance nodepools in your ROSA cluster
-            has not reached its desired size. This can prevent your workloads from
+            have not reached their desired size. This can prevent your workloads from
             running properly.
 
 
@@ -48578,8 +48578,8 @@ objects:
               exported_namespace\",\n    \"^(.*?)-(.*?)-(.*?)-.*$\"\n  )\n)"
           - alert: NodepoolFailureNotification
             annotations:
-              description: One or more on-demand nodepool for cluster {{ $labels._id
-                }} has not reached its target size for more than 1 hour
+              description: One or more on-demand nodepools for cluster {{ $labels._id
+                }} have not reached its target size for more than 1 hour
               summary: On-demand NodePool provisioning Failure
             expr: (sre:nodepool:provisioning_failure_notify and on (exported_namespace)
               (sre:nodepool:all_components_available == 1)) unless on (exported_namespace)
@@ -48593,8 +48593,8 @@ objects:
               namespace: '{{ $labels.namespace }}'
           - alert: SpotNodepoolFailureNotification
             annotations:
-              description: One or more spot instance nodepool for cluster {{ $labels._id
-                }} has not reached its target size for more than 1 hour
+              description: One or more spot instance nodepools for cluster {{ $labels._id
+                }} have not reached its target size for more than 1 hour
               summary: Spot NodePool provisioning Failure
             expr: (sre:nodepool:provisioning_failure_notify_spot and on (exported_namespace)
               (sre:nodepool:all_components_available == 1)) unless on (exported_namespace)
