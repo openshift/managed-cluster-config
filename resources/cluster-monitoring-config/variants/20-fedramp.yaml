@@ -1,0 +1,20 @@
+# FedRAMP clusters
+deployDir: osd-fedramp-cluster-monitoring-config
+category: fedramp
+
+selector:
+  deploymentMode: "SelectorSyncSet"
+  selectorSyncSet:
+    matchExpressions:
+      - key: api.openshift.com/fedramp
+        operator: In
+        values:
+          - "true"
+
+configOverrides:
+  enableUserWorkload: true
+  prometheusK8s:
+    retention: 11d
+removeKeys:
+  - k8sPrometheusAdapter
+  - prometheusK8s.remoteWrite
