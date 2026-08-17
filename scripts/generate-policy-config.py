@@ -99,7 +99,16 @@ for directory in sorted(directories, key=str.casefold):
         p['name'] = policy_name
         for m in p['manifests']:
             m['path'] = path
-    policy_template['policyDefaults']['placement']['labelSelector'] = cluster_selectors
+    match_expressions = []
+    for key, value in cluster_selectors.items():
+        match_expressions.append({
+            'key': key,
+            'operator': 'In',
+            'values': [value]
+        })
+    policy_template['policyDefaults']['placement']['labelSelector'] = {
+        'matchExpressions': match_expressions
+    }
     if not len(namespace_selectors) == 0:
         policy_template['policyDefaults']['namespaceSelector'] = namespace_selectors
     with open(os.path.join(temp_directory, "policy-generator-config.yaml"),'w+') as output_file:
