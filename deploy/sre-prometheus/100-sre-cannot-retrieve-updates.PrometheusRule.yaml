@@ -30,7 +30,7 @@ spec:
         expr: '
             (time()-cluster_version_operator_update_retrieval_timestamp_seconds) >= 3600
           and ignoring(condition, name, reason)
-            (cluster_operator_conditions{name="version",condition="RetrievedUpdates", endpoint="metrics", reason!="NoChannel"})
+            (cluster_operator_conditions{name="version",condition="RetrievedUpdates", endpoint="metrics", reason!~"NoChannel|VersionNotFound"})
           and on(instance, job, namespace, pod, service)
             (cluster_version{version!~"(4\\.11\\.36|4\\.12\\.12)"})
           '
