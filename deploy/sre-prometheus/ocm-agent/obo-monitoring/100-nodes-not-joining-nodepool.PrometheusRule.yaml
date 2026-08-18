@@ -66,7 +66,7 @@ spec:
             )
         - alert: NodepoolFailureNotification
           annotations:
-            description: "One or more on-demand nodepools for cluster {{ $labels._id }} have not reached its target size for more than 1 hour"
+            description: "One or more on-demand nodepools for cluster {{ $labels._id }} have not reached their target size for more than 1 hour"
             summary: "On-demand NodePool provisioning Failure"
           expr: (sre:nodepool:provisioning_failure_notify and on (exported_namespace) (sre:nodepool:all_components_available == 1)) unless on (exported_namespace) sre:nodepool:invalid_payload_nodepool_provision_failure
           for: 60m
@@ -78,7 +78,7 @@ spec:
             namespace: "{{ $labels.namespace }}"
         - alert: SpotNodepoolFailureNotification
           annotations:
-            description: "One or more spot instance nodepools for cluster {{ $labels._id }} have not reached its target size for more than 1 hour"
+            description: "One or more spot instance nodepools for cluster {{ $labels._id }} have not reached their target size for more than 1 hour"
             summary: "Spot NodePool provisioning Failure"
           expr: (sre:nodepool:provisioning_failure_notify_spot and on (exported_namespace) (sre:nodepool:all_components_available == 1)) unless on (exported_namespace) sre:nodepool:invalid_payload_nodepool_provision_failure
           for: 60m
