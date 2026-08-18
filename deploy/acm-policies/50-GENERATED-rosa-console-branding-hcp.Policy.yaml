@@ -1,0 +1,75 @@
+---
+apiVersion: policy.open-cluster-management.io/v1
+kind: Policy
+metadata:
+    annotations:
+        policy.open-cluster-management.io/categories: CM Configuration Management
+        policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+        policy.open-cluster-management.io/description: ""
+        policy.open-cluster-management.io/standards: NIST SP 800-53
+    name: rosa-console-branding-hcp
+    namespace: openshift-acm-policies
+spec:
+    disabled: false
+    policy-templates:
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+                name: rosa-console-branding-hcp
+            spec:
+                evaluationInterval:
+                    compliant: 2h
+                    noncompliant: 45s
+                object-templates:
+                    - complianceType: musthave
+                      metadataComplianceType: musthave
+                      objectDefinition:
+                        apiVersion: operator.openshift.io/v1
+                        kind: Console
+                        metadata:
+                            name: cluster
+                        spec:
+                            customization:
+                                brand: ROSA
+                                documentationBaseURL: https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/
+                            managementState: Managed
+                            route: null
+                pruneObjectBehavior: DeleteIfCreated
+                remediationAction: enforce
+                severity: low
+    remediationAction: enforce
+---
+apiVersion: cluster.open-cluster-management.io/v1beta1
+kind: Placement
+metadata:
+    name: placement-rosa-console-branding-hcp
+    namespace: openshift-acm-policies
+spec:
+    predicates:
+        - requiredClusterSelector:
+            labelSelector:
+                matchExpressions:
+                    - key: hypershift.open-cluster-management.io/hosted-cluster
+                      operator: In
+                      values:
+                        - "true"
+    tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
+---
+apiVersion: policy.open-cluster-management.io/v1
+kind: PlacementBinding
+metadata:
+    name: binding-rosa-console-branding-hcp
+    namespace: openshift-acm-policies
+placementRef:
+    apiGroup: cluster.open-cluster-management.io
+    kind: Placement
+    name: placement-rosa-console-branding-hcp
+subjects:
+    - apiGroup: policy.open-cluster-management.io
+      kind: Policy
+      name: rosa-console-branding-hcp

@@ -1,0 +1,73 @@
+---
+apiVersion: policy.open-cluster-management.io/v1
+kind: Policy
+metadata:
+    annotations:
+        policy.open-cluster-management.io/categories: CM Configuration Management
+        policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+        policy.open-cluster-management.io/description: ""
+        policy.open-cluster-management.io/standards: NIST SP 800-53
+    name: hypershift-ovn-logging
+    namespace: openshift-acm-policies
+spec:
+    disabled: false
+    policy-templates:
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+                name: hypershift-ovn-logging
+            spec:
+                evaluationInterval:
+                    compliant: 2h
+                    noncompliant: 45s
+                object-templates-raw: |
+                    {{- range (lookup "v1" "Namespace" "" "").items }}
+                    {{- if eq (index .metadata.labels "hypershift.openshift.io/hosted-control-plane") "true" }}
+                    - complianceType: musthave
+                      objectDefinition:
+                        kind: Namespace
+                        apiVersion: v1
+                        metadata:
+                          name: {{ .metadata.name }}
+                          annotations:
+                            k8s.ovn.org/acl-logging: '{ "deny": "info" }'
+                    {{- end }}
+                    {{- end }}
+                remediationAction: enforce
+                severity: low
+    remediationAction: enforce
+---
+apiVersion: cluster.open-cluster-management.io/v1beta1
+kind: Placement
+metadata:
+    name: placement-hypershift-ovn-logging
+    namespace: openshift-acm-policies
+spec:
+    predicates:
+        - requiredClusterSelector:
+            labelSelector:
+                matchExpressions:
+                    - key: hypershift.open-cluster-management.io/management-cluster
+                      operator: In
+                      values:
+                        - "true"
+    tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
+---
+apiVersion: policy.open-cluster-management.io/v1
+kind: PlacementBinding
+metadata:
+    name: binding-hypershift-ovn-logging
+    namespace: openshift-acm-policies
+placementRef:
+    apiGroup: cluster.open-cluster-management.io
+    kind: Placement
+    name: placement-hypershift-ovn-logging
+subjects:
+    - apiGroup: policy.open-cluster-management.io
+      kind: Policy
+      name: hypershift-ovn-logging
