@@ -7128,6 +7128,339 @@ objects:
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
           policy.open-cluster-management.io/description: ''
           policy.open-cluster-management.io/standards: NIST SP 800-53
+        name: hcp-ze-ecr-creds
+        namespace: openshift-acm-policies
+      spec:
+        disabled: false
+        policy-templates:
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+              name: hcp-ze-ecr-creds
+            spec:
+              evaluationInterval:
+                compliant: 2h
+                noncompliant: 45s
+              object-templates-raw: "- complianceType: mustonlyhave\n  metadataComplianceType:\
+                \ musthave\n  objectDefinition:\n    apiVersion: v1\n    kind: ServiceAccount\n\
+                \    metadata:\n      name: ecr-credential-refresh\n      namespace:\
+                \ kube-system\n      labels:\n        app: ecr-credential-refresh\n\
+                \        app.kubernetes.io/name: ecr-credential-refresh\n        app.kubernetes.io/component:\
+                \ credential-management\n- complianceType: mustonlyhave\n  metadataComplianceType:\
+                \ musthave\n  objectDefinition:\n    apiVersion: rbac.authorization.k8s.io/v1\n\
+                \    kind: Role\n    metadata:\n      name: ecr-credential-refresh\n\
+                \      namespace: kube-system\n      labels:\n        app: ecr-credential-refresh\n\
+                \    rules:\n      - apiGroups: [\"\"]\n        resources: [\"secrets\"\
+                ]\n        resourceNames: [\"additional-pull-secret\"]\n        verbs:\
+                \ [\"get\", \"patch\", \"update\"]\n      - apiGroups: [\"\"]\n  \
+                \      resources: [\"secrets\"]\n        verbs: [\"create\"]\n- complianceType:\
+                \ mustonlyhave\n  metadataComplianceType: musthave\n  objectDefinition:\n\
+                \    apiVersion: rbac.authorization.k8s.io/v1\n    kind: RoleBinding\n\
+                \    metadata:\n      name: ecr-credential-refresh\n      namespace:\
+                \ kube-system\n      labels:\n        app: ecr-credential-refresh\n\
+                \    subjects:\n      - kind: ServiceAccount\n        name: ecr-credential-refresh\n\
+                \        namespace: kube-system\n    roleRef:\n      kind: Role\n\
+                \      name: ecr-credential-refresh\n      apiGroup: rbac.authorization.k8s.io\n\
+                - complianceType: mustonlyhave\n  metadataComplianceType: musthave\n\
+                \  objectDefinition:\n    apiVersion: rbac.authorization.k8s.io/v1\n\
+                \    kind: ClusterRole\n    metadata:\n      name: ecr-credential-refresh\n\
+                \      labels:\n        app: ecr-credential-refresh\n    rules:\n\
+                \      - apiGroups: [\"config.openshift.io\"]\n        resources:\
+                \ [\"imagedigestmirrorsets\", \"infrastructures\"]\n        verbs:\
+                \ [\"get\", \"list\"]\n- complianceType: mustonlyhave\n  metadataComplianceType:\
+                \ musthave\n  objectDefinition:\n    apiVersion: rbac.authorization.k8s.io/v1\n\
+                \    kind: ClusterRoleBinding\n    metadata:\n      name: ecr-credential-refresh\n\
+                \      labels:\n        app: ecr-credential-refresh\n    subjects:\n\
+                \      - kind: ServiceAccount\n        name: ecr-credential-refresh\n\
+                \        namespace: kube-system\n    roleRef:\n      kind: ClusterRole\n\
+                \      name: ecr-credential-refresh\n      apiGroup: rbac.authorization.k8s.io\n\
+                - complianceType: mustonlyhave\n  metadataComplianceType: musthave\n\
+                \  objectDefinition:\n    apiVersion: v1\n    kind: ConfigMap\n  \
+                \  metadata:\n      name: ecr-credential-refresh-script\n      namespace:\
+                \ kube-system\n      labels:\n        app: ecr-credential-refresh\n\
+                \    data:\n      refresh.py: |\n        #!/usr/bin/env python3\n\
+                \        \"\"\"ECR Credential Refresh Script for Zero-Egress HCP Clusters.\n\
+                \n        Gets an ECR authorization token using the node's ECR credential\
+                \ helper\n        and updates additional-pull-secret in kube-system\
+                \ namespace. HCCO then\n        merges this with original credentials\
+                \ to create global-pull-secret.\n\n        This script auto-detects\
+                \ zero-egress clusters by checking for IDMS.\n        Non-zero-egress\
+                \ clusters exit early with success (no-op).\n\n        Supports multiple\
+                \ ECR registries across all ImageDigestMirrorSets.\n\n        SOP:\
+                \ https://github.com/openshift/ops-sop/blob/master/hypershift/knowledge_base/zero-egress/zero-egress-ecr-credential-refresh.md\n\
+                \        Tracking: OHSS-49424\n        \"\"\"\n\n        import base64\n\
+                \        import json\n        import os\n        import re\n     \
+                \   import subprocess\n        import sys\n        from datetime import\
+                \ datetime, timezone\n\n\n        SECRET_NAME = os.environ.get(\"\
+                SECRET_NAME\", \"additional-pull-secret\")\n        NAMESPACE = os.environ.get(\"\
+                NAMESPACE\", \"kube-system\")\n        HELPER_PATH = os.environ.get(\n\
+                \            \"HELPER_PATH\",\n            \"/host/usr/libexec/kubelet-image-credential-provider-plugins/ecr-credential-provider\"\
+                ,\n        )\n\n        ECR_REGISTRY_RE = re.compile(\n          \
+                \  r\"^(\\d+\\.dkr\\.ecr\\.[a-z0-9-]+\\.amazonaws\\.com)\"\n     \
+                \   )\n\n\n        def log(msg):\n            ts = datetime.now(timezone.utc).strftime(\"\
+                %Y-%m-%d %H:%M:%S\")\n            print(f\"{ts} - {msg}\", flush=True)\n\
+                \n\n        def run(args, check=True, capture=True, redact_args=False):\n\
+                \            \"\"\"Run a subprocess, returning CompletedProcess.\"\
+                \"\"\n            result = subprocess.run(\n                args,\n\
+                \                capture_output=capture,\n                text=True,\n\
+                \                check=False,\n            )\n            if check\
+                \ and result.returncode != 0:\n                stderr = result.stderr.strip()\
+                \ if result.stderr else \"\"\n                cmd = \" \".join(args[:5])\
+                \ + \" ...\" if redact_args else \" \".join(args)\n              \
+                \  raise RuntimeError(\n                    f\"Command failed (rc={result.returncode}):\
+                \ {cmd}\\n{stderr}\"\n                )\n            return result\n\
+                \n\n        def discover_ecr_registries():\n            \"\"\"Discover\
+                \ unique ECR registries from ImageDigestMirrorSets.\n\n          \
+                \  Returns a list of ECR registry hostnames, or an empty list if\n\
+                \            no IDMS mirrors are found (not a zero-egress cluster).\n\
+                \            \"\"\"\n            log(\"Discovering ECR registries\
+                \ from cluster configuration...\")\n\n            result = run(\n\
+                \                [\"oc\", \"get\", \"imagedigestmirrorset\", \"-o\"\
+                ,\n                 \"jsonpath={.items[*].spec.imageDigestMirrors[*].mirrors[*]}\"\
+                ],\n                check=False,\n            )\n            all_mirrors\
+                \ = result.stdout.strip()\n\n            if not all_mirrors:\n   \
+                \             log(\"No IDMS mirrors found\")\n                return\
+                \ []\n\n            seen = set()\n            registries = []\n  \
+                \          for mirror in all_mirrors.split():\n                match\
+                \ = ECR_REGISTRY_RE.match(mirror)\n                if match:\n   \
+                \                 registry = match.group(1)\n                    if\
+                \ registry not in seen:\n                        seen.add(registry)\n\
+                \                        registries.append(registry)\n           \
+                \             log(f\"Discovered ECR registry: {registry}\")\n\n  \
+                \          if not registries:\n                log(\"No ECR registries\
+                \ found in IDMS mirrors\")\n\n            log(f\"Found {len(registries)}\
+                \ unique ECR registry(s)\")\n            return registries\n\n\n \
+                \       def get_ecr_token(registry):\n            \"\"\"Get ECR token\
+                \ using the credential helper.\n\n            ECR auth tokens are\
+                \ per-IAM-principal, not per-registry. A single\n            token\
+                \ works for all ECR registries the node's role can access.\n\n   \
+                \         Returns the ECR password string.\n            \"\"\"\n \
+                \           log(\"Getting ECR authorization token via credential helper...\"\
+                )\n\n            if not os.access(HELPER_PATH, os.X_OK):\n       \
+                \         raise RuntimeError(\n                    f\"ECR credential\
+                \ helper not found or not executable: {HELPER_PATH}\"\n          \
+                \      )\n\n            request = json.dumps({\n                \"\
+                kind\": \"CredentialProviderRequest\",\n                \"apiVersion\"\
+                : \"credentialprovider.kubelet.k8s.io/v1\",\n                \"image\"\
+                : f\"{registry}/test\",\n            })\n\n            result = subprocess.run(\n\
+                \                [HELPER_PATH, \"get-credentials\"],\n           \
+                \     input=request,\n                capture_output=True,\n     \
+                \           text=True,\n                check=False,\n           \
+                \ )\n            if result.returncode != 0:\n                raise\
+                \ RuntimeError(\n                    f\"Failed to get credentials\
+                \ from helper: {result.stderr}\"\n                )\n\n          \
+                \  password = \"\"\n            try:\n                response = json.loads(result.stdout)\n\
+                \                password = response.get(\"status\", {}).get(\"auth\"\
+                , {}).get(\n                    f\"{registry}/test\", {}\n       \
+                \         ).get(\"password\", \"\")\n            except json.JSONDecodeError:\n\
+                \                pass\n\n            if not password:\n          \
+                \      # Fall back to searching the raw response\n               \
+                \ match = re.search(r'\"password\"\\s*:\\s*\"([^\"]*)\"', result.stdout)\n\
+                \                if match:\n                    password = match.group(1)\n\
+                \n            if not password:\n                raise RuntimeError(\n\
+                \                    \"Credential helper response did not contain\
+                \ a usable password\"\n                )\n\n            log(\"Successfully\
+                \ retrieved ECR authorization token\")\n            return password\n\
+                \n\n        def update_secret(registries, ecr_password):\n       \
+                \     \"\"\"Update additional-pull-secret with ECR credentials for\
+                \ all registries.\n\n            When the secret already exists, merges\
+                \ fresh ECR entries with\n            existing customer entries to\
+                \ preserve any user-added pull secrets\n            (SREP-4339).\n\
+                \            \"\"\"\n            log(f\"Updating {SECRET_NAME} in\
+                \ {NAMESPACE} with {len(registries)} registry(s)...\")\n\n       \
+                \     auth_token = base64.b64encode(f\"AWS:{ecr_password}\".encode()).decode()\n\
+                \            ecr_auths = {\n                registry: {\"auth\": auth_token,\
+                \ \"email\": \"\"}\n                for registry in registries\n \
+                \           }\n            ecr_dockerconfig = {\"auths\": ecr_auths}\n\
+                \n            # Check if secret exists\n            result = run(\n\
+                \                [\"oc\", \"get\", \"secret\", SECRET_NAME, \"-n\"\
+                , NAMESPACE],\n                check=False,\n            )\n\n   \
+                \         if result.returncode == 0:\n                # Secret exists\
+                \ \u2014 read, merge, and patch\n                result = run([\n\
+                \                    \"oc\", \"get\", \"secret\", SECRET_NAME, \"\
+                -n\", NAMESPACE,\n                    \"-o\", \"jsonpath={.data.\\\
+                \\.dockerconfigjson}\",\n                ])\n                existing_b64\
+                \ = result.stdout.strip()\n                if not existing_b64:\n\
+                \                    raise RuntimeError(f\"{SECRET_NAME} is missing\
+                \ .dockerconfigjson\")\n\n                try:\n                 \
+                \   existing_json = base64.b64decode(existing_b64).decode()\n    \
+                \                existing = json.loads(existing_json)\n          \
+                \      except (ValueError, json.JSONDecodeError) as e:\n         \
+                \           raise RuntimeError(\n                        f\"Existing\
+                \ .dockerconfigjson is not valid: {e}\"\n                    )\n\n\
+                \                managed = set(registries)\n                merged_auths\
+                \ = {\n                    k: v for k, v in (existing.get(\"auths\"\
+                ) or {}).items()\n                    if k not in managed\n      \
+                \          }\n                merged_auths.update(ecr_auths)\n   \
+                \             existing[\"auths\"] = merged_auths\n\n             \
+                \   merged_b64 = base64.b64encode(\n                    json.dumps(existing).encode()\n\
+                \                ).decode()\n\n                patch_data = json.dumps({\n\
+                \                    \"data\": {\".dockerconfigjson\": merged_b64}\n\
+                \                })\n                run([\n                    \"\
+                oc\", \"patch\", \"secret\", SECRET_NAME, \"-n\", NAMESPACE,\n   \
+                \                 \"--type=merge\", \"-p\", patch_data,\n        \
+                \        ], redact_args=True)\n                log(f\"Successfully\
+                \ patched {SECRET_NAME} (merged with existing entries)\")\n      \
+                \      else:\n                # Secret does not exist \u2014 create\
+                \ it\n                config_b64 = base64.b64encode(\n           \
+                \         json.dumps(ecr_dockerconfig).encode()\n                ).decode()\n\
+                \n                secret_manifest = json.dumps({\n               \
+                \     \"apiVersion\": \"v1\",\n                    \"kind\": \"Secret\"\
+                ,\n                    \"metadata\": {\n                        \"\
+                name\": SECRET_NAME,\n                        \"namespace\": NAMESPACE,\n\
+                \                    },\n                    \"type\": \"kubernetes.io/dockerconfigjson\"\
+                ,\n                    \"data\": {\n                        \".dockerconfigjson\"\
+                : config_b64,\n                    },\n                })\n\n    \
+                \            result = subprocess.run(\n                    [\"oc\"\
+                , \"create\", \"-f\", \"-\"],\n                    input=secret_manifest,\n\
+                \                    capture_output=True,\n                    text=True,\n\
+                \                    check=False,\n                )\n           \
+                \     if result.returncode != 0:\n                    raise RuntimeError(f\"\
+                Failed to create secret: {result.stderr}\")\n                log(f\"\
+                Successfully created {SECRET_NAME}\")\n\n            for registry\
+                \ in registries:\n                log(f\"  - {registry}\")\n\n\n \
+                \       def main():\n            # Step 1: Discover all ECR registries\
+                \ from IDMS\n            registries = discover_ecr_registries()\n\
+                \            if not registries:\n                log(\"Skipping -\
+                \ no ECR IDMS mirrors found (not a zero-egress cluster)\")\n     \
+                \           return\n\n            log(f\"Starting ECR credential refresh\
+                \ for {len(registries)} registry(s)\")\n\n            # Step 2: Get\
+                \ ECR token (same token works for all registries)\n            ecr_password\
+                \ = get_ecr_token(registries[0])\n\n            # Step 3: Update the\
+                \ secret with auth entries for all registries\n            update_secret(registries,\
+                \ ecr_password)\n\n            log(\"ECR credential refresh completed\
+                \ successfully\")\n\n\n        if __name__ == \"__main__\":\n    \
+                \        try:\n                main()\n            except Exception\
+                \ as e:\n                log(f\"FATAL - {e}\")\n                sys.exit(1)\n\
+                - complianceType: mustonlyhave\n  metadataComplianceType: musthave\n\
+                \  objectDefinition:\n    apiVersion: batch/v1\n    kind: CronJob\n\
+                \    metadata:\n      name: ecr-credential-refresh\n      namespace:\
+                \ kube-system\n      labels:\n        app: ecr-credential-refresh\n\
+                \    spec:\n      schedule: \"0 */4 * * *\"\n      concurrencyPolicy:\
+                \ Forbid\n      successfulJobsHistoryLimit: 3\n      failedJobsHistoryLimit:\
+                \ 3\n      jobTemplate:\n        spec:\n          backoffLimit: 3\n\
+                \          activeDeadlineSeconds: 300\n          template:\n     \
+                \       metadata:\n              labels:\n                app: ecr-credential-refresh\n\
+                \            spec:\n              serviceAccountName: ecr-credential-refresh\n\
+                \              restartPolicy: OnFailure\n              nodeSelector:\n\
+                \                node-role.kubernetes.io/worker: \"\"\n          \
+                \    tolerations:\n                - operator: Exists\n          \
+                \    hostNetwork: true\n              dnsPolicy: Default\n       \
+                \       containers:\n                - name: refresh\n           \
+                \       # Dynamic lookup: get image from node-resolver DaemonSet\n\
+                \                  # This image is guaranteed to be cached on worker\
+                \ nodes\n                  # Uses index function since ACM templates\
+                \ don't support bracket notation\n                  image: '{{ (index\
+                \ (lookup \"apps/v1\" \"DaemonSet\" \"openshift-dns\" \"node-resolver\"\
+                ).spec.template.spec.containers 0).image }}'\n                  imagePullPolicy:\
+                \ IfNotPresent\n                  command:\n                    -\
+                \ python3\n                    - /scripts/refresh.py\n           \
+                \       volumeMounts:\n                    - name: script\n      \
+                \                mountPath: /scripts\n                      readOnly:\
+                \ true\n                    - name: host-root\n                  \
+                \    mountPath: /host\n                      readOnly: true\n    \
+                \              resources:\n                    requests:\n       \
+                \               cpu: 10m\n                      memory: 64Mi\n   \
+                \                 limits:\n                      cpu: 100m\n     \
+                \                 memory: 128Mi\n                  securityContext:\n\
+                \                    allowPrivilegeEscalation: false\n           \
+                \         capabilities:\n                      drop:\n           \
+                \             - ALL\n                    seccompProfile:\n       \
+                \               type: RuntimeDefault\n              volumes:\n   \
+                \             - name: script\n                  configMap:\n     \
+                \               name: ecr-credential-refresh-script\n            \
+                \        defaultMode: 0755\n                - name: host-root\n  \
+                \                hostPath:\n                    path: /\n        \
+                \            type: Directory\n- complianceType: mustonlyhave\n  metadataComplianceType:\
+                \ musthave\n  objectDefinition:\n    apiVersion: batch/v1\n    kind:\
+                \ Job\n    metadata:\n      name: ecr-credential-refresh-initial\n\
+                \      namespace: kube-system\n      labels:\n        app: ecr-credential-refresh\n\
+                \        app.kubernetes.io/component: initial-refresh\n    spec:\n\
+                \      activeDeadlineSeconds: 3600\n      ttlSecondsAfterFinished:\
+                \ 3600\n      template:\n        metadata:\n          labels:\n  \
+                \          app: ecr-credential-refresh\n        spec:\n          serviceAccountName:\
+                \ ecr-credential-refresh\n          restartPolicy: Never\n       \
+                \   nodeSelector:\n            node-role.kubernetes.io/worker: \"\"\
+                \n          tolerations:\n            - operator: Exists\n       \
+                \   hostNetwork: true\n          dnsPolicy: Default\n          containers:\n\
+                \            - name: refresh\n              # Dynamic lookup: get\
+                \ image from node-resolver DaemonSet\n              # This image is\
+                \ guaranteed to be cached on worker nodes\n              # Uses index\
+                \ function since ACM templates don't support bracket notation\n  \
+                \            image: '{{ (index (lookup \"apps/v1\" \"DaemonSet\" \"\
+                openshift-dns\" \"node-resolver\").spec.template.spec.containers 0).image\
+                \ }}'\n              imagePullPolicy: IfNotPresent\n             \
+                \ command:\n                - python3\n                - /scripts/refresh.py\n\
+                \              volumeMounts:\n                - name: script\n   \
+                \               mountPath: /scripts\n                  readOnly: true\n\
+                \                - name: host-root\n                  mountPath: /host\n\
+                \                  readOnly: true\n              resources:\n    \
+                \            requests:\n                  cpu: 10m\n             \
+                \     memory: 64Mi\n                limits:\n                  cpu:\
+                \ 100m\n                  memory: 128Mi\n              securityContext:\n\
+                \                allowPrivilegeEscalation: false\n               \
+                \ capabilities:\n                  drop:\n                    - ALL\n\
+                \                seccompProfile:\n                  type: RuntimeDefault\n\
+                \          volumes:\n            - name: script\n              configMap:\n\
+                \                name: ecr-credential-refresh-script\n           \
+                \     defaultMode: 0755\n            - name: host-root\n         \
+                \     hostPath:\n                path: /\n                type: Directory\n"
+              pruneObjectBehavior: DeleteIfCreated
+              remediationAction: enforce
+              severity: low
+        remediationAction: enforce
+    - apiVersion: cluster.open-cluster-management.io/v1beta1
+      kind: Placement
+      metadata:
+        name: placement-hcp-ze-ecr-creds
+        namespace: openshift-acm-policies
+      spec:
+        predicates:
+        - requiredClusterSelector:
+            labelSelector:
+              matchExpressions:
+              - key: hypershift.open-cluster-management.io/hosted-cluster
+                operator: In
+                values:
+                - 'true'
+              - key: api.openshift.com/hosted-cluster-egress-policy
+                operator: In
+                values:
+                - NoEgress
+              - key: openshiftVersion-major-minor
+                operator: NotIn
+                values:
+                - '4.14'
+                - '4.15'
+                - '4.16'
+                - '4.17'
+        tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: PlacementBinding
+      metadata:
+        name: binding-hcp-ze-ecr-creds
+        namespace: openshift-acm-policies
+      placementRef:
+        apiGroup: cluster.open-cluster-management.io
+        kind: Placement
+        name: placement-hcp-ze-ecr-creds
+      subjects:
+      - apiGroup: policy.open-cluster-management.io
+        kind: Policy
+        name: hcp-ze-ecr-creds
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: Policy
+      metadata:
+        annotations:
+          policy.open-cluster-management.io/categories: CM Configuration Management
+          policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/description: ''
+          policy.open-cluster-management.io/standards: NIST SP 800-53
         name: hosted-uwm
         namespace: openshift-acm-policies
       spec:
@@ -7280,6 +7613,184 @@ objects:
       - apiGroup: policy.open-cluster-management.io
         kind: Policy
         name: hypershift-ovn-logging
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: Policy
+      metadata:
+        annotations:
+          policy.open-cluster-management.io/categories: CM Configuration Management
+          policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/description: ''
+          policy.open-cluster-management.io/standards: NIST SP 800-53
+        name: ocpbugs-88685-metrics-proxy-memory-limit
+        namespace: openshift-acm-policies
+      spec:
+        disabled: false
+        policy-templates:
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+              name: ocpbugs-88685-metrics-proxy-memory-limit
+            spec:
+              evaluationInterval:
+                compliant: 2h
+                noncompliant: 45s
+              object-templates-raw: "- complianceType: mustonlyhave\n  metadataComplianceType:\
+                \ musthave\n  objectDefinition:\n    apiVersion: v1\n    kind: ServiceAccount\n\
+                \    metadata:\n      name: metrics-proxy-memory-limit\n      namespace:\
+                \ openshift-monitoring\n      labels:\n        app: metrics-proxy-memory-limit\n\
+                - complianceType: mustonlyhave\n  metadataComplianceType: musthave\n\
+                \  objectDefinition:\n    apiVersion: rbac.authorization.k8s.io/v1\n\
+                \    kind: ClusterRole\n    metadata:\n      name: metrics-proxy-memory-limit\n\
+                \      labels:\n        app: metrics-proxy-memory-limit\n    rules:\n\
+                \      - apiGroups: [\"apps\"]\n        resources: [\"deployments\"\
+                ]\n        verbs: [\"get\", \"list\", \"patch\"]\n      - apiGroups:\
+                \ [\"hypershift.openshift.io\"]\n        resources: [\"hostedcontrolplanes\"\
+                ]\n        verbs: [\"get\", \"list\"]\n- complianceType: mustonlyhave\n\
+                \  metadataComplianceType: musthave\n  objectDefinition:\n    apiVersion:\
+                \ rbac.authorization.k8s.io/v1\n    kind: ClusterRoleBinding\n   \
+                \ metadata:\n      name: metrics-proxy-memory-limit\n      labels:\n\
+                \        app: metrics-proxy-memory-limit\n    subjects:\n      - kind:\
+                \ ServiceAccount\n        name: metrics-proxy-memory-limit\n     \
+                \   namespace: openshift-monitoring\n    roleRef:\n      kind: ClusterRole\n\
+                \      name: metrics-proxy-memory-limit\n      apiGroup: rbac.authorization.k8s.io\n\
+                - complianceType: mustonlyhave\n  metadataComplianceType: musthave\n\
+                \  objectDefinition:\n    apiVersion: v1\n    kind: ConfigMap\n  \
+                \  metadata:\n      name: metrics-proxy-memory-limit-script\n    \
+                \  namespace: openshift-monitoring\n      labels:\n        app: metrics-proxy-memory-limit\n\
+                \    data:\n      patch.sh: |\n        #!/bin/bash\n        set -uo\
+                \ pipefail\n\n        FIXED_MINOR=22\n        FIXED_PATCH=4\n    \
+                \    MEMORY_LIMIT=\"${MEMORY_LIMIT:-512Mi}\"\n        added=0\n  \
+                \      removed=0\n        skipped=0\n        errors=0\n\n        for\
+                \ ns in $(oc get hostedcontrolplanes --all-namespaces --no-headers\
+                \ \\\n          -o custom-columns=NS:.metadata.namespace 2>/dev/null);\
+                \ do\n\n          version=$(oc get hostedcontrolplane -n \"$ns\" \\\
+                \n            -o jsonpath='{.items[0].status.versionStatus.desired.version}'\
+                \ 2>/dev/null)\n\n          if [ -z \"$version\" ]; then\n       \
+                \     echo \"Skipping $ns (unable to determine HCP version)\"\n  \
+                \          skipped=$((skipped + 1))\n            continue\n      \
+                \    fi\n\n          minor=$(echo \"$version\" | cut -d. -f2)\n  \
+                \        patch=$(echo \"$version\" | cut -d. -f3 | cut -d- -f1)\n\n\
+                \          if [ \"$minor\" -lt \"$FIXED_MINOR\" ] 2>/dev/null; then\n\
+                \            echo \"Skipping $ns (version $version < 4.$FIXED_MINOR)\"\
+                \n            skipped=$((skipped + 1))\n            continue\n   \
+                \       fi\n\n          if ! oc get deployment metrics-proxy -n \"\
+                $ns\" &>/dev/null; then\n            echo \"Skipping $ns (no metrics-proxy\
+                \ deployment)\"\n            skipped=$((skipped + 1))\n          \
+                \  continue\n          fi\n\n          names=$(oc get deployment metrics-proxy\
+                \ -n \"$ns\" \\\n            -o jsonpath='{range .spec.template.spec.containers[*]}{.name}{\"\
+                \\n\"}{end}' 2>/dev/null)\n          idx=-1\n          i=0\n     \
+                \     while IFS= read -r cname; do\n            if [ \"$cname\" =\
+                \ \"metrics-proxy\" ]; then\n              idx=$i\n              break\n\
+                \            fi\n            i=$((i + 1))\n          done <<< \"$names\"\
+                \n\n          if [ \"$idx\" -eq -1 ]; then\n            echo \"Skipping\
+                \ $ns (no metrics-proxy container found)\"\n            skipped=$((skipped\
+                \ + 1))\n            continue\n          fi\n\n          current=$(oc\
+                \ get deployment metrics-proxy -n \"$ns\" \\\n            -o jsonpath=\"\
+                {.spec.template.spec.containers[$idx].resources.limits.memory}\" 2>/dev/null)\n\
+                \n          fixed=false\n          if [ \"$minor\" -gt \"$FIXED_MINOR\"\
+                \ ] 2>/dev/null; then\n            fixed=true\n          elif [ \"\
+                $minor\" -eq \"$FIXED_MINOR\" ] && [ \"${patch:-0}\" -ge \"$FIXED_PATCH\"\
+                \ ] 2>/dev/null; then\n            fixed=true\n          fi\n\n  \
+                \        if [ \"$fixed\" = \"true\" ]; then\n            if [ -n \"\
+                $current\" ]; then\n              echo \"Removing limit from metrics-proxy\
+                \ in $ns (version $version has the fix)\"\n              if oc patch\
+                \ deployment metrics-proxy -n \"$ns\" --type=json \\\n           \
+                \     -p='[{\"op\":\"remove\",\"path\":\"/spec/template/spec/containers/'\"\
+                $idx\"'/resources/limits\"}]'; then\n                removed=$((removed\
+                \ + 1))\n              else\n                echo \"ERROR: Failed\
+                \ to remove limit in $ns\"\n                errors=$((errors + 1))\n\
+                \              fi\n            else\n              echo \"Skipping\
+                \ $ns (version $version, no limit to remove)\"\n              skipped=$((skipped\
+                \ + 1))\n            fi\n          else\n            if [ -z \"$current\"\
+                \ ]; then\n              echo \"Adding limit to metrics-proxy in $ns\
+                \ (version $version, container index $idx, setting memory limit to\
+                \ $MEMORY_LIMIT)\"\n              if oc patch deployment metrics-proxy\
+                \ -n \"$ns\" --type=json \\\n                -p='[{\"op\":\"add\"\
+                ,\"path\":\"/spec/template/spec/containers/'\"$idx\"'/resources/limits\"\
+                ,\"value\":{\"memory\":\"'\"$MEMORY_LIMIT\"'\"}}]'; then\n       \
+                \         added=$((added + 1))\n              else\n             \
+                \   echo \"ERROR: Failed to add limit in $ns\"\n                errors=$((errors\
+                \ + 1))\n              fi\n            else\n              echo \"\
+                Skipping $ns (version $version, limit already set: $current)\"\n \
+                \             skipped=$((skipped + 1))\n            fi\n         \
+                \ fi\n        done\n\n        echo \"Done. Added: $added, Removed:\
+                \ $removed, Skipped: $skipped, Errors: $errors\"\n        [ \"$errors\"\
+                \ -eq 0 ]\n- complianceType: mustonlyhave\n  metadataComplianceType:\
+                \ musthave\n  objectDefinition:\n    apiVersion: batch/v1\n    kind:\
+                \ CronJob\n    metadata:\n      name: metrics-proxy-memory-limit\n\
+                \      namespace: openshift-monitoring\n      labels:\n        app:\
+                \ metrics-proxy-memory-limit\n      annotations:\n        kubernetes.io/description:\
+                \ \"Mitigate OCPBUGS-88685 by adding memory limits to metrics-proxy\
+                \ deployments\"\n    spec:\n      schedule: \"*/30 * * * *\"\n   \
+                \   concurrencyPolicy: Forbid\n      successfulJobsHistoryLimit: 3\n\
+                \      failedJobsHistoryLimit: 3\n      jobTemplate:\n        spec:\n\
+                \          backoffLimit: 1\n          activeDeadlineSeconds: 300\n\
+                \          ttlSecondsAfterFinished: 3600\n          template:\n  \
+                \          metadata:\n              labels:\n                app:\
+                \ metrics-proxy-memory-limit\n            spec:\n              serviceAccountName:\
+                \ metrics-proxy-memory-limit\n              restartPolicy: Never\n\
+                \              affinity:\n                nodeAffinity:\n        \
+                \          preferredDuringSchedulingIgnoredDuringExecution:\n    \
+                \                - preference:\n                        matchExpressions:\n\
+                \                          - key: node-role.kubernetes.io/infra\n\
+                \                            operator: Exists\n                  \
+                \    weight: 1\n              tolerations:\n                - operator:\
+                \ Exists\n              containers:\n                - name: patcher\n\
+                \                  image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest\n\
+                \                  imagePullPolicy: Always\n                  command:\n\
+                \                    - /bin/bash\n                    - /scripts/patch.sh\n\
+                \                  env:\n                    - name: MEMORY_LIMIT\n\
+                \                      value: \"512Mi\"\n                  volumeMounts:\n\
+                \                    - name: script\n                      mountPath:\
+                \ /scripts\n                      readOnly: true\n               \
+                \   resources:\n                    requests:\n                  \
+                \    cpu: 10m\n                      memory: 64Mi\n              \
+                \      limits:\n                      cpu: 100m\n                \
+                \      memory: 128Mi\n                  securityContext:\n       \
+                \             allowPrivilegeEscalation: false\n                  \
+                \  capabilities:\n                      drop:\n                  \
+                \      - ALL\n                    runAsNonRoot: true\n           \
+                \         seccompProfile:\n                      type: RuntimeDefault\n\
+                \              volumes:\n                - name: script\n        \
+                \          configMap:\n                    name: metrics-proxy-memory-limit-script\n\
+                \                    defaultMode: 0755\n"
+              pruneObjectBehavior: DeleteIfCreated
+              remediationAction: enforce
+              severity: high
+        remediationAction: enforce
+    - apiVersion: cluster.open-cluster-management.io/v1beta1
+      kind: Placement
+      metadata:
+        name: placement-ocpbugs-88685-metrics-proxy-memory-limit
+        namespace: openshift-acm-policies
+      spec:
+        predicates:
+        - requiredClusterSelector:
+            labelSelector:
+              matchExpressions:
+              - key: hypershift.open-cluster-management.io/management-cluster
+                operator: In
+                values:
+                - 'true'
+        tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: PlacementBinding
+      metadata:
+        name: binding-ocpbugs-88685-metrics-proxy-memory-limit
+        namespace: openshift-acm-policies
+      placementRef:
+        apiGroup: cluster.open-cluster-management.io
+        kind: Placement
+        name: placement-ocpbugs-88685-metrics-proxy-memory-limit
+      subjects:
+      - apiGroup: policy.open-cluster-management.io
+        kind: Policy
+        name: ocpbugs-88685-metrics-proxy-memory-limit
     - apiVersion: policy.open-cluster-management.io/v1
       kind: Policy
       metadata:
@@ -10923,6 +11434,78 @@ objects:
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
           policy.open-cluster-management.io/description: ''
           policy.open-cluster-management.io/standards: NIST SP 800-53
+        name: rosa-console-branding-hcp
+        namespace: openshift-acm-policies
+      spec:
+        disabled: false
+        policy-templates:
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+              name: rosa-console-branding-hcp
+            spec:
+              evaluationInterval:
+                compliant: 2h
+                noncompliant: 45s
+              object-templates:
+              - complianceType: musthave
+                metadataComplianceType: musthave
+                objectDefinition:
+                  apiVersion: operator.openshift.io/v1
+                  kind: Console
+                  metadata:
+                    name: cluster
+                  spec:
+                    customization:
+                      brand: ROSA
+                      documentationBaseURL: https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/
+                    managementState: Managed
+                    route: null
+              pruneObjectBehavior: DeleteIfCreated
+              remediationAction: enforce
+              severity: low
+        remediationAction: enforce
+    - apiVersion: cluster.open-cluster-management.io/v1beta1
+      kind: Placement
+      metadata:
+        name: placement-rosa-console-branding-hcp
+        namespace: openshift-acm-policies
+      spec:
+        predicates:
+        - requiredClusterSelector:
+            labelSelector:
+              matchExpressions:
+              - key: hypershift.open-cluster-management.io/hosted-cluster
+                operator: In
+                values:
+                - 'true'
+        tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: PlacementBinding
+      metadata:
+        name: binding-rosa-console-branding-hcp
+        namespace: openshift-acm-policies
+      placementRef:
+        apiGroup: cluster.open-cluster-management.io
+        kind: Placement
+        name: placement-rosa-console-branding-hcp
+      subjects:
+      - apiGroup: policy.open-cluster-management.io
+        kind: Policy
+        name: rosa-console-branding-hcp
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: Policy
+      metadata:
+        annotations:
+          policy.open-cluster-management.io/categories: CM Configuration Management
+          policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/description: ''
+          policy.open-cluster-management.io/standards: NIST SP 800-53
         name: rosa-console-legacy-branding-configmap
         namespace: openshift-acm-policies
       spec:
@@ -11258,6 +11841,454 @@ objects:
       - apiGroup: policy.open-cluster-management.io
         kind: Policy
         name: rosa-ingress-certificate-policies
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: Policy
+      metadata:
+        annotations:
+          policy.open-cluster-management.io/categories: CM Configuration Management
+          policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/description: ''
+          policy.open-cluster-management.io/standards: NIST SP 800-53
+        name: srep-vap-autonode-karpenter
+        namespace: openshift-acm-policies
+      spec:
+        disabled: false
+        policy-templates:
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+              name: srep-vap-autonode-karpenter
+            spec:
+              evaluationInterval:
+                compliant: 2h
+                noncompliant: 45s
+              object-templates:
+              - complianceType: mustonlyhave
+                metadataComplianceType: musthave
+                objectDefinition:
+                  apiVersion: admissionregistration.k8s.io/v1
+                  kind: ValidatingAdmissionPolicy
+                  metadata:
+                    name: autonode-nodepool-guardrails
+                  spec:
+                    failurePolicy: Fail
+                    matchConstraints:
+                      resourceRules:
+                      - apiGroups:
+                        - karpenter.sh
+                        apiVersions:
+                        - v1
+                        operations:
+                        - CREATE
+                        - UPDATE
+                        resources:
+                        - nodepools
+                    validations:
+                    - expression: "!has(object.spec) ||\n!has(object.spec.template)\
+                        \ ||\n!has(object.spec.template.spec) ||\n!has(object.spec.template.spec.requirements)\
+                        \ ||\nobject.spec.template.spec.requirements\n  .filter(r,\
+                        \ r.key == 'node.kubernetes.io/instance-type' && r.operator\
+                        \ == 'In')\n  .all(r, r.values.all(v,\n    !v.matches('\\\\\
+                        .(nano|micro|small|medium|large)$')\n  ))\n"
+                      message: Instance types ending in .nano, .micro, .small, .medium,
+                        or .large are not allowed. Use .xlarge or bigger.
+                    - expression: '!has(object.spec) ||
+
+                        !has(object.spec.template) ||
+
+                        !has(object.spec.template.metadata) ||
+
+                        !has(object.spec.template.metadata.labels) ||
+
+                        !(''node-role.kubernetes.io/master'' in object.spec.template.metadata.labels)
+                        &&
+
+                        !(''node-role.kubernetes.io/infra'' in object.spec.template.metadata.labels)
+                        &&
+
+                        !(''node-role.kubernetes.io/control-plane'' in object.spec.template.metadata.labels)
+
+                        '
+                      message: Labels node-role.kubernetes.io/master, node-role.kubernetes.io/infra,
+                        and node-role.kubernetes.io/control-plane are reserved and
+                        cannot be set on NodePools.
+              - complianceType: mustonlyhave
+                metadataComplianceType: musthave
+                objectDefinition:
+                  apiVersion: admissionregistration.k8s.io/v1
+                  kind: ValidatingAdmissionPolicyBinding
+                  metadata:
+                    name: autonode-nodepool-guardrails-binding
+                  spec:
+                    policyName: autonode-nodepool-guardrails
+                    validationActions:
+                    - Deny
+              - complianceType: mustonlyhave
+                metadataComplianceType: musthave
+                objectDefinition:
+                  apiVersion: admissionregistration.k8s.io/v1
+                  kind: ValidatingAdmissionPolicy
+                  metadata:
+                    name: autonode-ec2nodeclass-guardrails
+                  spec:
+                    failurePolicy: Fail
+                    matchConstraints:
+                      resourceRules:
+                      - apiGroups:
+                        - karpenter.hypershift.openshift.io
+                        apiVersions:
+                        - v1
+                        operations:
+                        - CREATE
+                        - UPDATE
+                        resources:
+                        - openshiftec2nodeclasses
+                    validations:
+                    - expression: "!has(object.spec) ||\n!has(object.spec.blockDeviceMappings)\
+                        \ ||\nobject.spec.blockDeviceMappings.all(bdm,\n  !has(bdm.ebs)\
+                        \ ||\n  !has(bdm.ebs.volumeSizeGiB) ||\n  bdm.ebs.volumeSizeGiB\
+                        \ >= 100\n)\n"
+                      message: EBS volume size must be at least 100 GiB.
+                    - expression: "!has(object.spec) ||\n!has(object.spec.blockDeviceMappings)\
+                        \ ||\nobject.spec.blockDeviceMappings.all(bdm,\n  !has(bdm.ebs)\
+                        \ ||\n  (has(bdm.ebs.encrypted) && bdm.ebs.encrypted == 'Encrypted')\n\
+                        )\n"
+                      message: 'All EBS volumes must have encryption enabled (encrypted:
+                        "Encrypted").'
+                    - expression: "!has(object.spec) ||\n!has(object.spec.tags) ||\n\
+                        object.spec.tags.all(key,\n  key != 'red-hat-managed' &&\n\
+                        \  !key.startsWith('api.openshift.com/') &&\n  !key.startsWith('kubernetes.io/cluster/')\n\
+                        )\n"
+                      message: Tags 'red-hat-managed', 'api.openshift.com/*', and
+                        'kubernetes.io/cluster/*' are reserved and cannot be set.
+                    - expression: '!has(object.spec) ||
+
+                        !has(object.spec.associatePublicIPAddress) ||
+
+                        object.spec.associatePublicIPAddress != true
+
+                        '
+                      message: Public IP address association is not allowed. Set associatePublicIPAddress
+                        to false or remove it.
+              - complianceType: mustonlyhave
+                metadataComplianceType: musthave
+                objectDefinition:
+                  apiVersion: admissionregistration.k8s.io/v1
+                  kind: ValidatingAdmissionPolicyBinding
+                  metadata:
+                    name: autonode-ec2nodeclass-guardrails-binding
+                  spec:
+                    policyName: autonode-ec2nodeclass-guardrails
+                    validationActions:
+                    - Deny
+              - complianceType: mustonlyhave
+                metadataComplianceType: musthave
+                objectDefinition:
+                  apiVersion: admissionregistration.k8s.io/v1
+                  kind: ValidatingAdmissionPolicy
+                  metadata:
+                    name: autonode-nodeclaim-guardrails
+                  spec:
+                    failurePolicy: Fail
+                    matchConstraints:
+                      resourceRules:
+                      - apiGroups:
+                        - karpenter.sh
+                        apiVersions:
+                        - v1
+                        operations:
+                        - CREATE
+                        - UPDATE
+                        resources:
+                        - nodeclaims
+                    validations:
+                    - expression: "!has(object.spec) ||\n!has(object.spec.requirements)\
+                        \ ||\nobject.spec.requirements\n  .filter(r, r.key == 'node.kubernetes.io/instance-type'\
+                        \ && r.operator == 'In')\n  .all(r, r.values.all(v,\n    !v.matches('\\\
+                        \\.(nano|micro|small|medium|large)$')\n  ))\n"
+                      message: Instance types ending in .nano, .micro, .small, .medium,
+                        or .large are not supported for OpenShift nodes.
+              - complianceType: mustonlyhave
+                metadataComplianceType: musthave
+                objectDefinition:
+                  apiVersion: admissionregistration.k8s.io/v1
+                  kind: ValidatingAdmissionPolicyBinding
+                  metadata:
+                    name: autonode-nodeclaim-guardrails-binding
+                  spec:
+                    policyName: autonode-nodeclaim-guardrails
+                    validationActions:
+                    - Deny
+              pruneObjectBehavior: DeleteIfCreated
+              remediationAction: enforce
+              severity: low
+        remediationAction: enforce
+    - apiVersion: cluster.open-cluster-management.io/v1beta1
+      kind: Placement
+      metadata:
+        name: placement-srep-vap-autonode-karpenter
+        namespace: openshift-acm-policies
+      spec:
+        predicates:
+        - requiredClusterSelector:
+            labelSelector:
+              matchExpressions:
+              - key: hypershift.open-cluster-management.io/hosted-cluster
+                operator: In
+                values:
+                - 'true'
+              - key: openshiftVersion-major-minor
+                operator: NotIn
+                values:
+                - '4.14'
+                - '4.15'
+                - '4.16'
+                - '4.17'
+                - '4.18'
+                - '4.19'
+                - '4.20'
+        tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: PlacementBinding
+      metadata:
+        name: binding-srep-vap-autonode-karpenter
+        namespace: openshift-acm-policies
+      placementRef:
+        apiGroup: cluster.open-cluster-management.io
+        kind: Placement
+        name: placement-srep-vap-autonode-karpenter
+      subjects:
+      - apiGroup: policy.open-cluster-management.io
+        kind: Policy
+        name: srep-vap-autonode-karpenter
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: Policy
+      metadata:
+        annotations:
+          policy.open-cluster-management.io/categories: CM Configuration Management
+          policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/description: ''
+          policy.open-cluster-management.io/standards: NIST SP 800-53
+        name: srep-vap-hcp-node-label
+        namespace: openshift-acm-policies
+      spec:
+        disabled: false
+        policy-templates:
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+              name: srep-vap-hcp-node-label
+            spec:
+              evaluationInterval:
+                compliant: 2h
+                noncompliant: 45s
+              object-templates:
+              - complianceType: mustonlyhave
+                metadataComplianceType: musthave
+                objectDefinition:
+                  apiVersion: admissionregistration.k8s.io/v1
+                  kind: ValidatingAdmissionPolicy
+                  metadata:
+                    name: rh-sre-deny-node-image-type-modify
+                  spec:
+                    failurePolicy: Fail
+                    matchConstraints:
+                      resourceRules:
+                      - apiGroups:
+                        - ''
+                        apiVersions:
+                        - v1
+                        operations:
+                        - UPDATE
+                        resources:
+                        - nodes
+                    validations:
+                    - expression: "(\n  \"api.openshift.com/image-type\" in oldObject.metadata.labels\
+                        \ &&\n  \"api.openshift.com/image-type\" in object.metadata.labels\
+                        \ &&\n  object.metadata.labels[\"api.openshift.com/image-type\"\
+                        ] == oldObject.metadata.labels[\"api.openshift.com/image-type\"\
+                        ]\n)\n||\n(\n  !(\"api.openshift.com/image-type\" in oldObject.metadata.labels)\
+                        \ &&\n  !(\"api.openshift.com/image-type\" in object.metadata.labels)\n\
+                        )\n|| request.userInfo.username == \"system:hosted-cluster-config\"\
+                        \n"
+                      message: Modification of node label api.openshift.com/image-type
+                        is not allowed
+              - complianceType: mustonlyhave
+                metadataComplianceType: musthave
+                objectDefinition:
+                  apiVersion: admissionregistration.k8s.io/v1
+                  kind: ValidatingAdmissionPolicyBinding
+                  metadata:
+                    name: rh-sre-deny-node-image-type-modify-binding
+                  spec:
+                    policyName: rh-sre-deny-node-image-type-modify
+                    validationActions:
+                    - Deny
+              pruneObjectBehavior: DeleteIfCreated
+              remediationAction: enforce
+              severity: low
+        remediationAction: enforce
+    - apiVersion: cluster.open-cluster-management.io/v1beta1
+      kind: Placement
+      metadata:
+        name: placement-srep-vap-hcp-node-label
+        namespace: openshift-acm-policies
+      spec:
+        predicates:
+        - requiredClusterSelector:
+            labelSelector:
+              matchExpressions:
+              - key: hypershift.open-cluster-management.io/hosted-cluster
+                operator: In
+                values:
+                - 'true'
+              - key: openshiftVersion-major-minor
+                operator: NotIn
+                values:
+                - '4.14'
+                - '4.15'
+                - '4.16'
+                - '4.17'
+                - '4.18'
+        tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: PlacementBinding
+      metadata:
+        name: binding-srep-vap-hcp-node-label
+        namespace: openshift-acm-policies
+      placementRef:
+        apiGroup: cluster.open-cluster-management.io
+        kind: Placement
+        name: placement-srep-vap-hcp-node-label
+      subjects:
+      - apiGroup: policy.open-cluster-management.io
+        kind: Policy
+        name: srep-vap-hcp-node-label
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: Policy
+      metadata:
+        annotations:
+          policy.open-cluster-management.io/categories: CM Configuration Management
+          policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/description: ''
+          policy.open-cluster-management.io/standards: NIST SP 800-53
+        name: srep-vap-vcpu-overcommit
+        namespace: openshift-acm-policies
+      spec:
+        disabled: false
+        policy-templates:
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+              name: srep-vap-vcpu-overcommit
+            spec:
+              evaluationInterval:
+                compliant: 2h
+                noncompliant: 45s
+              object-templates:
+              - complianceType: mustonlyhave
+                metadataComplianceType: musthave
+                objectDefinition:
+                  apiVersion: admissionregistration.k8s.io/v1
+                  kind: ValidatingAdmissionPolicy
+                  metadata:
+                    name: windows-vcpu-overcommit
+                  spec:
+                    failurePolicy: Fail
+                    matchConditions:
+                    - expression: (('kubevirt.io/preference-name' in object.metadata.annotations)
+                        && (object.metadata.annotations['kubevirt.io/preference-name'].lowerAscii().contains('windows')))
+                        || (('kubevirt.io/cluster-preference-name' in object.metadata.annotations)
+                        && (object.metadata.annotations['kubevirt.io/cluster-preference-name'].lowerAscii().contains('windows')))
+                        || (('vm.kubevirt.io/os' in object.metadata.annotations) &&
+                        (object.metadata.annotations['vm.kubevirt.io/os'].lowerAscii().contains('windows')))
+                      name: windows-vcpu-overcommit
+                    matchConstraints:
+                      resourceRules:
+                      - apiGroups:
+                        - kubevirt.io
+                        apiVersions:
+                        - '*'
+                        operations:
+                        - CREATE
+                        - UPDATE
+                        resources:
+                        - virtualmachineinstances
+                    validations:
+                    - expression: has(object.spec.domain.cpu.dedicatedCpuPlacement)
+                        && object.spec.domain.cpu.dedicatedCpuPlacement == true
+                      message: Windows VMIs require dedicated CPU placement. Set spec.domain.cpu.dedicatedCpuPlacement
+                        to true.
+              - complianceType: mustonlyhave
+                metadataComplianceType: musthave
+                objectDefinition:
+                  apiVersion: admissionregistration.k8s.io/v1
+                  kind: ValidatingAdmissionPolicyBinding
+                  metadata:
+                    name: windows-vcpu-overcommit-binding
+                  spec:
+                    policyName: windows-vcpu-overcommit
+                    validationActions:
+                    - Deny
+              pruneObjectBehavior: DeleteIfCreated
+              remediationAction: enforce
+              severity: low
+        remediationAction: enforce
+    - apiVersion: cluster.open-cluster-management.io/v1beta1
+      kind: Placement
+      metadata:
+        name: placement-srep-vap-vcpu-overcommit
+        namespace: openshift-acm-policies
+      spec:
+        predicates:
+        - requiredClusterSelector:
+            labelSelector:
+              matchExpressions:
+              - key: hypershift.open-cluster-management.io/hosted-cluster
+                operator: In
+                values:
+                - 'true'
+              - key: api.openshift.com/win-li-enabled
+                operator: In
+                values:
+                - 'true'
+              - key: openshiftVersion-major-minor
+                operator: NotIn
+                values:
+                - '4.14'
+                - '4.15'
+                - '4.16'
+                - '4.17'
+                - '4.18'
+        tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: PlacementBinding
+      metadata:
+        name: binding-srep-vap-vcpu-overcommit
+        namespace: openshift-acm-policies
+      placementRef:
+        apiGroup: cluster.open-cluster-management.io
+        kind: Placement
+        name: placement-srep-vap-vcpu-overcommit
+      subjects:
+      - apiGroup: policy.open-cluster-management.io
+        kind: Policy
+        name: srep-vap-vcpu-overcommit
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
