@@ -32238,6 +32238,41 @@ objects:
     - apiVersion: ocmagent.managed.openshift.io/v1alpha1
       kind: ManagedFleetNotification
       metadata:
+        name: autonode-iam-misconfiguration
+        namespace: openshift-ocm-agent-operator
+      spec:
+        fleetNotification:
+          name: autonode-iam-misconfiguration
+          summary: Karpenter IAM role misconfiguration detected
+          notificationMessage: 'Your ROSA cluster''s Karpenter (AutoNode) is unable
+            to launch EC2 instances due to an IAM role or instance profile misconfiguration.
+            This prevents new nodes from being provisioned and may impact your workloads.
+
+
+            Common causes include:
+
+            - Missing or incorrect trust policy on the node IAM role
+
+            - Missing required managed policies (e.g., the Karpenter managed policy)
+
+            - Permissions boundary blocking required actions
+
+            - Instance profile does not exist or ARN is incorrect
+
+
+            Please verify your IAM role configuration matches the expected setup described
+            in the ROSA documentation: https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/cluster_administration/managing-compute-nodes-using-red-hat-build-of-karpenter#rosa-nodes-autonode-managing-setup_rosa-autonode-setup
+
+
+            If you need assistance, please open a support case.'
+          references:
+          - https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/cluster_administration/managing-compute-nodes-using-red-hat-build-of-karpenter#rosa-nodes-autonode-managing-setup_rosa-autonode-setup
+          resendWait: 24
+          severity: Warning
+          limitedSupport: false
+    - apiVersion: ocmagent.managed.openshift.io/v1alpha1
+      kind: ManagedFleetNotification
+      metadata:
         name: customer-monitoring-operator-down
         namespace: openshift-ocm-agent-operator
       spec:
@@ -48461,6 +48496,32 @@ objects:
               severity: info
               send_managed_notification: 'true'
               managed_notification_template: audit-webhook-error-putting-minimized-cloudwatch-log
+              namespace: '{{ $labels.namespace }}'
+    - apiVersion: monitoring.rhobs/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
+          prometheus: autonode-iam-misconfiguration
+          role: alert-rules
+        name: autonode-iam-misconfiguration
+        namespace: openshift-observability-rhobs
+      spec:
+        groups:
+        - name: AutoNodeIAMMisconfigurationFleetNotification
+          interval: 60s
+          rules:
+          - alert: AutoNodeIAMMisconfigurationSRE
+            annotations:
+              description: AutoNode encountering IAM-related errors for cluster {{
+                $labels._id }}, indicating a misconfigured IAM role or instance profile.
+              summary: AutoNode IAM role misconfiguration detected
+            expr: sum by (_id, namespace) (operator_nodeclaim_status_condition_count{reason=~"Unauthorized|InstanceProfileNameInvalid|SpotSLRCreationFailed|AMIAuthorizationFailure"})
+              > 0 unless on (_id) sre:hcp:alerts_suppressed
+            for: 15m
+            labels:
+              severity: warning
+              send_managed_notification: 'true'
+              managed_notification_template: autonode-iam-misconfiguration
               namespace: '{{ $labels.namespace }}'
     - apiVersion: monitoring.rhobs/v1
       kind: PrometheusRule
