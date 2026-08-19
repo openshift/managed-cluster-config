@@ -47848,8 +47848,8 @@ objects:
         groups:
         - name: sre-namespace-stuck-terminating
           rules:
-          - expr: 'kube_namespace_status_phase{namespace=~"openshift-.*", phase="Terminating"}
-              == 1
+          - expr: 'kube_namespace_status_phase{namespace=~"openshift-.*",namespace!~"(^openshift-debug-.*)",
+              phase="Terminating"} == 1
 
               '
             record: sre:record:namespace_stuck_terminating
@@ -47869,6 +47869,7 @@ objects:
                 phase. This typically indicates resources with finalizers that are
                 preventing deletion. Check for stuck custom resources, APIService
                 issues, or webhook problems.
+              runbook_url: https://github.com/openshift/ops-sop/blob/master/v4/alerts/ManagedNamespaceStuckTerminatingSRE.md
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
