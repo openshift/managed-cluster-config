@@ -1,0 +1,26 @@
+---
+apiVersion: monitoring.rhobs/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: ec2nodeclass-not-ready
+    role: alert-rules
+  name: ec2nodeclass-not-ready
+  namespace: openshift-observability-rhobs
+spec:
+  groups:
+    - name: ec2nodeclass-not-ready
+      interval: 60s
+      rules:
+        - alert: OpenshiftEC2NodeClassNotReadyFleetNotification
+          annotations:
+            description: "OpenshiftEC2NodeClass {{ $labels.name }} has been in a non-Ready state for more than 5 minutes."
+            runbook_url: https://github.com/openshift/ops-sop/blob/master/hypershift/alerts/OpenshiftEC2NodeClassNotReady.md
+            summary: "OpenshiftEC2NodeClass not ready."
+          expr: (operator_ec2nodeclass_status_condition_current_status_seconds{type="Ready", status!="True"}) unless on (_id) sre:hcp:alerts_suppressed
+          for: 5m
+          labels:
+            severity: info
+            send_managed_notification: "true"
+            managed_notification_template: ec2nodeclass-not-ready
+            namespace: "{{ $labels.namespace }}"

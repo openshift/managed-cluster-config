@@ -1,0 +1,27 @@
+apiVersion: ocmagent.managed.openshift.io/v1alpha1
+kind: ManagedFleetNotification
+metadata:
+  name: ec2nodeclass-not-ready
+  namespace: openshift-ocm-agent-operator
+spec:
+  fleetNotification:
+    name: ec2nodeclass-not-ready
+    severity: Warning
+    summary: "Action required: AutoNode (Karpenter) OpenShiftEC2NodeClass not ready"
+    logType: "Cluster Configuration"
+    notificationMessage: |-
+      Red Hat has identified one or more OpenShiftEC2NodeClass resources on your cluster are not ready. This can cause NodePools that reference these resources to not become ready, Karpenter to not provision nodes and workloads to become unavailable.
+
+      Common causes include:
+      - Missing or incorrect subnet tags on your VPC subnets
+      - Missing security group tags
+      - Deleted worker instance profile
+      - IAM role permission issues
+
+      For more information, please refer to: https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/cluster_administration/managing-compute-nodes-using-red-hat-build-of-karpenter
+
+      If you need assistance, please open a support case.
+    resendWait: 24
+    limitedSupport: false
+    references:
+      - https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/cluster_administration/managing-compute-nodes-using-red-hat-build-of-karpenter
