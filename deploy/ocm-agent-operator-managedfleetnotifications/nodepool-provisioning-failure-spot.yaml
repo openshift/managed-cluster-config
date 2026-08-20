@@ -1,0 +1,22 @@
+apiVersion: ocmagent.managed.openshift.io/v1alpha1
+kind: ManagedFleetNotification
+metadata:
+  name: nodepool-provisioning-failure-spot
+  namespace: openshift-ocm-agent-operator
+spec:
+  fleetNotification:
+    name: nodepool-provisioning-failure-spot
+    summary: Spot instance machinepool has not reached its desired size
+    notificationMessage: |-
+      One or more Spot instance machinepools in your ROSA cluster have not reached their desired size. This can prevent your workloads from running properly.
+
+      Common causes include:
+      - Your maximum Spot price is below the current Spot price for the selected instance type
+      - There is not enough Spot capacity available for the requested instance type in the selected availability zone
+
+      For other common issues, please refer to: https://access.redhat.com/articles/7132524
+
+      If you need assistance, please open a support case.
+    resendWait: 24
+    severity: Warning
+    limitedSupport: false
