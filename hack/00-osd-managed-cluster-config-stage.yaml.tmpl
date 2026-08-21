@@ -7104,27 +7104,30 @@ objects:
                 Failed to create secret: {result.stderr}\")\n                log(f\"\
                 Successfully created {SECRET_NAME}\")\n\n            for registry\
                 \ in registries:\n                log(f\"  - {registry}\")\n\n\n \
-                \       def main():\n            # Step 1: Discover all ECR registries\
-                \ from IDMS\n            registries = discover_ecr_registries()\n\
-                \            if not registries:\n                log(\"Skipping -\
-                \ no ECR IDMS mirrors found (not a zero-egress cluster)\")\n     \
-                \           return\n\n            log(f\"Starting ECR credential refresh\
-                \ for {len(registries)} registry(s)\")\n\n            # Step 2: Get\
-                \ ECR token (same token works for all registries)\n            ecr_password\
-                \ = get_ecr_token(registries[0])\n\n            # Step 3: Update the\
-                \ secret with auth entries for all registries\n            update_secret(registries,\
-                \ ecr_password)\n\n            log(\"ECR credential refresh completed\
-                \ successfully\")\n\n\n        if __name__ == \"__main__\":\n    \
-                \        try:\n                main()\n            except Exception\
-                \ as e:\n                log(f\"FATAL - {e}\")\n                sys.exit(1)\n\
-                - complianceType: mustonlyhave\n  metadataComplianceType: musthave\n\
-                \  objectDefinition:\n    apiVersion: batch/v1\n    kind: CronJob\n\
-                \    metadata:\n      name: ecr-credential-refresh\n      namespace:\
-                \ kube-system\n      labels:\n        app: ecr-credential-refresh\n\
-                \    spec:\n      schedule: \"0 */4 * * *\"\n      concurrencyPolicy:\
-                \ Forbid\n      successfulJobsHistoryLimit: 3\n      failedJobsHistoryLimit:\
+                \       def main():\n            jitter = int.from_bytes(os.urandom(2),\
+                \ \"big\") % 601\n            log(f\"Sleeping {jitter}s for jitter\"\
+                )\n            subprocess.run([\"sleep\", str(jitter)], check=True)\n\
+                \n            # Step 1: Discover all ECR registries from IDMS\n  \
+                \          registries = discover_ecr_registries()\n            if\
+                \ not registries:\n                log(\"Skipping - no ECR IDMS mirrors\
+                \ found (not a zero-egress cluster)\")\n                return\n\n\
+                \            log(f\"Starting ECR credential refresh for {len(registries)}\
+                \ registry(s)\")\n\n            # Step 2: Get ECR token (same token\
+                \ works for all registries)\n            ecr_password = get_ecr_token(registries[0])\n\
+                \n            # Step 3: Update the secret with auth entries for all\
+                \ registries\n            update_secret(registries, ecr_password)\n\
+                \n            log(\"ECR credential refresh completed successfully\"\
+                )\n\n\n        if __name__ == \"__main__\":\n            try:\n  \
+                \              main()\n            except Exception as e:\n      \
+                \          log(f\"FATAL - {e}\")\n                sys.exit(1)\n- complianceType:\
+                \ mustonlyhave\n  metadataComplianceType: musthave\n  objectDefinition:\n\
+                \    apiVersion: batch/v1\n    kind: CronJob\n    metadata:\n    \
+                \  name: ecr-credential-refresh\n      namespace: kube-system\n  \
+                \    labels:\n        app: ecr-credential-refresh\n    spec:\n   \
+                \   schedule: \"0 */5 * * *\"\n      concurrencyPolicy: Forbid\n \
+                \     successfulJobsHistoryLimit: 3\n      failedJobsHistoryLimit:\
                 \ 3\n      jobTemplate:\n        spec:\n          backoffLimit: 3\n\
-                \          activeDeadlineSeconds: 300\n          template:\n     \
+                \          activeDeadlineSeconds: 900\n          template:\n     \
                 \       metadata:\n              labels:\n                app: ecr-credential-refresh\n\
                 \            spec:\n              serviceAccountName: ecr-credential-refresh\n\
                 \              restartPolicy: OnFailure\n              nodeSelector:\n\

@@ -359,6 +359,10 @@ spec:
 
 
                             def main():
+                                jitter = int.from_bytes(os.urandom(2), "big") % 601
+                                log(f"Sleeping {jitter}s for jitter")
+                                subprocess.run(["sleep", str(jitter)], check=True)
+
                                 # Step 1: Discover all ECR registries from IDMS
                                 registries = discover_ecr_registries()
                                 if not registries:
@@ -393,14 +397,14 @@ spec:
                           labels:
                             app: ecr-credential-refresh
                         spec:
-                          schedule: "0 */4 * * *"
+                          schedule: "0 */5 * * *"
                           concurrencyPolicy: Forbid
                           successfulJobsHistoryLimit: 3
                           failedJobsHistoryLimit: 3
                           jobTemplate:
                             spec:
                               backoffLimit: 3
-                              activeDeadlineSeconds: 300
+                              activeDeadlineSeconds: 900
                               template:
                                 metadata:
                                   labels:
