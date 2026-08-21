@@ -31,7 +31,6 @@ spec:
                         allowHostPorts: false
                         allowPrivilegedContainer: false
                         allowedCapabilities:
-                            - NET_ADMIN
                             - NET_RAW
                         apiVersion: security.openshift.io/v1
                         kind: SecurityContextConstraints
@@ -39,9 +38,9 @@ spec:
                             name: pcap-dedicated-admins
                         readOnlyRootFilesystem: false
                         runAsUser:
-                            type: RunAsAny
+                            type: MustRunAsNonRoot
                         seLinuxContext:
-                            type: RunAsAny
+                            type: MustRunAs
                     - complianceType: mustonlyhave
                       metadataComplianceType: musthave
                       objectDefinition:
