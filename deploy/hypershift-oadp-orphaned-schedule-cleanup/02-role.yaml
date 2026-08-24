@@ -1,0 +1,19 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: oadp-orphaned-schedule-cleanup
+  namespace: openshift-adp
+rules:
+# Schedule - evaluate and delete orphaned schedules
+- apiGroups: [velero.io]
+  resources: [schedules]
+  verbs: [get, list, delete]
+# Backup - evaluate and delete FailedValidation backups by exact name
+- apiGroups: [velero.io]
+  resources: [backups]
+  verbs: [get, list, delete]
+# BackupStorageLocation - existence check only, never modified
+- apiGroups: [velero.io]
+  resources: [backupstoragelocations]
+  verbs: [get, list]

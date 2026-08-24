@@ -1,0 +1,12 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: oadp-orphaned-schedule-cleanup
+rules:
+# HostedCluster - existence check only, never modified. Cluster-scoped
+# because HostedClusters live in per-cluster namespaces across the MC,
+# not just openshift-adp.
+- apiGroups: [hypershift.openshift.io]
+  resources: [hostedclusters]
+  verbs: [get, list]

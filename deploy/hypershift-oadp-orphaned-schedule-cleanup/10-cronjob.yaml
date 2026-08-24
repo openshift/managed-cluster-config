@@ -1,0 +1,320 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: oadp-orphaned-schedule-cleanup
+  namespace: openshift-adp
+spec:
+  schedule: "0 3 * * *"  # 03:00 UTC daily
+  suspend: false
+  concurrencyPolicy: Forbid  # Don't run if previous still running
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: 604800  # Auto-delete Job after 7 days
+      backoffLimit: 0  # Don't retry on failure
+      activeDeadlineSeconds: 3600  # Bound total Job runtime; a blocked oc
+                                   # call must not keep the Job (and thus
+                                   # concurrencyPolicy: Forbid) active
+                                   # indefinitely and block future runs.
+      template:
+        spec:
+          securityContext:
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+          affinity:
+            nodeAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+              - preference:
+                  matchExpressions:
+                  - key: node-role.kubernetes.io/infra
+                    operator: Exists
+                weight: 1
+          tolerations:
+            - effect: NoSchedule
+              key: node-role.kubernetes.io/infra
+              operator: Exists
+          containers:
+          - name: cleanup
+            image: image-registry.openshift-image-registry.svc:5000/openshift/tools:latest
+            imagePullPolicy: IfNotPresent
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities:
+                drop:
+                - ALL
+            resources:
+              requests:
+                memory: "100Mi"
+                cpu: "100m"
+              limits:
+                memory: "512Mi"
+                cpu: "500m"
+            volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            env:
+            - name: HOME
+              value: /tmp
+            - name: TMPDIR
+              value: /tmp
+            command:
+            - bash
+            - -c
+            - |
+              set -euo pipefail
+
+              NAMESPACE="openshift-adp"
+
+              echo "=============================================="
+              echo "  OADP Orphaned Schedule Cleanup Job"
+              echo "=============================================="
+              echo ""
+              echo "Start time: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+              echo ""
+
+              # ============================================
+              # Gather Data
+              # ============================================
+              echo "Gathering Kubernetes data..."
+
+              # Fail closed: if we can't reliably list Schedules or Backups,
+              # abort rather than proceeding with an empty/partial inventory,
+              # which could otherwise cause an owned Schedule (or its
+              # backups) to be mistaken for absent/orphaned.
+              if ! SCHEDULES_JSON=$(oc get schedules -n "$NAMESPACE" --request-timeout=30s -o json 2>/dev/null); then
+                  echo "ERROR: failed to list Schedules in $NAMESPACE; aborting (fail-closed)." >&2
+                  exit 1
+              fi
+              if ! BACKUPS_JSON=$(oc get backups -n "$NAMESPACE" --request-timeout=30s -o json 2>/dev/null); then
+                  echo "ERROR: failed to list Backups in $NAMESPACE; aborting (fail-closed)." >&2
+                  exit 1
+              fi
+
+              SCHEDULE_COUNT=$(echo "$SCHEDULES_JSON" | jq '.items | length')
+              FAILED_VALIDATION_COUNT=$(echo "$BACKUPS_JSON" | jq '[.items[] | select(.status.phase == "FailedValidation")] | length')
+
+              echo "  Schedules found:            $SCHEDULE_COUNT"
+              echo "  FailedValidation backups:   $FAILED_VALIDATION_COUNT"
+              echo ""
+
+              if [ "$SCHEDULE_COUNT" = "0" ] && [ "$FAILED_VALIDATION_COUNT" = "0" ]; then
+                  echo "Nothing to evaluate. Exiting."
+                  echo "End time: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+                  exit 0
+              fi
+
+              # ============================================
+              # Build candidate schedule name list
+              # (union of existing Schedule names + schedule-name
+              #  labels referenced by FailedValidation backups,
+              #  covering the case where the Schedule itself is
+              #  already gone but orphaned backups remain)
+              # ============================================
+              SCHEDULE_NAMES_FROM_SCHEDULES=$(echo "$SCHEDULES_JSON" | jq -r '.items[].metadata.name')
+              SCHEDULE_NAMES_FROM_BACKUPS=$(echo "$BACKUPS_JSON" | jq -r \
+                  '[.items[] | select(.status.phase == "FailedValidation") | (.metadata.labels["velero.io/schedule-name"] // empty)] | unique[]')
+
+              UNLABELED_FV_COUNT=$(echo "$BACKUPS_JSON" | jq \
+                  '[.items[] | select(.status.phase == "FailedValidation") | select((.metadata.labels["velero.io/schedule-name"] // "") == "")] | length')
+
+              CANDIDATES=$(printf '%s\n%s\n' "$SCHEDULE_NAMES_FROM_SCHEDULES" "$SCHEDULE_NAMES_FROM_BACKUPS" | grep -v '^$' | sort -u || true)
+              CANDIDATE_COUNT=$(echo "$CANDIDATES" | grep -c . 2>/dev/null || true); CANDIDATE_COUNT=${CANDIDATE_COUNT:-0}
+
+              echo "  Candidate schedules to evaluate:                    $CANDIDATE_COUNT"
+              echo "  FailedValidation backups without schedule-name label (always skipped): $UNLABELED_FV_COUNT"
+              echo ""
+
+              # Note: individual Backup names are intentionally not logged
+              # here (see "No resource names in logs" in the README) - the
+              # aggregate count above is the signal; inspect the live
+              # cluster for specifics if manual review is needed.
+
+              DELETED_SCHEDULES=0
+              FAILED_SCHEDULES=0
+              DELETED_BACKUPS=0
+              FAILED_BACKUPS=0
+              SKIPPED_HC_EXISTS=0
+              SKIPPED_BSL_EXISTS=0
+              SKIPPED_OWNED=0
+              SKIPPED_UNPARSEABLE=0
+              SKIPPED_STATIC=0
+              SKIPPED_LOOKUP_ERROR=0
+
+              if [ "$CANDIDATE_COUNT" = "0" ]; then
+                  echo "  No candidate schedules to evaluate."
+              else
+                  IDX=0
+                  while read -r name; do
+                      [ -z "$name" ] && continue
+                      IDX=$((IDX + 1))
+                      echo "[$IDX/$CANDIDATE_COUNT] Evaluating candidate schedule"
+
+                      # Static, cluster-agnostic schedules (e.g.
+                      # daily-full-backup, weekly-full-backup) are permanent
+                      # infrastructure, never orphans. Ignore them quietly -
+                      # they do not need manual review.
+                      if [[ "$name" == *-full-backup ]]; then
+                          echo "    SKIP: static schedule (ignored)"
+                          SKIPPED_STATIC=$((SKIPPED_STATIC + 1))
+                          sleep 0.2
+                          continue
+                      fi
+
+                      # Parse CLUSTER_ID from the schedule name (convention:
+                      # <cluster-id>-hourly, cluster ID is a 26-32 char
+                      # lowercase alphanumeric string). Conservative: skip
+                      # and report anything that doesn't confidently match
+                      # rather than guessing at a cluster ID.
+                      if [[ "$name" =~ ^([a-z0-9]{26,32})-hourly$ ]]; then
+                          CLUSTER_ID="${BASH_REMATCH[1]}"
+                      else
+                          echo "    SKIP: could not parse cluster ID from schedule name (manual review needed)"
+                          SKIPPED_UNPARSEABLE=$((SKIPPED_UNPARSEABLE + 1))
+                          sleep 0.2
+                          continue
+                      fi
+
+                      # Fail-closed: an oc lookup error must NOT be read as
+                      # "HostedCluster absent" (which would also produce
+                      # empty output). Capture output only on success; on
+                      # any error, skip this candidate for manual review
+                      # rather than risking a false-positive deletion.
+                      if HC_OUTPUT=$(oc get hc -A -l "api.openshift.com/id=${CLUSTER_ID}" \
+                          --no-headers --request-timeout=30s 2>/dev/null); then
+                          HC_COUNT=$(printf '%s' "$HC_OUTPUT" | grep -c . || true)
+                      else
+                          echo "    SKIP: could not confirm HostedCluster absence (lookup error; manual review needed)"
+                          SKIPPED_LOOKUP_ERROR=$((SKIPPED_LOOKUP_ERROR + 1))
+                          sleep 0.2
+                          continue
+                      fi
+                      if [ "$HC_COUNT" != "0" ]; then
+                          echo "    SKIP: HostedCluster still exists for the parsed cluster ID"
+                          SKIPPED_HC_EXISTS=$((SKIPPED_HC_EXISTS + 1))
+                          sleep 0.2
+                          continue
+                      fi
+
+                      # Distinguish a confirmed-absent BSL (NotFound) from an
+                      # actual lookup error (e.g. transient API issue). Only
+                      # a confirmed NotFound is treated as "BSL absent" -
+                      # any other error is conservatively skipped rather
+                      # than assumed absent.
+                      # Note: BSL_OUTPUT (the raw oc error/output) is
+                      # intentionally never logged - only a generic,
+                      # bounded status message is emitted (see "No
+                      # resource names in logs" in the README).
+                      if BSL_OUTPUT=$(oc get backupstoragelocation "$name" -n "$NAMESPACE" --request-timeout=30s -o name 2>&1); then
+                          echo "    SKIP: BackupStorageLocation still exists"
+                          SKIPPED_BSL_EXISTS=$((SKIPPED_BSL_EXISTS + 1))
+                          sleep 0.2
+                          continue
+                      elif ! echo "$BSL_OUTPUT" | grep -qi "NotFound"; then
+                          echo "    SKIP: could not confirm BackupStorageLocation absence (lookup error; manual review needed)"
+                          SKIPPED_LOOKUP_ERROR=$((SKIPPED_LOOKUP_ERROR + 1))
+                          sleep 0.2
+                          continue
+                      fi
+
+                      SCHEDULE_EXISTS=$(echo "$SCHEDULES_JSON" | jq --arg n "$name" '[.items[] | select(.metadata.name == $n)] | length')
+                      if [ "$SCHEDULE_EXISTS" != "0" ]; then
+                          OWNER_COUNT=$(echo "$SCHEDULES_JSON" | jq --arg n "$name" \
+                              '[.items[] | select(.metadata.name == $n) | (.metadata.ownerReferences // [])] | flatten | length')
+                          if [ "$OWNER_COUNT" != "0" ]; then
+                              echo "    SKIP: Schedule has ownerReferences; flagging for manual investigation"
+                              SKIPPED_OWNED=$((SKIPPED_OWNED + 1))
+                              sleep 0.2
+                              continue
+                          fi
+                      fi
+
+                      # Safe to clean up: HostedCluster gone, BSL gone, and
+                      # the Schedule (if present) has no ownerReferences.
+                      SAFE_TO_DELETE_BACKUPS=true
+                      if [ "$SCHEDULE_EXISTS" != "0" ]; then
+                          if oc delete schedule "$name" -n "$NAMESPACE" --request-timeout=30s --wait=false >/dev/null 2>&1; then
+                              echo "    OK:   deleted Schedule"
+                              DELETED_SCHEDULES=$((DELETED_SCHEDULES + 1))
+                          else
+                              echo "    FAIL: could not delete Schedule"
+                              FAILED_SCHEDULES=$((FAILED_SCHEDULES + 1))
+                              SAFE_TO_DELETE_BACKUPS=false
+                          fi
+                      else
+                          echo "    INFO: Schedule object already absent; cleaning orphaned backups only"
+                      fi
+
+                      # Do not delete this schedule's FailedValidation
+                      # backups if the Schedule itself failed to delete -
+                      # avoid removing Backups while a (possibly transient)
+                      # error left the Schedule in place; retry next run.
+                      if [ "$SAFE_TO_DELETE_BACKUPS" = "false" ]; then
+                          echo "    SKIP: not deleting FailedValidation backups because Schedule deletion failed"
+                          sleep 0.2
+                          continue
+                      fi
+
+                      # Delete FailedValidation backups for this schedule by
+                      # EXACT name only - never via a bare label selector,
+                      # since that would not be phase-aware and could match
+                      # backups in other phases (e.g. PartiallyFailed).
+                      BACKUP_NAMES=$(echo "$BACKUPS_JSON" | jq -r --arg n "$name" \
+                          '.items[] | select(.status.phase == "FailedValidation") | select(.metadata.labels["velero.io/schedule-name"] == $n) | .metadata.name')
+                      BACKUP_NAMES=${BACKUP_NAMES:-}
+                      if [ -n "$BACKUP_NAMES" ]; then
+                          while read -r bname; do
+                              [ -z "$bname" ] && continue
+                              if oc delete backup "$bname" -n "$NAMESPACE" --request-timeout=30s --wait=false >/dev/null 2>&1; then
+                                  echo "    OK:   deleted Backup"
+                                  DELETED_BACKUPS=$((DELETED_BACKUPS + 1))
+                              else
+                                  echo "    FAIL: could not delete Backup"
+                                  FAILED_BACKUPS=$((FAILED_BACKUPS + 1))
+                              fi
+                              sleep 0.2
+                          done <<< "$BACKUP_NAMES"
+                      fi
+
+                      sleep 0.2
+                  done <<< "$CANDIDATES"
+              fi
+
+              # ============================================
+              # Summary
+              # ============================================
+              echo ""
+              echo "=============================================="
+              echo "  CLEANUP COMPLETE"
+              echo "=============================================="
+              echo ""
+              echo "  Candidates evaluated:               $CANDIDATE_COUNT"
+              echo "  Schedules deleted:                  $DELETED_SCHEDULES  (failed: $FAILED_SCHEDULES)"
+              echo "  FailedValidation backups deleted:   $DELETED_BACKUPS  (failed: $FAILED_BACKUPS)"
+              echo "  Skipped - HostedCluster exists:     $SKIPPED_HC_EXISTS"
+              echo "  Skipped - BSL exists:               $SKIPPED_BSL_EXISTS"
+              echo "  Skipped - lookup error (HC/BSL):    $SKIPPED_LOOKUP_ERROR"
+              echo "  Skipped - Schedule has owners:      $SKIPPED_OWNED"
+              echo "  Skipped - unparseable cluster ID:   $SKIPPED_UNPARSEABLE"
+              echo "  Skipped - static schedule:          $SKIPPED_STATIC"
+              echo "  Skipped - unlabeled FV backups:     $UNLABELED_FV_COUNT"
+              echo ""
+              echo "  Total deleted:                      $((DELETED_SCHEDULES + DELETED_BACKUPS))"
+              echo "  Total failures:                     $((FAILED_SCHEDULES + FAILED_BACKUPS))"
+              echo ""
+              echo "End time: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+
+              # Fail the Job if any deletion failed, so partial cleanups
+              # are recorded as failed Jobs (visible via `oc get jobs`)
+              # rather than silently succeeding.
+              if [ "$FAILED_SCHEDULES" != "0" ] || [ "$FAILED_BACKUPS" != "0" ]; then
+                  exit 1
+              fi
+          volumes:
+          - name: tmp
+            emptyDir: {}
+          serviceAccountName: oadp-orphaned-schedule-cleanup
+          restartPolicy: Never
