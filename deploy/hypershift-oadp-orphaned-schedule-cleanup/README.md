@@ -152,7 +152,7 @@ oc create job --from=cronjob/oadp-orphaned-schedule-cleanup manual-cleanup-$(dat
 - **No resource names or cluster IDs in logs**: per-item log lines emit only generic status classifications (e.g. `SKIP: BackupStorageLocation still exists`) and the final summary reports aggregate counts only. Schedule/Backup names, parsed cluster IDs, and raw `oc` lookup error output are never printed, so retained Job logs cannot leak internal identifiers or API error details. To investigate a specific skip/failure, query the live cluster directly (e.g. `oc get schedules,backups -n openshift-adp -o wide`).
 - **Idempotent**: safe to re-run; already-cleaned resources simply won't appear as candidates.
 - **Concurrency protection**: `concurrencyPolicy: Forbid` prevents overlapping runs.
-- **Resource limits**: the container defines both `requests` and `limits` (`memory: 512Mi`, `cpu: 500m`) to bound memory usage given the potentially large in-memory Schedule/Backup JSON inventories.
+- **Resource limits**: the container defines both `requests` (`memory: 100Mi`, `cpu: 100m`) and `limits` (`memory: 1Gi`, `cpu: 500m`) to bound memory usage given the potentially large in-memory Schedule/Backup JSON inventories.
 - **Read-only root filesystem**: the container runs with `readOnlyRootFilesystem: true`; a writable `emptyDir` is mounted at `/tmp` (with `HOME`/`TMPDIR` pointed there) for any temporary files `oc`/`jq` need to write.
 - **History preserved**: previous Job logs can be reviewed via `oc get jobs` / `oc logs`.
 - **Fails visibly on partial cleanup**: if any Schedule or Backup deletion fails, the job exits non-zero and the Job is marked failed (visible via `oc get jobs`) rather than silently reporting success.
