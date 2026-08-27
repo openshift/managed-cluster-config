@@ -9240,7 +9240,6 @@ objects:
                   allowHostPorts: false
                   allowPrivilegedContainer: false
                   allowedCapabilities:
-                  - NET_ADMIN
                   - NET_RAW
                   apiVersion: security.openshift.io/v1
                   kind: SecurityContextConstraints
@@ -9248,9 +9247,9 @@ objects:
                     name: pcap-dedicated-admins
                   readOnlyRootFilesystem: false
                   runAsUser:
-                    type: RunAsAny
+                    type: MustRunAsNonRoot
                   seLinuxContext:
-                    type: RunAsAny
+                    type: MustRunAs
               - complianceType: mustonlyhave
                 metadataComplianceType: musthave
                 objectDefinition:
@@ -40379,13 +40378,12 @@ objects:
       allowHostPorts: false
       allowPrivilegedContainer: false
       allowedCapabilities:
-      - NET_ADMIN
       - NET_RAW
       readOnlyRootFilesystem: false
       runAsUser:
-        type: RunAsAny
+        type: MustRunAsNonRoot
       seLinuxContext:
-        type: RunAsAny
+        type: MustRunAs
     - apiVersion: rbac.authorization.k8s.io/v1
       kind: ClusterRole
       metadata:
