@@ -40,6 +40,7 @@ $(error CHECK_SSS_CONFLICTS is not set; check project.mk file)
 endif
 
 POLICYGEN_VERSION=v1.12.4
+BOILERPLATE_REPO_RAW=https://raw.githubusercontent.com/openshift/boilerplate/master
 
 VOLUME_MOUNT_FLAGS = :z
 CONTAINER_ENGINE?=$(shell command -v docker 2>/dev/null || command -v podman 2>/dev/null)
@@ -61,7 +62,15 @@ OC := $(CONTAINER_ENGINE) run $(CONTAINER_RUN_FLAGS) quay.io/openshift/origin-cl
 endif
 
 .PHONY: default
-default: check-sss-conflicts enforce-backplane-rules generate-oauth-templates generate-rosa-brand-logo generate-hive-templates
+default: check-sss-conflicts enforce-backplane-rules generate-oauth-templates generate-rosa-brand-logo generate-hive-templates sync-owners-aliases
+
+.PHONY: sync-owners-aliases
+sync-owners-aliases:
+	tmpfile=$$(mktemp OWNERS_ALIASES.XXXXXX); \
+	trap 'rm -f "$$tmpfile"' EXIT; \
+	curl -fsSL --connect-timeout 10 --max-time 30 $(BOILERPLATE_REPO_RAW)/OWNERS_ALIASES -o "$$tmpfile" && \
+	chmod 0644 "$$tmpfile" && \
+	mv "$$tmpfile" OWNERS_ALIASES
 
 .PHONY: generate-oauth-templates
 generate-oauth-templates:
