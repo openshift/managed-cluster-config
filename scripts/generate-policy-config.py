@@ -118,6 +118,7 @@ for directory in sorted(directories, key=str.casefold):
             })
         label_selector = {'matchExpressions': match_expressions}
     policy_template['policyDefaults']['placement']['labelSelector'] = label_selector
+    policy_template['policyDefaults']['placement']['name'] = f'{policy_name}-placement'
     if not len(namespace_selectors) == 0:
         policy_template['policyDefaults']['namespaceSelector'] = namespace_selectors
     with open(os.path.join(temp_directory, "policy-generator-config.yaml"),'w+') as output_file:
