@@ -100,3 +100,41 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+# ---------------------------------------------------------------------------
+# SLSRE-534: rename the generated PlacementBindings to "<policy>-binding".
+#
+# PolicyGenerator names a binding "binding-<policy>" whenever one policy owns
+# the placement; placementBindingDefaults.name only applies when several
+# policies are consolidated onto a single binding, so it cannot be used here.
+# The PlacementRule-era bindings carry exactly those names, so without this the
+# new binding would patch the old one in place instead of existing beside it,
+# and the staged rollout needs both live at once.
+#
+# Text pass rather than a YAML round-trip, to keep the diff to the one line.
+import glob as _glob
+import os as _os
+import re as _re
+
+_BINDING_NAME = _re.compile(r"^(\s*)name:\s+binding-(\S+)\s*$")
+
+for _path in sorted(_glob.glob(_os.path.join("deploy", "acm-policies", "50-GENERATED-*.yaml"))):
+    _lines = open(_path).read().splitlines(keepends=True)
+    _in_binding = False
+    _renamed = 0
+    for _i, _line in enumerate(_lines):
+        _stripped = _line.strip()
+        if _stripped.startswith("---"):
+            _in_binding = False
+        elif _stripped == "kind: PlacementBinding":
+            _in_binding = True
+        elif _in_binding:
+            _m = _BINDING_NAME.match(_line.rstrip("\n"))
+            if _m:
+                _lines[_i] = f"{_m.group(1)}name: {_m.group(2)}-binding\n"
+                _renamed += 1
+                _in_binding = False      # don't touch placementRef.name below
+    if _renamed:
+        open(_path, "w").write("".join(_lines))
+        print(f"Renamed {_renamed} PlacementBinding(s) in {_os.path.basename(_path)}")

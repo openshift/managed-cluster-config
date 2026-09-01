@@ -134,8 +134,10 @@ for directory in sorted(directories, key=str.casefold):
             #fill in the name and path in the policy generator template
             policy_template['metadata']['name'] = 'subjectpermission-policies'
             policy_template['policyDefaults']['consolidateManifests'] = False
+            sp_name = policy_name + '-sp'
             for p in policy_template['policies']:
-                p['name'] =  policy_name + '-sp'
+                p['name'] = sp_name
                 p['manifests'] = manifests
+            policy_template['policyDefaults']['placement']['name'] = f'{sp_name}-placement'
             with open(os.path.join(temp_directory, "policy-generator-config.yaml"),'w+') as output_file:
                 yaml.dump(policy_template, output_file)

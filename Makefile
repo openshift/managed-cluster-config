@@ -40,6 +40,7 @@ $(error CHECK_SSS_CONFLICTS is not set; check project.mk file)
 endif
 
 POLICYGEN_VERSION=v1.17.1
+BOILERPLATE_REPO_RAW=https://raw.githubusercontent.com/openshift/boilerplate/master
 
 VOLUME_MOUNT_FLAGS = :z
 CONTAINER_ENGINE?=$(shell command -v docker 2>/dev/null || command -v podman 2>/dev/null)
@@ -61,7 +62,15 @@ OC := $(CONTAINER_ENGINE) run $(CONTAINER_RUN_FLAGS) quay.io/openshift/origin-cl
 endif
 
 .PHONY: default
-default: check-sss-conflicts enforce-backplane-rules generate-oauth-templates generate-rosa-brand-logo generate-hive-templates
+default: check-sss-conflicts enforce-backplane-rules generate-oauth-templates generate-rosa-brand-logo generate-hive-templates sync-owners-aliases
+
+.PHONY: sync-owners-aliases
+sync-owners-aliases:
+	tmpfile=$$(mktemp OWNERS_ALIASES.XXXXXX); \
+	trap 'rm -f "$$tmpfile"' EXIT; \
+	curl -fsSL --connect-timeout 10 --max-time 30 $(BOILERPLATE_REPO_RAW)/OWNERS_ALIASES -o "$$tmpfile" && \
+	chmod 0644 "$$tmpfile" && \
+	mv "$$tmpfile" OWNERS_ALIASES
 
 .PHONY: generate-oauth-templates
 generate-oauth-templates:
@@ -80,18 +89,14 @@ generate-rosa-brand-logo:
 .PHONY: generate-hive-templates
 generate-hive-templates: generate-oauth-templates
 	if [ -z ${IN_CONTAINER} ]; then \
-		$(CONTAINER_ENGINE) run $(CONTAINER_RUN_FLAGS) registry.access.redhat.com/ubi9/python-312 /bin/bash -xc "cd `pwd -P` && pip install --disable-pip-version-check oyaml && curl -sSL https://github.com/open-cluster-management-io/policy-generator-plugin/releases/download/${POLICYGEN_VERSION}/linux-amd64-PolicyGenerator --output /opt/app-root/bin/PolicyGenerator && chmod +x /opt/app-root/bin/PolicyGenerator && ${GEN_POLICY_CONFIG} && ${GEN_POLICY_CONFIG_SP} && ${GEN_POLICY} && ${GEN_CMO_CONFIG} && scripts/add-annotations-tolerations.py" && \
-		$(CONTAINER_ENGINE) run $(CONTAINER_RUN_FLAGS) registry.access.redhat.com/ubi9/python-312 /bin/bash -xc "cd `pwd -P` && pip install --disable-pip-version-check oyaml && ${GEN_TEMPLATE}"; \
+		$(CONTAINER_ENGINE) run $(CONTAINER_RUN_FLAGS) registry.access.redhat.com/ubi9/python-312 /bin/bash -xc "cd `pwd -P`; pip install --disable-pip-version-check oyaml; curl -sSL https://github.com/open-cluster-management-io/policy-generator-plugin/releases/download/${POLICYGEN_VERSION}/linux-amd64-PolicyGenerator --output /opt/app-root/bin/PolicyGenerator; chmod +x /opt/app-root/bin/PolicyGenerator; ${GEN_POLICY_CONFIG}; ${GEN_POLICY_CONFIG_SP}; ${GEN_POLICY}; ${GEN_CMO_CONFIG}; scripts/add-annotations-tolerations.py";\
+		$(CONTAINER_ENGINE) run $(CONTAINER_RUN_FLAGS) registry.access.redhat.com/ubi9/python-312 /bin/bash -xc "cd `pwd -P`; pip install --disable-pip-version-check oyaml; ${GEN_TEMPLATE}"; \
 	else \
-		mkdir -p .bin && \
-		curl -sSL https://github.com/open-cluster-management-io/policy-generator-plugin/releases/download/${POLICYGEN_VERSION}/linux-amd64-PolicyGenerator --output .bin/PolicyGenerator && \
-		chmod +x .bin/PolicyGenerator && \
-		export PATH="$$(pwd)/.bin:$$PATH" && \
-		${GEN_POLICY_CONFIG} && \
-		${GEN_POLICY_CONFIG_SP} && \
-		${GEN_POLICY} && \
-		${GEN_CMO_CONFIG} && \
-		scripts/add-annotations-tolerations.py && \
+		${GEN_POLICY_CONFIG};\
+		${GEN_POLICY_CONFIG_SP};\
+		${GEN_POLICY};\
+		${GEN_CMO_CONFIG}; \
+		scripts/add-annotations-tolerations.py;\
 		${GEN_TEMPLATE}; \
 	fi
 
