@@ -1500,6 +1500,7 @@ objects:
         annotations:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/description: ''
           policy.open-cluster-management.io/standards: NIST SP 800-53
         name: backplane-acs
         namespace: openshift-acm-policies
@@ -2368,26 +2369,33 @@ objects:
               remediationAction: enforce
               severity: low
         remediationAction: enforce
-    - apiVersion: apps.open-cluster-management.io/v1
-      kind: PlacementRule
+    - apiVersion: cluster.open-cluster-management.io/v1beta1
+      kind: Placement
       metadata:
         name: placement-backplane-acs
         namespace: openshift-acm-policies
       spec:
-        clusterSelector:
-          matchExpressions:
-          - key: api.openshift.com/addon-acs-fleetshard
-            operator: In
-            values:
-            - 'true'
+        predicates:
+        - requiredClusterSelector:
+            labelSelector:
+              matchExpressions:
+              - key: api.openshift.com/addon-acs-fleetshard
+                operator: In
+                values:
+                - 'true'
+        tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
     - apiVersion: policy.open-cluster-management.io/v1
       kind: PlacementBinding
       metadata:
         name: binding-backplane-acs
         namespace: openshift-acm-policies
       placementRef:
-        apiGroup: apps.open-cluster-management.io
-        kind: PlacementRule
+        apiGroup: cluster.open-cluster-management.io
+        kind: Placement
         name: placement-backplane-acs
       subjects:
       - apiGroup: policy.open-cluster-management.io
@@ -2399,6 +2407,7 @@ objects:
         annotations:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/description: ''
           policy.open-cluster-management.io/standards: NIST SP 800-53
         name: backplane-ai-agent-sp
         namespace: openshift-acm-policies
@@ -2472,26 +2481,33 @@ objects:
               remediationAction: enforce
               severity: low
         remediationAction: enforce
-    - apiVersion: apps.open-cluster-management.io/v1
-      kind: PlacementRule
+    - apiVersion: cluster.open-cluster-management.io/v1beta1
+      kind: Placement
       metadata:
         name: placement-backplane-ai-agent-sp
         namespace: openshift-acm-policies
       spec:
-        clusterSelector:
-          matchExpressions:
-          - key: hypershift.open-cluster-management.io/hosted-cluster
-            operator: In
-            values:
-            - 'true'
+        predicates:
+        - requiredClusterSelector:
+            labelSelector:
+              matchExpressions:
+              - key: hypershift.open-cluster-management.io/hosted-cluster
+                operator: In
+                values:
+                - 'true'
+        tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
     - apiVersion: policy.open-cluster-management.io/v1
       kind: PlacementBinding
       metadata:
         name: binding-backplane-ai-agent-sp
         namespace: openshift-acm-policies
       placementRef:
-        apiGroup: apps.open-cluster-management.io
-        kind: PlacementRule
+        apiGroup: cluster.open-cluster-management.io
+        kind: Placement
         name: placement-backplane-ai-agent-sp
       subjects:
       - apiGroup: policy.open-cluster-management.io
@@ -2503,6 +2519,7 @@ objects:
         annotations:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/description: ''
           policy.open-cluster-management.io/standards: NIST SP 800-53
         name: backplane-ai-agent
         namespace: openshift-acm-policies
@@ -2530,26 +2547,33 @@ objects:
               remediationAction: enforce
               severity: low
         remediationAction: enforce
-    - apiVersion: apps.open-cluster-management.io/v1
-      kind: PlacementRule
+    - apiVersion: cluster.open-cluster-management.io/v1beta1
+      kind: Placement
       metadata:
         name: placement-backplane-ai-agent
         namespace: openshift-acm-policies
       spec:
-        clusterSelector:
-          matchExpressions:
-          - key: hypershift.open-cluster-management.io/hosted-cluster
-            operator: In
-            values:
-            - 'true'
+        predicates:
+        - requiredClusterSelector:
+            labelSelector:
+              matchExpressions:
+              - key: hypershift.open-cluster-management.io/hosted-cluster
+                operator: In
+                values:
+                - 'true'
+        tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
     - apiVersion: policy.open-cluster-management.io/v1
       kind: PlacementBinding
       metadata:
         name: binding-backplane-ai-agent
         namespace: openshift-acm-policies
       placementRef:
-        apiGroup: apps.open-cluster-management.io
-        kind: PlacementRule
+        apiGroup: cluster.open-cluster-management.io
+        kind: Placement
         name: placement-backplane-ai-agent
       subjects:
       - apiGroup: policy.open-cluster-management.io
@@ -2561,6 +2585,7 @@ objects:
         annotations:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/description: ''
           policy.open-cluster-management.io/standards: NIST SP 800-53
         name: backplane-cee-sp
         namespace: openshift-acm-policies
@@ -2664,26 +2689,33 @@ objects:
               remediationAction: enforce
               severity: low
         remediationAction: enforce
-    - apiVersion: apps.open-cluster-management.io/v1
-      kind: PlacementRule
+    - apiVersion: cluster.open-cluster-management.io/v1beta1
+      kind: Placement
       metadata:
         name: placement-backplane-cee-sp
         namespace: openshift-acm-policies
       spec:
-        clusterSelector:
-          matchExpressions:
-          - key: hypershift.open-cluster-management.io/hosted-cluster
-            operator: In
-            values:
-            - 'true'
+        predicates:
+        - requiredClusterSelector:
+            labelSelector:
+              matchExpressions:
+              - key: hypershift.open-cluster-management.io/hosted-cluster
+                operator: In
+                values:
+                - 'true'
+        tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
     - apiVersion: policy.open-cluster-management.io/v1
       kind: PlacementBinding
       metadata:
         name: binding-backplane-cee-sp
         namespace: openshift-acm-policies
       placementRef:
-        apiGroup: apps.open-cluster-management.io
-        kind: PlacementRule
+        apiGroup: cluster.open-cluster-management.io
+        kind: Placement
         name: placement-backplane-cee-sp
       subjects:
       - apiGroup: policy.open-cluster-management.io
@@ -2695,6 +2727,7 @@ objects:
         annotations:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/description: ''
           policy.open-cluster-management.io/standards: NIST SP 800-53
         name: backplane-cee
         namespace: openshift-acm-policies
@@ -2879,26 +2912,33 @@ objects:
               remediationAction: enforce
               severity: low
         remediationAction: enforce
-    - apiVersion: apps.open-cluster-management.io/v1
-      kind: PlacementRule
+    - apiVersion: cluster.open-cluster-management.io/v1beta1
+      kind: Placement
       metadata:
         name: placement-backplane-cee
         namespace: openshift-acm-policies
       spec:
-        clusterSelector:
-          matchExpressions:
-          - key: hypershift.open-cluster-management.io/hosted-cluster
-            operator: In
-            values:
-            - 'true'
+        predicates:
+        - requiredClusterSelector:
+            labelSelector:
+              matchExpressions:
+              - key: hypershift.open-cluster-management.io/hosted-cluster
+                operator: In
+                values:
+                - 'true'
+        tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
     - apiVersion: policy.open-cluster-management.io/v1
       kind: PlacementBinding
       metadata:
         name: binding-backplane-cee
         namespace: openshift-acm-policies
       placementRef:
-        apiGroup: apps.open-cluster-management.io
-        kind: PlacementRule
+        apiGroup: cluster.open-cluster-management.io
+        kind: Placement
         name: placement-backplane-cee
       subjects:
       - apiGroup: policy.open-cluster-management.io
@@ -2910,6 +2950,7 @@ objects:
         annotations:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/description: ''
           policy.open-cluster-management.io/standards: NIST SP 800-53
         name: backplane-cse-sp
         namespace: openshift-acm-policies
@@ -2983,26 +3024,33 @@ objects:
               remediationAction: enforce
               severity: low
         remediationAction: enforce
-    - apiVersion: apps.open-cluster-management.io/v1
-      kind: PlacementRule
+    - apiVersion: cluster.open-cluster-management.io/v1beta1
+      kind: Placement
       metadata:
         name: placement-backplane-cse-sp
         namespace: openshift-acm-policies
       spec:
-        clusterSelector:
-          matchExpressions:
-          - key: hypershift.open-cluster-management.io/hosted-cluster
-            operator: In
-            values:
-            - 'true'
+        predicates:
+        - requiredClusterSelector:
+            labelSelector:
+              matchExpressions:
+              - key: hypershift.open-cluster-management.io/hosted-cluster
+                operator: In
+                values:
+                - 'true'
+        tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
     - apiVersion: policy.open-cluster-management.io/v1
       kind: PlacementBinding
       metadata:
         name: binding-backplane-cse-sp
         namespace: openshift-acm-policies
       placementRef:
-        apiGroup: apps.open-cluster-management.io
-        kind: PlacementRule
+        apiGroup: cluster.open-cluster-management.io
+        kind: Placement
         name: placement-backplane-cse-sp
       subjects:
       - apiGroup: policy.open-cluster-management.io
@@ -3014,6 +3062,7 @@ objects:
         annotations:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/description: ''
           policy.open-cluster-management.io/standards: NIST SP 800-53
         name: backplane-cse
         namespace: openshift-acm-policies
@@ -3041,26 +3090,33 @@ objects:
               remediationAction: enforce
               severity: low
         remediationAction: enforce
-    - apiVersion: apps.open-cluster-management.io/v1
-      kind: PlacementRule
+    - apiVersion: cluster.open-cluster-management.io/v1beta1
+      kind: Placement
       metadata:
         name: placement-backplane-cse
         namespace: openshift-acm-policies
       spec:
-        clusterSelector:
-          matchExpressions:
-          - key: hypershift.open-cluster-management.io/hosted-cluster
-            operator: In
-            values:
-            - 'true'
+        predicates:
+        - requiredClusterSelector:
+            labelSelector:
+              matchExpressions:
+              - key: hypershift.open-cluster-management.io/hosted-cluster
+                operator: In
+                values:
+                - 'true'
+        tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
     - apiVersion: policy.open-cluster-management.io/v1
       kind: PlacementBinding
       metadata:
         name: binding-backplane-cse
         namespace: openshift-acm-policies
       placementRef:
-        apiGroup: apps.open-cluster-management.io
-        kind: PlacementRule
+        apiGroup: cluster.open-cluster-management.io
+        kind: Placement
         name: placement-backplane-cse
       subjects:
       - apiGroup: policy.open-cluster-management.io
@@ -3072,6 +3128,7 @@ objects:
         annotations:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/description: ''
           policy.open-cluster-management.io/standards: NIST SP 800-53
         name: backplane-csm-sp
         namespace: openshift-acm-policies
@@ -3173,26 +3230,33 @@ objects:
               remediationAction: enforce
               severity: low
         remediationAction: enforce
-    - apiVersion: apps.open-cluster-management.io/v1
-      kind: PlacementRule
+    - apiVersion: cluster.open-cluster-management.io/v1beta1
+      kind: Placement
       metadata:
         name: placement-backplane-csm-sp
         namespace: openshift-acm-policies
       spec:
-        clusterSelector:
-          matchExpressions:
-          - key: hypershift.open-cluster-management.io/hosted-cluster
-            operator: In
-            values:
-            - 'true'
+        predicates:
+        - requiredClusterSelector:
+            labelSelector:
+              matchExpressions:
+              - key: hypershift.open-cluster-management.io/hosted-cluster
+                operator: In
+                values:
+                - 'true'
+        tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
     - apiVersion: policy.open-cluster-management.io/v1
       kind: PlacementBinding
       metadata:
         name: binding-backplane-csm-sp
         namespace: openshift-acm-policies
       placementRef:
-        apiGroup: apps.open-cluster-management.io
-        kind: PlacementRule
+        apiGroup: cluster.open-cluster-management.io
+        kind: Placement
         name: placement-backplane-csm-sp
       subjects:
       - apiGroup: policy.open-cluster-management.io
@@ -3204,6 +3268,7 @@ objects:
         annotations:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/description: ''
           policy.open-cluster-management.io/standards: NIST SP 800-53
         name: backplane-csm
         namespace: openshift-acm-policies
@@ -3340,26 +3405,33 @@ objects:
               remediationAction: enforce
               severity: low
         remediationAction: enforce
-    - apiVersion: apps.open-cluster-management.io/v1
-      kind: PlacementRule
+    - apiVersion: cluster.open-cluster-management.io/v1beta1
+      kind: Placement
       metadata:
         name: placement-backplane-csm
         namespace: openshift-acm-policies
       spec:
-        clusterSelector:
-          matchExpressions:
-          - key: hypershift.open-cluster-management.io/hosted-cluster
-            operator: In
-            values:
-            - 'true'
+        predicates:
+        - requiredClusterSelector:
+            labelSelector:
+              matchExpressions:
+              - key: hypershift.open-cluster-management.io/hosted-cluster
+                operator: In
+                values:
+                - 'true'
+        tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
     - apiVersion: policy.open-cluster-management.io/v1
       kind: PlacementBinding
       metadata:
         name: binding-backplane-csm
         namespace: openshift-acm-policies
       placementRef:
-        apiGroup: apps.open-cluster-management.io
-        kind: PlacementRule
+        apiGroup: cluster.open-cluster-management.io
+        kind: Placement
         name: placement-backplane-csm
       subjects:
       - apiGroup: policy.open-cluster-management.io
@@ -3371,6 +3443,7 @@ objects:
         annotations:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/description: ''
           policy.open-cluster-management.io/standards: NIST SP 800-53
         name: backplane-elevated-sre
         namespace: openshift-acm-policies
@@ -3451,26 +3524,33 @@ objects:
               remediationAction: enforce
               severity: low
         remediationAction: enforce
-    - apiVersion: apps.open-cluster-management.io/v1
-      kind: PlacementRule
+    - apiVersion: cluster.open-cluster-management.io/v1beta1
+      kind: Placement
       metadata:
         name: placement-backplane-elevated-sre
         namespace: openshift-acm-policies
       spec:
-        clusterSelector:
-          matchExpressions:
-          - key: hypershift.open-cluster-management.io/hosted-cluster
-            operator: In
-            values:
-            - 'true'
+        predicates:
+        - requiredClusterSelector:
+            labelSelector:
+              matchExpressions:
+              - key: hypershift.open-cluster-management.io/hosted-cluster
+                operator: In
+                values:
+                - 'true'
+        tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
     - apiVersion: policy.open-cluster-management.io/v1
       kind: PlacementBinding
       metadata:
         name: binding-backplane-elevated-sre
         namespace: openshift-acm-policies
       placementRef:
-        apiGroup: apps.open-cluster-management.io
-        kind: PlacementRule
+        apiGroup: cluster.open-cluster-management.io
+        kind: Placement
         name: placement-backplane-elevated-sre
       subjects:
       - apiGroup: policy.open-cluster-management.io
@@ -3482,6 +3562,7 @@ objects:
         annotations:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/description: ''
           policy.open-cluster-management.io/standards: NIST SP 800-53
         name: backplane-lpsre-sp
         namespace: openshift-acm-policies
@@ -3682,26 +3763,33 @@ objects:
               remediationAction: enforce
               severity: low
         remediationAction: enforce
-    - apiVersion: apps.open-cluster-management.io/v1
-      kind: PlacementRule
+    - apiVersion: cluster.open-cluster-management.io/v1beta1
+      kind: Placement
       metadata:
         name: placement-backplane-lpsre-sp
         namespace: openshift-acm-policies
       spec:
-        clusterSelector:
-          matchExpressions:
-          - key: hypershift.open-cluster-management.io/hosted-cluster
-            operator: In
-            values:
-            - 'true'
+        predicates:
+        - requiredClusterSelector:
+            labelSelector:
+              matchExpressions:
+              - key: hypershift.open-cluster-management.io/hosted-cluster
+                operator: In
+                values:
+                - 'true'
+        tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
     - apiVersion: policy.open-cluster-management.io/v1
       kind: PlacementBinding
       metadata:
         name: binding-backplane-lpsre-sp
         namespace: openshift-acm-policies
       placementRef:
-        apiGroup: apps.open-cluster-management.io
-        kind: PlacementRule
+        apiGroup: cluster.open-cluster-management.io
+        kind: Placement
         name: placement-backplane-lpsre-sp
       subjects:
       - apiGroup: policy.open-cluster-management.io
@@ -3713,6 +3801,7 @@ objects:
         annotations:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/description: ''
           policy.open-cluster-management.io/standards: NIST SP 800-53
         name: backplane-lpsre
         namespace: openshift-acm-policies
@@ -3994,26 +4083,33 @@ objects:
               remediationAction: enforce
               severity: low
         remediationAction: enforce
-    - apiVersion: apps.open-cluster-management.io/v1
-      kind: PlacementRule
+    - apiVersion: cluster.open-cluster-management.io/v1beta1
+      kind: Placement
       metadata:
         name: placement-backplane-lpsre
         namespace: openshift-acm-policies
       spec:
-        clusterSelector:
-          matchExpressions:
-          - key: hypershift.open-cluster-management.io/hosted-cluster
-            operator: In
-            values:
-            - 'true'
+        predicates:
+        - requiredClusterSelector:
+            labelSelector:
+              matchExpressions:
+              - key: hypershift.open-cluster-management.io/hosted-cluster
+                operator: In
+                values:
+                - 'true'
+        tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
     - apiVersion: policy.open-cluster-management.io/v1
       kind: PlacementBinding
       metadata:
         name: binding-backplane-lpsre
         namespace: openshift-acm-policies
       placementRef:
-        apiGroup: apps.open-cluster-management.io
-        kind: PlacementRule
+        apiGroup: cluster.open-cluster-management.io
+        kind: Placement
         name: placement-backplane-lpsre
       subjects:
       - apiGroup: policy.open-cluster-management.io
@@ -4025,6 +4121,7 @@ objects:
         annotations:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/description: ''
           policy.open-cluster-management.io/standards: NIST SP 800-53
         name: backplane-mcs-tier-two-sp
         namespace: openshift-acm-policies
@@ -4128,26 +4225,33 @@ objects:
               remediationAction: enforce
               severity: low
         remediationAction: enforce
-    - apiVersion: apps.open-cluster-management.io/v1
-      kind: PlacementRule
+    - apiVersion: cluster.open-cluster-management.io/v1beta1
+      kind: Placement
       metadata:
         name: placement-backplane-mcs-tier-two-sp
         namespace: openshift-acm-policies
       spec:
-        clusterSelector:
-          matchExpressions:
-          - key: hypershift.open-cluster-management.io/hosted-cluster
-            operator: In
-            values:
-            - 'true'
+        predicates:
+        - requiredClusterSelector:
+            labelSelector:
+              matchExpressions:
+              - key: hypershift.open-cluster-management.io/hosted-cluster
+                operator: In
+                values:
+                - 'true'
+        tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
     - apiVersion: policy.open-cluster-management.io/v1
       kind: PlacementBinding
       metadata:
         name: binding-backplane-mcs-tier-two-sp
         namespace: openshift-acm-policies
       placementRef:
-        apiGroup: apps.open-cluster-management.io
-        kind: PlacementRule
+        apiGroup: cluster.open-cluster-management.io
+        kind: Placement
         name: placement-backplane-mcs-tier-two-sp
       subjects:
       - apiGroup: policy.open-cluster-management.io
@@ -4159,6 +4263,7 @@ objects:
         annotations:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/description: ''
           policy.open-cluster-management.io/standards: NIST SP 800-53
         name: backplane-mcs-tier-two
         namespace: openshift-acm-policies
@@ -4334,26 +4439,33 @@ objects:
               remediationAction: enforce
               severity: low
         remediationAction: enforce
-    - apiVersion: apps.open-cluster-management.io/v1
-      kind: PlacementRule
+    - apiVersion: cluster.open-cluster-management.io/v1beta1
+      kind: Placement
       metadata:
         name: placement-backplane-mcs-tier-two
         namespace: openshift-acm-policies
       spec:
-        clusterSelector:
-          matchExpressions:
-          - key: hypershift.open-cluster-management.io/hosted-cluster
-            operator: In
-            values:
-            - 'true'
+        predicates:
+        - requiredClusterSelector:
+            labelSelector:
+              matchExpressions:
+              - key: hypershift.open-cluster-management.io/hosted-cluster
+                operator: In
+                values:
+                - 'true'
+        tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
     - apiVersion: policy.open-cluster-management.io/v1
       kind: PlacementBinding
       metadata:
         name: binding-backplane-mcs-tier-two
         namespace: openshift-acm-policies
       placementRef:
-        apiGroup: apps.open-cluster-management.io
-        kind: PlacementRule
+        apiGroup: cluster.open-cluster-management.io
+        kind: Placement
         name: placement-backplane-mcs-tier-two
       subjects:
       - apiGroup: policy.open-cluster-management.io
@@ -4365,6 +4477,7 @@ objects:
         annotations:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/description: ''
           policy.open-cluster-management.io/standards: NIST SP 800-53
         name: backplane-mobb-sp
         namespace: openshift-acm-policies
@@ -4466,26 +4579,33 @@ objects:
               remediationAction: enforce
               severity: low
         remediationAction: enforce
-    - apiVersion: apps.open-cluster-management.io/v1
-      kind: PlacementRule
+    - apiVersion: cluster.open-cluster-management.io/v1beta1
+      kind: Placement
       metadata:
         name: placement-backplane-mobb-sp
         namespace: openshift-acm-policies
       spec:
-        clusterSelector:
-          matchExpressions:
-          - key: hypershift.open-cluster-management.io/hosted-cluster
-            operator: In
-            values:
-            - 'true'
+        predicates:
+        - requiredClusterSelector:
+            labelSelector:
+              matchExpressions:
+              - key: hypershift.open-cluster-management.io/hosted-cluster
+                operator: In
+                values:
+                - 'true'
+        tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
     - apiVersion: policy.open-cluster-management.io/v1
       kind: PlacementBinding
       metadata:
         name: binding-backplane-mobb-sp
         namespace: openshift-acm-policies
       placementRef:
-        apiGroup: apps.open-cluster-management.io
-        kind: PlacementRule
+        apiGroup: cluster.open-cluster-management.io
+        kind: Placement
         name: placement-backplane-mobb-sp
       subjects:
       - apiGroup: policy.open-cluster-management.io
@@ -4497,6 +4617,7 @@ objects:
         annotations:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/description: ''
           policy.open-cluster-management.io/standards: NIST SP 800-53
         name: backplane-mobb
         namespace: openshift-acm-policies
@@ -4633,26 +4754,33 @@ objects:
               remediationAction: enforce
               severity: low
         remediationAction: enforce
-    - apiVersion: apps.open-cluster-management.io/v1
-      kind: PlacementRule
+    - apiVersion: cluster.open-cluster-management.io/v1beta1
+      kind: Placement
       metadata:
         name: placement-backplane-mobb
         namespace: openshift-acm-policies
       spec:
-        clusterSelector:
-          matchExpressions:
-          - key: hypershift.open-cluster-management.io/hosted-cluster
-            operator: In
-            values:
-            - 'true'
+        predicates:
+        - requiredClusterSelector:
+            labelSelector:
+              matchExpressions:
+              - key: hypershift.open-cluster-management.io/hosted-cluster
+                operator: In
+                values:
+                - 'true'
+        tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
     - apiVersion: policy.open-cluster-management.io/v1
       kind: PlacementBinding
       metadata:
         name: binding-backplane-mobb
         namespace: openshift-acm-policies
       placementRef:
-        apiGroup: apps.open-cluster-management.io
-        kind: PlacementRule
+        apiGroup: cluster.open-cluster-management.io
+        kind: Placement
         name: placement-backplane-mobb
       subjects:
       - apiGroup: policy.open-cluster-management.io
@@ -4664,6 +4792,7 @@ objects:
         annotations:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/description: ''
           policy.open-cluster-management.io/standards: NIST SP 800-53
         name: backplane-srep-ro-sp
         namespace: openshift-acm-policies
@@ -4805,26 +4934,33 @@ objects:
               remediationAction: enforce
               severity: low
         remediationAction: enforce
-    - apiVersion: apps.open-cluster-management.io/v1
-      kind: PlacementRule
+    - apiVersion: cluster.open-cluster-management.io/v1beta1
+      kind: Placement
       metadata:
         name: placement-backplane-srep-ro-sp
         namespace: openshift-acm-policies
       spec:
-        clusterSelector:
-          matchExpressions:
-          - key: hypershift.open-cluster-management.io/hosted-cluster
-            operator: In
-            values:
-            - 'true'
+        predicates:
+        - requiredClusterSelector:
+            labelSelector:
+              matchExpressions:
+              - key: hypershift.open-cluster-management.io/hosted-cluster
+                operator: In
+                values:
+                - 'true'
+        tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
     - apiVersion: policy.open-cluster-management.io/v1
       kind: PlacementBinding
       metadata:
         name: binding-backplane-srep-ro-sp
         namespace: openshift-acm-policies
       placementRef:
-        apiGroup: apps.open-cluster-management.io
-        kind: PlacementRule
+        apiGroup: cluster.open-cluster-management.io
+        kind: Placement
         name: placement-backplane-srep-ro-sp
       subjects:
       - apiGroup: policy.open-cluster-management.io
@@ -4836,6 +4972,7 @@ objects:
         annotations:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/description: ''
           policy.open-cluster-management.io/standards: NIST SP 800-53
         name: backplane-srep-ro
         namespace: openshift-acm-policies
@@ -5233,26 +5370,33 @@ objects:
               remediationAction: enforce
               severity: low
         remediationAction: enforce
-    - apiVersion: apps.open-cluster-management.io/v1
-      kind: PlacementRule
+    - apiVersion: cluster.open-cluster-management.io/v1beta1
+      kind: Placement
       metadata:
         name: placement-backplane-srep-ro
         namespace: openshift-acm-policies
       spec:
-        clusterSelector:
-          matchExpressions:
-          - key: hypershift.open-cluster-management.io/hosted-cluster
-            operator: In
-            values:
-            - 'true'
+        predicates:
+        - requiredClusterSelector:
+            labelSelector:
+              matchExpressions:
+              - key: hypershift.open-cluster-management.io/hosted-cluster
+                operator: In
+                values:
+                - 'true'
+        tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
     - apiVersion: policy.open-cluster-management.io/v1
       kind: PlacementBinding
       metadata:
         name: binding-backplane-srep-ro
         namespace: openshift-acm-policies
       placementRef:
-        apiGroup: apps.open-cluster-management.io
-        kind: PlacementRule
+        apiGroup: cluster.open-cluster-management.io
+        kind: Placement
         name: placement-backplane-srep-ro
       subjects:
       - apiGroup: policy.open-cluster-management.io
@@ -5264,6 +5408,7 @@ objects:
         annotations:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/description: ''
           policy.open-cluster-management.io/standards: NIST SP 800-53
         name: backplane-srep-sp
         namespace: openshift-acm-policies
@@ -5403,26 +5548,33 @@ objects:
               remediationAction: enforce
               severity: low
         remediationAction: enforce
-    - apiVersion: apps.open-cluster-management.io/v1
-      kind: PlacementRule
+    - apiVersion: cluster.open-cluster-management.io/v1beta1
+      kind: Placement
       metadata:
         name: placement-backplane-srep-sp
         namespace: openshift-acm-policies
       spec:
-        clusterSelector:
-          matchExpressions:
-          - key: hypershift.open-cluster-management.io/hosted-cluster
-            operator: In
-            values:
-            - 'true'
+        predicates:
+        - requiredClusterSelector:
+            labelSelector:
+              matchExpressions:
+              - key: hypershift.open-cluster-management.io/hosted-cluster
+                operator: In
+                values:
+                - 'true'
+        tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
     - apiVersion: policy.open-cluster-management.io/v1
       kind: PlacementBinding
       metadata:
         name: binding-backplane-srep-sp
         namespace: openshift-acm-policies
       placementRef:
-        apiGroup: apps.open-cluster-management.io
-        kind: PlacementRule
+        apiGroup: cluster.open-cluster-management.io
+        kind: Placement
         name: placement-backplane-srep-sp
       subjects:
       - apiGroup: policy.open-cluster-management.io
@@ -5434,6 +5586,7 @@ objects:
         annotations:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/description: ''
           policy.open-cluster-management.io/standards: NIST SP 800-53
         name: backplane-srep
         namespace: openshift-acm-policies
@@ -5735,26 +5888,33 @@ objects:
               remediationAction: enforce
               severity: low
         remediationAction: enforce
-    - apiVersion: apps.open-cluster-management.io/v1
-      kind: PlacementRule
+    - apiVersion: cluster.open-cluster-management.io/v1beta1
+      kind: Placement
       metadata:
         name: placement-backplane-srep
         namespace: openshift-acm-policies
       spec:
-        clusterSelector:
-          matchExpressions:
-          - key: hypershift.open-cluster-management.io/hosted-cluster
-            operator: In
-            values:
-            - 'true'
+        predicates:
+        - requiredClusterSelector:
+            labelSelector:
+              matchExpressions:
+              - key: hypershift.open-cluster-management.io/hosted-cluster
+                operator: In
+                values:
+                - 'true'
+        tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
     - apiVersion: policy.open-cluster-management.io/v1
       kind: PlacementBinding
       metadata:
         name: binding-backplane-srep
         namespace: openshift-acm-policies
       placementRef:
-        apiGroup: apps.open-cluster-management.io
-        kind: PlacementRule
+        apiGroup: cluster.open-cluster-management.io
+        kind: Placement
         name: placement-backplane-srep
       subjects:
       - apiGroup: policy.open-cluster-management.io
@@ -5766,6 +5926,7 @@ objects:
         annotations:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/description: ''
           policy.open-cluster-management.io/standards: NIST SP 800-53
         name: backplane-tam-sp
         namespace: openshift-acm-policies
@@ -5867,26 +6028,33 @@ objects:
               remediationAction: enforce
               severity: low
         remediationAction: enforce
-    - apiVersion: apps.open-cluster-management.io/v1
-      kind: PlacementRule
+    - apiVersion: cluster.open-cluster-management.io/v1beta1
+      kind: Placement
       metadata:
         name: placement-backplane-tam-sp
         namespace: openshift-acm-policies
       spec:
-        clusterSelector:
-          matchExpressions:
-          - key: hypershift.open-cluster-management.io/hosted-cluster
-            operator: In
-            values:
-            - 'true'
+        predicates:
+        - requiredClusterSelector:
+            labelSelector:
+              matchExpressions:
+              - key: hypershift.open-cluster-management.io/hosted-cluster
+                operator: In
+                values:
+                - 'true'
+        tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
     - apiVersion: policy.open-cluster-management.io/v1
       kind: PlacementBinding
       metadata:
         name: binding-backplane-tam-sp
         namespace: openshift-acm-policies
       placementRef:
-        apiGroup: apps.open-cluster-management.io
-        kind: PlacementRule
+        apiGroup: cluster.open-cluster-management.io
+        kind: Placement
         name: placement-backplane-tam-sp
       subjects:
       - apiGroup: policy.open-cluster-management.io
@@ -5898,6 +6066,7 @@ objects:
         annotations:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/description: ''
           policy.open-cluster-management.io/standards: NIST SP 800-53
         name: backplane-tam
         namespace: openshift-acm-policies
@@ -6034,26 +6203,33 @@ objects:
               remediationAction: enforce
               severity: low
         remediationAction: enforce
-    - apiVersion: apps.open-cluster-management.io/v1
-      kind: PlacementRule
+    - apiVersion: cluster.open-cluster-management.io/v1beta1
+      kind: Placement
       metadata:
         name: placement-backplane-tam
         namespace: openshift-acm-policies
       spec:
-        clusterSelector:
-          matchExpressions:
-          - key: hypershift.open-cluster-management.io/hosted-cluster
-            operator: In
-            values:
-            - 'true'
+        predicates:
+        - requiredClusterSelector:
+            labelSelector:
+              matchExpressions:
+              - key: hypershift.open-cluster-management.io/hosted-cluster
+                operator: In
+                values:
+                - 'true'
+        tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
     - apiVersion: policy.open-cluster-management.io/v1
       kind: PlacementBinding
       metadata:
         name: binding-backplane-tam
         namespace: openshift-acm-policies
       placementRef:
-        apiGroup: apps.open-cluster-management.io
-        kind: PlacementRule
+        apiGroup: cluster.open-cluster-management.io
+        kind: Placement
         name: placement-backplane-tam
       subjects:
       - apiGroup: policy.open-cluster-management.io
@@ -6065,6 +6241,7 @@ objects:
         annotations:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/description: ''
           policy.open-cluster-management.io/standards: NIST SP 800-53
         name: backplane
         namespace: openshift-acm-policies
@@ -6584,26 +6761,33 @@ objects:
               remediationAction: enforce
               severity: low
         remediationAction: enforce
-    - apiVersion: apps.open-cluster-management.io/v1
-      kind: PlacementRule
+    - apiVersion: cluster.open-cluster-management.io/v1beta1
+      kind: Placement
       metadata:
         name: placement-backplane
         namespace: openshift-acm-policies
       spec:
-        clusterSelector:
-          matchExpressions:
-          - key: hypershift.open-cluster-management.io/hosted-cluster
-            operator: In
-            values:
-            - 'true'
+        predicates:
+        - requiredClusterSelector:
+            labelSelector:
+              matchExpressions:
+              - key: hypershift.open-cluster-management.io/hosted-cluster
+                operator: In
+                values:
+                - 'true'
+        tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
     - apiVersion: policy.open-cluster-management.io/v1
       kind: PlacementBinding
       metadata:
         name: binding-backplane
         namespace: openshift-acm-policies
       placementRef:
-        apiGroup: apps.open-cluster-management.io
-        kind: PlacementRule
+        apiGroup: cluster.open-cluster-management.io
+        kind: Placement
         name: placement-backplane
       subjects:
       - apiGroup: policy.open-cluster-management.io
@@ -6615,6 +6799,7 @@ objects:
         annotations:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/description: ''
           policy.open-cluster-management.io/standards: NIST SP 800-53
         name: ccs-dedicated-admins-sp
         namespace: openshift-acm-policies
@@ -6684,26 +6869,33 @@ objects:
               remediationAction: enforce
               severity: low
         remediationAction: enforce
-    - apiVersion: apps.open-cluster-management.io/v1
-      kind: PlacementRule
+    - apiVersion: cluster.open-cluster-management.io/v1beta1
+      kind: Placement
       metadata:
         name: placement-ccs-dedicated-admins-sp
         namespace: openshift-acm-policies
       spec:
-        clusterSelector:
-          matchExpressions:
-          - key: hypershift.open-cluster-management.io/hosted-cluster
-            operator: In
-            values:
-            - 'true'
+        predicates:
+        - requiredClusterSelector:
+            labelSelector:
+              matchExpressions:
+              - key: hypershift.open-cluster-management.io/hosted-cluster
+                operator: In
+                values:
+                - 'true'
+        tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
     - apiVersion: policy.open-cluster-management.io/v1
       kind: PlacementBinding
       metadata:
         name: binding-ccs-dedicated-admins-sp
         namespace: openshift-acm-policies
       placementRef:
-        apiGroup: apps.open-cluster-management.io
-        kind: PlacementRule
+        apiGroup: cluster.open-cluster-management.io
+        kind: Placement
         name: placement-ccs-dedicated-admins-sp
       subjects:
       - apiGroup: policy.open-cluster-management.io
@@ -6715,6 +6907,7 @@ objects:
         annotations:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/description: ''
           policy.open-cluster-management.io/standards: NIST SP 800-53
         name: ccs-dedicated-admins
         namespace: openshift-acm-policies
@@ -6751,26 +6944,33 @@ objects:
               remediationAction: enforce
               severity: low
         remediationAction: enforce
-    - apiVersion: apps.open-cluster-management.io/v1
-      kind: PlacementRule
+    - apiVersion: cluster.open-cluster-management.io/v1beta1
+      kind: Placement
       metadata:
         name: placement-ccs-dedicated-admins
         namespace: openshift-acm-policies
       spec:
-        clusterSelector:
-          matchExpressions:
-          - key: hypershift.open-cluster-management.io/hosted-cluster
-            operator: In
-            values:
-            - 'true'
+        predicates:
+        - requiredClusterSelector:
+            labelSelector:
+              matchExpressions:
+              - key: hypershift.open-cluster-management.io/hosted-cluster
+                operator: In
+                values:
+                - 'true'
+        tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
     - apiVersion: policy.open-cluster-management.io/v1
       kind: PlacementBinding
       metadata:
         name: binding-ccs-dedicated-admins
         namespace: openshift-acm-policies
       placementRef:
-        apiGroup: apps.open-cluster-management.io
-        kind: PlacementRule
+        apiGroup: cluster.open-cluster-management.io
+        kind: Placement
         name: placement-ccs-dedicated-admins
       subjects:
       - apiGroup: policy.open-cluster-management.io
@@ -6782,6 +6982,7 @@ objects:
         annotations:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/description: ''
           policy.open-cluster-management.io/standards: NIST SP 800-53
         name: customer-registry-cas
         namespace: openshift-acm-policies
@@ -6880,26 +7081,33 @@ objects:
               remediationAction: enforce
               severity: low
         remediationAction: enforce
-    - apiVersion: apps.open-cluster-management.io/v1
-      kind: PlacementRule
+    - apiVersion: cluster.open-cluster-management.io/v1beta1
+      kind: Placement
       metadata:
         name: placement-customer-registry-cas
         namespace: openshift-acm-policies
       spec:
-        clusterSelector:
-          matchExpressions:
-          - key: hypershift.open-cluster-management.io/hosted-cluster
-            operator: In
-            values:
-            - 'true'
+        predicates:
+        - requiredClusterSelector:
+            labelSelector:
+              matchExpressions:
+              - key: hypershift.open-cluster-management.io/hosted-cluster
+                operator: In
+                values:
+                - 'true'
+        tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
     - apiVersion: policy.open-cluster-management.io/v1
       kind: PlacementBinding
       metadata:
         name: binding-customer-registry-cas
         namespace: openshift-acm-policies
       placementRef:
-        apiGroup: apps.open-cluster-management.io
-        kind: PlacementRule
+        apiGroup: cluster.open-cluster-management.io
+        kind: Placement
         name: placement-customer-registry-cas
       subjects:
       - apiGroup: policy.open-cluster-management.io
@@ -6911,6 +7119,7 @@ objects:
         annotations:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/description: ''
           policy.open-cluster-management.io/standards: NIST SP 800-53
         name: hcp-ze-ecr-creds
         namespace: openshift-acm-policies
@@ -7197,37 +7406,44 @@ objects:
               remediationAction: enforce
               severity: low
         remediationAction: enforce
-    - apiVersion: apps.open-cluster-management.io/v1
-      kind: PlacementRule
+    - apiVersion: cluster.open-cluster-management.io/v1beta1
+      kind: Placement
       metadata:
         name: placement-hcp-ze-ecr-creds
         namespace: openshift-acm-policies
       spec:
-        clusterSelector:
-          matchExpressions:
-          - key: hypershift.open-cluster-management.io/hosted-cluster
-            operator: In
-            values:
-            - 'true'
-          - key: api.openshift.com/hosted-cluster-egress-policy
-            operator: In
-            values:
-            - NoEgress
-          - key: openshiftVersion-major-minor
-            operator: NotIn
-            values:
-            - '4.14'
-            - '4.15'
-            - '4.16'
-            - '4.17'
+        predicates:
+        - requiredClusterSelector:
+            labelSelector:
+              matchExpressions:
+              - key: hypershift.open-cluster-management.io/hosted-cluster
+                operator: In
+                values:
+                - 'true'
+              - key: api.openshift.com/hosted-cluster-egress-policy
+                operator: In
+                values:
+                - NoEgress
+              - key: openshiftVersion-major-minor
+                operator: NotIn
+                values:
+                - '4.14'
+                - '4.15'
+                - '4.16'
+                - '4.17'
+        tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
     - apiVersion: policy.open-cluster-management.io/v1
       kind: PlacementBinding
       metadata:
         name: binding-hcp-ze-ecr-creds
         namespace: openshift-acm-policies
       placementRef:
-        apiGroup: apps.open-cluster-management.io
-        kind: PlacementRule
+        apiGroup: cluster.open-cluster-management.io
+        kind: Placement
         name: placement-hcp-ze-ecr-creds
       subjects:
       - apiGroup: policy.open-cluster-management.io
@@ -7239,6 +7455,7 @@ objects:
         annotations:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/description: ''
           policy.open-cluster-management.io/standards: NIST SP 800-53
         name: hosted-uwm
         namespace: openshift-acm-policies
@@ -7297,26 +7514,33 @@ objects:
               remediationAction: enforce
               severity: low
         remediationAction: enforce
-    - apiVersion: apps.open-cluster-management.io/v1
-      kind: PlacementRule
+    - apiVersion: cluster.open-cluster-management.io/v1beta1
+      kind: Placement
       metadata:
         name: placement-hosted-uwm
         namespace: openshift-acm-policies
       spec:
-        clusterSelector:
-          matchExpressions:
-          - key: hypershift.open-cluster-management.io/hosted-cluster
-            operator: In
-            values:
-            - 'true'
+        predicates:
+        - requiredClusterSelector:
+            labelSelector:
+              matchExpressions:
+              - key: hypershift.open-cluster-management.io/hosted-cluster
+                operator: In
+                values:
+                - 'true'
+        tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
     - apiVersion: policy.open-cluster-management.io/v1
       kind: PlacementBinding
       metadata:
         name: binding-hosted-uwm
         namespace: openshift-acm-policies
       placementRef:
-        apiGroup: apps.open-cluster-management.io
-        kind: PlacementRule
+        apiGroup: cluster.open-cluster-management.io
+        kind: Placement
         name: placement-hosted-uwm
       subjects:
       - apiGroup: policy.open-cluster-management.io
@@ -7328,6 +7552,7 @@ objects:
         annotations:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/description: ''
           policy.open-cluster-management.io/standards: NIST SP 800-53
         name: hypershift-ovn-logging
         namespace: openshift-acm-policies
@@ -7352,26 +7577,33 @@ objects:
               remediationAction: enforce
               severity: low
         remediationAction: enforce
-    - apiVersion: apps.open-cluster-management.io/v1
-      kind: PlacementRule
+    - apiVersion: cluster.open-cluster-management.io/v1beta1
+      kind: Placement
       metadata:
         name: placement-hypershift-ovn-logging
         namespace: openshift-acm-policies
       spec:
-        clusterSelector:
-          matchExpressions:
-          - key: hypershift.open-cluster-management.io/management-cluster
-            operator: In
-            values:
-            - 'true'
+        predicates:
+        - requiredClusterSelector:
+            labelSelector:
+              matchExpressions:
+              - key: hypershift.open-cluster-management.io/management-cluster
+                operator: In
+                values:
+                - 'true'
+        tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
     - apiVersion: policy.open-cluster-management.io/v1
       kind: PlacementBinding
       metadata:
         name: binding-hypershift-ovn-logging
         namespace: openshift-acm-policies
       placementRef:
-        apiGroup: apps.open-cluster-management.io
-        kind: PlacementRule
+        apiGroup: cluster.open-cluster-management.io
+        kind: Placement
         name: placement-hypershift-ovn-logging
       subjects:
       - apiGroup: policy.open-cluster-management.io
@@ -7383,6 +7615,7 @@ objects:
         annotations:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/description: ''
           policy.open-cluster-management.io/standards: NIST SP 800-53
         name: ocpbugs-88685-metrics-proxy-memory-limit
         namespace: openshift-acm-policies
@@ -7522,26 +7755,33 @@ objects:
               remediationAction: enforce
               severity: high
         remediationAction: enforce
-    - apiVersion: apps.open-cluster-management.io/v1
-      kind: PlacementRule
+    - apiVersion: cluster.open-cluster-management.io/v1beta1
+      kind: Placement
       metadata:
         name: placement-ocpbugs-88685-metrics-proxy-memory-limit
         namespace: openshift-acm-policies
       spec:
-        clusterSelector:
-          matchExpressions:
-          - key: hypershift.open-cluster-management.io/management-cluster
-            operator: In
-            values:
-            - 'true'
+        predicates:
+        - requiredClusterSelector:
+            labelSelector:
+              matchExpressions:
+              - key: hypershift.open-cluster-management.io/management-cluster
+                operator: In
+                values:
+                - 'true'
+        tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
     - apiVersion: policy.open-cluster-management.io/v1
       kind: PlacementBinding
       metadata:
         name: binding-ocpbugs-88685-metrics-proxy-memory-limit
         namespace: openshift-acm-policies
       placementRef:
-        apiGroup: apps.open-cluster-management.io
-        kind: PlacementRule
+        apiGroup: cluster.open-cluster-management.io
+        kind: Placement
         name: placement-ocpbugs-88685-metrics-proxy-memory-limit
       subjects:
       - apiGroup: policy.open-cluster-management.io
@@ -7553,6 +7793,7 @@ objects:
         annotations:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/description: ''
           policy.open-cluster-management.io/standards: NIST SP 800-53
         name: osd-backplane-managed-scripts
         namespace: openshift-acm-policies
@@ -7608,26 +7849,33 @@ objects:
               remediationAction: enforce
               severity: low
         remediationAction: enforce
-    - apiVersion: apps.open-cluster-management.io/v1
-      kind: PlacementRule
+    - apiVersion: cluster.open-cluster-management.io/v1beta1
+      kind: Placement
       metadata:
         name: placement-osd-backplane-managed-scripts
         namespace: openshift-acm-policies
       spec:
-        clusterSelector:
-          matchExpressions:
-          - key: hypershift.open-cluster-management.io/hosted-cluster
-            operator: In
-            values:
-            - 'true'
+        predicates:
+        - requiredClusterSelector:
+            labelSelector:
+              matchExpressions:
+              - key: hypershift.open-cluster-management.io/hosted-cluster
+                operator: In
+                values:
+                - 'true'
+        tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
     - apiVersion: policy.open-cluster-management.io/v1
       kind: PlacementBinding
       metadata:
         name: binding-osd-backplane-managed-scripts
         namespace: openshift-acm-policies
       placementRef:
-        apiGroup: apps.open-cluster-management.io
-        kind: PlacementRule
+        apiGroup: cluster.open-cluster-management.io
+        kind: Placement
         name: placement-osd-backplane-managed-scripts
       subjects:
       - apiGroup: policy.open-cluster-management.io
@@ -7639,6 +7887,7 @@ objects:
         annotations:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/description: ''
           policy.open-cluster-management.io/standards: NIST SP 800-53
         name: osd-cluster-acks-hcp-5.0
         namespace: openshift-acm-policies
@@ -7732,26 +7981,33 @@ objects:
               remediationAction: enforce
               severity: low
         remediationAction: enforce
-    - apiVersion: apps.open-cluster-management.io/v1
-      kind: PlacementRule
+    - apiVersion: cluster.open-cluster-management.io/v1beta1
+      kind: Placement
       metadata:
         name: placement-osd-cluster-admin
         namespace: openshift-acm-policies
       spec:
-        clusterSelector:
-          matchExpressions:
-          - key: hypershift.open-cluster-management.io/hosted-cluster
-            operator: In
-            values:
-            - 'true'
+        predicates:
+        - requiredClusterSelector:
+            labelSelector:
+              matchExpressions:
+              - key: hypershift.open-cluster-management.io/hosted-cluster
+                operator: In
+                values:
+                - 'true'
+        tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
     - apiVersion: policy.open-cluster-management.io/v1
       kind: PlacementBinding
       metadata:
         name: binding-osd-cluster-admin
         namespace: openshift-acm-policies
       placementRef:
-        apiGroup: apps.open-cluster-management.io
-        kind: PlacementRule
+        apiGroup: cluster.open-cluster-management.io
+        kind: Placement
         name: placement-osd-cluster-admin
       subjects:
       - apiGroup: policy.open-cluster-management.io
@@ -7763,6 +8019,7 @@ objects:
         annotations:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/description: ''
           policy.open-cluster-management.io/standards: NIST SP 800-53
         name: osd-customer-monitoring
         namespace: openshift-acm-policies
@@ -8385,26 +8642,33 @@ objects:
               remediationAction: enforce
               severity: low
         remediationAction: enforce
-    - apiVersion: apps.open-cluster-management.io/v1
-      kind: PlacementRule
+    - apiVersion: cluster.open-cluster-management.io/v1beta1
+      kind: Placement
       metadata:
         name: placement-osd-customer-monitoring
         namespace: openshift-acm-policies
       spec:
-        clusterSelector:
-          matchExpressions:
-          - key: hypershift.open-cluster-management.io/hosted-cluster
-            operator: In
-            values:
-            - 'true'
+        predicates:
+        - requiredClusterSelector:
+            labelSelector:
+              matchExpressions:
+              - key: hypershift.open-cluster-management.io/hosted-cluster
+                operator: In
+                values:
+                - 'true'
+        tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
     - apiVersion: policy.open-cluster-management.io/v1
       kind: PlacementBinding
       metadata:
         name: binding-osd-customer-monitoring
         namespace: openshift-acm-policies
       placementRef:
-        apiGroup: apps.open-cluster-management.io
-        kind: PlacementRule
+        apiGroup: cluster.open-cluster-management.io
+        kind: Placement
         name: placement-osd-customer-monitoring
       subjects:
       - apiGroup: policy.open-cluster-management.io
@@ -8416,6 +8680,7 @@ objects:
         annotations:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/description: ''
           policy.open-cluster-management.io/standards: NIST SP 800-53
         name: osd-delete-backplane-script-resources
         namespace: openshift-acm-policies
@@ -8614,26 +8879,33 @@ objects:
               remediationAction: enforce
               severity: low
         remediationAction: enforce
-    - apiVersion: apps.open-cluster-management.io/v1
-      kind: PlacementRule
+    - apiVersion: cluster.open-cluster-management.io/v1beta1
+      kind: Placement
       metadata:
         name: placement-osd-delete-backplane-script-resources
         namespace: openshift-acm-policies
       spec:
-        clusterSelector:
-          matchExpressions:
-          - key: hypershift.open-cluster-management.io/hosted-cluster
-            operator: In
-            values:
-            - 'true'
+        predicates:
+        - requiredClusterSelector:
+            labelSelector:
+              matchExpressions:
+              - key: hypershift.open-cluster-management.io/hosted-cluster
+                operator: In
+                values:
+                - 'true'
+        tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
     - apiVersion: policy.open-cluster-management.io/v1
       kind: PlacementBinding
       metadata:
         name: binding-osd-delete-backplane-script-resources
         namespace: openshift-acm-policies
       placementRef:
-        apiGroup: apps.open-cluster-management.io
-        kind: PlacementRule
+        apiGroup: cluster.open-cluster-management.io
+        kind: Placement
         name: placement-osd-delete-backplane-script-resources
       subjects:
       - apiGroup: policy.open-cluster-management.io
@@ -8645,6 +8917,7 @@ objects:
         annotations:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/description: ''
           policy.open-cluster-management.io/standards: NIST SP 800-53
         name: osd-delete-backplane-serviceaccounts-sp
         namespace: openshift-acm-policies
@@ -8711,26 +8984,33 @@ objects:
               remediationAction: enforce
               severity: low
         remediationAction: enforce
-    - apiVersion: apps.open-cluster-management.io/v1
-      kind: PlacementRule
+    - apiVersion: cluster.open-cluster-management.io/v1beta1
+      kind: Placement
       metadata:
         name: placement-osd-delete-backplane-serviceaccounts-sp
         namespace: openshift-acm-policies
       spec:
-        clusterSelector:
-          matchExpressions:
-          - key: hypershift.open-cluster-management.io/hosted-cluster
-            operator: In
-            values:
-            - 'true'
+        predicates:
+        - requiredClusterSelector:
+            labelSelector:
+              matchExpressions:
+              - key: hypershift.open-cluster-management.io/hosted-cluster
+                operator: In
+                values:
+                - 'true'
+        tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
     - apiVersion: policy.open-cluster-management.io/v1
       kind: PlacementBinding
       metadata:
         name: binding-osd-delete-backplane-serviceaccounts-sp
         namespace: openshift-acm-policies
       placementRef:
-        apiGroup: apps.open-cluster-management.io
-        kind: PlacementRule
+        apiGroup: cluster.open-cluster-management.io
+        kind: Placement
         name: placement-osd-delete-backplane-serviceaccounts-sp
       subjects:
       - apiGroup: policy.open-cluster-management.io
@@ -8742,6 +9022,7 @@ objects:
         annotations:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/description: ''
           policy.open-cluster-management.io/standards: NIST SP 800-53
         name: osd-delete-backplane-serviceaccounts
         namespace: openshift-acm-policies
@@ -8859,26 +9140,33 @@ objects:
               remediationAction: enforce
               severity: low
         remediationAction: enforce
-    - apiVersion: apps.open-cluster-management.io/v1
-      kind: PlacementRule
+    - apiVersion: cluster.open-cluster-management.io/v1beta1
+      kind: Placement
       metadata:
         name: placement-osd-delete-backplane-serviceaccounts
         namespace: openshift-acm-policies
       spec:
-        clusterSelector:
-          matchExpressions:
-          - key: hypershift.open-cluster-management.io/hosted-cluster
-            operator: In
-            values:
-            - 'true'
+        predicates:
+        - requiredClusterSelector:
+            labelSelector:
+              matchExpressions:
+              - key: hypershift.open-cluster-management.io/hosted-cluster
+                operator: In
+                values:
+                - 'true'
+        tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
     - apiVersion: policy.open-cluster-management.io/v1
       kind: PlacementBinding
       metadata:
         name: binding-osd-delete-backplane-serviceaccounts
         namespace: openshift-acm-policies
       placementRef:
-        apiGroup: apps.open-cluster-management.io
-        kind: PlacementRule
+        apiGroup: cluster.open-cluster-management.io
+        kind: Placement
         name: placement-osd-delete-backplane-serviceaccounts
       subjects:
       - apiGroup: policy.open-cluster-management.io
@@ -8890,6 +9178,7 @@ objects:
         annotations:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/description: ''
           policy.open-cluster-management.io/standards: NIST SP 800-53
         name: osd-logging-unsupported
         namespace: openshift-acm-policies
@@ -9056,26 +9345,33 @@ objects:
               remediationAction: enforce
               severity: low
         remediationAction: enforce
-    - apiVersion: apps.open-cluster-management.io/v1
-      kind: PlacementRule
+    - apiVersion: cluster.open-cluster-management.io/v1beta1
+      kind: Placement
       metadata:
         name: placement-osd-logging-unsupported
         namespace: openshift-acm-policies
       spec:
-        clusterSelector:
-          matchExpressions:
-          - key: hypershift.open-cluster-management.io/hosted-cluster
-            operator: In
-            values:
-            - 'true'
+        predicates:
+        - requiredClusterSelector:
+            labelSelector:
+              matchExpressions:
+              - key: hypershift.open-cluster-management.io/hosted-cluster
+                operator: In
+                values:
+                - 'true'
+        tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
     - apiVersion: policy.open-cluster-management.io/v1
       kind: PlacementBinding
       metadata:
         name: binding-osd-logging-unsupported
         namespace: openshift-acm-policies
       placementRef:
-        apiGroup: apps.open-cluster-management.io
-        kind: PlacementRule
+        apiGroup: cluster.open-cluster-management.io
+        kind: Placement
         name: placement-osd-logging-unsupported
       subjects:
       - apiGroup: policy.open-cluster-management.io
@@ -9087,6 +9383,7 @@ objects:
         annotations:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/description: ''
           policy.open-cluster-management.io/standards: NIST SP 800-53
         name: osd-must-gather-operator
         namespace: openshift-acm-policies
@@ -9119,26 +9416,33 @@ objects:
               remediationAction: enforce
               severity: low
         remediationAction: enforce
-    - apiVersion: apps.open-cluster-management.io/v1
-      kind: PlacementRule
+    - apiVersion: cluster.open-cluster-management.io/v1beta1
+      kind: Placement
       metadata:
         name: placement-osd-must-gather-operator
         namespace: openshift-acm-policies
       spec:
-        clusterSelector:
-          matchExpressions:
-          - key: hypershift.open-cluster-management.io/hosted-cluster
-            operator: In
-            values:
-            - 'true'
+        predicates:
+        - requiredClusterSelector:
+            labelSelector:
+              matchExpressions:
+              - key: hypershift.open-cluster-management.io/hosted-cluster
+                operator: In
+                values:
+                - 'true'
+        tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
     - apiVersion: policy.open-cluster-management.io/v1
       kind: PlacementBinding
       metadata:
         name: binding-osd-must-gather-operator
         namespace: openshift-acm-policies
       placementRef:
-        apiGroup: apps.open-cluster-management.io
-        kind: PlacementRule
+        apiGroup: cluster.open-cluster-management.io
+        kind: Placement
         name: placement-osd-must-gather-operator
       subjects:
       - apiGroup: policy.open-cluster-management.io
@@ -9150,6 +9454,7 @@ objects:
         annotations:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/description: ''
           policy.open-cluster-management.io/standards: NIST SP 800-53
         name: osd-openshift-operators-redhat
         namespace: openshift-acm-policies
@@ -9241,26 +9546,33 @@ objects:
               remediationAction: enforce
               severity: low
         remediationAction: enforce
-    - apiVersion: apps.open-cluster-management.io/v1
-      kind: PlacementRule
+    - apiVersion: cluster.open-cluster-management.io/v1beta1
+      kind: Placement
       metadata:
         name: placement-osd-openshift-operators-redhat
         namespace: openshift-acm-policies
       spec:
-        clusterSelector:
-          matchExpressions:
-          - key: hypershift.open-cluster-management.io/hosted-cluster
-            operator: In
-            values:
-            - 'true'
+        predicates:
+        - requiredClusterSelector:
+            labelSelector:
+              matchExpressions:
+              - key: hypershift.open-cluster-management.io/hosted-cluster
+                operator: In
+                values:
+                - 'true'
+        tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
     - apiVersion: policy.open-cluster-management.io/v1
       kind: PlacementBinding
       metadata:
         name: binding-osd-openshift-operators-redhat
         namespace: openshift-acm-policies
       placementRef:
-        apiGroup: apps.open-cluster-management.io
-        kind: PlacementRule
+        apiGroup: cluster.open-cluster-management.io
+        kind: Placement
         name: placement-osd-openshift-operators-redhat
       subjects:
       - apiGroup: policy.open-cluster-management.io
@@ -9272,6 +9584,7 @@ objects:
         annotations:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/description: ''
           policy.open-cluster-management.io/standards: NIST SP 800-53
         name: osd-pcap-collector
         namespace: openshift-acm-policies
@@ -9342,26 +9655,33 @@ objects:
               remediationAction: enforce
               severity: low
         remediationAction: enforce
-    - apiVersion: apps.open-cluster-management.io/v1
-      kind: PlacementRule
+    - apiVersion: cluster.open-cluster-management.io/v1beta1
+      kind: Placement
       metadata:
         name: placement-osd-pcap-collector
         namespace: openshift-acm-policies
       spec:
-        clusterSelector:
-          matchExpressions:
-          - key: hypershift.open-cluster-management.io/hosted-cluster
-            operator: In
-            values:
-            - 'true'
+        predicates:
+        - requiredClusterSelector:
+            labelSelector:
+              matchExpressions:
+              - key: hypershift.open-cluster-management.io/hosted-cluster
+                operator: In
+                values:
+                - 'true'
+        tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
     - apiVersion: policy.open-cluster-management.io/v1
       kind: PlacementBinding
       metadata:
         name: binding-osd-pcap-collector
         namespace: openshift-acm-policies
       placementRef:
-        apiGroup: apps.open-cluster-management.io
-        kind: PlacementRule
+        apiGroup: cluster.open-cluster-management.io
+        kind: Placement
         name: placement-osd-pcap-collector
       subjects:
       - apiGroup: policy.open-cluster-management.io
@@ -9373,6 +9693,7 @@ objects:
         annotations:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/description: ''
           policy.open-cluster-management.io/standards: NIST SP 800-53
         name: osd-project-request-template
         namespace: openshift-acm-policies
@@ -9426,26 +9747,33 @@ objects:
               remediationAction: enforce
               severity: low
         remediationAction: enforce
-    - apiVersion: apps.open-cluster-management.io/v1
-      kind: PlacementRule
+    - apiVersion: cluster.open-cluster-management.io/v1beta1
+      kind: Placement
       metadata:
         name: placement-osd-project-request-template
         namespace: openshift-acm-policies
       spec:
-        clusterSelector:
-          matchExpressions:
-          - key: hypershift.open-cluster-management.io/hosted-cluster
-            operator: In
-            values:
-            - 'true'
+        predicates:
+        - requiredClusterSelector:
+            labelSelector:
+              matchExpressions:
+              - key: hypershift.open-cluster-management.io/hosted-cluster
+                operator: In
+                values:
+                - 'true'
+        tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
     - apiVersion: policy.open-cluster-management.io/v1
       kind: PlacementBinding
       metadata:
         name: binding-osd-project-request-template
         namespace: openshift-acm-policies
       placementRef:
-        apiGroup: apps.open-cluster-management.io
-        kind: PlacementRule
+        apiGroup: cluster.open-cluster-management.io
+        kind: Placement
         name: placement-osd-project-request-template
       subjects:
       - apiGroup: policy.open-cluster-management.io
@@ -9457,6 +9785,7 @@ objects:
         annotations:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/description: ''
           policy.open-cluster-management.io/standards: NIST SP 800-53
         name: osd-user-workload-monitoring-sp
         namespace: openshift-acm-policies
@@ -9503,26 +9832,33 @@ objects:
               remediationAction: enforce
               severity: low
         remediationAction: enforce
-    - apiVersion: apps.open-cluster-management.io/v1
-      kind: PlacementRule
+    - apiVersion: cluster.open-cluster-management.io/v1beta1
+      kind: Placement
       metadata:
         name: placement-osd-user-workload-monitoring-sp
         namespace: openshift-acm-policies
       spec:
-        clusterSelector:
-          matchExpressions:
-          - key: hypershift.open-cluster-management.io/hosted-cluster
-            operator: In
-            values:
-            - 'true'
+        predicates:
+        - requiredClusterSelector:
+            labelSelector:
+              matchExpressions:
+              - key: hypershift.open-cluster-management.io/hosted-cluster
+                operator: In
+                values:
+                - 'true'
+        tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
     - apiVersion: policy.open-cluster-management.io/v1
       kind: PlacementBinding
       metadata:
         name: binding-osd-user-workload-monitoring-sp
         namespace: openshift-acm-policies
       placementRef:
-        apiGroup: apps.open-cluster-management.io
-        kind: PlacementRule
+        apiGroup: cluster.open-cluster-management.io
+        kind: Placement
         name: placement-osd-user-workload-monitoring-sp
       subjects:
       - apiGroup: policy.open-cluster-management.io
@@ -9534,6 +9870,7 @@ objects:
         annotations:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/description: ''
           policy.open-cluster-management.io/standards: NIST SP 800-53
         name: osd-user-workload-monitoring
         namespace: openshift-acm-policies
@@ -9644,26 +9981,33 @@ objects:
               remediationAction: enforce
               severity: low
         remediationAction: enforce
-    - apiVersion: apps.open-cluster-management.io/v1
-      kind: PlacementRule
+    - apiVersion: cluster.open-cluster-management.io/v1beta1
+      kind: Placement
       metadata:
         name: placement-osd-user-workload-monitoring
         namespace: openshift-acm-policies
       spec:
-        clusterSelector:
-          matchExpressions:
-          - key: hypershift.open-cluster-management.io/hosted-cluster
-            operator: In
-            values:
-            - 'true'
+        predicates:
+        - requiredClusterSelector:
+            labelSelector:
+              matchExpressions:
+              - key: hypershift.open-cluster-management.io/hosted-cluster
+                operator: In
+                values:
+                - 'true'
+        tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
     - apiVersion: policy.open-cluster-management.io/v1
       kind: PlacementBinding
       metadata:
         name: binding-osd-user-workload-monitoring
         namespace: openshift-acm-policies
       placementRef:
-        apiGroup: apps.open-cluster-management.io
-        kind: PlacementRule
+        apiGroup: cluster.open-cluster-management.io
+        kind: Placement
         name: placement-osd-user-workload-monitoring
       subjects:
       - apiGroup: policy.open-cluster-management.io
@@ -9675,6 +10019,7 @@ objects:
         annotations:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/description: ''
           policy.open-cluster-management.io/standards: NIST SP 800-53
         name: rbac-permissions-operator-config-sp
         namespace: openshift-acm-policies
@@ -10018,26 +10363,33 @@ objects:
               remediationAction: enforce
               severity: low
         remediationAction: enforce
-    - apiVersion: apps.open-cluster-management.io/v1
-      kind: PlacementRule
+    - apiVersion: cluster.open-cluster-management.io/v1beta1
+      kind: Placement
       metadata:
         name: placement-rbac-permissions-operator-config-sp
         namespace: openshift-acm-policies
       spec:
-        clusterSelector:
-          matchExpressions:
-          - key: hypershift.open-cluster-management.io/hosted-cluster
-            operator: In
-            values:
-            - 'true'
+        predicates:
+        - requiredClusterSelector:
+            labelSelector:
+              matchExpressions:
+              - key: hypershift.open-cluster-management.io/hosted-cluster
+                operator: In
+                values:
+                - 'true'
+        tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
     - apiVersion: policy.open-cluster-management.io/v1
       kind: PlacementBinding
       metadata:
         name: binding-rbac-permissions-operator-config-sp
         namespace: openshift-acm-policies
       placementRef:
-        apiGroup: apps.open-cluster-management.io
-        kind: PlacementRule
+        apiGroup: cluster.open-cluster-management.io
+        kind: Placement
         name: placement-rbac-permissions-operator-config-sp
       subjects:
       - apiGroup: policy.open-cluster-management.io
@@ -10049,6 +10401,7 @@ objects:
         annotations:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/description: ''
           policy.open-cluster-management.io/standards: NIST SP 800-53
         name: rbac-permissions-operator-config
         namespace: openshift-acm-policies
@@ -11094,26 +11447,33 @@ objects:
               remediationAction: enforce
               severity: low
         remediationAction: enforce
-    - apiVersion: apps.open-cluster-management.io/v1
-      kind: PlacementRule
+    - apiVersion: cluster.open-cluster-management.io/v1beta1
+      kind: Placement
       metadata:
         name: placement-rbac-permissions-operator-config
         namespace: openshift-acm-policies
       spec:
-        clusterSelector:
-          matchExpressions:
-          - key: hypershift.open-cluster-management.io/hosted-cluster
-            operator: In
-            values:
-            - 'true'
+        predicates:
+        - requiredClusterSelector:
+            labelSelector:
+              matchExpressions:
+              - key: hypershift.open-cluster-management.io/hosted-cluster
+                operator: In
+                values:
+                - 'true'
+        tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
     - apiVersion: policy.open-cluster-management.io/v1
       kind: PlacementBinding
       metadata:
         name: binding-rbac-permissions-operator-config
         namespace: openshift-acm-policies
       placementRef:
-        apiGroup: apps.open-cluster-management.io
-        kind: PlacementRule
+        apiGroup: cluster.open-cluster-management.io
+        kind: Placement
         name: placement-rbac-permissions-operator-config
       subjects:
       - apiGroup: policy.open-cluster-management.io
@@ -11125,6 +11485,7 @@ objects:
         annotations:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/description: ''
           policy.open-cluster-management.io/standards: NIST SP 800-53
         name: rosa-console-branding-hcp
         namespace: openshift-acm-policies
@@ -11158,26 +11519,33 @@ objects:
               remediationAction: enforce
               severity: low
         remediationAction: enforce
-    - apiVersion: apps.open-cluster-management.io/v1
-      kind: PlacementRule
+    - apiVersion: cluster.open-cluster-management.io/v1beta1
+      kind: Placement
       metadata:
         name: placement-rosa-console-branding-hcp
         namespace: openshift-acm-policies
       spec:
-        clusterSelector:
-          matchExpressions:
-          - key: hypershift.open-cluster-management.io/hosted-cluster
-            operator: In
-            values:
-            - 'true'
+        predicates:
+        - requiredClusterSelector:
+            labelSelector:
+              matchExpressions:
+              - key: hypershift.open-cluster-management.io/hosted-cluster
+                operator: In
+                values:
+                - 'true'
+        tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
     - apiVersion: policy.open-cluster-management.io/v1
       kind: PlacementBinding
       metadata:
         name: binding-rosa-console-branding-hcp
         namespace: openshift-acm-policies
       placementRef:
-        apiGroup: apps.open-cluster-management.io
-        kind: PlacementRule
+        apiGroup: cluster.open-cluster-management.io
+        kind: Placement
         name: placement-rosa-console-branding-hcp
       subjects:
       - apiGroup: policy.open-cluster-management.io
@@ -11189,6 +11557,7 @@ objects:
         annotations:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/description: ''
           policy.open-cluster-management.io/standards: NIST SP 800-53
         name: rosa-console-legacy-branding-configmap
         namespace: openshift-acm-policies
@@ -11319,26 +11688,33 @@ objects:
               remediationAction: enforce
               severity: low
         remediationAction: enforce
-    - apiVersion: apps.open-cluster-management.io/v1
-      kind: PlacementRule
+    - apiVersion: cluster.open-cluster-management.io/v1beta1
+      kind: Placement
       metadata:
         name: placement-rosa-console-legacy-branding-configmap
         namespace: openshift-acm-policies
       spec:
-        clusterSelector:
-          matchExpressions:
-          - key: hypershift.open-cluster-management.io/hosted-cluster
-            operator: In
-            values:
-            - 'true'
+        predicates:
+        - requiredClusterSelector:
+            labelSelector:
+              matchExpressions:
+              - key: hypershift.open-cluster-management.io/hosted-cluster
+                operator: In
+                values:
+                - 'true'
+        tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
     - apiVersion: policy.open-cluster-management.io/v1
       kind: PlacementBinding
       metadata:
         name: binding-rosa-console-legacy-branding-configmap
         namespace: openshift-acm-policies
       placementRef:
-        apiGroup: apps.open-cluster-management.io
-        kind: PlacementRule
+        apiGroup: cluster.open-cluster-management.io
+        kind: Placement
         name: placement-rosa-console-legacy-branding-configmap
       subjects:
       - apiGroup: policy.open-cluster-management.io
@@ -11350,6 +11726,7 @@ objects:
         annotations:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/description: ''
           policy.open-cluster-management.io/standards: NIST SP 800-53
         name: rosa-ingress-certificate-check
         namespace: openshift-acm-policies
@@ -11378,26 +11755,33 @@ objects:
               remediationAction: inform
               severity: low
         remediationAction: inform
-    - apiVersion: apps.open-cluster-management.io/v1
-      kind: PlacementRule
+    - apiVersion: cluster.open-cluster-management.io/v1beta1
+      kind: Placement
       metadata:
         name: placement-rosa-ingress-certificate-check
         namespace: openshift-acm-policies
       spec:
-        clusterSelector:
-          matchExpressions:
-          - key: hypershift.open-cluster-management.io/hosted-cluster
-            operator: In
-            values:
-            - 'true'
+        predicates:
+        - requiredClusterSelector:
+            labelSelector:
+              matchExpressions:
+              - key: hypershift.open-cluster-management.io/hosted-cluster
+                operator: In
+                values:
+                - 'true'
+        tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
     - apiVersion: policy.open-cluster-management.io/v1
       kind: PlacementBinding
       metadata:
         name: binding-rosa-ingress-certificate-check
         namespace: openshift-acm-policies
       placementRef:
-        apiGroup: apps.open-cluster-management.io
-        kind: PlacementRule
+        apiGroup: cluster.open-cluster-management.io
+        kind: Placement
         name: placement-rosa-ingress-certificate-check
       subjects:
       - apiGroup: policy.open-cluster-management.io
@@ -11409,6 +11793,7 @@ objects:
         annotations:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/description: ''
           policy.open-cluster-management.io/standards: NIST SP 800-53
         name: rosa-ingress-certificate-policies
         namespace: openshift-acm-policies
@@ -11477,26 +11862,33 @@ objects:
               remediationAction: enforce
               severity: low
         remediationAction: enforce
-    - apiVersion: apps.open-cluster-management.io/v1
-      kind: PlacementRule
+    - apiVersion: cluster.open-cluster-management.io/v1beta1
+      kind: Placement
       metadata:
         name: placement-rosa-ingress-certificate-policies
         namespace: openshift-acm-policies
       spec:
-        clusterSelector:
-          matchExpressions:
-          - key: hypershift.open-cluster-management.io/hosted-cluster
-            operator: In
-            values:
-            - 'true'
+        predicates:
+        - requiredClusterSelector:
+            labelSelector:
+              matchExpressions:
+              - key: hypershift.open-cluster-management.io/hosted-cluster
+                operator: In
+                values:
+                - 'true'
+        tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
     - apiVersion: policy.open-cluster-management.io/v1
       kind: PlacementBinding
       metadata:
         name: binding-rosa-ingress-certificate-policies
         namespace: openshift-acm-policies
       placementRef:
-        apiGroup: apps.open-cluster-management.io
-        kind: PlacementRule
+        apiGroup: cluster.open-cluster-management.io
+        kind: Placement
         name: placement-rosa-ingress-certificate-policies
       subjects:
       - apiGroup: policy.open-cluster-management.io
@@ -11508,6 +11900,7 @@ objects:
         annotations:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/description: ''
           policy.open-cluster-management.io/standards: NIST SP 800-53
         name: srep-vap-autonode-karpenter
         namespace: openshift-acm-policies
@@ -11684,36 +12077,43 @@ objects:
               remediationAction: enforce
               severity: low
         remediationAction: enforce
-    - apiVersion: apps.open-cluster-management.io/v1
-      kind: PlacementRule
+    - apiVersion: cluster.open-cluster-management.io/v1beta1
+      kind: Placement
       metadata:
         name: placement-srep-vap-autonode-karpenter
         namespace: openshift-acm-policies
       spec:
-        clusterSelector:
-          matchExpressions:
-          - key: hypershift.open-cluster-management.io/hosted-cluster
-            operator: In
-            values:
-            - 'true'
-          - key: openshiftVersion-major-minor
-            operator: NotIn
-            values:
-            - '4.14'
-            - '4.15'
-            - '4.16'
-            - '4.17'
-            - '4.18'
-            - '4.19'
-            - '4.20'
+        predicates:
+        - requiredClusterSelector:
+            labelSelector:
+              matchExpressions:
+              - key: hypershift.open-cluster-management.io/hosted-cluster
+                operator: In
+                values:
+                - 'true'
+              - key: openshiftVersion-major-minor
+                operator: NotIn
+                values:
+                - '4.14'
+                - '4.15'
+                - '4.16'
+                - '4.17'
+                - '4.18'
+                - '4.19'
+                - '4.20'
+        tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
     - apiVersion: policy.open-cluster-management.io/v1
       kind: PlacementBinding
       metadata:
         name: binding-srep-vap-autonode-karpenter
         namespace: openshift-acm-policies
       placementRef:
-        apiGroup: apps.open-cluster-management.io
-        kind: PlacementRule
+        apiGroup: cluster.open-cluster-management.io
+        kind: Placement
         name: placement-srep-vap-autonode-karpenter
       subjects:
       - apiGroup: policy.open-cluster-management.io
@@ -11725,6 +12125,7 @@ objects:
         annotations:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/description: ''
           policy.open-cluster-management.io/standards: NIST SP 800-53
         name: srep-vap-hcp-node-label
         namespace: openshift-acm-policies
@@ -11786,34 +12187,41 @@ objects:
               remediationAction: enforce
               severity: low
         remediationAction: enforce
-    - apiVersion: apps.open-cluster-management.io/v1
-      kind: PlacementRule
+    - apiVersion: cluster.open-cluster-management.io/v1beta1
+      kind: Placement
       metadata:
         name: placement-srep-vap-hcp-node-label
         namespace: openshift-acm-policies
       spec:
-        clusterSelector:
-          matchExpressions:
-          - key: hypershift.open-cluster-management.io/hosted-cluster
-            operator: In
-            values:
-            - 'true'
-          - key: openshiftVersion-major-minor
-            operator: NotIn
-            values:
-            - '4.14'
-            - '4.15'
-            - '4.16'
-            - '4.17'
-            - '4.18'
+        predicates:
+        - requiredClusterSelector:
+            labelSelector:
+              matchExpressions:
+              - key: hypershift.open-cluster-management.io/hosted-cluster
+                operator: In
+                values:
+                - 'true'
+              - key: openshiftVersion-major-minor
+                operator: NotIn
+                values:
+                - '4.14'
+                - '4.15'
+                - '4.16'
+                - '4.17'
+                - '4.18'
+        tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
     - apiVersion: policy.open-cluster-management.io/v1
       kind: PlacementBinding
       metadata:
         name: binding-srep-vap-hcp-node-label
         namespace: openshift-acm-policies
       placementRef:
-        apiGroup: apps.open-cluster-management.io
-        kind: PlacementRule
+        apiGroup: cluster.open-cluster-management.io
+        kind: Placement
         name: placement-srep-vap-hcp-node-label
       subjects:
       - apiGroup: policy.open-cluster-management.io
@@ -11825,6 +12233,7 @@ objects:
         annotations:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/description: ''
           policy.open-cluster-management.io/standards: NIST SP 800-53
         name: srep-vap-vcpu-overcommit
         namespace: openshift-acm-policies
@@ -11889,38 +12298,45 @@ objects:
               remediationAction: enforce
               severity: low
         remediationAction: enforce
-    - apiVersion: apps.open-cluster-management.io/v1
-      kind: PlacementRule
+    - apiVersion: cluster.open-cluster-management.io/v1beta1
+      kind: Placement
       metadata:
         name: placement-srep-vap-vcpu-overcommit
         namespace: openshift-acm-policies
       spec:
-        clusterSelector:
-          matchExpressions:
-          - key: hypershift.open-cluster-management.io/hosted-cluster
-            operator: In
-            values:
-            - 'true'
-          - key: api.openshift.com/win-li-enabled
-            operator: In
-            values:
-            - 'true'
-          - key: openshiftVersion-major-minor
-            operator: NotIn
-            values:
-            - '4.14'
-            - '4.15'
-            - '4.16'
-            - '4.17'
-            - '4.18'
+        predicates:
+        - requiredClusterSelector:
+            labelSelector:
+              matchExpressions:
+              - key: hypershift.open-cluster-management.io/hosted-cluster
+                operator: In
+                values:
+                - 'true'
+              - key: api.openshift.com/win-li-enabled
+                operator: In
+                values:
+                - 'true'
+              - key: openshiftVersion-major-minor
+                operator: NotIn
+                values:
+                - '4.14'
+                - '4.15'
+                - '4.16'
+                - '4.17'
+                - '4.18'
+        tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
     - apiVersion: policy.open-cluster-management.io/v1
       kind: PlacementBinding
       metadata:
         name: binding-srep-vap-vcpu-overcommit
         namespace: openshift-acm-policies
       placementRef:
-        apiGroup: apps.open-cluster-management.io
-        kind: PlacementRule
+        apiGroup: cluster.open-cluster-management.io
+        kind: Placement
         name: placement-srep-vap-vcpu-overcommit
       subjects:
       - apiGroup: policy.open-cluster-management.io
