@@ -11,6 +11,7 @@ the action will create a new commit with the generated files.
 To add an ACM (Governance) Policy
 - If the manifest of the object you want to convert to policy already exists in `deploy` : in the object config.yaml, add a field `policy: `destination: "acm-policies"` (example: https://github.com/openshift/managed-cluster-config/blob/master/deploy/backplane/cee/config.yaml) 
 - If the manifest of the object does not exist: add your manifests with a config.yaml file. If you only want this object to be deployed as Policy, see [this example](https://github.com/openshift/managed-cluster-config/tree/bad140663d088cbce06edaf2527f69651db5a80b/deploy/hs-mgmt-route-monitor-operator)
+- Policies are placed with `Placement` (`cluster.open-cluster-management.io/v1beta1`). A `Placement` only considers clusters from `ManagedClusterSet`s bound into its own namespace, so `deploy/acm-policies` and `deploy/rosa-oauth-templates-policies` each carry a `ManagedClusterSetBinding` for the `global` set. A new policy namespace needs its own binding, or its placements will never be satisfied.
 
 `make` will look for `config.yaml` files, runs it with the PolicyGenerator binary and save the output to `generated_deploy/acm-policies` directory. `make` will then automatically
 add the policy as a new SelectorySyncSet.
