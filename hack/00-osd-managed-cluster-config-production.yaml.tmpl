@@ -7918,31 +7918,38 @@ objects:
               remediationAction: enforce
               severity: high
         remediationAction: enforce
-    - apiVersion: apps.open-cluster-management.io/v1
-      kind: PlacementRule
+    - apiVersion: cluster.open-cluster-management.io/v1beta1
+      kind: Placement
       metadata:
-        name: placement-osd-cluster-acks-hcp-5.0
+        name: osd-cluster-acks-hcp-5.0-placement
         namespace: openshift-acm-policies
       spec:
-        clusterSelector:
-          matchExpressions:
-          - key: hypershift.open-cluster-management.io/hosted-cluster
-            operator: In
-            values:
-            - 'true'
-          - key: openshiftVersion-major-minor
-            operator: In
-            values:
-            - '4.22'
+        predicates:
+        - requiredClusterSelector:
+            labelSelector:
+              matchExpressions:
+              - key: hypershift.open-cluster-management.io/hosted-cluster
+                operator: In
+                values:
+                - 'true'
+              - key: openshiftVersion-major-minor
+                operator: In
+                values:
+                - '4.22'
+        tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
     - apiVersion: policy.open-cluster-management.io/v1
       kind: PlacementBinding
       metadata:
-        name: binding-osd-cluster-acks-hcp-5.0
+        name: osd-cluster-acks-hcp-5.0-binding
         namespace: openshift-acm-policies
       placementRef:
-        apiGroup: apps.open-cluster-management.io
-        kind: PlacementRule
-        name: placement-osd-cluster-acks-hcp-5.0
+        apiGroup: cluster.open-cluster-management.io
+        kind: Placement
+        name: osd-cluster-acks-hcp-5.0-placement
       subjects:
       - apiGroup: policy.open-cluster-management.io
         kind: Policy
@@ -7953,6 +7960,7 @@ objects:
         annotations:
           policy.open-cluster-management.io/categories: CM Configuration Management
           policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+          policy.open-cluster-management.io/description: ''
           policy.open-cluster-management.io/standards: NIST SP 800-53
         name: osd-cluster-admin
         namespace: openshift-acm-policies
