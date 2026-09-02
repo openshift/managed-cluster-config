@@ -1,0 +1,36 @@
+# OSD STS upgrade acknowledgement for HCP clusters (4.22 -> 5.0)
+#
+# HCP hosted clusters are managed through ACM policies rather than Hive
+# SelectorSyncSets. This policy patches the pre-existing CloudCredential/cluster
+# resource to add the cloudcredential.openshift.io/upgradeable-to annotation so
+# the cluster-version-operator upgrade gate is acknowledged and the upgrade to
+# v5.0 is unblocked.
+#
+# complianceType/metadataComplianceType: musthave enforces (merges) only the
+# specified annotation onto the existing object; it does not create or fully
+# own the CloudCredential, and no other fields are altered.
+#
+# Mirrors the SelectorSyncSet-based ack used for classic STS clusters in
+# deploy/osd-cluster-acks/sts/5.0.
+#
+# Tracking: ROSAENG-65928
+apiVersion: policy.open-cluster-management.io/v1
+kind: ConfigurationPolicy
+metadata:
+  name: osd-cluster-acks-hcp-5.0
+spec:
+  evaluationInterval:
+    compliant: 2h
+    noncompliant: 45s
+  object-templates-raw: |
+    - complianceType: musthave
+      metadataComplianceType: musthave
+      objectDefinition:
+        apiVersion: operator.openshift.io/v1
+        kind: CloudCredential
+        metadata:
+          name: cluster
+          annotations:
+            cloudcredential.openshift.io/upgradeable-to: "v5.0"
+  remediationAction: enforce
+  severity: high

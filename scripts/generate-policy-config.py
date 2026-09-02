@@ -30,6 +30,7 @@ directories = [
         'customer-registry-cas',
         'hcp-ze-ecr-creds',
         'hypershift-ovn-logging',
+        'osd-cluster-acks/hcp/5.0',
         'osd-cluster-admin',
         'ocpbugs-88685-metrics-proxy-memory-limit',
         'osd-customer-monitoring',
