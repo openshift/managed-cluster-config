@@ -10,6 +10,14 @@ The hypershift-operator (HO v0.1.75+, [OCPBUGS-50003](https://issues.redhat.com/
 |---------------|-------|
 | `i3.metal` | 72 |
 | `g6.xlarge` | 4 |
+| `g6e.xlarge` | 4 |
+| `g6e.2xlarge` | 8 |
+| `g6e.4xlarge` | 16 |
+| `g6e.8xlarge` | 32 |
+| `g6e.12xlarge` | 48 |
+| `g6e.16xlarge` | 64 |
+| `g6e.24xlarge` | 96 |
+| `g6e.48xlarge` | 192 |
 
 ## Adding new instance types
 
