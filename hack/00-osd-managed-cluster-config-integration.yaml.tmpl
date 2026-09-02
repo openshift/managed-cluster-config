@@ -36731,39 +36731,6 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: osd-custom-domains
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-    resourceApplyMode: Sync
-    resources:
-    - apiVersion: rbac.authorization.k8s.io/v1
-      kind: ClusterRole
-      metadata:
-        labels:
-          managed.openshift.io/aggregate-to-dedicated-admins: cluster
-        name: osd-custom-domains-dedicated-admin-cluster
-      rules:
-      - apiGroups:
-        - managed.openshift.io
-        resources:
-        - customdomains
-        verbs:
-        - create
-        - delete
-        - get
-        - list
-        - patch
-        - update
-        - watch
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    labels:
-      managed.openshift.io/gitHash: ${IMAGE_TAG}
-      managed.openshift.io/gitRepoName: ${REPO_NAME}
-      managed.openshift.io/osd: 'true'
     name: osd-customer-monitoring
   spec:
     clusterDeploymentSelector:
@@ -39856,14 +39823,14 @@ objects:
           \  - name: openshift-backplane-tam\n  - name: openshift-cloud-ingress-operator\n\
           \  - name: openshift-codeready-workspaces\n  - name: openshift-compliance\n\
           \  - name: openshift-compliance-monkey\n  - name: openshift-container-security\n\
-          \  - name: openshift-custom-domains-operator\n  - name: openshift-customer-monitoring\n\
-          \  - name: openshift-deployment-validation-operator\n  - name: openshift-managed-node-metadata-operator\
-          \      \n  - name: openshift-file-integrity\n  - name: openshift-logging\n\
-          \  - name: openshift-managed-upgrade-operator\n  - name: openshift-must-gather-operator\n\
-          \  - name: openshift-observability-operator\n  - name: openshift-ocm-agent-operator\n\
-          \  - name: openshift-operators-redhat\n  - name: openshift-osd-metrics\n\
-          \  - name: openshift-rbac-permissions\n  - name: openshift-route-monitor-operator\n\
-          \  - name: openshift-scanning\n  - name: openshift-security\n  - name: openshift-splunk-forwarder-operator\n\
+          \  - name: openshift-customer-monitoring\n  - name: openshift-deployment-validation-operator\n\
+          \  - name: openshift-managed-node-metadata-operator      \n  - name: openshift-file-integrity\n\
+          \  - name: openshift-logging\n  - name: openshift-managed-upgrade-operator\n\
+          \  - name: openshift-must-gather-operator\n  - name: openshift-observability-operator\n\
+          \  - name: openshift-ocm-agent-operator\n  - name: openshift-operators-redhat\n\
+          \  - name: openshift-osd-metrics\n  - name: openshift-rbac-permissions\n\
+          \  - name: openshift-route-monitor-operator\n  - name: openshift-scanning\n\
+          \  - name: openshift-security\n  - name: openshift-splunk-forwarder-operator\n\
           \  - name: openshift-sre-pruning\n  - name: openshift-suricata\n  - name:\
           \ openshift-validation-webhook\n  - name: openshift-velero\n  - name: openshift-monitoring\n\
           \  - name: openshift\n  - name: openshift-cluster-version\n  - name: goalert\n\
@@ -40881,11 +40848,10 @@ objects:
           \ app\n\necho \"INFO: Wait for running splunk-heavy-forwarder pods...\"\n\
           waitRunningPods splunk-heavy-forwarder openshift-security name\n\necho \"\
           INFO: Rebalancing misscheduled pods from openshift- namespaces\"\ninfraPodsMisscheduled\
-          \  openshift-cloud-ingress-operator openshift-custom-domains-operator openshift-image-registry\
-          \ openshift-managed-node-metadata-operator openshift-monitoring openshift-must-gather-operator\
-          \ openshift-network-operator openshift-ocm-agent-operator openshift-osd-metrics\
-          \ openshift-rbac-permissions openshift-route-monitor-operator openshift-splunk-forwarder-operator\
-          \ openshift-velero"
+          \  openshift-cloud-ingress-operator openshift-image-registry openshift-managed-node-metadata-operator\
+          \ openshift-monitoring openshift-must-gather-operator openshift-network-operator\
+          \ openshift-ocm-agent-operator openshift-osd-metrics openshift-rbac-permissions\
+          \ openshift-route-monitor-operator openshift-splunk-forwarder-operator openshift-velero"
     - apiVersion: batch/v1
       kind: CronJob
       metadata:
@@ -40984,19 +40950,6 @@ objects:
       metadata:
         name: osd-rebalance-infra-nodes-openshift-pod-rebalance
         namespace: openshift-osd-metrics
-      subjects:
-      - kind: ServiceAccount
-        name: osd-rebalance-infra-nodes
-        namespace: openshift-monitoring
-      roleRef:
-        apiGroup: rbac.authorization.k8s.io
-        kind: ClusterRole
-        name: osd-rebalance-infra-nodes-openshift-pod-rebalance
-    - kind: RoleBinding
-      apiVersion: rbac.authorization.k8s.io/v1
-      metadata:
-        name: osd-rebalance-infra-nodes-openshift-pod-rebalance
-        namespace: openshift-custom-domains-operator
       subjects:
       - kind: ServiceAccount
         name: osd-rebalance-infra-nodes
@@ -41344,31 +41297,6 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
-    name: osd-serviceaccounts-aws
-  spec:
-    clusterDeploymentSelector:
-      matchLabels:
-        api.openshift.com/managed: 'true'
-        hive.openshift.io/cluster-platform: aws
-      matchExpressions:
-      - key: api.openshift.com/fedramp
-        operator: NotIn
-        values:
-        - 'true'
-    resourceApplyMode: Upsert
-    resources:
-    - apiVersion: v1
-      kind: ServiceAccount
-      metadata:
-        name: custom-domains-operator
-        namespace: openshift-custom-domains-operator
-- apiVersion: hive.openshift.io/v1
-  kind: SelectorSyncSet
-  metadata:
-    labels:
-      managed.openshift.io/gitHash: ${IMAGE_TAG}
-      managed.openshift.io/gitRepoName: ${REPO_NAME}
-      managed.openshift.io/osd: 'true'
     name: osd-serviceaccounts-cronjob
   spec:
     clusterDeploymentSelector:
@@ -41439,11 +41367,10 @@ objects:
                   args:
                   - /bin/bash
                   - -c
-                  - "for NS in openshift-cloud-ingress-operator openshift-custom-domains-operator\
-                    \ openshift-managed-upgrade-operator openshift-monitoring openshift-rbac-permissions\
-                    \ openshift-splunk-forwarder-operator openshift-velero openshift-ocm-agent-operator;\n\
-                    do\n  for SA in $(oc -n $NS get serviceaccount --ignore-not-found\
-                    \ -o jsonpath='{.items[?(@.metadata.ownerReferences[0].kind==\"\
+                  - "for NS in openshift-cloud-ingress-operator openshift-managed-upgrade-operator\
+                    \ openshift-monitoring openshift-rbac-permissions openshift-splunk-forwarder-operator\
+                    \ openshift-velero openshift-ocm-agent-operator;\ndo\n  for SA\
+                    \ in $(oc -n $NS get serviceaccount --ignore-not-found -o jsonpath='{.items[?(@.metadata.ownerReferences[0].kind==\"\
                     ClusterServiceVersion\")].metadata.name}');\n  do\n    echo \"\
                     Removing owner ref from SA '$SA' in NS '$NS'\"\n    oc -n $NS\
                     \ patch serviceaccount $SA --type=json -p '[{\"op\":\"remove\"\
@@ -46618,7 +46545,7 @@ objects:
               \ (\n    label_replace(csv_succeeded, \"name\", \"$1\", \"name\", \"\
               ([^.]+).*\")\n  ^ on (name) group_left (channel, package)\n    (\n \
               \     max by (name, channel, package) (subscription_sync_total{name=~\"\
-              addon-operator|aws-vpce-operator|custom-domains-operator|managed-node-metadata-operator|managed-upgrade-operator|must-gather-operator|ocm-agent-operator|osd-metrics-exporter|rbac-permissions-operator|openshift-splunk-forwarder-operator|aws-account-operator|certman-operator|cloud-ingress-operator|configure-alertmanager-operator|deadmanssnitch-operator|deployment-validation-operator|dynatrace-operator|gcp-project-operator|managed-velero-operator|observability-operator|opentelemetry-operator|pagerduty-operator|route-monitor-operator\"\
+              addon-operator|aws-vpce-operator|managed-node-metadata-operator|managed-upgrade-operator|must-gather-operator|ocm-agent-operator|osd-metrics-exporter|rbac-permissions-operator|openshift-splunk-forwarder-operator|aws-account-operator|certman-operator|cloud-ingress-operator|configure-alertmanager-operator|deadmanssnitch-operator|deployment-validation-operator|dynatrace-operator|gcp-project-operator|managed-velero-operator|observability-operator|opentelemetry-operator|pagerduty-operator|route-monitor-operator\"\
               })\n      or\n      label_replace(\n        max by (channel, package)\
               \ (subscription_sync_total{name=\"redhat-oadp-operator\"}),\n      \
               \  \"name\", \"oadp-operator\", \"name\", \".*\"\n      )\n    )\n)\n"
@@ -46628,7 +46555,7 @@ objects:
               \ provider)\nmax by (exported_namespace, name, version, channel, package)\
               \ (\n  label_replace(\n    label_replace(\n      label_replace(\n  \
               \      label_replace(\n          label_replace(\n            (package_operator_package_availability{pko_name=~\"\
-              addon-operator|aws-vpce-operator|custom-domains-operator|managed-node-metadata-operator|managed-upgrade-operator|must-gather-operator|ocm-agent-operator|osd-metrics-exporter|rbac-permissions-operator|openshift-splunk-forwarder-operator|aws-account-operator|certman-operator|cloud-ingress-operator|configure-alertmanager-operator|deadmanssnitch-operator|deployment-validation-operator|dynatrace-operator|gcp-project-operator|managed-velero-operator|observability-operator|opentelemetry-operator|pagerduty-operator|route-monitor-operator\"\
+              addon-operator|aws-vpce-operator|managed-node-metadata-operator|managed-upgrade-operator|must-gather-operator|ocm-agent-operator|osd-metrics-exporter|rbac-permissions-operator|openshift-splunk-forwarder-operator|aws-account-operator|certman-operator|cloud-ingress-operator|configure-alertmanager-operator|deadmanssnitch-operator|deployment-validation-operator|dynatrace-operator|gcp-project-operator|managed-velero-operator|observability-operator|opentelemetry-operator|pagerduty-operator|route-monitor-operator\"\
               } == 1),\n            \"exported_namespace\", \"openshift-$1\", \"pko_name\"\
               , \"^(?:openshift-)?(.*)$\"\n          ),\n          \"version\", \"\
               $1\", \"image\", \"^[^@]+:([^@]+)(?:@.+)?$\"\n        ),\n        \"\
