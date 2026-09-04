@@ -131,7 +131,6 @@
                 "iam:ListRoles",
                 "iam:ListUserPolicies",
                 "iam:ListUsers",
-                "iam:PassRole",
                 "iam:RemoveRoleFromInstanceProfile",
                 "iam:SimulatePrincipalPolicy",
                 "iam:TagRole",
@@ -197,6 +196,24 @@
                 "cloudwatch:GetMetricData"
             ],
             "Resource": "*"
+        },
+        {
+            "Sid": "PassRoleToNodes",
+            "Effect": "Allow",
+            "Action": [
+                "iam:PassRole"
+            ],
+            "Resource": [
+                "arn:*:iam::*:role/*-ControlPlane-Role",
+                "arn:*:iam::*:role/*-Worker-Role"
+            ],
+            "Condition": {
+                "StringEquals": {
+                    "iam:PassedToService": [
+                        "ec2.amazonaws.com"
+                    ]
+                }
+            }
         },
         {
             "Effect": "Allow",
