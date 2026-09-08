@@ -26,7 +26,8 @@ yaml.add_representer(str, str_presenter)
 def dump_configmap(input_path, configmap_path, enableUserWorkload,
                    disableremoteWrite, retentionTime = "11d",
                    enableGrafana = False,
-                   keepPrometheusAdapter = False):
+                   keepPrometheusAdapter = False,
+                   enableEthtool = False):
     with open(input_path,'r') as input_file:
         config = yaml.safe_load(input_file)
         config["enableUserWorkload"] = enableUserWorkload
@@ -40,6 +41,9 @@ def dump_configmap(input_path, configmap_path, enableUserWorkload,
 
         if not keepPrometheusAdapter:
             del config['k8sPrometheusAdapter']
+
+        if enableEthtool:
+            config.setdefault("nodeExporter", {}).setdefault("collectors", {})["ethtool"] = { "enabled": True }
 
         cmo_config = {
             "apiVersion": "v1",
@@ -65,5 +69,5 @@ dump_configmap(input_file_path, output_file_path_non_uwm_4_5, False, False, "11d
 dump_configmap(input_file_path, output_file_path_non_uwm_pre_411, False, False, "7d", True, True)
 dump_configmap(input_file_path, output_file_path_non_uwm_411_415, False, False, "7d", True, True)
 dump_configmap(input_file_path, output_file_path_fr, True, True)
-dump_configmap(input_file_path, output_mc_file_path_uwm, True, False, "7d")
-dump_configmap(input_file_path, output_mc_file_path_non_uwm, False, False, "7d")
+dump_configmap(input_file_path, output_mc_file_path_uwm, True, False, "7d", enableEthtool=True)
+dump_configmap(input_file_path, output_mc_file_path_non_uwm, False, False, "7d", enableEthtool=True)
