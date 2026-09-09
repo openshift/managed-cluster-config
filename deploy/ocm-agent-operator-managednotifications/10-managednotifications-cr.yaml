@@ -9,14 +9,14 @@ spec:
         Your cluster requires you to take action as there are multiple ingress controllers detected. Red Hat SRE strongly recommends using Openshift-managed Custom Domains instead, as multiple ingress controllers, if improperly configured, can lead to problems with internal and external networking.
       name: MultipleIngressControllersDetected
       resendWait: 24
-      severity: Info
+      severity: Low
       summary: "Multiple ingress controllers detected"
       logType: Cluster Configuration
     - activeBody: |-
         Your cluster is currently alerting with 'KubePersistentVolumeFillingUp' in '${namespace}' for PVC '${persistentvolumeclaim}'. This is not an actionable alert for the SRE team. Please address this capacity issue using this reference documentation: https://docs.openshift.com/container-platform/latest/storage/expanding-persistent-volumes.html.
       name: KubePersistentVolumeFillingUp
       resendWait: 1
-      severity: Warning
+      severity: Moderate
       summary: "Action required: Persistent Volume filling"
     - activeBody: |-
         Your cluster requires you to take action as its ElasticSearch cluster logging deployment has been detected as reaching a high disk usage threshold. Red Hat SRE strongly recommends reducing application logging on your cluster to ensure logging continues to function. If logging disk consumption exceeds 95%, data will be at risk of becoming unavailable or lost and the stability of your ElasticSearch deployment may be impacted.
@@ -24,7 +24,7 @@ spec:
       resendWait: 24
       resolvedBody: |-
         Your cluster's ElasticSearch deployment is detected as being at safe disk consumption levels and no additional action on this issue is required.
-      severity: Info
+      severity: Low
       summary: "ElasticSearch reaching disk capacity"
       logType: Cluster Configuration
     - activeBody: |-
@@ -33,14 +33,14 @@ spec:
       resendWait: 24
       resolvedBody: |-
         Your cluster no longer has multiple default storage classes defined. No further action is required.
-      severity: Info
+      severity: Low
       summary: "Multiple Default Storage Classes Configured"
       logType: Cluster Configuration
     - activeBody: |-
         A user on your system has removed a platform protection webhook. This protection has already been automatically replaced, and no further action is required. Tampering with platform protections can endanger SLAs.
       name: NonSystemChangeValidationWebhookConfigurations # https://issues.redhat.com/browse/OSD-13558
       resendWait: 1
-      severity: Info
+      severity: Low
       summary: "Platform protections removed by non-Red Hat user"
       logType: Cluster Security
     - activeBody: Your cluster requires you to take action. The kernel file descriptor
@@ -54,21 +54,21 @@ spec:
       resendWait: 24
       resolvedBody: Your cluster no longer has worker nodes approaching the kernel file
         descriptor limit. No additional action on this issue is required.
-      severity: Info
+      severity: Low
       summary: Worker node file descriptor limit nearly exhausted
       logType: Cluster Configuration
     - activeBody: |-
         Red Hat has detected that your cluster is running multiple versions of EFS CSI driver. This configuration is not safe to use as this might lead to the EFS Operator not working as expected. Please use the officially supported version of EFS operator as described in https://access.redhat.com/solutions/4591701.
       name: MultipleEFSCSIDrivers
       resendWait: 72
-      severity: Warning
+      severity: Moderate
       summary: "Multiple EFS CSI drivers detected"
       logType: Cluster Configuration
     - activeBody: |-
         Your cluster requires you to take action. A workload is been preventing a machine from deleting. The name of the workload can be found by looking at the 'pods_preventing_node_drain' metric in Prometheus. Not taking action can result in higher compute costs as the instance won't terminate until the workload has been moved.
       name: CustomerWorkloadPreventingDrain
       resendWait: 1
-      severity: Major
+      severity: Important
       summary: Workload preventing machine deletion
       logType: Cluster Configuration
       references:
@@ -77,7 +77,7 @@ spec:
         Your cluster currently has at least one unschedulable worker node. This may reduce cluster's effective capacity to schedule pods.
       name: KubeNodeUnschedulableSRE
       resendWait: 6
-      severity: Warning
+      severity: Moderate
       summary: "Action required: At least one worker node is unschedulable for more than an hour."
       references:
         - "https://docs.openshift.com/container-platform/latest/nodes/nodes/nodes-nodes-working.html#nodes-nodes-working-marking_nodes-nodes-working"
@@ -85,7 +85,7 @@ spec:
         Your cluster requires your attention. User Workload Monitoring is currently degraded. Please review your User Workload Monitoring configuration and ensure your worker nodes have capacity for User Workload Monitoring pods to be scheduled.
       name: "UWMDeploymentErrorBudgetBurn"
       resendWait: 2
-      severity: Major
+      severity: Important
       summary: "Action required: User Workload Monitoring is degraded"
       logType: Cluster Configuration
       references:
@@ -95,33 +95,33 @@ spec:
         Your cluster requires your attention because a webhook that you have installed is negatively impacting successful API requests on your cluster. The ${type} webhook named ${webhook_name} is taking more than ${duration_threshold} on ${operation} operations. Check '${service_name}' service in '${service_namespace}' namespace; this is the service targeted by the webhook or, if not applicable, check the service behind the URL set in the webhook config. Without action, your cluster's SLA may be impacted, along with your ability to upgrade. For more information, review the documentation: https://docs.openshift.com/rosa/architecture/admission-plug-ins.html.
       name: SlowCustomerWebhook
       resendWait: 2
-      severity: Major
+      severity: Important
       summary: "Action required: ${webhook_name} webhook slow to process ${operation} operations"
     - activeBody: |-
         Your cluster requires you to take action. The file system space usage for a worker node is currently at or above 90% and is predicted to be fully exhausted soon. Without action, this could impact the usability of this node. Please reduce the amount of space used on this mountpoint, either by adjusting application configuration or by moving some applications to other nodes.
       name: WorkerNodeFilesystemSpaceFillingUp
       resendWait: 24
-      severity: Info
+      severity: Low
       summary: "Filesystem is predicted to run out of space within the next 4 hours."
       logType: Cluster Configuration
     - activeBody: |-
         Your cluster requires you to take action. The available file system space for a worker node are currently at or below 3% and are predicted to be fully exhausted soon. Without action, this could impact the usability of this node. Please reduce the amount of inodes used on this mountpoint, either by adjusting application configuration or by moving some applications to other nodes.
       name: WorkerNodeFilesystemAlmostOutOfSpace
       resendWait: 24
-      severity: Major
+      severity: Important
       summary: "FFilesystem has less than 3% space left."
       logType: Cluster Configuration
     - activeBody: |-
         Your cluster requires you to take action. The file system inode usage for a worker node is currently at or above 90% and is predicted to be fully exhausted soon. Without action, this could impact the usability of this node. Please reduce the amount of inode used on this mountpoint, either by adjusting application configuration or by moving some applications to other nodes.
       name: WorkerNodeFilesystemFilesFillingUp
       resendWait: 24
-      severity: Info
+      severity: Low
       summary: "Worker node is predicted to run out of inodes in 4 hours"
       logType: Cluster Configuration
     - activeBody: |-
         Your cluster requires you to take action. The available file system inodes for a worker node are currently at or below 3% and are predicted to be fully exhausted soon. Without action, this could impact the usability of this node. Please reduce the amount of inodes used on this mountpoint, either by adjusting application configuration or by moving some applications to other nodes.
       name: WorkerNodeFilesystemAlmostOutOfFiles
       resendWait: 24
-      severity: Major
+      severity: Important
       summary: "Filesystem has less than 3% inodes left"
       logType: Cluster Configuration
