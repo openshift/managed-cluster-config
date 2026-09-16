@@ -1,1 +1,0 @@
-There are some AWS specific operators, so this SSS will apply only to AWS for those.
