@@ -9,6 +9,14 @@ The hypershift-operator (HO v0.1.75+, [OCPBUGS-50003](https://issues.redhat.com/
 | Instance Type | vCPUs |
 |---------------|-------|
 | `i3.metal` | 72 |
+| `g5.xlarge` | 4 |
+| `g5.2xlarge` | 8 |
+| `g5.4xlarge` | 16 |
+| `g5.8xlarge` | 32 |
+| `g5.12xlarge` | 48 |
+| `g5.16xlarge` | 64 |
+| `g5.24xlarge` | 96 |
+| `g5.48xlarge` | 192 |
 | `g6.xlarge` | 4 |
 | `g6e.xlarge` | 4 |
 | `g6e.2xlarge` | 8 |
@@ -18,6 +26,7 @@ The hypershift-operator (HO v0.1.75+, [OCPBUGS-50003](https://issues.redhat.com/
 | `g6e.16xlarge` | 64 |
 | `g6e.24xlarge` | 96 |
 | `g6e.48xlarge` | 192 |
+| `m5.2xlarge` | 8 |
 
 ## Adding new instance types
 
