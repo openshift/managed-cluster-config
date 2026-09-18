@@ -104,7 +104,6 @@
 		    "iam:ListRoles",
 		    "iam:ListUserPolicies",
 		    "iam:ListUsers",
-		    "iam:PassRole",
 		    "iam:RemoveRoleFromInstanceProfile",
 		    "iam:SimulatePrincipalPolicy",
 		    "iam:TagRole",
@@ -173,6 +172,21 @@
             ],
             "Resource": "*"
         },
+		{
+      		"Sid": "PassRoleToNodes",
+			"Effect": "Allow",
+      		"Action": [
+        		"iam:PassRole"
+      		],
+      		"Resource": "*",
+      		"Condition": {
+                "StringEquals": {
+                    "iam:PassedToService": [
+                        "ec2.amazonaws.com"
+                    ]
+                }
+            }
+    	},
         {
             "Effect": "Allow",
             "Action": [
