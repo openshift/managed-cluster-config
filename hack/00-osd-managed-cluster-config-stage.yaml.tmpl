@@ -44953,6 +44953,99 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: rosaeng-68278-awsmachinetemplates-rbac
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: ext-hypershift.openshift.io/cluster-type
+        operator: In
+        values:
+        - service-cluster
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: Policy
+      metadata:
+        name: rosaeng-68278-awsmachinetemplates-rbac
+        namespace: openshift-acm-policies
+      spec:
+        remediationAction: enforce
+        disabled: false
+        policy-templates:
+        - objectDefinition:
+            apiVersion: policy.open-cluster-management.io/v1
+            kind: ConfigurationPolicy
+            metadata:
+              name: rosaeng-68278-awsmachinetemplates-rbac
+            spec:
+              namespaceSelector:
+                matchLabels:
+                  hypershift.openshift.io/hosted-control-plane: 'true'
+              pruneObjectBehavior: DeleteIfCreated
+              object-templates-raw: "{{- $hostedClusters := (lookup\n      \"hypershift.openshift.io/v1beta1\"\
+                \ \"HostedCluster\"\n      \"\" \"\").items }}\n{{- range $hostedClusters\
+                \ }}\n{{- $hcpNamespace := printf \"%s-%s\"\n      .metadata.namespace\
+                \ .metadata.name }}\n{{- $history := .status.version.history }}\n\
+                {{- if $history }}\n{{- $version := (index $history 0).version }}\n\
+                {{- if and $version (semverCompare \"<4.22.0-0\" $version) }}\n- complianceType:\
+                \ mustonlyhave\n  objectDefinition:\n    apiVersion: rbac.authorization.k8s.io/v1\n\
+                \    kind: Role\n    metadata:\n      name: rosaeng-68278-cluster-autoscaler\n\
+                \      namespace: {{ $hcpNamespace }}\n    rules:\n      - apiGroups:\n\
+                \          - cluster.x-k8s.io\n        resources:\n          - machinedeployments\n\
+                \          - machinedeployments/scale\n          - machines\n    \
+                \      - machinesets\n          - machinesets/scale\n          - machinepools\n\
+                \          - machinepools/scale\n        verbs:\n          - '*'\n\
+                \      - apiGroups:\n          - infrastructure.cluster.x-k8s.io\n\
+                \        resources:\n          - '*'\n        verbs:\n          -\
+                \ get\n          - list\n          - watch\n      - apiGroups:\n \
+                \         - capi-provider.agent-install.openshift.io\n        resources:\n\
+                \          - agentmachinetemplates\n        verbs:\n          - get\n\
+                \          - list\n- complianceType: mustonlyhave\n  objectDefinition:\n\
+                \    apiVersion: rbac.authorization.k8s.io/v1\n    kind: RoleBinding\n\
+                \    metadata:\n      name: rosaeng-68278-cluster-autoscaler\n   \
+                \   namespace: {{ $hcpNamespace }}\n    subjects:\n      - kind: ServiceAccount\n\
+                \        name: cluster-autoscaler\n        namespace: {{ $hcpNamespace\
+                \ }}\n    roleRef:\n      apiGroup: rbac.authorization.k8s.io\n  \
+                \    kind: Role\n      name: rosaeng-68278-cluster-autoscaler\n{{-\
+                \ end }}\n{{- end }}\n{{- end }}\n"
+    - apiVersion: apps.open-cluster-management.io/v1
+      kind: PlacementRule
+      metadata:
+        name: rosaeng-68278-awsmachinetemplates-rbac
+        namespace: openshift-acm-policies
+      spec:
+        clusterSelector:
+          matchExpressions:
+          - key: hypershift.open-cluster-management.io/management-cluster
+            operator: In
+            values:
+            - 'true'
+    - apiVersion: policy.open-cluster-management.io/v1
+      kind: PlacementBinding
+      metadata:
+        name: rosaeng-68278-awsmachinetemplates-rbac
+        namespace: openshift-acm-policies
+      placementRef:
+        apiGroup: apps.open-cluster-management.io
+        kind: PlacementRule
+        name: rosaeng-68278-awsmachinetemplates-rbac
+      subjects:
+      - apiGroup: policy.open-cluster-management.io
+        kind: Policy
+        name: rosaeng-68278-awsmachinetemplates-rbac
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: rosaeng-900-console-webhook-cleanup
   spec:
     clusterDeploymentSelector:

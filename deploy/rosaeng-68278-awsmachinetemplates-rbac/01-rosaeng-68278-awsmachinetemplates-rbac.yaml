@@ -1,0 +1,111 @@
+---
+apiVersion: policy.open-cluster-management.io/v1
+kind: Policy
+metadata:
+  name: rosaeng-68278-awsmachinetemplates-rbac
+  namespace: openshift-acm-policies
+spec:
+  remediationAction: enforce
+  disabled: false
+  policy-templates:
+    - objectDefinition:
+        apiVersion: policy.open-cluster-management.io/v1
+        kind: ConfigurationPolicy
+        metadata:
+          name: rosaeng-68278-awsmachinetemplates-rbac
+        spec:
+          namespaceSelector:
+            matchLabels:
+              hypershift.openshift.io/hosted-control-plane: "true"
+          pruneObjectBehavior: DeleteIfCreated
+          object-templates-raw: |
+            {{- $hostedClusters := (lookup
+                  "hypershift.openshift.io/v1beta1" "HostedCluster"
+                  "" "").items }}
+            {{- range $hostedClusters }}
+            {{- $hcpNamespace := printf "%s-%s"
+                  .metadata.namespace .metadata.name }}
+            {{- $history := .status.version.history }}
+            {{- if $history }}
+            {{- $version := (index $history 0).version }}
+            {{- if and $version (semverCompare "<4.22.0-0" $version) }}
+            - complianceType: mustonlyhave
+              objectDefinition:
+                apiVersion: rbac.authorization.k8s.io/v1
+                kind: Role
+                metadata:
+                  name: rosaeng-68278-cluster-autoscaler
+                  namespace: {{ $hcpNamespace }}
+                rules:
+                  - apiGroups:
+                      - cluster.x-k8s.io
+                    resources:
+                      - machinedeployments
+                      - machinedeployments/scale
+                      - machines
+                      - machinesets
+                      - machinesets/scale
+                      - machinepools
+                      - machinepools/scale
+                    verbs:
+                      - '*'
+                  - apiGroups:
+                      - infrastructure.cluster.x-k8s.io
+                    resources:
+                      - '*'
+                    verbs:
+                      - get
+                      - list
+                      - watch
+                  - apiGroups:
+                      - capi-provider.agent-install.openshift.io
+                    resources:
+                      - agentmachinetemplates
+                    verbs:
+                      - get
+                      - list
+            - complianceType: mustonlyhave
+              objectDefinition:
+                apiVersion: rbac.authorization.k8s.io/v1
+                kind: RoleBinding
+                metadata:
+                  name: rosaeng-68278-cluster-autoscaler
+                  namespace: {{ $hcpNamespace }}
+                subjects:
+                  - kind: ServiceAccount
+                    name: cluster-autoscaler
+                    namespace: {{ $hcpNamespace }}
+                roleRef:
+                  apiGroup: rbac.authorization.k8s.io
+                  kind: Role
+                  name: rosaeng-68278-cluster-autoscaler
+            {{- end }}
+            {{- end }}
+            {{- end }}
+---
+apiVersion: apps.open-cluster-management.io/v1
+kind: PlacementRule
+metadata:
+  name: rosaeng-68278-awsmachinetemplates-rbac
+  namespace: openshift-acm-policies
+spec:
+  clusterSelector:
+    matchExpressions:
+      - key: hypershift.open-cluster-management.io/management-cluster
+        operator: In
+        values:
+          - "true"
+---
+apiVersion: policy.open-cluster-management.io/v1
+kind: PlacementBinding
+metadata:
+  name: rosaeng-68278-awsmachinetemplates-rbac
+  namespace: openshift-acm-policies
+placementRef:
+  apiGroup: apps.open-cluster-management.io
+  kind: PlacementRule
+  name: rosaeng-68278-awsmachinetemplates-rbac
+subjects:
+  - apiGroup: policy.open-cluster-management.io
+    kind: Policy
+    name: rosaeng-68278-awsmachinetemplates-rbac
