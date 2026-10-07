@@ -172,6 +172,12 @@ spec:
       expr: |
         up{job="hypershift-control-plane-log-forwarding/control-plane-log-forwarding-cmo"} == 0
 
+    # Preserve both healthy and failed Vector scrape results per pod.
+    # RHOBS federates this bounded series from each CMO Prometheus replica.
+    - record: vector:pods:up
+      expr: |
+        up{job="hypershift-control-plane-log-forwarding/control-plane-log-forwarding-cmo"}
+
   - name: sre-vector-log-forwarding-infrastructure-alerts
     rules:
 
