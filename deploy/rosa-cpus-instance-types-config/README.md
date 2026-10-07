@@ -9,6 +9,11 @@ The hypershift-operator (HO v0.1.75+, [OCPBUGS-50003](https://issues.redhat.com/
 | Instance Type | vCPUs |
 |---------------|-------|
 | `i3.metal` | 72 |
+| `g4ad.xlarge` | 4 |
+| `g4ad.2xlarge` | 8 |
+| `g4ad.4xlarge` | 16 |
+| `g4ad.8xlarge` | 32 |
+| `g4ad.16xlarge` | 64 |
 | `g6.xlarge` | 4 |
 | `g6e.xlarge` | 4 |
 | `g6e.2xlarge` | 8 |
