@@ -48152,9 +48152,8 @@ objects:
               / 10737418240
 
               '
-          - record: vector:pods:down
+          - record: vector:pods:up
             expr: 'up{job="hypershift-control-plane-log-forwarding/control-plane-log-forwarding-cmo"}
-              == 0
 
               '
         - name: sre-vector-log-forwarding-infrastructure-alerts
@@ -48172,7 +48171,7 @@ objects:
               summary: '{{ $value }} Vector pod(s) down'
               description: '{{ $value }} Vector DaemonSet pod(s) have been unreachable
                 for 5 minutes. Log collection is interrupted on affected nodes. Query
-                vector:pods:down to see which specific pods are affected.'
+                vector:pods:up == 0 to see which specific pods are affected.'
               SOP: https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/VectorPodDownSRE.md
               query: up{job="hypershift-control-plane-log-forwarding/control-plane-log-forwarding-cmo"}
                 == 0
