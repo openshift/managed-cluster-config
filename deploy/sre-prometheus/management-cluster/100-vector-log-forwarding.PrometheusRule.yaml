@@ -165,15 +165,11 @@ spec:
       expr: |
         vector_buffer_byte_size{buffer_id="hcp_logs",namespace="hypershift-control-plane-log-forwarding"} / 10737418240
 
-    # Vector pods currently down (up == 0)
-    # Used for troubleshooting VectorPodDownSRE alert
-    # Query this to identify which specific pods are affected
-    - record: vector:pods:down
-      expr: |
-        up{job="hypershift-control-plane-log-forwarding/control-plane-log-forwarding-cmo"} == 0
 
     # Preserve both healthy and failed Vector scrape results per pod.
     # RHOBS federates this bounded series from each CMO Prometheus replica.
+    # Used for troubleshooting VectorPodDownSRE alert
+    # Query this to identify which specific pods are affected
     - record: vector:pods:up
       expr: |
         up{job="hypershift-control-plane-log-forwarding/control-plane-log-forwarding-cmo"}
