@@ -168,8 +168,7 @@ spec:
 
     # Preserve both healthy and failed Vector scrape results per pod.
     # RHOBS federates this bounded series from each CMO Prometheus replica.
-    # Used for troubleshooting VectorPodDownSRE alert
-    # Query this to identify which specific pods are affected
+    # Query vector:pods:up == 0 to identify which specific pods are down.
     - record: vector:pods:up
       expr: |
         up{job="hypershift-control-plane-log-forwarding/control-plane-log-forwarding-cmo"}
@@ -184,7 +183,7 @@ spec:
 
     # CRITICAL: One or more Vector DaemonSet pods are down
     # Consolidates per-pod down status into a single alert with count
-    # Use vector:pods:down recording rule to identify which specific pods are affected
+    # Use vector:pods:up == 0 to identify which specific pods are affected
     # Common causes: Node issues, resource constraints, image pull failures, crashloops
     - alert: VectorPodDownSRE
       expr: |
@@ -195,7 +194,7 @@ spec:
         namespace: openshift-monitoring
       annotations:
         summary: "{{ $value }} Vector pod(s) down"
-        description: "{{ $value }} Vector DaemonSet pod(s) have been unreachable for 5 minutes. Log collection is interrupted on affected nodes. Query vector:pods:down to see which specific pods are affected."
+        description: "{{ $value }} Vector DaemonSet pod(s) have been unreachable for 5 minutes. Log collection is interrupted on affected nodes. Query vector:pods:up == 0 to see which specific pods are affected."
         SOP: https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/VectorPodDownSRE.md
         query: up{job="hypershift-control-plane-log-forwarding/control-plane-log-forwarding-cmo"} == 0
 
