@@ -33,12 +33,18 @@ spec:
     # Used by VectorClusterPipelineEBBFastSRE and VectorClusterPipelineEBBSlowSRE alerts
     - record: vector:log_delivery:pipeline_ratio:by_cluster
       expr: |
-        sum by (pod_namespace) (
-          rate(vector_hcp_logs_events_total[5m])
+        (
+          sum by (pod_namespace) (
+            rate(vector_hcp_logs_events_total[5m])
+          )
+          or on (pod_namespace)
+          sum by (pod_namespace) (
+            rate(vector_hcp_logs_input_events_total[5m]) * 0
+          )
         )
         /
         sum by (pod_namespace) (
-          rate(vector_component_received_events_total{component_id="kubernetes_logs"}[5m])
+          rate(vector_hcp_logs_input_events_total[5m])
         )
 
     # Measures how well the S3 sink is keeping up with incoming logs
@@ -127,7 +133,7 @@ spec:
     - record: vector:cluster:ingestion_rate
       expr: |
         sum by (pod_namespace) (
-          rate(vector_component_received_events_total{component_id="kubernetes_logs",namespace="hypershift-control-plane-log-forwarding"}[5m])
+          rate(vector_hcp_logs_input_events_total{namespace="hypershift-control-plane-log-forwarding"}[5m])
         )
 
     # S3 write error rate
@@ -237,8 +243,7 @@ spec:
         (
           (
             sum by (pod_namespace) (
-              rate(vector_component_received_events_total{
-                component_id="kubernetes_logs",
+              rate(vector_hcp_logs_input_events_total{
                 namespace="hypershift-control-plane-log-forwarding"
               }[5m] offset 15m)
             ) > 10
@@ -246,8 +251,7 @@ spec:
           unless
           (
             sum by (pod_namespace) (
-              rate(vector_component_received_events_total{
-                component_id="kubernetes_logs",
+              rate(vector_hcp_logs_input_events_total{
                 namespace="hypershift-control-plane-log-forwarding"
               }[5m])
             ) > 0
