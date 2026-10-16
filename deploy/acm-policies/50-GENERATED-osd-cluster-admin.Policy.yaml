@@ -5,6 +5,7 @@ metadata:
     annotations:
         policy.open-cluster-management.io/categories: CM Configuration Management
         policy.open-cluster-management.io/controls: CM-2 Baseline Configuration
+        policy.open-cluster-management.io/description: ""
         policy.open-cluster-management.io/standards: NIST SP 800-53
     name: osd-cluster-admin
     namespace: openshift-acm-policies
@@ -41,28 +42,35 @@ spec:
                 severity: low
     remediationAction: enforce
 ---
-apiVersion: apps.open-cluster-management.io/v1
-kind: PlacementRule
+apiVersion: cluster.open-cluster-management.io/v1beta1
+kind: Placement
 metadata:
-    name: placement-osd-cluster-admin
+    name: osd-cluster-admin-placement
     namespace: openshift-acm-policies
 spec:
-    clusterSelector:
-        matchExpressions:
-            - key: hypershift.open-cluster-management.io/hosted-cluster
-              operator: In
-              values:
-                - "true"
+    predicates:
+        - requiredClusterSelector:
+            labelSelector:
+                matchExpressions:
+                    - key: hypershift.open-cluster-management.io/hosted-cluster
+                      operator: In
+                      values:
+                        - "true"
+    tolerations:
+        - key: cluster.open-cluster-management.io/unavailable
+          operator: Exists
+        - key: cluster.open-cluster-management.io/unreachable
+          operator: Exists
 ---
 apiVersion: policy.open-cluster-management.io/v1
 kind: PlacementBinding
 metadata:
-    name: binding-osd-cluster-admin
+    name: osd-cluster-admin-binding
     namespace: openshift-acm-policies
 placementRef:
-    apiGroup: apps.open-cluster-management.io
-    kind: PlacementRule
-    name: placement-osd-cluster-admin
+    apiGroup: cluster.open-cluster-management.io
+    kind: Placement
+    name: osd-cluster-admin-placement
 subjects:
     - apiGroup: policy.open-cluster-management.io
       kind: Policy
