@@ -263,6 +263,10 @@ spec:
             "pod_namespace", "$1", "namespace", "(.*)"
           )
         )
+        and on()
+        (
+          count(up{job="hypershift-control-plane-log-forwarding/control-plane-log-forwarding-cmo"} == 1) > 0
+        )
       for: 5m
       labels:
         severity: warning

@@ -48296,7 +48296,8 @@ objects:
               hypershift-control-plane-log-forwarding\"\n      }[5m])\n    ) > 0\n\
               \  )\n)\nand on(pod_namespace)\n(\n  label_replace(\n    kube_namespace_labels{label_hypershift_openshift_io_hosted_control_plane=\"\
               true\"},\n    \"pod_namespace\", \"$1\", \"namespace\", \"(.*)\"\n \
-              \ )\n)\n"
+              \ )\n)\nand on()\n(\n  count(up{job=\"hypershift-control-plane-log-forwarding/control-plane-log-forwarding-cmo\"\
+              } == 1) > 0\n)\n"
             for: 5m
             labels:
               severity: warning
