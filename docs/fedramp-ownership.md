@@ -1,6 +1,6 @@
 # Scoped FedRAMP ownership
 
-The `srep-functional-team-fedramp` alias can review and approve the payload
+The `srep-functional-team-fedramp` alias can review and approve the
 files explicitly matched by the `OWNERS` filters in:
 
 - `deploy/osd-fedramp-machineconfig/reg-trust/`: the master and worker registry
@@ -9,19 +9,22 @@ files explicitly matched by the `OWNERS` filters in:
   in `us-gov-east-1/` and `us-gov-west-1/`.
 - `deploy/sre-prometheus/fedramp/`: the two top-level Prometheus rules and
   the `hive-prod/` heartbeat rule.
+- `hack/`: only `00-osd-managed-cluster-config-{integration,stage,production}.yaml.tmpl`.
+
+The template grant covers these whole shared files, not only FedRAMP content.
 
 Each payload directory has its own `config.yaml` requiring
 `api.openshift.com/fedramp` to be `"true"`. Deployment configuration is not
 inherited from parent directories. The anchored, explicit filename filters do
 not delegate `config.yaml`, `OWNERS`, other control files, or new payload paths.
-Changing targeting, extending this delegation, or adding a deployment still
-requires the existing broader approvers. No parent ownership is disabled;
+Changing source selectors, extending this delegation, or adding a source
+deployment still requires the existing broader approvers. No parent ownership is disabled;
 existing approvers and reviewers remain eligible. People already authorized
 through another alias or an existing OWNERS entry retain that authority.
 
 This grant does not include other FedRAMP directories, shared or commercial
-configuration, `resources/`, generator scripts, root `OWNERS` or
-`OWNERS_ALIASES`, or the generated `hack/` templates.
+source configuration, `resources/`, generator scripts, root `OWNERS` or
+`OWNERS_ALIASES`, or other files in `hack/`.
 
 ## Approval semantics
 
