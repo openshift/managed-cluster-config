@@ -1,0 +1,24 @@
+apiVersion: ocmagent.managed.openshift.io/v1alpha1
+kind: ManagedNotification
+metadata:
+  name: machineset-provisioning-failure
+  namespace: openshift-ocm-agent-operator
+spec:
+  notifications:
+    - name: MachineSetProvisioningFailure
+      severity: Moderate
+      summary: "EC2 instances failed to be provisioned or accessible"
+      activeBody: |-
+        Your EC2 instances are not joining machine pool in your ROSA cluster. This can prevent your workloads from running properly and may indicate configuration issues with your AWS environment.
+
+        Common causes include:
+        - Network connectivity issues (security groups, NACLs, firewall rules)
+        - DNS resolution problems
+        - Misconfigured KMS encryption key policies (either custom or default EBS KMS key)
+        - AWS permissions or quota issues
+        - EC2 instance is either stopped or terminated
+
+        For detailed troubleshooting steps, please refer to: https://access.redhat.com/articles/7132524
+
+        If you need assistance, please open a support case.
+      resendWait: 24
