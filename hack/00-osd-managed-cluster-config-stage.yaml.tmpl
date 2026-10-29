@@ -33462,6 +33462,68 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: ocm-agent-operator-managednotifications-machineset-provisioning-failure
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/product
+        operator: In
+        values:
+        - rosa
+      - key: ext-hypershift.openshift.io/cluster-type
+        operator: NotIn
+        values:
+        - management-cluster
+        - service-cluster
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: ocmagent.managed.openshift.io/v1alpha1
+      kind: ManagedNotification
+      metadata:
+        name: machineset-provisioning-failure
+        namespace: openshift-ocm-agent-operator
+      spec:
+        notifications:
+        - name: MachineSetProvisioningFailure
+          severity: Moderate
+          summary: EC2 instances failed to be provisioned or accessible
+          activeBody: 'Your EC2 instances are not joining machine pool in your ROSA
+            cluster. This can prevent your workloads from running properly and may
+            indicate configuration issues with your AWS environment.
+
+
+            Common causes include:
+
+            - Network connectivity issues (security groups, NACLs, firewall rules)
+
+            - DNS resolution problems
+
+            - Misconfigured KMS encryption key policies (either custom or default
+            EBS KMS key)
+
+            - AWS permissions or quota issues
+
+            - EC2 instance is either stopped or terminated
+
+
+            For detailed troubleshooting steps, please refer to: https://access.redhat.com/articles/7132524
+
+
+            If you need assistance, please open a support case.'
+          resendWait: 24
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: ocm-agent-operator-managednotifications-node-condition
   spec:
     clusterDeploymentSelector:
@@ -45533,6 +45595,51 @@ objects:
                 '
               summary: machine health check {{ $labels.name }} has been disabled by
                 short circuit for more than 30 minutes
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
+          prometheus: machineset-not-reaching-desired-replicas
+          role: alert-rules
+        name: machineset-not-reaching-desired-replicas
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: machineset-not-reaching-desired-replicas
+          interval: 60s
+          rules:
+          - record: sre:machineset:ready_nodes_count
+            expr: "count by (machineset) (\n  label_replace(\n    clamp(mapi_machine_created_timestamp_seconds,\
+              \ 0, 1),\n    \"machineset\",\n    \"$1\",\n    \"name\",\n    \"^(.*)-[^-]*$\"\
+              \n  )\n  * on (node) group_right(machineset)\n  kube_node_status_condition{condition=\"\
+              Ready\",status=\"True\"}\n) or\n# If no ready nodes exist for a machineset,\
+              \ return 0\n(\n  mapi_machine_set_status_replicas * 0\n)"
+          - record: sre:machineset:provisioning_failure_notify
+            expr: "(\n  # Desired replicas\n  mapi_machine_set_status_replicas{name!~\"\
+              .*upgrade$\",name!~\".*(master|infra).*\"}\n  > on (name)\n  # Ready\
+              \ nodes count (use label_replace to match on 'name')\n  label_replace(\n\
+              \    sre:machineset:ready_nodes_count,\n    \"name\",\n    \"$1\",\n\
+              \    \"machineset\",\n    \"(.*)\"\n  )\n) or\n(\n  # Also catch machinesets\
+              \ with zero ready nodes\n  mapi_machine_set_status_replicas{name!~\"\
+              .*upgrade$\",name!~\".*(master|infra).*\"}\n  unless on (name)\n  label_replace(\n\
+              \    sre:machineset:ready_nodes_count > 0,\n    \"name\",\n    \"$1\"\
+              ,\n    \"machineset\",\n    \"(.*)\"\n  )\n)"
+          - alert: MachineSetNotReachingDesiredReplicasNotificationSRE
+            annotations:
+              description: One or more machine pools for cluster {{ $labels._id }}
+                have not reached their target size for more than 1 hour
+              summary: Machine Pool provisioning failure
+            expr: "(\n  sre:machineset:provisioning_failure_notify\n  # Only fire\
+              \ when control plane is healthy (no etcd members down)\n  # If control\
+              \ plane is unhealthy, SRE should receive etcd alerts instead\n  unless\
+              \ on ()\n  count(ALERTS{alertname=\"etcdMembersDownSRE\",alertstate=\"\
+              firing\"}) > 0\n)"
+            for: 60m
+            labels:
+              severity: info
+              send_managed_notification: 'true'
+              managed_notification_template: MachineSetProvisioningFailure
+              namespace: openshift-machine-api
     - apiVersion: monitoring.coreos.com/v1
       kind: PrometheusRule
       metadata:
