@@ -46566,27 +46566,28 @@ objects:
               \ 0, 1),\n    \"machineset\",\n    \"$1\",\n    \"name\",\n    \"^(.*)-[^-]*$\"\
               \n  )\n  * on (node) group_right(machineset)\n  kube_node_status_condition{condition=\"\
               Ready\",status=\"True\"}\n) or\n# If no ready nodes exist for a machineset,\
-              \ return 0\n(\n  mapi_machine_set_status_replicas * 0\n)"
+              \ return 0\n(\n  mapi_machine_set_spec_replicas * 0\n)"
           - record: sre:machineset:provisioning_failure_notify
-            expr: "(\n  # Desired replicas\n  mapi_machine_set_status_replicas{name!~\"\
-              .*upgrade$\",name!~\".*(master|infra).*\"}\n  > on (name)\n  # Ready\
+            expr: "(\n  # Desired replicas (from spec.replicas)\n  mapi_machine_set_spec_replicas{name!~\"\
+              .*upgrade$\",name!~\".*(master|infra).*\"} > 0\n  > on (name)\n  # Ready\
               \ nodes count (use label_replace to match on 'name')\n  label_replace(\n\
               \    sre:machineset:ready_nodes_count,\n    \"name\",\n    \"$1\",\n\
               \    \"machineset\",\n    \"(.*)\"\n  )\n) or\n(\n  # Also catch machinesets\
-              \ with zero ready nodes\n  mapi_machine_set_status_replicas{name!~\"\
-              .*upgrade$\",name!~\".*(master|infra).*\"}\n  unless on (name)\n  label_replace(\n\
-              \    sre:machineset:ready_nodes_count > 0,\n    \"name\",\n    \"$1\"\
-              ,\n    \"machineset\",\n    \"(.*)\"\n  )\n)"
+              \ with zero ready nodes (but replicas > 0)\n  mapi_machine_set_spec_replicas{name!~\"\
+              .*upgrade$\",name!~\".*(master|infra).*\"} > 0\n  unless on (name)\n\
+              \  label_replace(\n    sre:machineset:ready_nodes_count > 0,\n    \"\
+              name\",\n    \"$1\",\n    \"machineset\",\n    \"(.*)\"\n  )\n)"
           - alert: MachineSetNotReachingDesiredReplicasNotificationSRE
             annotations:
               description: One or more machine pools for cluster {{ $labels._id }}
                 have not reached their target size for more than 1 hour
               summary: Machine Pool provisioning failure
             expr: "(\n  sre:machineset:provisioning_failure_notify\n  # Only fire\
-              \ when control plane is healthy (no etcd members down)\n  # If control\
-              \ plane is unhealthy, SRE should receive etcd alerts instead\n  unless\
-              \ on ()\n  count(ALERTS{alertname=\"etcdMembersDownSRE\",alertstate=\"\
-              firing\"}) > 0\n)"
+              \ when control plane is healthy (no etcd members down)\n  # Use upstream\
+              \ etcdMembersDown alert to cover all cluster sizes\n  # If control plane\
+              \ is unhealthy, SRE should receive etcd alerts instead\n  unless on\
+              \ ()\n  count(ALERTS{alertname=\"etcdMembersDown\",alertstate=\"firing\"\
+              }) > 0\n)"
             for: 60m
             labels:
               severity: info

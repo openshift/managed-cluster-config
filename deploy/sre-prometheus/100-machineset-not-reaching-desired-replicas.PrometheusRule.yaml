@@ -29,18 +29,18 @@ spec:
             ) or
             # If no ready nodes exist for a machineset, return 0
             (
-              mapi_machine_set_status_replicas * 0
+              mapi_machine_set_spec_replicas * 0
             )
 
         # Recording rule to detect machinesets not reaching desired replicas
-        # Excludes: upgrade machinesets, master nodes, infra nodes
+        # Excludes: upgrade machinesets, master nodes, infra nodes, zero-replica machinesets
         # NOTE: Spot instance exclusion is not currently implemented due to lack of metric exposure
         # from machine-api-operator. This is a known limitation that may be addressed in the future.
         - record: sre:machineset:provisioning_failure_notify
           expr: |-
             (
-              # Desired replicas
-              mapi_machine_set_status_replicas{name!~".*upgrade$",name!~".*(master|infra).*"}
+              # Desired replicas (from spec.replicas)
+              mapi_machine_set_spec_replicas{name!~".*upgrade$",name!~".*(master|infra).*"} > 0
               > on (name)
               # Ready nodes count (use label_replace to match on 'name')
               label_replace(
@@ -52,8 +52,8 @@ spec:
               )
             ) or
             (
-              # Also catch machinesets with zero ready nodes
-              mapi_machine_set_status_replicas{name!~".*upgrade$",name!~".*(master|infra).*"}
+              # Also catch machinesets with zero ready nodes (but replicas > 0)
+              mapi_machine_set_spec_replicas{name!~".*upgrade$",name!~".*(master|infra).*"} > 0
               unless on (name)
               label_replace(
                 sre:machineset:ready_nodes_count > 0,
@@ -76,9 +76,10 @@ spec:
             (
               sre:machineset:provisioning_failure_notify
               # Only fire when control plane is healthy (no etcd members down)
+              # Use upstream etcdMembersDown alert to cover all cluster sizes
               # If control plane is unhealthy, SRE should receive etcd alerts instead
               unless on ()
-              count(ALERTS{alertname="etcdMembersDownSRE",alertstate="firing"}) > 0
+              count(ALERTS{alertname="etcdMembersDown",alertstate="firing"}) > 0
             )
           for: 60m
           labels:
