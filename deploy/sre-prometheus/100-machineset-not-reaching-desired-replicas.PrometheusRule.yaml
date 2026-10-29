@@ -1,0 +1,88 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: machineset-not-reaching-desired-replicas
+    role: alert-rules
+  name: machineset-not-reaching-desired-replicas
+  namespace: openshift-monitoring
+spec:
+  groups:
+    - name: machineset-not-reaching-desired-replicas
+      interval: 60s
+      rules:
+        # Recording rule to count ready nodes per machineset
+        # This extracts the machineset name from machine names and joins with node readiness status
+        - record: sre:machineset:ready_nodes_count
+          expr: |-
+            count by (machineset) (
+              label_replace(
+                clamp(mapi_machine_created_timestamp_seconds, 0, 1),
+                "machineset",
+                "$1",
+                "name",
+                "^(.*)-[^-]*$"
+              )
+              * on (node) group_right(machineset)
+              kube_node_status_condition{condition="Ready",status="True"}
+            ) or
+            # If no ready nodes exist for a machineset, return 0
+            (
+              mapi_machine_set_status_replicas * 0
+            )
+
+        # Recording rule to detect machinesets not reaching desired replicas
+        # Excludes: upgrade machinesets, master nodes, infra nodes
+        # NOTE: Spot instance exclusion is not currently implemented due to lack of metric exposure
+        # from machine-api-operator. This is a known limitation that may be addressed in the future.
+        - record: sre:machineset:provisioning_failure_notify
+          expr: |-
+            (
+              # Desired replicas
+              mapi_machine_set_status_replicas{name!~".*upgrade$",name!~".*(master|infra).*"}
+              > on (name)
+              # Ready nodes count (use label_replace to match on 'name')
+              label_replace(
+                sre:machineset:ready_nodes_count,
+                "name",
+                "$1",
+                "machineset",
+                "(.*)"
+              )
+            ) or
+            (
+              # Also catch machinesets with zero ready nodes
+              mapi_machine_set_status_replicas{name!~".*upgrade$",name!~".*(master|infra).*"}
+              unless on (name)
+              label_replace(
+                sre:machineset:ready_nodes_count > 0,
+                "name",
+                "$1",
+                "machineset",
+                "(.*)"
+              )
+            )
+
+        # Alert fires when:
+        # 1. Machineset has not reached desired replicas for 1 hour
+        # 2. Control plane is healthy (no etcd issues)
+        # This sends a service log to customers to investigate their AWS configuration
+        - alert: MachineSetNotReachingDesiredReplicasNotificationSRE
+          annotations:
+            description: "One or more machine pools for cluster {{ $labels._id }} have not reached their target size for more than 1 hour"
+            summary: "Machine Pool provisioning failure"
+          expr: |-
+            (
+              sre:machineset:provisioning_failure_notify
+              # Only fire when control plane is healthy (no etcd members down)
+              # If control plane is unhealthy, SRE should receive etcd alerts instead
+              unless on ()
+              count(ALERTS{alertname="etcdMembersDownSRE",alertstate="firing"}) > 0
+            )
+          for: 60m
+          labels:
+            severity: info
+            send_managed_notification: "true"
+            managed_notification_template: MachineSetProvisioningFailure
+            namespace: openshift-machine-api
