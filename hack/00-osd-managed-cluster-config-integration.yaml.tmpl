@@ -40141,6 +40141,49 @@ objects:
         api.openshift.com/managed: 'true'
       matchExpressions:
       - key: hive.openshift.io/version-major-minor
+        operator: In
+        values:
+        - '4.19'
+        - '4.20'
+        - '4.21'
+      - key: hive.openshift.io/cluster-platform
+        operator: In
+        values:
+        - aws
+      - key: api.openshift.com/product
+        operator: NotIn
+        values:
+        - rosa
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    patches:
+    - apiVersion: operator.openshift.io/v1
+      applyMode: AlwaysApply
+      kind: MachineConfiguration
+      name: cluster
+      namespace: openshift-machine-config-operator
+      patch: '{"spec":{"managedBootImages":null}}'
+      patchType: merge
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: osd-machine-configuration-osd-aws-422
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: hive.openshift.io/version-major-minor
+        operator: Exists
+        values: []
+      - key: hive.openshift.io/version-major-minor
         operator: NotIn
         values:
         - '4.0'
@@ -40162,6 +40205,9 @@ objects:
         - '4.16'
         - '4.17'
         - '4.18'
+        - '4.19'
+        - '4.20'
+        - '4.21'
       - key: hive.openshift.io/cluster-platform
         operator: In
         values:
@@ -40181,7 +40227,7 @@ objects:
       kind: MachineConfiguration
       name: cluster
       namespace: openshift-machine-config-operator
-      patch: '{"spec":{"managedBootImages":null}}'
+      patch: '{"spec":{"managedBootImages":{"machineManagers":[{"apiGroup":"machine.openshift.io","resource":"controlplanemachinesets","selection":{"mode":"All"}},{"apiGroup":"machine.openshift.io","resource":"machinesets","selection":{"mode":"All"}}]}}}'
       patchType: merge
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
