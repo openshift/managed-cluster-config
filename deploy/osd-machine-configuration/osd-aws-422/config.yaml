@@ -2,10 +2,13 @@ deploymentMode: "SelectorSyncSet"
 selectorSyncSet:
   resourceApplyMode: "Sync"
   matchExpressions:
-  # Keep this allowlist limited to supported OpenShift releases. Add new releases as they become supported.
+  # CPMS boot image management is GA (Default feature set) from 4.22 onward;
+  # it is TechPreview-only in 4.21 and does not exist in <=4.20. Apply to 4.22
+  # and all later releases (incl. future majors) via NotIn, since QA covers
+  # future releases and upgrade paths.
   - key: hive.openshift.io/version-major-minor
-    operator: In
-    values: ["4.22"]
+    operator: NotIn
+    values: ["4.0", "4.1", "4.2", "4.3", "4.4", "4.5", "4.6", "4.7", "4.8", "4.9", "4.10", "4.11", "4.12", "4.13", "4.14", "4.15", "4.16", "4.17", "4.18", "4.19", "4.20", "4.21"]
   - key: hive.openshift.io/cluster-platform
     operator: In
     values: ["aws"]
@@ -15,3 +18,8 @@ selectorSyncSet:
   - key: api.openshift.com/fedramp
     operator: NotIn
     values: ["true"]
+  # Exclude HyperShift management/service clusters; CPMS boot image management
+  # for the HCP fleet is handled as a separate, dedicated rollout.
+  - key: ext-hypershift.openshift.io/cluster-type
+    operator: NotIn
+    values: ["management-cluster", "management-cluster-v2", "service-cluster"]
