@@ -28,6 +28,7 @@ directories = [
         'backplane/tam',
         'ccs-dedicated-admins',
         'customer-registry-cas',
+        'cve-2026-98432-nft/hosted-cluster',
         'hcp-ze-ecr-creds',
         'hypershift-ovn-logging',
         'osd-cluster-acks/hcp/5.0',
