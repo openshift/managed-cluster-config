@@ -102,12 +102,12 @@ spec:
     - alert: WorkerNodeAutoReplacedNotificationSRE
       expr: |
         count by (namespace, name) (
-            increase(mapi_machinehealthcheck_remediation_success_total{namespace="openshift-machine-api",name="srep-worker-healthcheck"}[15m]) > 0
+            increase(mapi_machinehealthcheck_remediation_success_total{namespace="openshift-machine-api",name="srep-worker-healthcheck"}[5m]) > 0
           or
             (
-              mapi_machinehealthcheck_remediation_success_total{namespace="openshift-machine-api",name="srep-worker-healthcheck"}
+              (mapi_machinehealthcheck_remediation_success_total{namespace="openshift-machine-api",name="srep-worker-healthcheck"} > 0)
               unless
-              mapi_machinehealthcheck_remediation_success_total{namespace="openshift-machine-api",name="srep-worker-healthcheck"} offset 15m
+              (mapi_machinehealthcheck_remediation_success_total{namespace="openshift-machine-api",name="srep-worker-healthcheck"} offset 5m > 0)
             )
         )
         and on ()
@@ -126,11 +126,11 @@ spec:
         )
         unless on ()
         (
-            sum(mapi_machine_set_status_replicas{name=~".*upgrade$"}) > 0
+            max(cluster_operator_conditions{name="version",condition="Progressing"}) == 1
           or
-            max(upgradeoperator_workernode_upgrade_started_timestamp) > max(upgradeoperator_workernode_upgrade_completed_timestamp or vector(0))
+            count(cluster_version{type="updating"}) > 0
           or
-            (time() - max(upgradeoperator_workernode_upgrade_completed_timestamp)) < 1800
+            (time() - max(cluster_version{type="completed"})) < 600
         )
       labels:
         severity: info
