@@ -33492,6 +33492,23 @@ objects:
             For more information, consult the relevant ROSA documentation here: ${documentation}.'
           resolvedBody: ${condition} condition is resolved.
           resendWait: 6
+        - name: WorkerNodeAutoReplaced
+          severity: Info
+          logType: Cluster Lifecycle
+          summary: Worker node automatically replaced
+          activeBody: Red Hat's automated health checks detected that one or more
+            worker nodes in your cluster stopped reporting Ready for more than 8 minutes,
+            and initiated their replacement with new nodes from the same machine pool.
+            Pods on the affected nodes are rescheduled to other nodes; workloads running
+            a single replica may have experienced a brief disruption. A frequent cause
+            of nodes becoming NotReady is resource exhaustion from workloads without
+            resource requests and limits. To identify the replaced node and make your
+            applications resilient to node replacement, see https://access.redhat.com/solutions/7066033.
+            Further replacements within 24 hours are not notified individually. If
+            replacements recur, please open a support case.
+          references:
+          - https://access.redhat.com/solutions/7066033
+          resendWait: 24
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -49152,6 +49169,37 @@ objects:
               explanation: ' Red Hat SRE will be alerted and triage issues. If action
                 is required, a proactive case will be opened by Red Hat.'
               documentation: https://docs.openshift.com/rosa/rosa_planning/rosa-cloud-expert-prereq-checklist.html#networking-prerequisites
+        - name: sre-node-condition-managed-notification-alerts.worker-auto-replaced
+          rules:
+          - alert: WorkerNodeAutoReplacedNotificationSRE
+            expr: "count by (namespace, name) (\n    increase(mapi_machinehealthcheck_remediation_success_total{namespace=\"\
+              openshift-machine-api\",name=\"srep-worker-healthcheck\"}[15m]) > 0\n\
+              \  or\n    (\n      mapi_machinehealthcheck_remediation_success_total{namespace=\"\
+              openshift-machine-api\",name=\"srep-worker-healthcheck\"}\n      unless\n\
+              \      mapi_machinehealthcheck_remediation_success_total{namespace=\"\
+              openshift-machine-api\",name=\"srep-worker-healthcheck\"} offset 15m\n\
+              \    )\n)\nand on ()\n(\n  count(\n    (max_over_time(kube_node_status_condition{condition=\"\
+              Ready\",status=~\"false|unknown\"}[20m]) == 1)\n    * on (node) group_left\
+              \ ()\n    count by (node) (max_over_time(cluster:cpu_core_node_labels{label_node_role_kubernetes_io_infra=\"\
+              \",label_node_role_kubernetes_io_master=\"\"}[20m]))\n  ) > 0\n)\nunless\
+              \ on ()\n(\n    count(max_over_time(kube_node_status_condition{condition=\"\
+              Terminating\",status=\"true\"}[30m]) == 1) > 0\n  or\n    count(max_over_time(kube_node_spec_taint{key=\"\
+              aws-node-termination-handler/spot-itn\"}[30m])) > 0\n)\nunless on ()\n\
+              (\n    sum(mapi_machine_set_status_replicas{name=~\".*upgrade$\"}) >\
+              \ 0\n  or\n    max(upgradeoperator_workernode_upgrade_started_timestamp)\
+              \ > max(upgradeoperator_workernode_upgrade_completed_timestamp or vector(0))\n\
+              \  or\n    (time() - max(upgradeoperator_workernode_upgrade_completed_timestamp))\
+              \ < 1800\n)\n"
+            labels:
+              severity: info
+              namespace: openshift-machine-api
+              send_managed_notification: 'true'
+              managed_notification_template: WorkerNodeAutoReplaced
+            annotations:
+              summary: Worker node automatically replaced by MachineHealthCheck
+              description: MachineHealthCheck srep-worker-healthcheck replaced at
+                least one NotReady worker node outside of an upgrade or spot interruption;
+                the customer is notified via service log.
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
