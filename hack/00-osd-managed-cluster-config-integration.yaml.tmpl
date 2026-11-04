@@ -28633,6 +28633,263 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: classic-kube-state-metrics
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/product
+        operator: In
+        values:
+        - rosa
+      - key: ext-hypershift.openshift.io/cluster-type
+        operator: NotIn
+        values:
+        - management-cluster
+        - service-cluster
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: openshift-machine-api-observability
+        labels:
+          name: openshift-machine-api-observability
+          openshift.io/cluster-monitoring: 'true'
+    - apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: kube-state-metrics
+        namespace: openshift-machine-api-observability
+        labels:
+          app.kubernetes.io/name: kube-state-metrics
+          app.kubernetes.io/version: v2.17.0
+      spec:
+        replicas: 1
+        selector:
+          matchLabels:
+            app.kubernetes.io/name: kube-state-metrics
+        template:
+          metadata:
+            labels:
+              app.kubernetes.io/name: kube-state-metrics
+              app.kubernetes.io/version: v2.17.0
+          spec:
+            serviceAccountName: kube-state-metrics
+            containers:
+            - name: kube-state-metrics
+              image: quay.io/openshift/origin-kube-state-metrics:4.19.0
+              ports:
+              - containerPort: 8080
+                name: http-metrics
+              - containerPort: 8081
+                name: telemetry
+              args:
+              - --host=0.0.0.0
+              - --port=8080
+              - --telemetry-host=0.0.0.0
+              - --telemetry-port=8081
+              - --custom-resource-state-only=true
+              - --custom-resource-state-config-file=/etc/config/custom-resource-state.yaml
+              volumeMounts:
+              - name: config
+                mountPath: /etc/config
+                readOnly: true
+              livenessProbe:
+                httpGet:
+                  path: /healthz
+                  port: 8080
+                initialDelaySeconds: 5
+                timeoutSeconds: 5
+              readinessProbe:
+                httpGet:
+                  path: /
+                  port: 8081
+                initialDelaySeconds: 5
+                timeoutSeconds: 5
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 32Mi
+                limits:
+                  cpu: 100m
+                  memory: 256Mi
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                runAsNonRoot: true
+                capabilities:
+                  drop:
+                  - ALL
+                seccompProfile:
+                  type: RuntimeDefault
+            volumes:
+            - name: config
+              configMap:
+                name: kube-state-metrics-config
+            securityContext:
+              runAsNonRoot: true
+              seccompProfile:
+                type: RuntimeDefault
+    - apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: kube-state-metrics-config
+        namespace: openshift-machine-api-observability
+      data:
+        custom-resource-state.yaml: "spec:\n  resources:\n    - groupVersionKind:\n\
+          \        group: machine.openshift.io\n        version: v1beta1\n       \
+          \ kind: MachineSet\n      metricNamePrefix: mapi_machineset\n      labelsFromPath:\n\
+          \        name:\n          - metadata\n          - name\n        namespace:\n\
+          \          - metadata\n          - namespace\n      metrics:\n        -\
+          \ name: \"spec_info\"\n          help: \"Static spec-derived info for a\
+          \ machineset including spot market configuration\"\n          each:\n  \
+          \          type: Info\n            info:\n                labelsFromPath:\n\
+          \                  # Extract instance type for reference\n             \
+          \     instance_type: [spec, template, spec, providerSpec, value, instanceType]\n\
+          \                  # Extract spot market max price - if this label exists,\
+          \ it's a spot instance\n                  # The maxPrice value can be empty\
+          \ (means use current on-demand price as max)\n                  # We use\
+          \ label presence (not value) to detect spot instances in alerts\n      \
+          \            spot_market_max_price: [spec, template, spec, providerSpec,\
+          \ value, spotMarketOptions, maxPrice]\n"
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: kube-state-metrics
+        namespace: openshift-machine-api-observability
+        labels:
+          app.kubernetes.io/name: kube-state-metrics
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: classic-kube-state-metrics
+        labels:
+          app.kubernetes.io/name: kube-state-metrics
+      rules:
+      - apiGroups:
+        - machine.openshift.io
+        resources:
+        - machinesets
+        - machines
+        verbs:
+        - get
+        - list
+        - watch
+      - apiGroups:
+        - apiextensions.k8s.io
+        resources:
+        - customresourcedefinitions
+        verbs:
+        - list
+        - watch
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRoleBinding
+      metadata:
+        name: classic-kube-state-metrics
+        labels:
+          app.kubernetes.io/name: kube-state-metrics
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: classic-kube-state-metrics
+      subjects:
+      - kind: ServiceAccount
+        name: kube-state-metrics
+        namespace: openshift-machine-api-observability
+    - apiVersion: v1
+      kind: Service
+      metadata:
+        name: kube-state-metrics
+        namespace: openshift-machine-api-observability
+        labels:
+          app.kubernetes.io/name: kube-state-metrics
+      spec:
+        clusterIP: None
+        ports:
+        - name: http-metrics
+          port: 8080
+          targetPort: http-metrics
+        - name: telemetry
+          port: 8081
+          targetPort: telemetry
+        selector:
+          app.kubernetes.io/name: kube-state-metrics
+    - apiVersion: monitoring.coreos.com/v1
+      kind: ServiceMonitor
+      metadata:
+        name: kube-state-metrics
+        namespace: openshift-machine-api-observability
+        labels:
+          app.kubernetes.io/name: kube-state-metrics
+      spec:
+        selector:
+          matchLabels:
+            app.kubernetes.io/name: kube-state-metrics
+        endpoints:
+        - port: http-metrics
+          interval: 30s
+          path: /metrics
+    - apiVersion: networking.k8s.io/v1
+      kind: NetworkPolicy
+      metadata:
+        name: kube-state-metrics
+        namespace: openshift-machine-api-observability
+        labels:
+          app.kubernetes.io/name: kube-state-metrics
+      spec:
+        podSelector:
+          matchLabels:
+            app.kubernetes.io/name: kube-state-metrics
+        policyTypes:
+        - Ingress
+        - Egress
+        ingress:
+        - from:
+          - namespaceSelector:
+              matchLabels:
+                network.openshift.io/policy-group: monitoring
+          ports:
+          - protocol: TCP
+            port: 8080
+          - protocol: TCP
+            port: 8081
+        - from:
+          - namespaceSelector:
+              matchLabels:
+                network.openshift.io/policy-group: host-network
+          ports:
+          - protocol: TCP
+            port: 8080
+          - protocol: TCP
+            port: 8081
+        egress:
+        - to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: openshift-dns
+          ports:
+          - protocol: UDP
+            port: 5353
+          - protocol: TCP
+            port: 5353
+        - ports:
+          - protocol: TCP
+            port: 6443
+          - protocol: TCP
+            port: 443
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: cloud-ingress-operator-configuration-apischeme
   spec:
     clusterDeploymentSelector:
@@ -34466,6 +34723,71 @@ objects:
 
 
             For detailed troubleshooting steps, please refer to: https://docs.openshift.com/rosa/rosa_cluster_admin/rosa_nodes/rosa-managing-worker-nodes.html
+
+
+            If you need assistance, please open a support case.'
+          resendWait: 24
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: ocm-agent-operator-managednotifications-machineset-provisioning-failure-spot
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/product
+        operator: In
+        values:
+        - rosa
+      - key: ext-hypershift.openshift.io/cluster-type
+        operator: NotIn
+        values:
+        - management-cluster
+        - service-cluster
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: ocmagent.managed.openshift.io/v1alpha1
+      kind: ManagedNotification
+      metadata:
+        name: machineset-provisioning-failure-spot
+        namespace: openshift-ocm-agent-operator
+      spec:
+        notifications:
+        - name: MachineSetProvisioningFailureSpot
+          severity: Moderate
+          summary: Spot instance machine pool has not reached its desired size
+          activeBody: 'One or more Spot instance machine pools in your ROSA cluster
+            have not reached their desired size. This can prevent your workloads from
+            running properly.
+
+
+            Common causes for Spot instance provisioning failures include:
+
+            - Your maximum Spot price is below the current Spot price for the selected
+            instance type
+
+            - There is not enough Spot capacity available for the requested instance
+            type in the selected availability zone
+
+            - AWS has reclaimed Spot instances due to capacity needs or price changes
+
+
+            Spot instances are designed to use spare EC2 capacity and may not always
+            be available. If you need guaranteed capacity, consider using on-demand
+            instances instead.
+
+
+            For detailed information about managing worker nodes and machine pools,
+            please refer to: https://docs.openshift.com/rosa/rosa_cluster_admin/rosa_nodes/rosa-managing-worker-nodes.html
 
 
             If you need assistance, please open a support case.'
@@ -46568,20 +46890,40 @@ objects:
               Ready\",status=\"True\"}\n) or\n# If no ready nodes exist for a machineset,\
               \ return 0\n(\n  mapi_machine_set_spec_replicas * 0\n)"
           - record: sre:machineset:provisioning_failure_notify
-            expr: "(\n  # Desired replicas (from spec.replicas)\n  mapi_machine_set_spec_replicas{name!~\"\
-              .*upgrade$\",name!~\".*(master|infra).*\"} > 0\n  > on (name)\n  # Ready\
-              \ nodes count (use label_replace to match on 'name')\n  label_replace(\n\
-              \    sre:machineset:ready_nodes_count,\n    \"name\",\n    \"$1\",\n\
-              \    \"machineset\",\n    \"(.*)\"\n  )\n) or\n(\n  # Also catch machinesets\
-              \ with zero ready nodes (but replicas > 0)\n  mapi_machine_set_spec_replicas{name!~\"\
-              .*upgrade$\",name!~\".*(master|infra).*\"} > 0\n  unless on (name)\n\
-              \  label_replace(\n    sre:machineset:ready_nodes_count > 0,\n    \"\
-              name\",\n    \"$1\",\n    \"machineset\",\n    \"(.*)\"\n  )\n)"
+            expr: "(\n  (\n    # Desired replicas (from spec.replicas)\n    mapi_machine_set_spec_replicas{name!~\"\
+              .*upgrade$\",name!~\".*(master|infra).*\"} > 0\n    > on (name)\n  \
+              \  # Ready nodes count (use label_replace to match on 'name')\n    label_replace(\n\
+              \      sre:machineset:ready_nodes_count,\n      \"name\",\n      \"\
+              $1\",\n      \"machineset\",\n      \"(.*)\"\n    )\n  ) or\n  (\n \
+              \   # Also catch machinesets with zero ready nodes (but replicas > 0)\n\
+              \    mapi_machine_set_spec_replicas{name!~\".*upgrade$\",name!~\".*(master|infra).*\"\
+              } > 0\n    unless on (name)\n    label_replace(\n      sre:machineset:ready_nodes_count\
+              \ > 0,\n      \"name\",\n      \"$1\",\n      \"machineset\",\n    \
+              \  \"(.*)\"\n    )\n  )\n)\n# Exclude spot instances - spot_market_max_price\
+              \ label exists if spotMarketOptions configured\n# Note: We check for\
+              \ label existence, not non-empty value, because maxPrice can be empty\n\
+              # (empty means use current on-demand price as maximum)\nunless on (name,\
+              \ namespace)\nmapi_machineset_spec_info"
+          - record: sre:machineset:provisioning_failure_notify_spot
+            expr: "(\n  (\n    # Desired replicas (from spec.replicas)\n    mapi_machine_set_spec_replicas{name!~\"\
+              .*upgrade$\",name!~\".*(master|infra).*\"} > 0\n    > on (name)\n  \
+              \  # Ready nodes count (use label_replace to match on 'name')\n    label_replace(\n\
+              \      sre:machineset:ready_nodes_count,\n      \"name\",\n      \"\
+              $1\",\n      \"machineset\",\n      \"(.*)\"\n    )\n  ) or\n  (\n \
+              \   # Also catch machinesets with zero ready nodes (but replicas > 0)\n\
+              \    mapi_machine_set_spec_replicas{name!~\".*upgrade$\",name!~\".*(master|infra).*\"\
+              } > 0\n    unless on (name)\n    label_replace(\n      sre:machineset:ready_nodes_count\
+              \ > 0,\n      \"name\",\n      \"$1\",\n      \"machineset\",\n    \
+              \  \"(.*)\"\n    )\n  )\n)\n# Only include spot instances - spot_market_max_price\
+              \ label exists if spotMarketOptions configured\n# Note: We check for\
+              \ label existence, not non-empty value, because maxPrice can be empty\n\
+              # (empty means use current on-demand price as maximum)\nand on (name,\
+              \ namespace)\nmapi_machineset_spec_info"
           - alert: MachineSetNotReachingDesiredReplicasNotificationSRE
             annotations:
-              description: One or more machine pools for cluster {{ $labels._id }}
-                have not reached their target size for more than 1 hour
-              summary: Machine Pool provisioning failure
+              description: One or more on-demand machine pools for cluster {{ $labels._id
+                }} have not reached their target size for more than 1 hour
+              summary: On-demand Machine Pool provisioning failure
             expr: "(\n  sre:machineset:provisioning_failure_notify\n  # Only fire\
               \ when control plane is healthy (no etcd members down)\n  # Use upstream\
               \ etcdMembersDown alert to cover all cluster sizes\n  # If control plane\
@@ -46593,6 +46935,22 @@ objects:
               severity: info
               send_managed_notification: 'true'
               managed_notification_template: MachineSetProvisioningFailure
+              namespace: openshift-machine-api
+          - alert: SpotMachineSetNotReachingDesiredReplicasNotificationSRE
+            annotations:
+              description: One or more spot instance machine pools for cluster {{
+                $labels._id }} have not reached their target size for more than 1
+                hour
+              summary: Spot Machine Pool provisioning failure
+            expr: "(\n  sre:machineset:provisioning_failure_notify_spot\n  # Only\
+              \ fire when control plane is healthy (no etcd members down)\n  unless\
+              \ on ()\n  count(ALERTS{alertname=\"etcdMembersDown\",alertstate=\"\
+              firing\"}) > 0\n)"
+            for: 60m
+            labels:
+              severity: warning
+              send_managed_notification: 'true'
+              managed_notification_template: MachineSetProvisioningFailureSpot
               namespace: openshift-machine-api
     - apiVersion: monitoring.coreos.com/v1
       kind: PrometheusRule
