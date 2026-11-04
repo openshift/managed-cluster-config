@@ -1,0 +1,30 @@
+apiVersion: machine.openshift.io/v1beta1
+kind: MachineHealthCheck
+metadata:
+  name: srep-spot-worker-healthcheck
+  namespace: openshift-machine-api
+spec:
+  selector:
+    matchExpressions:
+    - key: machine.openshift.io/interruptible-instance
+      operator: In
+      values:
+      - ""
+    - key: machine.openshift.io/cluster-api-machine-role
+      operator: NotIn
+      values:
+      - "infra"
+      - "master"
+    - key: machine.openshift.io/cluster-api-machineset
+      operator: Exists
+  unhealthyConditions:
+  - type:    "Ready"
+    timeout: "480s"
+    status: "False"
+  - type:    "Ready"
+    timeout: "600s"
+    status: "Unknown"
+  # Spot reclamation is expected churn the customer opted into: a capacity event can
+  # take out many machines at once, so do not short-circuit remediation.
+  maxUnhealthy: 100%
+  nodeStartupTimeout: 25m

@@ -13,6 +13,11 @@ spec:
       - "master"
     - key: machine.openshift.io/cluster-api-machineset
       operator: Exists
+    # Spot machines are remediated by srep-spot-worker-healthcheck instead, so that
+    # their remediation is invisible to the WorkerNodeAutoReplacedNotificationSRE alert
+    # (https://redhat.atlassian.net/browse/MCS-36) and cannot exhaust maxUnhealthy.
+    - key: machine.openshift.io/interruptible-instance
+      operator: DoesNotExist
     - key: machine.openshift.io/instance-type
       operator: NotIn
       values:

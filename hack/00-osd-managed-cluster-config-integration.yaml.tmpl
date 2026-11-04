@@ -40742,6 +40742,8 @@ objects:
             - master
           - key: machine.openshift.io/cluster-api-machineset
             operator: Exists
+          - key: machine.openshift.io/interruptible-instance
+            operator: DoesNotExist
           - key: machine.openshift.io/instance-type
             operator: NotIn
             values:
@@ -40853,6 +40855,34 @@ objects:
           timeout: 600s
           status: Unknown
         maxUnhealthy: 1
+    - apiVersion: machine.openshift.io/v1beta1
+      kind: MachineHealthCheck
+      metadata:
+        name: srep-spot-worker-healthcheck
+        namespace: openshift-machine-api
+      spec:
+        selector:
+          matchExpressions:
+          - key: machine.openshift.io/interruptible-instance
+            operator: In
+            values:
+            - ''
+          - key: machine.openshift.io/cluster-api-machine-role
+            operator: NotIn
+            values:
+            - infra
+            - master
+          - key: machine.openshift.io/cluster-api-machineset
+            operator: Exists
+        unhealthyConditions:
+        - type: Ready
+          timeout: 480s
+          status: 'False'
+        - type: Ready
+          timeout: 600s
+          status: Unknown
+        maxUnhealthy: 100%
+        nodeStartupTimeout: 25m
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
