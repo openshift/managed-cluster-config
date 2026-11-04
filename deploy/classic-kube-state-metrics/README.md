@@ -18,19 +18,26 @@ By deploying this specialized KSM instance to ROSA Classic clusters, we generate
 This is an additional KSM deployment to the `openshift-machine-api-observability` namespace, separate from OpenShift's Cluster Monitoring Operator (CMO) KSM instance which does not support extensions for custom resource monitoring.
 
 Currently configured to monitor MachineSet custom resources, this deployment converts their spec fields into Prometheus metrics. The configuration extracts:
-- Instance type information
-- Spot market configuration (presence of `spotMarketOptions` indicates spot instance)
+- Instance type information (for all MachineSets)
+- Spot market configuration (separate metric only for spot instances)
 
 ## Example Metrics Generated
 
 ```prometheus
-# HELP mapi_machine_set_spec_info Static spec-derived info for a machineset including spot market configuration
+# HELP mapi_machine_set_spec_info Static spec-derived info for a machineset
 # TYPE mapi_machine_set_spec_info info
-mapi_machine_set_spec_info{customresource_group="machine.openshift.io",customresource_kind="MachineSet",customresource_version="v1beta1",instance_type="m5.xlarge",name="my-cluster-worker-us-east-1a",namespace="openshift-machine-api",spot_market_max_price=""} 1
-mapi_machine_set_spec_info{customresource_group="machine.openshift.io",customresource_kind="MachineSet",customresource_version="v1beta1",instance_type="m5.large",name="my-cluster-spot-worker-us-east-1b",namespace="openshift-machine-api",spot_market_max_price="0.10"} 1
+mapi_machine_set_spec_info{customresource_group="machine.openshift.io",customresource_kind="MachineSet",customresource_version="v1beta1",instance_type="m5.xlarge",name="my-cluster-worker-us-east-1a",namespace="openshift-machine-api"} 1
+mapi_machine_set_spec_info{customresource_group="machine.openshift.io",customresource_kind="MachineSet",customresource_version="v1beta1",instance_type="m5.large",name="my-cluster-spot-worker-us-east-1b",namespace="openshift-machine-api"} 1
+
+# HELP mapi_machine_set_spec_spot_info Info metric for spot-configured machinesets - only present when spotMarketOptions is configured
+# TYPE mapi_machine_set_spec_spot_info info
+mapi_machine_set_spec_spot_info{customresource_group="machine.openshift.io",customresource_kind="MachineSet",customresource_version="v1beta1",name="my-cluster-spot-worker-us-east-1b",namespace="openshift-machine-api",spot_max_price="0.10"} 1
 ```
 
-**Note**: If `spot_market_max_price` label exists (even as empty string ""), the MachineSet is configured for spot instances. On-demand MachineSets will not have this label at all.
+**Note**: 
+- `mapi_machine_set_spec_info` is emitted for ALL MachineSets
+- `mapi_machine_set_spec_spot_info` is emitted ONLY for spot-configured MachineSets (those with `spotMarketOptions` in spec)
+- This separation allows reliable detection: on-demand = no spot_info series, spot = has spot_info series
 
 ## Observability Integration
 

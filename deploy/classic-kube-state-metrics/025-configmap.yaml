@@ -21,14 +21,21 @@ data:
               - namespace
           metrics:
             - name: "spec_info"
-              help: "Static spec-derived info for a machineset including spot market configuration"
+              help: "Static spec-derived info for a machineset"
               each:
                 type: Info
                 info:
                     labelsFromPath:
                       # Extract instance type for reference
                       instance_type: [spec, template, spec, providerSpec, value, instanceType]
-                      # Extract spot market max price - if this label exists, it's a spot instance
-                      # The maxPrice value can be empty (means use current on-demand price as max)
-                      # We use label presence (not value) to detect spot instances in alerts
-                      spot_market_max_price: [spec, template, spec, providerSpec, value, spotMarketOptions, maxPrice]
+            # Separate metric for spot instances - only emitted when spotMarketOptions exists
+            # This allows reliable detection: on-demand = no spot_info series, spot = has spot_info series
+            - name: "spec_spot_info"
+              help: "Info metric for spot-configured machinesets - only present when spotMarketOptions is configured"
+              each:
+                type: Info
+                path: [spec, template, spec, providerSpec, value, spotMarketOptions]
+                info:
+                    labelsFromPath:
+                      # Extract max price - can be empty (means use current on-demand price as max)
+                      spot_max_price: [maxPrice]
