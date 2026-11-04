@@ -32,46 +32,90 @@ spec:
               mapi_machine_set_spec_replicas * 0
             )
 
-        # Recording rule to detect machinesets not reaching desired replicas
-        # Excludes: upgrade machinesets, master nodes, infra nodes, zero-replica machinesets
-        # NOTE: Spot instance exclusion is not currently implemented due to lack of metric exposure
-        # from machine-api-operator. This is a known limitation that may be addressed in the future.
+        # Recording rule to detect on-demand machinesets not reaching desired replicas
+        # Excludes: upgrade machinesets, master nodes, infra nodes, zero-replica machinesets, spot instances
+        # Spot instances are excluded because provisioning failures are expected behavior for spot
         - record: sre:machineset:provisioning_failure_notify
           expr: |-
             (
-              # Desired replicas (from spec.replicas)
-              mapi_machine_set_spec_replicas{name!~".*upgrade$",name!~".*(master|infra).*"} > 0
-              > on (name)
-              # Ready nodes count (use label_replace to match on 'name')
-              label_replace(
-                sre:machineset:ready_nodes_count,
-                "name",
-                "$1",
-                "machineset",
-                "(.*)"
-              )
-            ) or
-            (
-              # Also catch machinesets with zero ready nodes (but replicas > 0)
-              mapi_machine_set_spec_replicas{name!~".*upgrade$",name!~".*(master|infra).*"} > 0
-              unless on (name)
-              label_replace(
-                sre:machineset:ready_nodes_count > 0,
-                "name",
-                "$1",
-                "machineset",
-                "(.*)"
+              (
+                # Desired replicas (from spec.replicas)
+                mapi_machine_set_spec_replicas{name!~".*upgrade$",name!~".*(master|infra).*"} > 0
+                > on (name)
+                # Ready nodes count (use label_replace to match on 'name')
+                label_replace(
+                  sre:machineset:ready_nodes_count,
+                  "name",
+                  "$1",
+                  "machineset",
+                  "(.*)"
+                )
+              ) or
+              (
+                # Also catch machinesets with zero ready nodes (but replicas > 0)
+                mapi_machine_set_spec_replicas{name!~".*upgrade$",name!~".*(master|infra).*"} > 0
+                unless on (name)
+                label_replace(
+                  sre:machineset:ready_nodes_count > 0,
+                  "name",
+                  "$1",
+                  "machineset",
+                  "(.*)"
+                )
               )
             )
+            # Exclude spot instances - spot_market_max_price label exists if spotMarketOptions configured
+            # Note: We check for label existence, not non-empty value, because maxPrice can be empty
+            # (empty means use current on-demand price as maximum)
+            unless on (name, namespace)
+            mapi_machineset_spec_info
+
+        # Recording rule to detect spot machinesets not reaching desired replicas
+        # Only includes spot instances (those with spotMarketOptions configured)
+        - record: sre:machineset:provisioning_failure_notify_spot
+          expr: |-
+            (
+              (
+                # Desired replicas (from spec.replicas)
+                mapi_machine_set_spec_replicas{name!~".*upgrade$",name!~".*(master|infra).*"} > 0
+                > on (name)
+                # Ready nodes count (use label_replace to match on 'name')
+                label_replace(
+                  sre:machineset:ready_nodes_count,
+                  "name",
+                  "$1",
+                  "machineset",
+                  "(.*)"
+                )
+              ) or
+              (
+                # Also catch machinesets with zero ready nodes (but replicas > 0)
+                mapi_machine_set_spec_replicas{name!~".*upgrade$",name!~".*(master|infra).*"} > 0
+                unless on (name)
+                label_replace(
+                  sre:machineset:ready_nodes_count > 0,
+                  "name",
+                  "$1",
+                  "machineset",
+                  "(.*)"
+                )
+              )
+            )
+            # Only include spot instances - spot_market_max_price label exists if spotMarketOptions configured
+            # Note: We check for label existence, not non-empty value, because maxPrice can be empty
+            # (empty means use current on-demand price as maximum)
+            and on (name, namespace)
+            mapi_machineset_spec_info
 
         # Alert fires when:
-        # 1. Machineset has not reached desired replicas for 1 hour
+        # 1. On-demand machineset has not reached desired replicas for 1 hour
         # 2. Control plane is healthy (no etcd issues)
         # This sends a service log to customers to investigate their AWS configuration
+        # Spot instances are excluded - they have their own alert with different messaging
         - alert: MachineSetNotReachingDesiredReplicasNotificationSRE
           annotations:
-            description: "One or more machine pools for cluster {{ $labels._id }} have not reached their target size for more than 1 hour"
-            summary: "Machine Pool provisioning failure"
+            description: "One or more on-demand machine pools for cluster {{ $labels._id }} have not reached their target size for more than 1 hour"
+            summary: "On-demand Machine Pool provisioning failure"
           expr: |-
             (
               sre:machineset:provisioning_failure_notify
@@ -86,4 +130,27 @@ spec:
             severity: info
             send_managed_notification: "true"
             managed_notification_template: MachineSetProvisioningFailure
+            namespace: openshift-machine-api
+
+        # Alert fires when:
+        # 1. Spot machineset has not reached desired replicas for 1 hour
+        # 2. Control plane is healthy (no etcd issues)
+        # This sends a service log to customers about spot instance capacity/pricing issues
+        # Lower severity (warning vs info) because spot failures are more common and expected
+        - alert: SpotMachineSetNotReachingDesiredReplicasNotificationSRE
+          annotations:
+            description: "One or more spot instance machine pools for cluster {{ $labels._id }} have not reached their target size for more than 1 hour"
+            summary: "Spot Machine Pool provisioning failure"
+          expr: |-
+            (
+              sre:machineset:provisioning_failure_notify_spot
+              # Only fire when control plane is healthy (no etcd members down)
+              unless on ()
+              count(ALERTS{alertname="etcdMembersDown",alertstate="firing"}) > 0
+            )
+          for: 60m
+          labels:
+            severity: warning
+            send_managed_notification: "true"
+            managed_notification_template: MachineSetProvisioningFailureSpot
             namespace: openshift-machine-api
