@@ -39,7 +39,17 @@ spec:
                 "(.*)"
               )
               unless on (machineset)
-              sre:machineset:ready_nodes_count
+              count by (machineset) (
+                label_replace(
+                  clamp(mapi_machine_created_timestamp_seconds, 0, 1),
+                  "machineset",
+                  "$1",
+                  "name",
+                  "^(.*)-[^-]*$"
+                )
+                * on (node) group_right(machineset)
+                kube_node_status_condition{condition="Ready",status="True"}
+              )
             )
 
         # Recording rule to detect on-demand machinesets not reaching desired replicas
@@ -125,25 +135,18 @@ spec:
             description: "One or more on-demand machine pools for cluster {{ $labels._id }} have not reached their target size for more than 1 hour"
             summary: "On-demand Machine Pool provisioning failure"
           expr: |-
+            sre:machineset:provisioning_failure_notify
+            # Only fire when control plane is healthy - require positive health signals
+            # If health metrics are missing, these checks fail and suppress the alert
+            # Similar to HyperShift's all_components_available check
+            and on ()
             (
-              sre:machineset:provisioning_failure_notify
-              # Only fire when control plane is healthy
-              # Suppress when control plane components are unhealthy - these are SRE issues, not customer AWS config
-              # Similar to HyperShift's all_components_available check
-              unless on ()
-              (
-                # Etcd health - core control plane component
-                count(ALERTS{alertname="etcdMembersDown",alertstate="firing"}) > 0
-                or
-                # machine-api operator degraded - manages MachineSets (equivalent to CAPI in HCP)
-                cluster_operator_conditions{name="machine-api",condition="Degraded"} == 1
-                or
-                # kube-apiserver degraded - API server health
-                cluster_operator_conditions{name="kube-apiserver",condition="Degraded"} == 1
-                or
-                # kube-controller-manager degraded - includes machine-approver for CSR approval
-                cluster_operator_conditions{name="kube-controller-manager",condition="Degraded"} == 1
-              )
+              # All critical operators must not be degraded (Degraded=0)
+              cluster_operator_conditions{name="machine-api",condition="Degraded"} == 0
+              and cluster_operator_conditions{name="kube-apiserver",condition="Degraded"} == 0
+              and cluster_operator_conditions{name="kube-controller-manager",condition="Degraded"} == 0
+              # Etcd must not have members down
+              and (count(ALERTS{alertname="etcdMembersDown",alertstate="firing"}) or vector(0)) == 0
             )
           for: 60m
           labels:
@@ -162,25 +165,18 @@ spec:
             description: "One or more spot instance machine pools for cluster {{ $labels._id }} have not reached their target size for more than 1 hour"
             summary: "Spot Machine Pool provisioning failure"
           expr: |-
+            sre:machineset:provisioning_failure_notify_spot
+            # Only fire when control plane is healthy - require positive health signals
+            # If health metrics are missing, these checks fail and suppress the alert
+            # Similar to HyperShift's all_components_available check
+            and on ()
             (
-              sre:machineset:provisioning_failure_notify_spot
-              # Only fire when control plane is healthy
-              # Suppress when control plane components are unhealthy - these are SRE issues
-              # Similar to HyperShift's all_components_available check
-              unless on ()
-              (
-                # Etcd health - core control plane component
-                count(ALERTS{alertname="etcdMembersDown",alertstate="firing"}) > 0
-                or
-                # machine-api operator degraded - manages MachineSets (equivalent to CAPI in HCP)
-                cluster_operator_conditions{name="machine-api",condition="Degraded"} == 1
-                or
-                # kube-apiserver degraded - API server health
-                cluster_operator_conditions{name="kube-apiserver",condition="Degraded"} == 1
-                or
-                # kube-controller-manager degraded - includes machine-approver for CSR approval
-                cluster_operator_conditions{name="kube-controller-manager",condition="Degraded"} == 1
-              )
+              # All critical operators must not be degraded (Degraded=0)
+              cluster_operator_conditions{name="machine-api",condition="Degraded"} == 0
+              and cluster_operator_conditions{name="kube-apiserver",condition="Degraded"} == 0
+              and cluster_operator_conditions{name="kube-controller-manager",condition="Degraded"} == 0
+              # Etcd must not have members down
+              and (count(ALERTS{alertname="etcdMembersDown",alertstate="firing"}) or vector(0)) == 0
             )
           for: 60m
           labels:
