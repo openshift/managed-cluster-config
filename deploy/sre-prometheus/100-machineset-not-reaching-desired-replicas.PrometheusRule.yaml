@@ -1,3 +1,4 @@
+
 ---
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
@@ -28,8 +29,17 @@ spec:
               kube_node_status_condition{condition="Ready",status="True"}
             ) or
             # If no ready nodes exist for a machineset, return 0
+            # Add machineset label and exclude MachineSets already counted above
             (
-              mapi_machine_set_spec_replicas * 0
+              label_replace(
+                mapi_machine_set_spec_replicas * 0,
+                "machineset",
+                "$1",
+                "name",
+                "(.*)"
+              )
+              unless on (machineset)
+              sre:machineset:ready_nodes_count
             )
 
         # Recording rule to detect on-demand machinesets not reaching desired replicas
