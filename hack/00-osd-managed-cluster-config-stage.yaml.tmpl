@@ -28744,7 +28744,7 @@ objects:
       data:
         custom-resource-state.yaml: "spec:\n  resources:\n    - groupVersionKind:\n\
           \        group: machine.openshift.io\n        version: v1beta1\n       \
-          \ kind: MachineSet\n      metricNamePrefix: mapi_machineset\n      labelsFromPath:\n\
+          \ kind: MachineSet\n      metricNamePrefix: mapi_machine_set\n      labelsFromPath:\n\
           \        name:\n          - metadata\n          - name\n        namespace:\n\
           \          - metadata\n          - namespace\n      metrics:\n        -\
           \ name: \"spec_info\"\n          help: \"Static spec-derived info for a\
@@ -28776,7 +28776,6 @@ objects:
         - machine.openshift.io
         resources:
         - machinesets
-        - machines
         verbs:
         - get
         - list
@@ -46903,7 +46902,7 @@ objects:
               \ label exists if spotMarketOptions configured\n# Note: We check for\
               \ label existence, not non-empty value, because maxPrice can be empty\n\
               # (empty means use current on-demand price as maximum)\nunless on (name,\
-              \ namespace)\nmapi_machineset_spec_info"
+              \ namespace)\nmapi_machine_set_spec_info"
           - record: sre:machineset:provisioning_failure_notify_spot
             expr: "(\n  (\n    # Desired replicas (from spec.replicas)\n    mapi_machine_set_spec_replicas{name!~\"\
               .*upgrade$\",name!~\".*(master|infra).*\"} > 0\n    > on (name)\n  \
@@ -46918,7 +46917,7 @@ objects:
               \ label exists if spotMarketOptions configured\n# Note: We check for\
               \ label existence, not non-empty value, because maxPrice can be empty\n\
               # (empty means use current on-demand price as maximum)\nand on (name,\
-              \ namespace)\nmapi_machineset_spec_info"
+              \ namespace)\nmapi_machine_set_spec_info"
           - alert: MachineSetNotReachingDesiredReplicasNotificationSRE
             annotations:
               description: One or more on-demand machine pools for cluster {{ $labels._id
