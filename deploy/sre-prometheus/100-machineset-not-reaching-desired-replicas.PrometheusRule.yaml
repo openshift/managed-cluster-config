@@ -109,7 +109,7 @@ spec:
 
         # Alert fires when:
         # 1. On-demand machineset has not reached desired replicas for 1 hour
-        # 2. Control plane is healthy (no etcd issues)
+        # 2. Control plane is healthy (etcd + critical operators)
         # This sends a service log to customers to investigate their AWS configuration
         # Spot instances are excluded - they have their own alert with different messaging
         - alert: MachineSetNotReachingDesiredReplicasNotificationSRE
@@ -119,11 +119,23 @@ spec:
           expr: |-
             (
               sre:machineset:provisioning_failure_notify
-              # Only fire when control plane is healthy (no etcd members down)
-              # Use upstream etcdMembersDown alert to cover all cluster sizes
-              # If control plane is unhealthy, SRE should receive etcd alerts instead
+              # Only fire when control plane is healthy
+              # Suppress when control plane components are unhealthy - these are SRE issues, not customer AWS config
+              # Similar to HyperShift's all_components_available check
               unless on ()
-              count(ALERTS{alertname="etcdMembersDown",alertstate="firing"}) > 0
+              (
+                # Etcd health - core control plane component
+                count(ALERTS{alertname="etcdMembersDown",alertstate="firing"}) > 0
+                or
+                # machine-api operator degraded - manages MachineSets (equivalent to CAPI in HCP)
+                cluster_operator_conditions{name="machine-api",condition="Degraded"} == 1
+                or
+                # kube-apiserver degraded - API server health
+                cluster_operator_conditions{name="kube-apiserver",condition="Degraded"} == 1
+                or
+                # kube-controller-manager degraded - includes machine-approver for CSR approval
+                cluster_operator_conditions{name="kube-controller-manager",condition="Degraded"} == 1
+              )
             )
           for: 60m
           labels:
@@ -134,7 +146,7 @@ spec:
 
         # Alert fires when:
         # 1. Spot machineset has not reached desired replicas for 1 hour
-        # 2. Control plane is healthy (no etcd issues)
+        # 2. Control plane is healthy (etcd + critical operators)
         # This sends a service log to customers about spot instance capacity/pricing issues
         # Lower severity (warning vs info) because spot failures are more common and expected
         - alert: SpotMachineSetNotReachingDesiredReplicasNotificationSRE
@@ -144,9 +156,23 @@ spec:
           expr: |-
             (
               sre:machineset:provisioning_failure_notify_spot
-              # Only fire when control plane is healthy (no etcd members down)
+              # Only fire when control plane is healthy
+              # Suppress when control plane components are unhealthy - these are SRE issues
+              # Similar to HyperShift's all_components_available check
               unless on ()
-              count(ALERTS{alertname="etcdMembersDown",alertstate="firing"}) > 0
+              (
+                # Etcd health - core control plane component
+                count(ALERTS{alertname="etcdMembersDown",alertstate="firing"}) > 0
+                or
+                # machine-api operator degraded - manages MachineSets (equivalent to CAPI in HCP)
+                cluster_operator_conditions{name="machine-api",condition="Degraded"} == 1
+                or
+                # kube-apiserver degraded - API server health
+                cluster_operator_conditions{name="kube-apiserver",condition="Degraded"} == 1
+                or
+                # kube-controller-manager degraded - includes machine-approver for CSR approval
+                cluster_operator_conditions{name="kube-controller-manager",condition="Degraded"} == 1
+              )
             )
           for: 60m
           labels:
