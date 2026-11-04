@@ -113,16 +113,16 @@ spec:
         and on ()
         (
           count(
-            (max_over_time(kube_node_status_condition{condition="Ready",status=~"false|unknown"}[20m]) == 1)
-            * on (node) group_left ()
-            count by (node) (max_over_time(cluster:cpu_core_node_labels{label_node_role_kubernetes_io_infra="",label_node_role_kubernetes_io_master=""}[20m]))
+            (
+              (max_over_time(kube_node_status_condition{condition="Ready",status=~"false|unknown"}[20m]) == 1)
+              * on (node) group_left ()
+              count by (node) (max_over_time(cluster:cpu_core_node_labels{label_node_role_kubernetes_io_infra="",label_node_role_kubernetes_io_master=""}[20m]))
+            )
+            unless on (node)
+            (max_over_time(kube_node_status_condition{condition="Terminating",status="true"}[30m]) == 1)
+            unless on (node)
+            max_over_time(kube_node_spec_taint{key="aws-node-termination-handler/spot-itn"}[30m])
           ) > 0
-        )
-        unless on ()
-        (
-            count(max_over_time(kube_node_status_condition{condition="Terminating",status="true"}[30m]) == 1) > 0
-          or
-            count(max_over_time(kube_node_spec_taint{key="aws-node-termination-handler/spot-itn"}[30m])) > 0
         )
         unless on ()
         (
