@@ -74,11 +74,10 @@ spec:
                 )
               )
             )
-            # Exclude spot instances - spot_market_max_price label exists if spotMarketOptions configured
-            # Note: We check for label existence, not non-empty value, because maxPrice can be empty
-            # (empty means use current on-demand price as maximum)
+            # Exclude spot instances - mapi_machine_set_spec_spot_info only exists for spot MachineSets
+            # This metric is only emitted when spotMarketOptions is configured in the MachineSet spec
             unless on (name, namespace)
-            mapi_machine_set_spec_info
+            mapi_machine_set_spec_spot_info
 
         # Recording rule to detect spot machinesets not reaching desired replicas
         # Only includes spot instances (those with spotMarketOptions configured)
@@ -111,11 +110,10 @@ spec:
                 )
               )
             )
-            # Only include spot instances - spot_market_max_price label exists if spotMarketOptions configured
-            # Note: We check for label existence, not non-empty value, because maxPrice can be empty
-            # (empty means use current on-demand price as maximum)
+            # Only include spot instances - mapi_machine_set_spec_spot_info only exists for spot MachineSets
+            # This metric is only emitted when spotMarketOptions is configured in the MachineSet spec
             and on (name, namespace)
-            mapi_machine_set_spec_info
+            mapi_machine_set_spec_spot_info
 
         # Alert fires when:
         # 1. On-demand machineset has not reached desired replicas for 1 hour
