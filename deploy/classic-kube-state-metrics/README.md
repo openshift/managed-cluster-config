@@ -24,10 +24,10 @@ Currently configured to monitor MachineSet custom resources, this deployment con
 ## Example Metrics Generated
 
 ```prometheus
-# HELP mapi_machineset_spec_info Static spec-derived info for a machineset including spot market configuration
-# TYPE mapi_machineset_spec_info info
-mapi_machineset_spec_info{customresource_group="machine.openshift.io",customresource_kind="MachineSet",customresource_version="v1beta1",instance_type="m5.xlarge",name="my-cluster-worker-us-east-1a",namespace="openshift-machine-api",spot_market_max_price=""} 1
-mapi_machineset_spec_info{customresource_group="machine.openshift.io",customresource_kind="MachineSet",customresource_version="v1beta1",instance_type="m5.large",name="my-cluster-spot-worker-us-east-1b",namespace="openshift-machine-api",spot_market_max_price="0.10"} 1
+# HELP mapi_machine_set_spec_info Static spec-derived info for a machineset including spot market configuration
+# TYPE mapi_machine_set_spec_info info
+mapi_machine_set_spec_info{customresource_group="machine.openshift.io",customresource_kind="MachineSet",customresource_version="v1beta1",instance_type="m5.xlarge",name="my-cluster-worker-us-east-1a",namespace="openshift-machine-api",spot_market_max_price=""} 1
+mapi_machine_set_spec_info{customresource_group="machine.openshift.io",customresource_kind="MachineSet",customresource_version="v1beta1",instance_type="m5.large",name="my-cluster-spot-worker-us-east-1b",namespace="openshift-machine-api",spot_market_max_price="0.10"} 1
 ```
 
 **Note**: If `spot_market_max_price` label exists (even as empty string ""), the MachineSet is configured for spot instances. On-demand MachineSets will not have this label at all.
