@@ -46,7 +46,7 @@ This deployment targets **ROSA Classic clusters only** via SelectorSyncSet:
 ## Usage in Alerts
 
 The exposed metrics are used in the MachineSet provisioning failure alert to:
-1. Exclude spot instances from on-demand provisioning failure alerts (severity: critical)
+1. Exclude spot instances from on-demand provisioning failure alerts (severity: info)
 2. Create separate spot instance provisioning alerts (severity: warning)
 3. Send different service log messages to customers based on instance type
 
