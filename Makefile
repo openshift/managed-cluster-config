@@ -38,6 +38,9 @@ endif
 ifndef CHECK_SSS_CONFLICTS
 $(error CHECK_SSS_CONFLICTS is not set; check project.mk file)
 endif
+ifndef CHECK_SSS_SELECTOR_OVERLAPS
+$(error CHECK_SSS_SELECTOR_OVERLAPS is not set; check project.mk file)
+endif
 
 POLICYGEN_VERSION=v1.12.4
 BOILERPLATE_REPO_RAW=https://raw.githubusercontent.com/openshift/boilerplate/master
@@ -62,7 +65,7 @@ OC := $(CONTAINER_ENGINE) run $(CONTAINER_RUN_FLAGS) quay.io/openshift/origin-cl
 endif
 
 .PHONY: default
-default: check-sss-conflicts enforce-backplane-rules generate-oauth-templates generate-rosa-brand-logo generate-hive-templates sync-owners-aliases
+default: check-sss-conflicts enforce-backplane-rules generate-oauth-templates generate-rosa-brand-logo generate-hive-templates check-sss-selector-overlaps sync-owners-aliases
 
 .PHONY: sync-owners-aliases
 sync-owners-aliases:
@@ -113,6 +116,15 @@ check-sss-conflicts:
 		$(CONTAINER_ENGINE) run $(CONTAINER_RUN_FLAGS) registry.access.redhat.com/ubi8/python-39 /bin/bash -xc "cd `pwd -P`; pip install --disable-pip-version-check oyaml; ${CHECK_SSS_CONFLICTS}"; \
 	else \
 		${CHECK_SSS_CONFLICTS};\
+	fi
+
+.PHONY: check-sss-selector-overlaps
+check-sss-selector-overlaps: generate-hive-templates
+	if [ -z "$(IN_CONTAINER)" ]; then \
+		$(CONTAINER_ENGINE) run $(CONTAINER_RUN_FLAGS) registry.access.redhat.com/ubi8/python-39 /bin/bash -xc "cd $(GIT_ROOT); pip install --disable-pip-version-check oyaml; python -m unittest discover -s scripts -p 'test_check_sss_selector_overlaps.py' && $(CHECK_SSS_SELECTOR_OVERLAPS)"; \
+	else \
+		python -m unittest discover -s scripts -p 'test_check_sss_selector_overlaps.py'; \
+		$(CHECK_SSS_SELECTOR_OVERLAPS);\
 	fi
 
 .PHONY: checklinks
