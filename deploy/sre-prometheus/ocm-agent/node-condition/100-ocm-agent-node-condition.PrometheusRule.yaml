@@ -98,7 +98,9 @@ spec:
   # https://redhat.atlassian.net/browse/MCS-36
   - name: sre-node-condition-managed-notification-alerts.worker-auto-replaced
     rules:
-    # "unless ... offset" catches the counter's first increment, which increase() reads as 0
+    # "unless ... offset" catches the counter's first increment, which increase() reads as 0.
+    # cluster_version{type="current"} must exist so the upgrade exclusion fails closed: without
+    # CVO metrics (e.g. while the CVO pod restarts during an upgrade) the alert cannot fire.
     - alert: WorkerNodeAutoReplacedNotificationSRE
       expr: |
         count by (namespace, name) (
@@ -124,6 +126,8 @@ spec:
             max_over_time(kube_node_spec_taint{key="aws-node-termination-handler/spot-itn"}[30m])
           ) > 0
         )
+        and on ()
+        (count(cluster_version{type="current"}) > 0)
         unless on ()
         (
             max(cluster_operator_conditions{name="version",condition="Progressing"}) == 1

@@ -49179,7 +49179,8 @@ objects:
               \ on (node)\n    (max_over_time(kube_node_status_condition{condition=\"\
               Terminating\",status=\"true\"}[30m]) == 1)\n    unless on (node)\n \
               \   max_over_time(kube_node_spec_taint{key=\"aws-node-termination-handler/spot-itn\"\
-              }[30m])\n  ) > 0\n)\nunless on ()\n(\n    max(cluster_operator_conditions{name=\"\
+              }[30m])\n  ) > 0\n)\nand on ()\n(count(cluster_version{type=\"current\"\
+              }) > 0)\nunless on ()\n(\n    max(cluster_operator_conditions{name=\"\
               version\",condition=\"Progressing\"}) == 1\n  or\n    count(cluster_version{type=\"\
               updating\"}) > 0\n  or\n    (time() - max(cluster_version{type=\"completed\"\
               })) < 600\n)\n"
