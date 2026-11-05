@@ -30,12 +30,13 @@ data:
                       instance_type: [spec, template, spec, providerSpec, value, instanceType]
             # Separate metric for spot instances - only emitted when spotMarketOptions exists
             # This allows reliable detection: on-demand = no spot_info series, spot = has spot_info series
+            # Note: We emit this metric whenever spotMarketOptions path exists, regardless of maxPrice
+            # A Spot MachineSet can omit maxPrice (meaning "use on-demand price as max")
             - name: "spec_spot_info"
               help: "Info metric for spot-configured machinesets - only present when spotMarketOptions is configured"
               each:
                 type: Info
                 path: [spec, template, spec, providerSpec, value, spotMarketOptions]
                 info:
-                    labelsFromPath:
-                      # Extract max price - can be empty (means use current on-demand price as max)
-                      spot_max_price: [maxPrice]
+                    labels:
+                      spot_enabled: "true"
