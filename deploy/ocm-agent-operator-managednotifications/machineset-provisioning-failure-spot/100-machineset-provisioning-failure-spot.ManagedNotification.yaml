@@ -1,0 +1,24 @@
+apiVersion: ocmagent.managed.openshift.io/v1alpha1
+kind: ManagedNotification
+metadata:
+  name: machineset-provisioning-failure-spot
+  namespace: openshift-ocm-agent-operator
+spec:
+  notifications:
+    - name: MachineSetProvisioningFailureSpot
+      severity: Moderate
+      summary: "Spot instance machine pool has not reached its desired size"
+      activeBody: |-
+        One or more Spot instance machine pools in your ROSA cluster have not reached their desired size. This can prevent your workloads from running properly.
+
+        Common causes for Spot instance provisioning failures include:
+        - Your maximum Spot price is below the current Spot price for the selected instance type
+        - There is not enough Spot capacity available for the requested instance type in the selected availability zone
+        - AWS has reclaimed Spot instances due to capacity needs or price changes
+
+        Spot instances are designed to use spare EC2 capacity and may not always be available. If you need guaranteed capacity, consider using on-demand instances instead.
+
+        For detailed information about managing worker nodes and machine pools, please refer to: https://docs.openshift.com/rosa/rosa_cluster_admin/rosa_nodes/rosa-managing-worker-nodes.html
+
+        If you need assistance, please open a support case.
+      resendWait: 24

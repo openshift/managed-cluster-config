@@ -1,0 +1,42 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kube-state-metrics-config
+  namespace: openshift-machine-api-observability
+data:
+  custom-resource-state.yaml: |
+    spec:
+      resources:
+        - groupVersionKind:
+            group: machine.openshift.io
+            version: v1beta1
+            kind: MachineSet
+          metricNamePrefix: mapi_machine_set
+          labelsFromPath:
+            name:
+              - metadata
+              - name
+            namespace:
+              - metadata
+              - namespace
+          metrics:
+            - name: "spec_info"
+              help: "Static spec-derived info for a machineset"
+              each:
+                type: Info
+                info:
+                    labelsFromPath:
+                      # Extract instance type for reference
+                      instance_type: [spec, template, spec, providerSpec, value, instanceType]
+            # Separate metric for spot instances - only emitted when spotMarketOptions exists
+            # This allows reliable detection: on-demand = no spot_info series, spot = has spot_info series
+            # Note: We emit this metric whenever spotMarketOptions path exists, regardless of maxPrice
+            # A Spot MachineSet can omit maxPrice (meaning "use on-demand price as max")
+            - name: "spec_spot_info"
+              help: "Info metric for spot-configured machinesets - only present when spotMarketOptions is configured"
+              each:
+                type: Info
+                path: [spec, template, spec, providerSpec, value, spotMarketOptions]
+                info:
+                    labels:
+                      spot_enabled: "true"
