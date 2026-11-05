@@ -23,6 +23,11 @@ The hypershift-operator (HO v0.1.75+, [OCPBUGS-50003](https://issues.redhat.com/
 | `g6e.16xlarge` | 64 |
 | `g6e.24xlarge` | 96 |
 | `g6e.48xlarge` | 192 |
+| `a1.medium` | 1 |
+| `a1.large` | 2 |
+| `a1.xlarge` | 4 |
+| `a1.2xlarge` | 8 |
+| `a1.4xlarge` | 16 |
 
 ## Adding new instance types
 
