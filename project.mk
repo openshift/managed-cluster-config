@@ -14,3 +14,4 @@ GEN_POLICY_CONFIG_SP?=scripts/generate-subjectpermissions-policy-config.py
 ENFORCE_BACKPLANE_RULES?=scripts/enforce-backplane-rules.py
 GEN_CMO_CONFIG?=scripts/generate-cmo-config.py
 CHECK_SSS_CONFLICTS?=scripts/check_sss_conflicts.py --deploy-dir ${YAML_DIRECTORY}
+CHECK_SSS_SELECTOR_OVERLAPS?=scripts/check_sss_selector_overlaps.py --template-file $(GIT_ROOT)/hack/00-osd-managed-cluster-config-production.yaml.tmpl
