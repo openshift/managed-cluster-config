@@ -123,7 +123,7 @@ check-sss-selector-overlaps: generate-hive-templates
 	if [ -z "$(IN_CONTAINER)" ]; then \
 		$(CONTAINER_ENGINE) run $(CONTAINER_RUN_FLAGS) registry.access.redhat.com/ubi8/python-39 /bin/bash -xc "cd $(GIT_ROOT); pip install --disable-pip-version-check oyaml; python -m unittest discover -s scripts -p 'test_check_sss_selector_overlaps.py' && $(CHECK_SSS_SELECTOR_OVERLAPS)"; \
 	else \
-		python -m unittest discover -s scripts -p 'test_check_sss_selector_overlaps.py'; \
+		python -m unittest discover -s scripts -p 'test_check_sss_selector_overlaps.py' && \
 		$(CHECK_SSS_SELECTOR_OVERLAPS);\
 	fi
 

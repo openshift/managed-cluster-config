@@ -18,6 +18,8 @@ PRODUCT_LABEL = "api.openshift.com/product"
 FEDRAMP_LABEL = "api.openshift.com/fedramp"
 CLUSTER_TYPE_LABEL = "ext-hypershift.openshift.io/cluster-type"
 
+MAX_REPORTED_OVERLAPS = 20
+
 BOOT_IMAGE_PATCH_TARGET = (
     "MachineConfiguration",
     "openshift-machine-config-operator",
@@ -58,15 +60,9 @@ def selector_matches(selector, labels):
         key = expression.get("key")
         operator = expression.get("operator")
         values = expression.get("values") or []
-        if isinstance(values, str):
-            # Some generated Hive templates still contain an unresolved
-            # parameter placeholder here. The synthetic fleet does not model
-            # that label key, so the placeholder is an opaque single value.
-            values = [values]
-        elif not isinstance(values, list):
+        if not isinstance(values, list):
             raise ValueError(
-                "selector.matchExpressions values must be a list or string for key %r"
-                % key
+                "selector.matchExpressions values must be a list for key %r" % key
             )
         values = {label_value(value) for value in values}
         present = key in labels
@@ -234,11 +230,13 @@ def main():
     )
 
     if overlaps:
-        print("ERROR: found SelectorSyncSet patch-target overlaps:")
-        for target, labels, names in overlaps:
+        print("ERROR: found %d SelectorSyncSet patch-target overlaps:" % len(overlaps))
+        for target, labels, names in overlaps[:MAX_REPORTED_OVERLAPS]:
             print("  Patch target: %s" % format_target(target))
             print("  ClusterDeployment labels: %s" % json.dumps(labels, sort_keys=True))
             print("  Matching SelectorSyncSets: %s" % ", ".join(names))
+        if len(overlaps) > MAX_REPORTED_OVERLAPS:
+            print("  ... %d more overlaps" % (len(overlaps) - MAX_REPORTED_OVERLAPS))
         return 1
 
     print("OK: no synthetic ClusterDeployment matches multiple SSSes for one patch target")
