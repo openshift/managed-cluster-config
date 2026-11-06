@@ -34445,6 +34445,17 @@ objects:
             For more information, consult the relevant ROSA documentation here: ${documentation}.'
           resolvedBody: ${condition} condition is resolved.
           resendWait: 6
+        - name: WorkerNodeAutoReplaced
+          severity: Low
+          logType: Cluster Lifecycle
+          summary: Worker node automatically replaced
+          activeBody: 'Red Hat''s automated health checks detected one or more unhealthy
+            worker nodes in your cluster and replaced them with new nodes. For more
+            information, refer to the following article: https://access.redhat.com/solutions/7066033.
+            Further replacements within 24 hours are not notified individually.'
+          references:
+          - https://access.redhat.com/solutions/7066033
+          resendWait: 24
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -50110,6 +50121,37 @@ objects:
               explanation: ' Red Hat SRE will be alerted and triage issues. If action
                 is required, a proactive case will be opened by Red Hat.'
               documentation: https://docs.openshift.com/rosa/rosa_planning/rosa-cloud-expert-prereq-checklist.html#networking-prerequisites
+        - name: sre-node-condition-managed-notification-alerts.worker-auto-replaced
+          rules:
+          - alert: WorkerNodeAutoReplacedNotificationSRE
+            expr: "count by (namespace, name) (\n    increase(mapi_machinehealthcheck_remediation_success_total{namespace=\"\
+              openshift-machine-api\",name=\"srep-worker-healthcheck\"}[5m]) > 0\n\
+              \  or\n    (\n      (mapi_machinehealthcheck_remediation_success_total{namespace=\"\
+              openshift-machine-api\",name=\"srep-worker-healthcheck\"} > 0)\n   \
+              \   unless\n      (mapi_machinehealthcheck_remediation_success_total{namespace=\"\
+              openshift-machine-api\",name=\"srep-worker-healthcheck\"} offset 5m\
+              \ > 0)\n    )\n)\nand on ()\n(\n  count(\n    (\n      (max_over_time(kube_node_status_condition{condition=\"\
+              Ready\",status=~\"false|unknown\"}[20m]) == 1)\n      * on (node) group_left\
+              \ ()\n      count by (node) (max_over_time(cluster:cpu_core_node_labels{label_node_role_kubernetes_io_infra=\"\
+              \",label_node_role_kubernetes_io_master=\"\"}[20m]))\n    )\n    unless\
+              \ on (node)\n    (max_over_time(kube_node_status_condition{condition=\"\
+              Terminating\",status=\"true\"}[30m]) == 1)\n    unless on (node)\n \
+              \   max_over_time(kube_node_spec_taint{key=\"aws-node-termination-handler/spot-itn\"\
+              }[30m])\n  ) > 0\n)\nand on ()\n(count(cluster_version{type=\"current\"\
+              }) > 0)\nunless on ()\n(\n    max(cluster_operator_conditions{name=\"\
+              version\",condition=\"Progressing\"}) == 1\n  or\n    count(cluster_version{type=\"\
+              updating\"}) > 0\n  or\n    (time() - max(cluster_version{type=\"completed\"\
+              })) < 600\n)\n"
+            labels:
+              severity: info
+              namespace: openshift-machine-api
+              send_managed_notification: 'true'
+              managed_notification_template: WorkerNodeAutoReplaced
+            annotations:
+              summary: Worker node automatically replaced by MachineHealthCheck
+              description: MachineHealthCheck srep-worker-healthcheck replaced at
+                least one NotReady worker node outside of an upgrade or spot interruption;
+                the customer is notified via service log.
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
