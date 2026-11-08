@@ -324,15 +324,17 @@ spec:
 
     # S3 sink sent/received below 85% while a pod buffer is over 500 MiB.
     # The buffer comparison is on the left so the pod label is kept.
-    # ignoring(pod) lets the per-pod buffer match the MC-level ratio which
-    # has no pod label. A NaN ratio (idle sink) does not match.
+    # and on() matches the unlabeled per-cluster sink ratio. The buffer
+    # series still carries namespace and buffer_id, so ignoring(pod) does
+    # not match and the alert would never fire.
+    # A NaN ratio (idle sink) does not match.
     # VectorBufferNearCapacitySRE remains the escalation at 7 GiB.
     - alert: VectorS3DeliveryEBBSRE
       expr: |
         (
           vector_buffer_byte_size{buffer_id="hcp_logs",namespace="hypershift-control-plane-log-forwarding"} > 524288000
         )
-        and ignoring(pod)
+        and on()
         (vector:s3_sink:write_ratio < 0.85)
       for: 1h
       labels:
