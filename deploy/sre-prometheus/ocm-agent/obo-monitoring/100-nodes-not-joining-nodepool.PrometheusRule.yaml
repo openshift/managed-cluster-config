@@ -22,11 +22,8 @@ spec:
                     hypershift_nodepool_spec_info{market_type="Spot"},
                     "name", "$1", "nodepool_name", "(.*)"
                   )
-                  unless on (_id) (
-                    hypershift_nodepools_size == 0
-                    or
-                    hypershift_cluster_limited_support_enabled == 1
-                  )
+                  unless on (exported_namespace, name) (hypershift_nodepools_size == 0)
+                  unless on (_id) (hypershift_cluster_limited_support_enabled == 1)
                 )
                 unless on (exported_namespace) last_over_time(hypershift_cluster_deleting_duration_seconds[10m])
               )
@@ -48,11 +45,8 @@ spec:
                     hypershift_nodepool_spec_info{market_type="Spot"},
                     "name", "$1", "nodepool_name", "(.*)"
                   )
-                  unless on (_id) (
-                    hypershift_nodepools_size == 0
-                    or
-                    hypershift_cluster_limited_support_enabled == 1
-                  )
+                  unless on (exported_namespace, name) (hypershift_nodepools_size == 0)
+                  unless on (_id) (hypershift_cluster_limited_support_enabled == 1)
                 )
                 unless on (exported_namespace) last_over_time(hypershift_cluster_deleting_duration_seconds[10m])
               )
