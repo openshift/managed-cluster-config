@@ -14,12 +14,10 @@ selectorSyncSet:
   - key: hive.openshift.io/cluster-platform
     operator: In
     values: ["aws"]
+  # Include FedRAMP AWS OSD clusters in the same 4.22+ cohort.
   - key: api.openshift.com/product
     operator: NotIn
     values: ["rosa"]
-  - key: api.openshift.com/fedramp
-    operator: NotIn
-    values: ["true"]
   # Exclude HyperShift management/service clusters; CPMS boot image management
   # for the HCP fleet is handled as a separate, dedicated rollout.
   - key: ext-hypershift.openshift.io/cluster-type

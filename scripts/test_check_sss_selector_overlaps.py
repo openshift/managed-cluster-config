@@ -130,6 +130,21 @@ class GeneratedTemplateTests(unittest.TestCase):
             with self.subTest(version=version):
                 self.assertEqual([expected], self.matching_names(labels))
 
+    def test_fedramp_422_and_later_matches_only_managed_cpms_sss(self):
+        expected = ["osd-machine-configuration-osd-aws-422"]
+        for version in ("4.22", "4.23", "4.40", "5.0"):
+            for product in (None, "osd"):
+                labels = {
+                    MANAGED_LABEL: "true",
+                    VERSION_LABEL: version,
+                    CLUSTER_PLATFORM_LABEL: "aws",
+                    FEDRAMP_LABEL: "true",
+                }
+                if product is not None:
+                    labels[PRODUCT_LABEL] = product
+                with self.subTest(version=version, product=product):
+                    self.assertEqual(expected, self.matching_names(labels))
+
     def test_new_sss_excludes_out_of_scope_clusters(self):
         name = "osd-machine-configuration-osd-aws-422"
         self.assertIn(name, self.syncsets)
@@ -142,7 +157,10 @@ class GeneratedTemplateTests(unittest.TestCase):
         }
         cases = [
             ("ROSA", {**base, PRODUCT_LABEL: "rosa"}),
-            ("FedRAMP", {**base, FEDRAMP_LABEL: "true"}),
+            (
+                "FedRAMP ROSA",
+                {**base, PRODUCT_LABEL: "rosa", FEDRAMP_LABEL: "true"},
+            ),
             ("GCP", {**base, CLUSTER_PLATFORM_LABEL: "gcp"}),
             ("Azure", {**base, CLUSTER_PLATFORM_LABEL: "azure"}),
             (
