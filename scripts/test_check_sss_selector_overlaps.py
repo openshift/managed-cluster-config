@@ -145,6 +145,21 @@ class GeneratedTemplateTests(unittest.TestCase):
                 with self.subTest(version=version, product=product):
                     self.assertEqual(expected, self.matching_names(labels))
 
+    def test_fedramp_419_through_421_matches_only_legacy_sss(self):
+        expected = ["osd-machine-configuration-osd-aws-419"]
+        for version in ("4.19", "4.20", "4.21"):
+            for product in (None, "osd"):
+                labels = {
+                    MANAGED_LABEL: "true",
+                    VERSION_LABEL: version,
+                    CLUSTER_PLATFORM_LABEL: "aws",
+                    FEDRAMP_LABEL: "true",
+                }
+                if product is not None:
+                    labels[PRODUCT_LABEL] = product
+                with self.subTest(version=version, product=product):
+                    self.assertEqual(expected, self.matching_names(labels))
+
     def test_new_sss_excludes_out_of_scope_clusters(self):
         name = "osd-machine-configuration-osd-aws-422"
         self.assertIn(name, self.syncsets)
