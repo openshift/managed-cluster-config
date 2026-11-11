@@ -36,6 +36,11 @@ data:
                       infrastructure_ready: [status, conditions, "[type=InfrastructureReady]", status]
                       node_healthy: [status, conditions, "[type=NodeHealthy]", status]
                       draining_succeeded: [status, conditions, "[type=DrainingSucceeded]", status]
+                      # CAPI v1beta2 Machines can be draining without status.phase.
+                      # Expose the conditions so RHOBS can identify stuck drains.
+                      node_ready: [status, conditions, "[type=NodeReady]", status]
+                      deleting: [status, conditions, "[type=Deleting]", status]
+                      deleting_reason: [status, conditions, "[type=Deleting]", reason]
         - groupVersionKind:
             group: hypershift.openshift.io
             version: v1beta1
