@@ -3,14 +3,12 @@ selectorSyncSet:
   resourceApplyMode: "Sync"
   matchExpressions:
   - key: hive.openshift.io/version-major-minor
-    operator: NotIn
-    values: ["4.0", "4.1", "4.2", "4.3", "4.4", "4.5", "4.6", "4.7", "4.8", "4.9", "4.10", "4.11", "4.12", "4.13", "4.14", "4.15", "4.16", "4.17", "4.18"]
+    operator: In
+    values: ["4.19", "4.20", "4.21"]
   - key: hive.openshift.io/cluster-platform
     operator: In
     values: ["aws"]
+  # Include FedRAMP AWS OSD clusters in the 4.19-4.21 rule.
   - key: api.openshift.com/product
     operator: NotIn
     values: ["rosa"]
-  - key: api.openshift.com/fedramp
-    operator: NotIn
-    values: ["true"]
