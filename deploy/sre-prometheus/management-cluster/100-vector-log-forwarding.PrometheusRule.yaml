@@ -209,9 +209,12 @@ spec:
         SOP: https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/VectorClusterIngestionFailureSRE.md
 
     # CRITICAL: Vector has stopped collecting logs from HCP pods entirely
-    # Only fires when HCP namespaces exist, ingestion was active 15m ago, and
-    # is now zero. The offset 15m guard prevents false positives on cold-start
-    # MCs that have never ingested. Matches the RHOBS expression.
+    # Only fires when HCP namespaces exist, ingestion was above 10 events/s
+    # in the 5m window ending 15m ago, and current ingestion is zero.
+    # max_over_time keeps that prior-ingestion evidence for the 5m pending
+    # hold. A short burst can otherwise leave the offset rate above 10 for
+    # less than 5m, and the pending alert clears before it fires.
+    # A cluster that has never ingested does not match.
     # Possible causes: RBAC/SCC issues, k8s API connectivity problems, source config errors
     # TEMPORARILY WARNING: Set to warning for initial validation
     - alert: VectorNoLogsIngestedSRE
@@ -221,10 +224,14 @@ spec:
         )
         and
         (
-          sum(rate(vector_component_received_events_total{
-            component_id="kubernetes_logs",
-            namespace="hypershift-control-plane-log-forwarding"
-          }[5m] offset 15m)) > 10
+          max_over_time(
+            (
+              sum(rate(vector_component_received_events_total{
+                component_id="kubernetes_logs",
+                namespace="hypershift-control-plane-log-forwarding"
+              }[5m] offset 15m)) > bool 10
+            )[5m:]
+          ) == 1
         )
         and
         (
@@ -239,7 +246,7 @@ spec:
         namespace: openshift-monitoring
       annotations:
         summary: Vector is not collecting any logs from HCP pods
-        description: No logs have been collected in the last 5 minutes. Check Vector pod status and k8s API connectivity.
+        description: HCP namespaces are present and ingestion was above 10 events/s. Vector now reports zero collected events. Check Vector pod status and k8s API connectivity.
         SOP: https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/VectorNoLogsIngestedSRE.md
 
     # CRITICAL: Vector has stopped writing logs to S3 entirely

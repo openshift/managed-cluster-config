@@ -48226,10 +48226,11 @@ objects:
               SOP: https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/VectorClusterIngestionFailureSRE.md
           - alert: VectorNoLogsIngestedSRE
             expr: "(\n  count(kube_namespace_labels{label_hypershift_openshift_io_hosted_control_plane=\"\
-              true\"}) > 0\n)\nand\n(\n  sum(rate(vector_component_received_events_total{\n\
-              \    component_id=\"kubernetes_logs\",\n    namespace=\"hypershift-control-plane-log-forwarding\"\
-              \n  }[5m] offset 15m)) > 10\n)\nand\n(\n  sum(rate(vector_component_received_events_total{\n\
-              \    component_id=\"kubernetes_logs\",\n    namespace=\"hypershift-control-plane-log-forwarding\"\
+              true\"}) > 0\n)\nand\n(\n  max_over_time(\n    (\n      sum(rate(vector_component_received_events_total{\n\
+              \        component_id=\"kubernetes_logs\",\n        namespace=\"hypershift-control-plane-log-forwarding\"\
+              \n      }[5m] offset 15m)) > bool 10\n    )[5m:]\n  ) == 1\n)\nand\n\
+              (\n  sum(rate(vector_component_received_events_total{\n    component_id=\"\
+              kubernetes_logs\",\n    namespace=\"hypershift-control-plane-log-forwarding\"\
               \n  }[5m])) == 0\n)\n"
             for: 5m
             labels:
@@ -48237,8 +48238,9 @@ objects:
               namespace: openshift-monitoring
             annotations:
               summary: Vector is not collecting any logs from HCP pods
-              description: No logs have been collected in the last 5 minutes. Check
-                Vector pod status and k8s API connectivity.
+              description: HCP namespaces are present and ingestion was above 10 events/s.
+                Vector now reports zero collected events. Check Vector pod status
+                and k8s API connectivity.
               SOP: https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/VectorNoLogsIngestedSRE.md
           - alert: VectorS3WritesStoppedSRE
             expr: "(\n  sum(rate(vector_hcp_logs_events_total[5m])) > 0\n  and\n \
