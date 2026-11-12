@@ -189,6 +189,7 @@ def format_target(target):
 
 
 def main():
+    """Run overlap validation against the generated production template."""
     parser = argparse.ArgumentParser(
         description=(
             "Fail when a synthetic ClusterDeployment matches multiple generated "
