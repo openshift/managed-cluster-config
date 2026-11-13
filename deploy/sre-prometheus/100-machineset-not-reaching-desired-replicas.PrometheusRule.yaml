@@ -1,0 +1,186 @@
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: machineset-not-reaching-desired-replicas
+    role: alert-rules
+  name: machineset-not-reaching-desired-replicas
+  namespace: openshift-monitoring
+spec:
+  groups:
+    - name: machineset-not-reaching-desired-replicas
+      interval: 60s
+      rules:
+        # Recording rule to count ready nodes per machineset
+        # This extracts the machineset name from machine names and joins with node readiness status
+        - record: sre:machineset:ready_nodes_count
+          expr: |-
+            count by (machineset) (
+              label_replace(
+                clamp(mapi_machine_created_timestamp_seconds, 0, 1),
+                "machineset",
+                "$1",
+                "name",
+                "^(.*)-[^-]*$"
+              )
+              * on (node) group_right(machineset)
+              kube_node_status_condition{condition="Ready",status="True"}
+            ) or
+            # If no ready nodes exist for a machineset, return 0
+            # Add machineset label and exclude MachineSets already counted above
+            (
+              label_replace(
+                mapi_machine_set_spec_replicas * 0,
+                "machineset",
+                "$1",
+                "name",
+                "(.*)"
+              )
+              unless on (machineset)
+              count by (machineset) (
+                label_replace(
+                  clamp(mapi_machine_created_timestamp_seconds, 0, 1),
+                  "machineset",
+                  "$1",
+                  "name",
+                  "^(.*)-[^-]*$"
+                )
+                * on (node) group_right(machineset)
+                kube_node_status_condition{condition="Ready",status="True"}
+              )
+            )
+
+        # Recording rule to detect on-demand machinesets not reaching desired replicas
+        # Excludes: upgrade machinesets, master nodes, infra nodes, zero-replica machinesets, spot instances
+        # Spot instances are excluded because provisioning failures are expected behavior for spot
+        - record: sre:machineset:provisioning_failure_notify
+          expr: |-
+            (
+              (
+                # Desired replicas (from spec.replicas)
+                mapi_machine_set_spec_replicas{name!~".*upgrade$",name!~".*(master|infra).*"} > 0
+                > on (name)
+                # Ready nodes count (use label_replace to match on 'name')
+                label_replace(
+                  sre:machineset:ready_nodes_count,
+                  "name",
+                  "$1",
+                  "machineset",
+                  "(.*)"
+                )
+              ) or
+              (
+                # Also catch machinesets with zero ready nodes (but replicas > 0)
+                mapi_machine_set_spec_replicas{name!~".*upgrade$",name!~".*(master|infra).*"} > 0
+                unless on (name)
+                label_replace(
+                  sre:machineset:ready_nodes_count > 0,
+                  "name",
+                  "$1",
+                  "machineset",
+                  "(.*)"
+                )
+              )
+            )
+            # Exclude spot instances - mapi_machine_set_spec_spot_info only exists for spot MachineSets
+            # This metric is only emitted when spotMarketOptions is configured in the MachineSet spec
+            unless on (name, namespace)
+            mapi_machine_set_spec_spot_info
+
+        # Recording rule to detect spot machinesets not reaching desired replicas
+        # Only includes spot instances (those with spotMarketOptions configured)
+        - record: sre:machineset:provisioning_failure_notify_spot
+          expr: |-
+            (
+              (
+                # Desired replicas (from spec.replicas)
+                mapi_machine_set_spec_replicas{name!~".*upgrade$",name!~".*(master|infra).*"} > 0
+                > on (name)
+                # Ready nodes count (use label_replace to match on 'name')
+                label_replace(
+                  sre:machineset:ready_nodes_count,
+                  "name",
+                  "$1",
+                  "machineset",
+                  "(.*)"
+                )
+              ) or
+              (
+                # Also catch machinesets with zero ready nodes (but replicas > 0)
+                mapi_machine_set_spec_replicas{name!~".*upgrade$",name!~".*(master|infra).*"} > 0
+                unless on (name)
+                label_replace(
+                  sre:machineset:ready_nodes_count > 0,
+                  "name",
+                  "$1",
+                  "machineset",
+                  "(.*)"
+                )
+              )
+            )
+            # Only include spot instances - mapi_machine_set_spec_spot_info only exists for spot MachineSets
+            # This metric is only emitted when spotMarketOptions is configured in the MachineSet spec
+            and on (name, namespace)
+            mapi_machine_set_spec_spot_info
+
+        # Alert fires when:
+        # 1. On-demand machineset has not reached desired replicas for 1 hour
+        # 2. Control plane is healthy (etcd + critical operators)
+        # This sends a service log to customers to investigate their AWS configuration
+        # Spot instances are excluded - they have their own alert with different messaging
+        - alert: MachineSetNotReachingDesiredReplicasNotificationSRE
+          annotations:
+            description: "One or more on-demand machine pools for cluster {{ $labels._id }} have not reached their target size for more than 1 hour"
+            summary: "On-demand Machine Pool provisioning failure"
+          expr: |-
+            sre:machineset:provisioning_failure_notify
+            # Only fire when control plane is healthy - require positive health signals
+            # If health metrics are missing, these checks fail and suppress the alert
+            # Similar to HyperShift's all_components_available check
+            and on ()
+            (
+              # All critical operators must not be degraded (Degraded=0)
+              cluster_operator_conditions{name="machine-api",condition="Degraded"} == 0
+              and cluster_operator_conditions{name="kube-apiserver",condition="Degraded"} == 0
+              and cluster_operator_conditions{name="kube-controller-manager",condition="Degraded"} == 0
+              # Etcd must not have members down
+              and (count(ALERTS{alertname="etcdMembersDown",alertstate="firing"}) or vector(0)) == 0
+            )
+          for: 60m
+          labels:
+            severity: info
+            send_managed_notification: "true"
+            managed_notification_template: MachineSetProvisioningFailure
+            namespace: openshift-machine-api
+
+        # Alert fires when:
+        # 1. Spot machineset has not reached desired replicas for 1 hour
+        # 2. Control plane is healthy (etcd + critical operators)
+        # This sends a service log to customers about spot instance capacity/pricing issues
+        # Lower severity (warning vs info) because spot failures are more common and expected
+        - alert: SpotMachineSetNotReachingDesiredReplicasNotificationSRE
+          annotations:
+            description: "One or more spot instance machine pools for cluster {{ $labels._id }} have not reached their target size for more than 1 hour"
+            summary: "Spot Machine Pool provisioning failure"
+          expr: |-
+            sre:machineset:provisioning_failure_notify_spot
+            # Only fire when control plane is healthy - require positive health signals
+            # If health metrics are missing, these checks fail and suppress the alert
+            # Similar to HyperShift's all_components_available check
+            and on ()
+            (
+              # All critical operators must not be degraded (Degraded=0)
+              cluster_operator_conditions{name="machine-api",condition="Degraded"} == 0
+              and cluster_operator_conditions{name="kube-apiserver",condition="Degraded"} == 0
+              and cluster_operator_conditions{name="kube-controller-manager",condition="Degraded"} == 0
+              # Etcd must not have members down
+              and (count(ALERTS{alertname="etcdMembersDown",alertstate="firing"}) or vector(0)) == 0
+            )
+          for: 60m
+          labels:
+            severity: warning
+            send_managed_notification: "true"
+            managed_notification_template: MachineSetProvisioningFailureSpot
+            namespace: openshift-machine-api
