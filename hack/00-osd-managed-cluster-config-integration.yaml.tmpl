@@ -28547,16 +28547,19 @@ objects:
           \        name:\n          - metadata\n          - name\n        namespace:\n\
           \          - metadata\n          - namespace\n      metrics:\n        -\
           \ name: \"spec_info\"\n          help: \"Static spec-derived info for a\
-          \ machineset including spot market configuration\"\n          each:\n  \
-          \          type: Info\n            info:\n                labelsFromPath:\n\
-          \                  # Extract instance type for reference\n             \
-          \     instance_type: [spec, template, spec, providerSpec, value, instanceType]\n\
-          \                  # Extract spot market max price - if this label exists,\
-          \ it's a spot instance\n                  # The maxPrice value can be empty\
-          \ (means use current on-demand price as max)\n                  # We use\
-          \ label presence (not value) to detect spot instances in alerts\n      \
-          \            spot_market_max_price: [spec, template, spec, providerSpec,\
-          \ value, spotMarketOptions, maxPrice]\n"
+          \ machineset\"\n          each:\n            type: Info\n            info:\n\
+          \                labelsFromPath:\n                  # Extract instance type\
+          \ for reference\n                  instance_type: [spec, template, spec,\
+          \ providerSpec, value, instanceType]\n        # Separate metric for spot\
+          \ instances - only emitted when spotMarketOptions exists\n        # This\
+          \ allows reliable detection: on-demand = no spot_info series, spot = has\
+          \ spot_info series\n        - name: \"spec_spot_info\"\n          help:\
+          \ \"Info metric for spot-configured machinesets - only present when spotMarketOptions\
+          \ is configured\"\n          each:\n            type: Info\n           \
+          \ path: [spec, template, spec, providerSpec, value, spotMarketOptions]\n\
+          \            info:\n                labelsFromPath:\n                  #\
+          \ Extract max price - can be empty (means use current on-demand price as\
+          \ max)\n                  spot_max_price: [maxPrice]\n"
     - apiVersion: v1
       kind: ServiceAccount
       metadata:
@@ -46311,6 +46314,20 @@ objects:
     clusterDeploymentSelector:
       matchLabels:
         api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/product
+        operator: In
+        values:
+        - rosa
+      - key: ext-hypershift.openshift.io/cluster-type
+        operator: NotIn
+        values:
+        - management-cluster
+        - service-cluster
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
     resourceApplyMode: Sync
     resources:
     - apiVersion: monitoring.coreos.com/v1
@@ -46752,7 +46769,10 @@ objects:
               \ 0, 1),\n    \"machineset\",\n    \"$1\",\n    \"name\",\n    \"^(.*)-[^-]*$\"\
               \n  )\n  * on (node) group_right(machineset)\n  kube_node_status_condition{condition=\"\
               Ready\",status=\"True\"}\n) or\n# If no ready nodes exist for a machineset,\
-              \ return 0\n(\n  mapi_machine_set_spec_replicas * 0\n)"
+              \ return 0\n# Add machineset label and exclude MachineSets already counted\
+              \ above\n(\n  label_replace(\n    mapi_machine_set_spec_replicas * 0,\n\
+              \    \"machineset\",\n    \"$1\",\n    \"name\",\n    \"(.*)\"\n  )\n\
+              \  unless on (machineset)\n  sre:machineset:ready_nodes_count\n)"
           - record: sre:machineset:provisioning_failure_notify
             expr: "(\n  (\n    # Desired replicas (from spec.replicas)\n    mapi_machine_set_spec_replicas{name!~\"\
               .*upgrade$\",name!~\".*(master|infra).*\"} > 0\n    > on (name)\n  \
@@ -46763,11 +46783,10 @@ objects:
               \    mapi_machine_set_spec_replicas{name!~\".*upgrade$\",name!~\".*(master|infra).*\"\
               } > 0\n    unless on (name)\n    label_replace(\n      sre:machineset:ready_nodes_count\
               \ > 0,\n      \"name\",\n      \"$1\",\n      \"machineset\",\n    \
-              \  \"(.*)\"\n    )\n  )\n)\n# Exclude spot instances - spot_market_max_price\
-              \ label exists if spotMarketOptions configured\n# Note: We check for\
-              \ label existence, not non-empty value, because maxPrice can be empty\n\
-              # (empty means use current on-demand price as maximum)\nunless on (name,\
-              \ namespace)\nmapi_machine_set_spec_info"
+              \  \"(.*)\"\n    )\n  )\n)\n# Exclude spot instances - mapi_machine_set_spec_spot_info\
+              \ only exists for spot MachineSets\n# This metric is only emitted when\
+              \ spotMarketOptions is configured in the MachineSet spec\nunless on\
+              \ (name, namespace)\nmapi_machine_set_spec_spot_info"
           - record: sre:machineset:provisioning_failure_notify_spot
             expr: "(\n  (\n    # Desired replicas (from spec.replicas)\n    mapi_machine_set_spec_replicas{name!~\"\
               .*upgrade$\",name!~\".*(master|infra).*\"} > 0\n    > on (name)\n  \
@@ -46778,11 +46797,10 @@ objects:
               \    mapi_machine_set_spec_replicas{name!~\".*upgrade$\",name!~\".*(master|infra).*\"\
               } > 0\n    unless on (name)\n    label_replace(\n      sre:machineset:ready_nodes_count\
               \ > 0,\n      \"name\",\n      \"$1\",\n      \"machineset\",\n    \
-              \  \"(.*)\"\n    )\n  )\n)\n# Only include spot instances - spot_market_max_price\
-              \ label exists if spotMarketOptions configured\n# Note: We check for\
-              \ label existence, not non-empty value, because maxPrice can be empty\n\
-              # (empty means use current on-demand price as maximum)\nand on (name,\
-              \ namespace)\nmapi_machine_set_spec_info"
+              \  \"(.*)\"\n    )\n  )\n)\n# Only include spot instances - mapi_machine_set_spec_spot_info\
+              \ only exists for spot MachineSets\n# This metric is only emitted when\
+              \ spotMarketOptions is configured in the MachineSet spec\nand on (name,\
+              \ namespace)\nmapi_machine_set_spec_spot_info"
           - alert: MachineSetNotReachingDesiredReplicasNotificationSRE
             annotations:
               description: One or more on-demand machine pools for cluster {{ $labels._id
@@ -46830,6 +46848,28 @@ objects:
               severity: warning
               send_managed_notification: 'true'
               managed_notification_template: MachineSetProvisioningFailureSpot
+              namespace: openshift-machine-api
+          - alert: MachineSetProvisioningFailureControlPlaneUnhealthySRE
+            annotations:
+              summary: MachineSet not reaching replicas while control plane is unhealthy
+              description: MachineSet {{ $labels.name }} in namespace {{ $labels.namespace
+                }} has not reached desired replicas for 60m and control plane components
+                are degraded. SRE should investigate control plane health (etcd, machine-api,
+                kube-apiserver, or kube-controller-manager).
+            expr: "(\n  sre:machineset:provisioning_failure_notify\n  # Fire when\
+              \ control plane IS unhealthy (opposite of customer notification)\n \
+              \ and on ()\n  (\n    # Etcd health - core control plane component\n\
+              \    count(ALERTS{alertname=\"etcdMembersDown\",alertstate=\"firing\"\
+              }) > 0\n    or\n    # machine-api operator degraded - manages MachineSets\
+              \ (equivalent to CAPI in HCP)\n    cluster_operator_conditions{name=\"\
+              machine-api\",condition=\"Degraded\"} == 1\n    or\n    # kube-apiserver\
+              \ degraded - API server health\n    cluster_operator_conditions{name=\"\
+              kube-apiserver\",condition=\"Degraded\"} == 1\n    or\n    # kube-controller-manager\
+              \ degraded - includes machine-approver for CSR approval\n    cluster_operator_conditions{name=\"\
+              kube-controller-manager\",condition=\"Degraded\"} == 1\n  )\n)"
+            for: 60m
+            labels:
+              severity: warning
               namespace: openshift-machine-api
     - apiVersion: monitoring.coreos.com/v1
       kind: PrometheusRule

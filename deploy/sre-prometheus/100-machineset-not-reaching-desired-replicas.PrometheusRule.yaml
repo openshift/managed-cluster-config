@@ -188,3 +188,36 @@ spec:
             send_managed_notification: "true"
             managed_notification_template: MachineSetProvisioningFailureSpot
             namespace: openshift-machine-api
+
+        # SRE Alert fires when:
+        # 1. On-demand machineset has not reached desired replicas for 1 hour
+        # 2. Control plane is UNHEALTHY (etcd down or critical operators degraded)
+        # This alerts SRE to investigate control plane issues that are preventing nodes from joining
+        # Customer notification is suppressed in this scenario since it's an SRE-owned issue
+        - alert: MachineSetProvisioningFailureControlPlaneUnhealthySRE
+          annotations:
+            summary: "MachineSet not reaching replicas while control plane is unhealthy"
+            description: "MachineSet {{ $labels.name }} in namespace {{ $labels.namespace }} has not reached desired replicas for 60m and control plane components are degraded. SRE should investigate control plane health (etcd, machine-api, kube-apiserver, or kube-controller-manager)."
+          expr: |-
+            (
+              sre:machineset:provisioning_failure_notify
+              # Fire when control plane IS unhealthy (opposite of customer notification)
+              and on ()
+              (
+                # Etcd health - core control plane component
+                count(ALERTS{alertname="etcdMembersDown",alertstate="firing"}) > 0
+                or
+                # machine-api operator degraded - manages MachineSets (equivalent to CAPI in HCP)
+                cluster_operator_conditions{name="machine-api",condition="Degraded"} == 1
+                or
+                # kube-apiserver degraded - API server health
+                cluster_operator_conditions{name="kube-apiserver",condition="Degraded"} == 1
+                or
+                # kube-controller-manager degraded - includes machine-approver for CSR approval
+                cluster_operator_conditions{name="kube-controller-manager",condition="Degraded"} == 1
+              )
+            )
+          for: 60m
+          labels:
+            severity: warning
+            namespace: openshift-machine-api
