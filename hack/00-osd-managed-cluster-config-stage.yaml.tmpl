@@ -31547,11 +31547,13 @@ objects:
         namespace: hypershift-observability
       data:
         custom-resource-state.yaml: "spec:\n  resources:\n    - groupVersionKind:\n\
-          \        group: cluster.x-k8s.io\n        version: v1beta1\n        kind:\
+          \        group: cluster.x-k8s.io\n        version: v1beta2\n        kind:\
           \ Machine\n      metricNamePrefix: capi_machine\n      labelsFromPath:\n\
           \        machine_name:\n          - metadata\n          - name\n       \
-          \ exported_namespace:\n          - metadata\n          - namespace\n   \
-          \     _id:\n          - metadata\n          - labels\n          - \"cluster.x-k8s.io/cluster-name\"\
+          \ nodepool_ref:\n          - metadata\n          - annotations\n       \
+          \   - \"hypershift.openshift.io/nodePool\"\n        exported_namespace:\n\
+          \          - metadata\n          - namespace\n        _id:\n          -\
+          \ metadata\n          - labels\n          - \"cluster.x-k8s.io/cluster-name\"\
           \n      metrics:\n        - name: \"info\"\n          help: \"The current\
           \ state of a machine.\"\n          each:\n            type: Info\n     \
           \       info:\n                labelsFromPath:\n                  status_phase:\
@@ -31560,8 +31562,10 @@ objects:
           \ \"[type=HealthCheckSucceeded]\", status]\n                  infrastructure_ready:\
           \ [status, conditions, \"[type=InfrastructureReady]\", status]\n       \
           \           node_healthy: [status, conditions, \"[type=NodeHealthy]\", status]\n\
-          \                  draining_succeeded: [status, conditions, \"[type=DrainingSucceeded]\"\
-          , status]\n    - groupVersionKind:\n        group: hypershift.openshift.io\n\
+          \                  node_ready: [status, conditions, \"[type=NodeReady]\"\
+          , status]\n                  deleting: [status, conditions, \"[type=Deleting]\"\
+          , status]\n                  deleting_reason: [status, conditions, \"[type=Deleting]\"\
+          , reason]\n    - groupVersionKind:\n        group: hypershift.openshift.io\n\
           \        version: v1beta1\n        kind: NodePool\n      metricNamePrefix:\
           \ hypershift_nodepool\n      labelsFromPath:\n        nodepool_name:\n \
           \         - metadata\n          - name\n        exported_namespace:\n  \
@@ -31640,7 +31644,7 @@ objects:
           \   type: Gauge\n            gauge:\n              path: [metadata, creationTimestamp]\n\
           \        - name: \"info\"\n          help: \"cert-manager Challenge CR with\
           \ state label.\"\n          each:\n            type: Info\n            info:\n\
-          \              labelsFromPath:\n                state: [status, state]"
+          \              labelsFromPath:\n                state: [status, state]\n"
     - apiVersion: v1
       kind: ServiceAccount
       metadata:
@@ -50065,9 +50069,10 @@ objects:
               \ on (exported_namespace, name) (hypershift_nodepools_size == 0)\n \
               \     unless on (_id) (hypershift_cluster_limited_support_enabled ==\
               \ 1)\n    )\n    unless on (exported_namespace) last_over_time(hypershift_cluster_deleting_duration_seconds[10m])\n\
-              \  )\n  unless on (exported_namespace) label_replace(\n    capi_machine_info{status_phase=\"\
-              Deleting\"},\n    \"exported_namespace\",\n    \"$1-$2-$3\",\n    \"\
-              exported_namespace\",\n    \"^(.*?)-(.*?)-(.*?)-.*$\"\n  )\n)"
+              \  )\n  unless on (exported_namespace) label_replace(\n    (capi_machine_info{status_phase=\"\
+              Deleting\"} or capi_machine_info{deleting=\"True\"}),\n    \"exported_namespace\"\
+              ,\n    \"$1-$2-$3\",\n    \"exported_namespace\",\n    \"^(.*?)-(.*?)-(.*?)-.*$\"\
+              \n  )\n)"
           - record: sre:nodepool:provisioning_failure_notify_spot
             expr: "sum by (_id, cluster_name, exported_namespace, namespace) (\n \
               \ (\n    (\n      (hypershift_nodepools_available_replicas / hypershift_nodepools_size\
@@ -50077,9 +50082,10 @@ objects:
               \ on (exported_namespace, name) (hypershift_nodepools_size == 0)\n \
               \     unless on (_id) (hypershift_cluster_limited_support_enabled ==\
               \ 1)\n    )\n    unless on (exported_namespace) last_over_time(hypershift_cluster_deleting_duration_seconds[10m])\n\
-              \  )\n  unless on (exported_namespace) label_replace(\n    capi_machine_info{status_phase=\"\
-              Deleting\"},\n    \"exported_namespace\",\n    \"$1-$2-$3\",\n    \"\
-              exported_namespace\",\n    \"^(.*?)-(.*?)-(.*?)-.*$\"\n  )\n)"
+              \  )\n  unless on (exported_namespace) label_replace(\n    (capi_machine_info{status_phase=\"\
+              Deleting\"} or capi_machine_info{deleting=\"True\"}),\n    \"exported_namespace\"\
+              ,\n    \"$1-$2-$3\",\n    \"exported_namespace\",\n    \"^(.*?)-(.*?)-(.*?)-.*$\"\
+              \n  )\n)"
           - alert: NodepoolFailureNotification
             annotations:
               description: One or more on-demand nodepools for cluster {{ $labels._id
@@ -50110,6 +50116,29 @@ objects:
               managed_notification_template: nodepool-provisioning-failure-spot
               cluster_id: '{{ $labels._id }}'
               namespace: '{{ $labels.namespace }}'
+          - alert: NodePoolCapiDrainStalled
+            annotations:
+              description: For one hour, NodePool {{ $labels.nodepool_ref }} on cluster
+                {{ $labels._id }} has had fewer available replicas than desired while
+                at least two of its CAPI Machines reported Deleting=True (DrainingNode)
+                and NodeReady=True at each evaluation. The individual Machines may
+                change during that hour. Inspect the Machine deletion conditions and
+                NodePool status.
+              summary: CAPI Machines stuck draining with a NodePool replica shortfall
+            expr: "max by (_id, nodepool_ref) (\n  label_join(\n    (hypershift_nodepools_available_replicas\
+              \ / hypershift_nodepools_size < 1)\n    unless on (exported_namespace,\
+              \ name) (hypershift_nodepools_size == 0),\n    \"nodepool_ref\", \"\
+              /\", \"exported_namespace\", \"name\"\n  )\n)\nand on (nodepool_ref)\n\
+              (\n  count by (nodepool_ref) (\n    max by (nodepool_ref, machine_name)\
+              \ (\n      capi_machine_info{nodepool_ref!=\"\", deleting=\"True\",\
+              \ deleting_reason=\"DrainingNode\", node_ready=\"True\"}\n    )\n  )\
+              \ >= 2\n)\nunless on (_id) (hypershift_cluster_limited_support_enabled\
+              \ == 1)\nunless on (_id) last_over_time(hypershift_cluster_deleting_duration_seconds[10m])\n\
+              unless on (_id) sre:hcp:alerts_suppressed"
+            for: 60m
+            labels:
+              severity: warning
+              cluster_id: '{{ $labels._id }}'
     - apiVersion: monitoring.rhobs/v1
       kind: PrometheusRule
       metadata:
