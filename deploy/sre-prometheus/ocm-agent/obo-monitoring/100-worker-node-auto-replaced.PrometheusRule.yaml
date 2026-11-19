@@ -1,0 +1,53 @@
+---
+apiVersion: monitoring.rhobs/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: worker-node-auto-replaced
+    role: alert-rules
+  name: worker-node-auto-replaced
+  namespace: openshift-observability-rhobs
+spec:
+  groups:
+    - name: worker-node-auto-replaced
+      interval: 60s
+      rules:
+        # https://redhat.atlassian.net/browse/MCS-1494
+        #
+        # healthcheck_succeeded="False" is CAPI MachineHealthCheck's own condition on the
+        # Machine, set when MHC has flagged it unhealthy for remediation. last_over_time lets
+        # the signal survive the Machine object being deleted once remediation completes.
+        #
+        # TODO(MCS-1494): no HostedCluster/NodePool-level "upgrade in progress" signal was found
+        # in this repo (unlike Classic's ClusterVersion-based guard in
+        # deploy/sre-prometheus/ocm-agent/node-condition/100-ocm-agent-node-condition.PrometheusRule.yaml).
+        # Worker replacements during an HCP NodePool upgrade will currently be notified. Needs a
+        # confirmed upgrade signal before this is safe for production.
+        #
+        # TODO(MCS-1494): the join below against hypershift_nodepool_spec_info{market_type="Spot"}
+        # excludes ALL spot machine replacements, not just reclamation (unlike Classic, which only
+        # suppresses spot interruption/reclamation via the Terminating condition and still notifies
+        # on genuine spot failures). No CAPI/CAPA condition distinguishing spot reclamation from a
+        # genuine spot machine failure was found exposed by
+        # deploy/hypershift-kube-state-metrics/025-configmap.yaml. Needs that condition added to
+        # the custom-resource-state config (likely from AWSMachine, not currently scraped) before
+        # this can mirror Classic's nuance.
+        - alert: WorkerNodeAutoReplacedNotification
+          annotations:
+            summary: "Worker node automatically replaced by MachineHealthCheck"
+            description: "MachineHealthCheck replaced at least one unhealthy worker node {{ $labels.machine_name }} in cluster {{ $labels._id }}; the customer is notified via service log."
+          expr: |-
+            last_over_time(
+              capi_machine_info{healthcheck_succeeded="False"}[10m]
+            )
+            unless on (exported_namespace, machine_name) label_replace(
+              hypershift_nodepool_spec_info{market_type="Spot"},
+              "machine_name", "$1", "nodepool_name", "(.*)"
+            )
+            unless on (_id) (hypershift_cluster_limited_support_enabled == 1)
+            unless on (exported_namespace) last_over_time(hypershift_cluster_deleting_duration_seconds[10m])
+          labels:
+            severity: info
+            send_managed_notification: "true"
+            managed_notification_template: worker-node-auto-replaced
+            namespace: "{{ $labels.namespace }}"

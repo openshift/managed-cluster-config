@@ -33941,6 +33941,23 @@ objects:
           resendWait: 24
           references:
           - https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/ovn-kubernetes_network_plugin/configuring-a-cluster-wide-proxy
+    - apiVersion: ocmagent.managed.openshift.io/v1alpha1
+      kind: ManagedFleetNotification
+      metadata:
+        name: worker-node-auto-replaced
+        namespace: openshift-ocm-agent-operator
+      spec:
+        fleetNotification:
+          name: worker-node-auto-replaced
+          summary: Worker node automatically replaced
+          notificationMessage: 'OpenShift''s Machine Health Check detected one or
+            more unhealthy worker nodes in your cluster and replaced them with new
+            nodes. For more information, refer to the following article: https://access.redhat.com/solutions/7066033.
+            Further replacements within 24 hours are not notified individually.'
+          logType: Cluster Lifecycle
+          resendWait: 24
+          severity: Low
+          limitedSupport: false
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
@@ -50210,6 +50227,35 @@ objects:
               send_managed_notification: 'true'
               managed_notification_template: additional-trust-bundle-ca-expired
               namespace: '{{ $labels.exported_namespace }}'
+    - apiVersion: monitoring.rhobs/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
+          prometheus: worker-node-auto-replaced
+          role: alert-rules
+        name: worker-node-auto-replaced
+        namespace: openshift-observability-rhobs
+      spec:
+        groups:
+        - name: worker-node-auto-replaced
+          interval: 60s
+          rules:
+          - alert: WorkerNodeAutoReplacedNotification
+            annotations:
+              summary: Worker node automatically replaced by MachineHealthCheck
+              description: MachineHealthCheck replaced at least one unhealthy worker
+                node {{ $labels.machine_name }} in cluster {{ $labels._id }}; the
+                customer is notified via service log.
+            expr: "last_over_time(\n  capi_machine_info{healthcheck_succeeded=\"False\"\
+              }[10m]\n)\nunless on (exported_namespace, machine_name) label_replace(\n\
+              \  hypershift_nodepool_spec_info{market_type=\"Spot\"},\n  \"machine_name\"\
+              , \"$1\", \"nodepool_name\", \"(.*)\"\n)\nunless on (_id) (hypershift_cluster_limited_support_enabled\
+              \ == 1)\nunless on (exported_namespace) last_over_time(hypershift_cluster_deleting_duration_seconds[10m])"
+            labels:
+              severity: info
+              send_managed_notification: 'true'
+              managed_notification_template: worker-node-auto-replaced
+              namespace: '{{ $labels.namespace }}'
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
