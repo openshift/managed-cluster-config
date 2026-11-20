@@ -25,12 +25,16 @@ spec:
         # name (<nodepool>-<hash>-<suffix>), and the join with hypershift_nodepools_size replaces _id
         # with the external id. The operator metric is scraped from two replicas, hence group by.
         #
-        # TODO(MCS-1494): no HostedCluster/NodePool-level "upgrade in progress" signal is exposed yet,
-        # so replacements during a NodePool upgrade are currently notified.
+        # Upgrades need no exclusion for upgradeType Replace: the rollout deletes and recreates machines,
+        # which never sets HealthCheckSucceeded=False. Verified on stage (4.19.45 to 4.19.46, control
+        # plane and three NodePools): no machine flagged, no alert. Not verified for upgradeType InPlace.
         #
-        # TODO(MCS-1494): the spot exclusion drops every machine of a Spot NodePool, not only
-        # reclamations like Classic. It also relies on hypershift_nodepool_spec_info{market_type},
-        # which does not exist on a 4.19 hosted cluster without a spot NodePool.
+        # The spot exclusion drops every machine of a Spot NodePool, as the card asks, not only
+        # reclamations like Classic. It relies on hypershift_nodepool_spec_info{market_type}, which does
+        # not exist on a 4.19 hosted cluster without a spot NodePool, so it is only verified offline.
+        #
+        # TODO(MCS-1494): MHC can flag a machine and skip remediation when unhealthyLessThanOrEqualTo is
+        # exceeded; this alert would still fire. OwnerRemediated is not exposed as a label yet.
         - alert: WorkerNodeAutoReplacedNotification
           annotations:
             summary: "Worker node automatically replaced by MachineHealthCheck"
