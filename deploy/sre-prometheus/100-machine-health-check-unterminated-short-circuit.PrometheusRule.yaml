@@ -12,8 +12,7 @@ spec:
     rules:
     - alert: MachineHealthCheckUnterminatedShortCircuitSRE
       expr: |
-        mapi_machinehealthcheck_short_circuit == 1
-      for: 30m
+        min_over_time(mapi_machinehealthcheck_short_circuit[30m]) == 1
       labels:
         severity: critical
         namespace: '{{ $labels.namespace }}'
@@ -21,5 +20,5 @@ spec:
         description: |
           The number of unhealthy machines has exceeded the `maxUnhealthy` limit
           for the check, you should check the status of machines in the cluster.
-        summary: machine health check {{ $labels.name }} has been disabled
-          by short circuit for more than 30 minutes
+        summary: machine health check {{ $labels.name }} has stayed disabled
+          by short circuit for 30 minutes
