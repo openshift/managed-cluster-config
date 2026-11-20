@@ -50243,14 +50243,16 @@ objects:
           - alert: WorkerNodeAutoReplacedNotification
             annotations:
               summary: Worker node automatically replaced by MachineHealthCheck
-              description: MachineHealthCheck replaced at least one unhealthy worker
-                node {{ $labels.machine_name }} in cluster {{ $labels._id }}; the
-                customer is notified via service log.
-            expr: "last_over_time(\n  capi_machine_info{healthcheck_succeeded=\"False\"\
-              }[10m]\n)\nunless on (exported_namespace, machine_name) label_replace(\n\
-              \  hypershift_nodepool_spec_info{market_type=\"Spot\"},\n  \"machine_name\"\
-              , \"$1\", \"nodepool_name\", \"(.*)\"\n)\nunless on (_id) (hypershift_cluster_limited_support_enabled\
-              \ == 1)\nunless on (exported_namespace) last_over_time(hypershift_cluster_deleting_duration_seconds[10m])"
+              description: MachineHealthCheck flagged worker node {{ $labels.machine_name
+                }} of cluster {{ $labels._id }} as unhealthy; the customer is notified
+                via service log.
+            expr: "label_replace(\n  label_replace(\n    last_over_time(capi_machine_info{healthcheck_succeeded=\"\
+              False\"}[10m]),\n    \"nodepool_name\", \"$1\", \"machine_name\", \"\
+              ^(.*)-[^-]+-[^-]+$\"\n  ),\n  \"hc_namespace\", \"$1-$2-$3\", \"exported_namespace\"\
+              , \"^(.*?)-(.*?)-(.*?)-.*$\"\n)\nunless on (hc_namespace, nodepool_name)\
+              \ label_replace(\n  hypershift_nodepool_spec_info{market_type=\"Spot\"\
+              },\n  \"hc_namespace\", \"$1\", \"exported_namespace\", \"(.*)\"\n)\n\
+              unless on (_id) hypershift_cluster_alerts_disabled"
             labels:
               severity: info
               send_managed_notification: 'true'
