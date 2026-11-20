@@ -1,0 +1,66 @@
+---
+apiVersion: monitoring.rhobs/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: worker-node-auto-replaced
+    role: alert-rules
+  name: worker-node-auto-replaced
+  namespace: openshift-observability-rhobs
+spec:
+  groups:
+    - name: worker-node-auto-replaced
+      interval: 60s
+      rules:
+        # https://redhat.atlassian.net/browse/MCS-1494
+        #
+        # healthcheck_succeeded="False" is CAPI MachineHealthCheck's own condition on the Machine.
+        # last_over_time keeps the series for 10m after the Machine object is deleted.
+        #
+        # ocm-agent posts the service log to the cluster whose external id is in the _id label.
+        # capi_machine_info carries the internal cluster id in _id and the HCP namespace
+        # (ocm-<env>-<id>-<name>) in exported_namespace, while the hypershift_* operator metrics carry
+        # the external id in _id and the hosted cluster namespace (ocm-<env>-<id>). The first
+        # label_replace derives that namespace, the second derives the NodePool name from the machine
+        # name (<nodepool>-<hash>-<suffix>), and the join with hypershift_nodepools_size replaces _id
+        # with the external id. The operator metric is scraped from two replicas, hence group by.
+        #
+        # Upgrades need no exclusion for upgradeType Replace: the rollout deletes and recreates machines,
+        # which never sets HealthCheckSucceeded=False. Verified on stage (4.19.45 to 4.19.46, control
+        # plane and three NodePools): no machine flagged, no alert. Not verified for upgradeType InPlace.
+        #
+        # The spot exclusion drops every machine of a Spot NodePool, as the card asks, not only
+        # reclamations like Classic. It relies on hypershift_nodepool_spec_info{market_type}, which does
+        # not exist on a 4.19 hosted cluster without a spot NodePool, so it is only verified offline.
+        #
+        # TODO(MCS-1494): MHC can flag a machine and skip remediation when unhealthyLessThanOrEqualTo is
+        # exceeded; this alert would still fire. OwnerRemediated is not exposed as a label yet.
+        - alert: WorkerNodeAutoReplacedNotification
+          annotations:
+            summary: "Worker node automatically replaced by MachineHealthCheck"
+            description: "MachineHealthCheck flagged worker node {{ $labels.machine_name }} of cluster {{ $labels._id }} as unhealthy; the customer is notified via service log."
+          expr: |-
+            label_replace(
+              label_replace(
+                last_over_time(capi_machine_info{healthcheck_succeeded="False"}[10m]),
+                "nodepool_name", "$1", "machine_name", "^(.*)-[^-]+-[^-]+$"
+              ),
+              "hc_namespace", "$1-$2-$3", "exported_namespace", "^(.*?)-(.*?)-(.*?)-.*$"
+            )
+            * on (hc_namespace, nodepool_name) group_left(_id)
+            group by (hc_namespace, nodepool_name, _id) (
+              label_replace(
+                label_replace(hypershift_nodepools_size, "hc_namespace", "$1", "exported_namespace", "(.*)"),
+                "nodepool_name", "$1", "name", "(.*)"
+              )
+            )
+            unless on (hc_namespace, nodepool_name) label_replace(
+              hypershift_nodepool_spec_info{market_type="Spot"},
+              "hc_namespace", "$1", "exported_namespace", "(.*)"
+            )
+            unless on (_id) hypershift_cluster_alerts_disabled
+          labels:
+            severity: info
+            send_managed_notification: "true"
+            managed_notification_template: worker-node-auto-replaced
+            namespace: "{{ $labels.namespace }}"
