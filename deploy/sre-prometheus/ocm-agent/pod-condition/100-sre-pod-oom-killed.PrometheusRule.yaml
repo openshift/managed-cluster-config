@@ -11,7 +11,7 @@ spec:
   - name: sre-pod-oom-killed
     rules:
     - alert: UserPodOOMKilledSRE
-      expr: sum(kube_pod_container_status_last_terminated_reason{reason="OOMKilled", namespace!="(openshift|kube).*"}) by (pod,namespace) > 0
+      expr: sum(kube_pod_container_status_last_terminated_reason{reason="OOMKilled", namespace!~"(openshift|kube).*"}) by (pod,namespace) > 0
       for: 1m
       labels:
         severity: critical
