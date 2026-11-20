@@ -33955,6 +33955,8 @@ objects:
             nodes. For more information, refer to the following article: https://access.redhat.com/solutions/7066033.
             Further replacements within 24 hours are not notified individually.'
           logType: Cluster Lifecycle
+          references:
+          - https://access.redhat.com/solutions/7066033
           resendWait: 24
           severity: Low
           limitedSupport: false
@@ -50249,7 +50251,11 @@ objects:
             expr: "label_replace(\n  label_replace(\n    last_over_time(capi_machine_info{healthcheck_succeeded=\"\
               False\"}[10m]),\n    \"nodepool_name\", \"$1\", \"machine_name\", \"\
               ^(.*)-[^-]+-[^-]+$\"\n  ),\n  \"hc_namespace\", \"$1-$2-$3\", \"exported_namespace\"\
-              , \"^(.*?)-(.*?)-(.*?)-.*$\"\n)\nunless on (hc_namespace, nodepool_name)\
+              , \"^(.*?)-(.*?)-(.*?)-.*$\"\n)\n* on (hc_namespace, nodepool_name)\
+              \ group_left(_id)\ngroup by (hc_namespace, nodepool_name, _id) (\n \
+              \ label_replace(\n    label_replace(hypershift_nodepools_size, \"hc_namespace\"\
+              , \"$1\", \"exported_namespace\", \"(.*)\"),\n    \"nodepool_name\"\
+              , \"$1\", \"name\", \"(.*)\"\n  )\n)\nunless on (hc_namespace, nodepool_name)\
               \ label_replace(\n  hypershift_nodepool_spec_info{market_type=\"Spot\"\
               },\n  \"hc_namespace\", \"$1\", \"exported_namespace\", \"(.*)\"\n)\n\
               unless on (_id) hypershift_cluster_alerts_disabled"

@@ -17,17 +17,20 @@ spec:
         # healthcheck_succeeded="False" is CAPI MachineHealthCheck's own condition on the Machine.
         # last_over_time keeps the series for 10m after the Machine object is deleted.
         #
-        # capi_machine_info carries the HCP namespace (ocm-<env>-<id>-<name>) in exported_namespace,
-        # while the hypershift_nodepool_* metrics carry the hosted cluster namespace (ocm-<env>-<id>),
-        # so the first label_replace derives the latter. The second derives the NodePool name from
-        # the machine name (<nodepool>-<hash>-<suffix>).
+        # ocm-agent posts the service log to the cluster whose external id is in the _id label.
+        # capi_machine_info carries the internal cluster id in _id and the HCP namespace
+        # (ocm-<env>-<id>-<name>) in exported_namespace, while the hypershift_* operator metrics carry
+        # the external id in _id and the hosted cluster namespace (ocm-<env>-<id>). The first
+        # label_replace derives that namespace, the second derives the NodePool name from the machine
+        # name (<nodepool>-<hash>-<suffix>), and the join with hypershift_nodepools_size replaces _id
+        # with the external id. The operator metric is scraped from two replicas, hence group by.
         #
         # TODO(MCS-1494): no HostedCluster/NodePool-level "upgrade in progress" signal is exposed yet,
         # so replacements during a NodePool upgrade are currently notified.
         #
         # TODO(MCS-1494): the spot exclusion drops every machine of a Spot NodePool, not only
         # reclamations like Classic. It also relies on hypershift_nodepool_spec_info{market_type},
-        # which could not be verified on a 4.19 hosted cluster (no NodePool there sets marketType).
+        # which does not exist on a 4.19 hosted cluster without a spot NodePool.
         - alert: WorkerNodeAutoReplacedNotification
           annotations:
             summary: "Worker node automatically replaced by MachineHealthCheck"
@@ -39,6 +42,13 @@ spec:
                 "nodepool_name", "$1", "machine_name", "^(.*)-[^-]+-[^-]+$"
               ),
               "hc_namespace", "$1-$2-$3", "exported_namespace", "^(.*?)-(.*?)-(.*?)-.*$"
+            )
+            * on (hc_namespace, nodepool_name) group_left(_id)
+            group by (hc_namespace, nodepool_name, _id) (
+              label_replace(
+                label_replace(hypershift_nodepools_size, "hc_namespace", "$1", "exported_namespace", "(.*)"),
+                "nodepool_name", "$1", "name", "(.*)"
+              )
             )
             unless on (hc_namespace, nodepool_name) label_replace(
               hypershift_nodepool_spec_info{market_type="Spot"},
