@@ -1,0 +1,15 @@
+deploymentMode: "SelectorSyncSet"
+selectorSyncSet:
+  resourceApplyMode: Sync
+  matchExpressions:
+  - key: api.openshift.com/product
+    operator: In
+    values:
+      - "rosa"
+  - key: api.openshift.com/fedramp
+    operator: NotIn
+    values:
+      - "true"
+# This is ROSA only because we have a hard requirement that alert documentation links must
+# match the product.  Future templatization features can enable for OSD.  ROSA was selected
+# as the MVP.
