@@ -1,0 +1,59 @@
+# promtool unit tests for RHOBS CM-absence alert rules (MCS-1482)
+# Run with: promtool test rules tests/rhobs-cm-absence_test.yaml
+# (from deploy/sre-prometheus/management-cluster/ directory)
+
+rule_files:
+  - rhobs-cm-absence-rules.yaml
+
+evaluation_interval: 1m
+
+tests:
+  - name: RHOBSLogsDestinationCMMissingSRE fires after 15m when CM absent
+    interval: 1m
+    input_series: []
+    alert_rule_test:
+      - eval_time: 15m
+        alertname: RHOBSLogsDestinationCMMissingSRE
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              namespace: openshift-logging
+            exp_annotations:
+              summary: "RHOBS logs destination ConfigMap absent from Management Cluster"
+              description: "The rhobs-logs-destination ConfigMap is missing from openshift-logging. Log forwarding configuration is absent — HCP logs may not be reaching RHOBS."
+              runbook_url: https://github.com/openshift/ops-sop/blob/master/hypershift/alerts/RHOBSLogsDestinationCMMissingSRE.md
+
+  - name: RHOBSLogsDestinationCMMissingSRE does not fire when CM present
+    interval: 1m
+    input_series:
+      - series: 'kube_configmap_info{configmap="rhobs-logs-destination",namespace="openshift-logging"}'
+        values: "1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1"
+    alert_rule_test:
+      - eval_time: 15m
+        alertname: RHOBSLogsDestinationCMMissingSRE
+        exp_alerts: []
+
+  - name: RHOBSMetricsDestinationCMMissingSRE fires after 15m when CM absent
+    interval: 1m
+    input_series: []
+    alert_rule_test:
+      - eval_time: 15m
+        alertname: RHOBSMetricsDestinationCMMissingSRE
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              namespace: openshift-observability-operator
+            exp_annotations:
+              summary: "RHOBS metrics destination ConfigMap absent from Management Cluster"
+              description: "The rhobs-metrics-destination ConfigMap is missing from openshift-observability-operator. Metrics forwarding configuration is absent — HCP metrics may not be reaching RHOBS."
+              runbook_url: https://github.com/openshift/ops-sop/blob/master/hypershift/alerts/RHOBSMetricsDestinationCMMissingSRE.md
+
+  - name: RHOBSMetricsDestinationCMMissingSRE does not fire when CM present
+    interval: 1m
+    input_series:
+      - series: 'kube_configmap_info{configmap="rhobs-metrics-destination",namespace="openshift-observability-operator"}'
+        values: "1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1"
+    alert_rule_test:
+      - eval_time: 15m
+        alertname: RHOBSMetricsDestinationCMMissingSRE
+        exp_alerts: []

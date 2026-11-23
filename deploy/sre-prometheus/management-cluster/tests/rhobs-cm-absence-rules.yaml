@@ -1,0 +1,24 @@
+groups:
+  - name: sre-coo-workload
+    rules:
+      - alert: RHOBSLogsDestinationCMMissingSRE
+        expr: absent(kube_configmap_info{configmap="rhobs-logs-destination", namespace="openshift-logging"})
+        for: 15m
+        labels:
+          severity: critical
+          namespace: openshift-logging
+        annotations:
+          summary: "RHOBS logs destination ConfigMap absent from Management Cluster"
+          description: "The rhobs-logs-destination ConfigMap is missing from openshift-logging. Log forwarding configuration is absent — HCP logs may not be reaching RHOBS."
+          runbook_url: https://github.com/openshift/ops-sop/blob/master/hypershift/alerts/RHOBSLogsDestinationCMMissingSRE.md
+
+      - alert: RHOBSMetricsDestinationCMMissingSRE
+        expr: absent(kube_configmap_info{configmap="rhobs-metrics-destination", namespace="openshift-observability-operator"})
+        for: 15m
+        labels:
+          severity: critical
+          namespace: openshift-observability-operator
+        annotations:
+          summary: "RHOBS metrics destination ConfigMap absent from Management Cluster"
+          description: "The rhobs-metrics-destination ConfigMap is missing from openshift-observability-operator. Metrics forwarding configuration is absent — HCP metrics may not be reaching RHOBS."
+          runbook_url: https://github.com/openshift/ops-sop/blob/master/hypershift/alerts/RHOBSMetricsDestinationCMMissingSRE.md
