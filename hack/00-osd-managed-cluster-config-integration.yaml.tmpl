@@ -46023,6 +46023,13 @@ objects:
               ="master"} ) - 1 ) / count ( cluster:nodes_roles{label_node_role_kubernetes_io
               ="master"} ) ) )
             record: sre:node_control_plane:excessive_consumption_memory
+          - expr: node_cpu_seconds_total{mode="idle"} AND on(instance) label_replace(kube_node_role{role="master"},"instance",
+              "$1", "node", "(.+)")
+            record: sre:node_control_plane:node_cpu_seconds_idle_total
+          - expr: 100 * sum by (instance) ( 1 - rate(sre:node_control_plane:node_cpu_seconds_idle_total[5m])
+              ) / count by (instance) ( sre:node_control_plane:node_cpu_seconds_idle_total
+              )
+            record: sre:node_control_plane:cpu_usage
           - expr: avg_over_time ( ( ( 100 * sum by (instance) ( rate( node_cpu_seconds_total{mode!="idle"}[5m]
               ) ) / sum by (instance) ( rate( node_cpu_seconds_total[5m] ) ) AND on(instance)
               label_replace( kube_node_role{role="master"},"instance", "$1", "node",
