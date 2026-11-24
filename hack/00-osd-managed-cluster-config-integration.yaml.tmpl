@@ -31561,7 +31561,14 @@ objects:
           \ [status, conditions, \"[type=InfrastructureReady]\", status]\n       \
           \           node_healthy: [status, conditions, \"[type=NodeHealthy]\", status]\n\
           \                  draining_succeeded: [status, conditions, \"[type=DrainingSucceeded]\"\
-          , status]\n    - groupVersionKind:\n        group: hypershift.openshift.io\n\
+          , status]\n                  draining_reason: [status, conditions, \"[type=DrainingSucceeded]\"\
+          , reason]\n                  # The message names the PodDisruptionBudget\
+          \ blocking the drain. It is\n                  # parsed into blocking_pdb/blocking_pdb_namespace\
+          \ and then dropped by\n                  # the ServiceMonitor relabelings\
+          \ - it must never reach the TSDB, as it\n                  # embeds pod\
+          \ names and a timestamp that change on every reconcile.\n              \
+          \    draining_message: [status, conditions, \"[type=DrainingSucceeded]\"\
+          , message]\n    - groupVersionKind:\n        group: hypershift.openshift.io\n\
           \        version: v1beta1\n        kind: NodePool\n      metricNamePrefix:\
           \ hypershift_nodepool\n      labelsFromPath:\n        nodepool_name:\n \
           \         - metadata\n          - name\n        exported_namespace:\n  \
@@ -31751,6 +31758,24 @@ objects:
         - port: http-metrics
           interval: 30s
           path: /metrics
+          metricRelabelings:
+          - action: Replace
+            sourceLabels:
+            - __name__
+            - draining_message
+            regex: (?s)capi_machine_info;.*[Tt]he disruption budget (\S+) needs.*
+            targetLabel: blocking_pdb
+            replacement: $1
+          - action: Replace
+            sourceLabels:
+            - __name__
+            - draining_message
+            regex: '(?s)capi_machine_info;.*\* Pods? ([^/ ]+)/[^:]*: cannot evict
+              pod as it would violate the pod''s disruption budget\..*'
+            targetLabel: blocking_pdb_namespace
+            replacement: $1
+          - action: LabelDrop
+            regex: draining_message
     - apiVersion: networking.k8s.io/v1
       kind: NetworkPolicy
       metadata:
@@ -33858,6 +33883,36 @@ objects:
           resendWait: 0
           severity: Low
           limitedSupport: true
+    - apiVersion: ocmagent.managed.openshift.io/v1alpha1
+      kind: ManagedFleetNotification
+      metadata:
+        name: pdb-blocking-nodepool-drain
+        namespace: openshift-ocm-agent-operator
+      spec:
+        fleetNotification:
+          name: pdb-blocking-nodepool-drain
+          severity: Major
+          summary: 'Action required: Pod Disruption Budget preventing node drain'
+          logType: Cluster Configuration
+          notificationMessage: "Red Hat has identified that a node on your cluster\
+            \ cannot be drained because a PodDisruptionBudget in one of your namespaces\
+            \ currently permits no disruptions. Until the drain completes, the affected\
+            \ machine pool cannot finish upgrading or replacing that node.\n\nTo resolve\
+            \ this, for the workload protected by the PodDisruptionBudget:\n- Scale\
+            \ the workload up so that more replicas are available than the budget\
+            \ requires, or\n- Relax the PodDisruptionBudget (increase maxUnavailable,\
+            \ or reduce minAvailable), or\n- Reschedule or delete the affected pods\
+            \ so the node can drain.\n\nA PodDisruptionBudget with minAvailable equal\
+            \ to the replica count, or maxUnavailable set to 0, permits no disruption\
+            \ at all and will block the drain indefinitely regardless of scaling.\n\
+            \nYou can list the budgets that currently allow no disruptions with:\n\
+            \  oc get poddisruptionbudgets --all-namespaces -o wide\n\nFor more information,\
+            \ please refer to: https://access.redhat.com/documentation/en-us/red_hat_openshift_service_on_aws/4/html/nodes/working-with-pods#nodes-pods-pod-distruption-about_nodes-pods-configuring\n\
+            \nIf you need assistance, please open a support case."
+          resendWait: 24
+          limitedSupport: false
+          references:
+          - https://access.redhat.com/documentation/en-us/red_hat_openshift_service_on_aws/4/html/nodes/working-with-pods#nodes-pods-pod-distruption-about_nodes-pods-configuring
     - apiVersion: ocmagent.managed.openshift.io/v1alpha1
       kind: ManagedFleetNotification
       metadata:
@@ -50043,6 +50098,61 @@ objects:
               send_managed_notification: 'true'
               managed_notification_template: additional-trust-bundle-ca-expired
               namespace: '{{ $labels.exported_namespace }}'
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: sre-prometheus-ocm-agent-pdb-blocking-nodepool-drain
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: ext-hypershift.openshift.io/cluster-type
+        operator: In
+        values:
+        - management-cluster
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: monitoring.rhobs/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
+          prometheus: pdb-blocking-nodepool-drain
+          role: alert-rules
+        name: pdb-blocking-nodepool-drain
+        namespace: openshift-observability-rhobs
+      spec:
+        groups:
+        - name: pdb-blocking-nodepool-drain
+          interval: 60s
+          rules:
+          - alert: CustomerPDBBlockingNodeDrainFleetNotification
+            annotations:
+              description: Machine {{ $labels.machine_name }} in {{ $labels.exported_namespace
+                }} has been unable to drain for more than 30 minutes because customer
+                PodDisruptionBudget {{ $labels.blocking_pdb_namespace }}/{{ $labels.blocking_pdb
+                }} permits no disruptions.
+              summary: Customer PodDisruptionBudget is blocking a node drain.
+              runbook_url: https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/HCPNodepoolUpgradeDelay.md
+            expr: 'capi_machine_info{draining_succeeded="False", blocking_pdb!="",
+              blocking_pdb_namespace!~"openshift|openshift-.*|kube-.*"}
+
+              unless on (_id) sre:hcp:alerts_suppressed'
+            for: 30m
+            labels:
+              severity: warning
+              send_managed_notification: 'true'
+              managed_notification_template: pdb-blocking-nodepool-drain
+              cluster_id: '{{ $labels._id }}'
+              namespace: '{{ $labels.namespace }}'
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:

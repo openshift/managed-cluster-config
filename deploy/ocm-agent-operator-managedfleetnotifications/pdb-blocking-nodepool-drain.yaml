@@ -1,0 +1,31 @@
+apiVersion: ocmagent.managed.openshift.io/v1alpha1
+kind: ManagedFleetNotification
+metadata:
+  name: pdb-blocking-nodepool-drain
+  namespace: openshift-ocm-agent-operator
+spec:
+  fleetNotification:
+    name: pdb-blocking-nodepool-drain
+    severity: Major
+    summary: "Action required: Pod Disruption Budget preventing node drain"
+    logType: "Cluster Configuration"
+    notificationMessage: |-
+      Red Hat has identified that a node on your cluster cannot be drained because a PodDisruptionBudget in one of your namespaces currently permits no disruptions. Until the drain completes, the affected machine pool cannot finish upgrading or replacing that node.
+
+      To resolve this, for the workload protected by the PodDisruptionBudget:
+      - Scale the workload up so that more replicas are available than the budget requires, or
+      - Relax the PodDisruptionBudget (increase maxUnavailable, or reduce minAvailable), or
+      - Reschedule or delete the affected pods so the node can drain.
+
+      A PodDisruptionBudget with minAvailable equal to the replica count, or maxUnavailable set to 0, permits no disruption at all and will block the drain indefinitely regardless of scaling.
+
+      You can list the budgets that currently allow no disruptions with:
+        oc get poddisruptionbudgets --all-namespaces -o wide
+
+      For more information, please refer to: https://access.redhat.com/documentation/en-us/red_hat_openshift_service_on_aws/4/html/nodes/working-with-pods#nodes-pods-pod-distruption-about_nodes-pods-configuring
+
+      If you need assistance, please open a support case.
+    resendWait: 24
+    limitedSupport: false
+    references:
+      - https://access.redhat.com/documentation/en-us/red_hat_openshift_service_on_aws/4/html/nodes/working-with-pods#nodes-pods-pod-distruption-about_nodes-pods-configuring
