@@ -29,9 +29,8 @@ spec:
         # which never sets HealthCheckSucceeded=False. Verified on stage (4.19.45 to 4.19.46, control
         # plane and three NodePools): no machine flagged, no alert. Not verified for upgradeType InPlace.
         #
-        # The spot exclusion drops every machine of a Spot NodePool, as the card asks, not only
-        # reclamations like Classic. It relies on hypershift_nodepool_spec_info{market_type}, which does
-        # not exist on a 4.19 hosted cluster without a spot NodePool, so it is only verified offline.
+        # Spot NodePools get no special treatment, as on Classic (MCS-36): any machine MHC replaces
+        # notifies, including a spot reclamation.
         #
         # TODO(MCS-1494): MHC can flag a machine and skip remediation when unhealthyLessThanOrEqualTo is
         # exceeded; this alert would still fire. OwnerRemediated is not exposed as a label yet.
@@ -53,10 +52,6 @@ spec:
                 label_replace(hypershift_nodepools_size, "hc_namespace", "$1", "exported_namespace", "(.*)"),
                 "nodepool_name", "$1", "name", "(.*)"
               )
-            )
-            unless on (hc_namespace, nodepool_name) label_replace(
-              hypershift_nodepool_spec_info{market_type="Spot"},
-              "hc_namespace", "$1", "exported_namespace", "(.*)"
             )
             unless on (_id) hypershift_cluster_alerts_disabled
           labels:
