@@ -1,0 +1,14 @@
+---
+deploymentMode: "SelectorSyncSet"
+selectorSyncSet:
+  matchExpressions:
+    - key: ext-hypershift.openshift.io/cluster-type
+      operator: In
+      values: ["management-cluster"]
+    - key: api.openshift.com/fedramp
+      operator: NotIn
+      values: ["true"]
+# Deployed separately from ../obo-monitoring so that it can be excluded from FedRAMP.
+# The ManagedFleetNotification this alert routes to is itself excluded from FedRAMP
+# (see deploy/ocm-agent-operator-managedfleetnotifications/config.yaml), so deploying
+# the alert there would only produce notifications with no template behind them.

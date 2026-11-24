@@ -1,0 +1,33 @@
+---
+apiVersion: monitoring.rhobs/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: pdb-blocking-nodepool-drain
+    role: alert-rules
+  name: pdb-blocking-nodepool-drain
+  namespace: openshift-observability-rhobs
+spec:
+  groups:
+    - name: pdb-blocking-nodepool-drain
+      interval: 60s
+      rules:
+        - alert: CustomerPDBBlockingNodeDrainFleetNotification
+          annotations:
+            description: "Machine {{ $labels.machine_name }} in {{ $labels.exported_namespace }} has been unable to drain for more than 30 minutes because customer PodDisruptionBudget {{ $labels.blocking_pdb_namespace }}/{{ $labels.blocking_pdb }} permits no disruptions."
+            summary: "Customer PodDisruptionBudget is blocking a node drain."
+            runbook_url: https://github.com/openshift/ops-sop/blob/master/v4/alerts/hypershift/HCPNodepoolUpgradeDelay.md
+          # blocking_pdb is only set when CAPI itself attributes the failed eviction to a
+          # PodDisruptionBudget, so draining_succeeded="False" alone (which also covers
+          # pods stuck with a deletionTimestamp, volume detach waits, etc.) never fires this.
+          # Platform-owned PDBs are excluded: those are an SRE problem, not a customer one.
+          expr: |-
+            capi_machine_info{draining_succeeded="False", blocking_pdb!="", blocking_pdb_namespace!~"openshift|openshift-.*|kube-.*"}
+            unless on (_id) sre:hcp:alerts_suppressed
+          for: 30m
+          labels:
+            severity: warning
+            send_managed_notification: "true"
+            managed_notification_template: pdb-blocking-nodepool-drain
+            cluster_id: "{{ $labels._id }}"
+            namespace: "{{ $labels.namespace }}"

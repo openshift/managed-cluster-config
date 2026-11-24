@@ -13,3 +13,24 @@ spec:
   - port: http-metrics
     interval: 30s
     path: /metrics
+    metricRelabelings:
+      # CAPI reports a blocked drain on the Machine's DrainingSucceeded condition, e.g.
+      #   Drain not completed yet (started at 2026-11-05T08:41:29Z):
+      #   * Pod argocd/argocd-application-controller-0: cannot evict pod as it would
+      #     violate the pod's disruption budget. The disruption budget argocd-app needs
+      #     2 healthy pods and has 2 currently
+      # Lift the PDB identity out of that prose into labels. (?s) is required because
+      # the message is multi-line. A non-matching message leaves the labels unset, which
+      # is what distinguishes a PDB-blocked drain from one stalled for other reasons.
+      - action: Replace
+        sourceLabels: [__name__, draining_message]
+        regex: "(?s)capi_machine_info;.*[Tt]he disruption budget (\\S+) needs.*"
+        targetLabel: blocking_pdb
+        replacement: "$1"
+      - action: Replace
+        sourceLabels: [__name__, draining_message]
+        regex: "(?s)capi_machine_info;.*\\* Pods? ([^/ ]+)/[^:]*: cannot evict pod as it would violate the pod's disruption budget\\..*"
+        targetLabel: blocking_pdb_namespace
+        replacement: "$1"
+      - action: LabelDrop
+        regex: draining_message

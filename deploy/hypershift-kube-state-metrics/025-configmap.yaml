@@ -36,6 +36,12 @@ data:
                       infrastructure_ready: [status, conditions, "[type=InfrastructureReady]", status]
                       node_healthy: [status, conditions, "[type=NodeHealthy]", status]
                       draining_succeeded: [status, conditions, "[type=DrainingSucceeded]", status]
+                      draining_reason: [status, conditions, "[type=DrainingSucceeded]", reason]
+                      # The message names the PodDisruptionBudget blocking the drain. It is
+                      # parsed into blocking_pdb/blocking_pdb_namespace and then dropped by
+                      # the ServiceMonitor relabelings - it must never reach the TSDB, as it
+                      # embeds pod names and a timestamp that change on every reconcile.
+                      draining_message: [status, conditions, "[type=DrainingSucceeded]", message]
         - groupVersionKind:
             group: hypershift.openshift.io
             version: v1beta1
