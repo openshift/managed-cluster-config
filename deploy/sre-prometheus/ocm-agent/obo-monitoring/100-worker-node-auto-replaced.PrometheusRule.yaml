@@ -32,8 +32,11 @@ spec:
         # Spot NodePools get no special treatment, as on Classic (MCS-36): any machine MHC replaces
         # notifies, including a spot reclamation.
         #
-        # TODO(MCS-1494): MHC can flag a machine and skip remediation when unhealthyLessThanOrEqualTo is
-        # exceeded; this alert would still fire. OwnerRemediated is not exposed as a label yet.
+        # owner_remediated="False" is set (reason WaitingForRemediation) only when MHC actually asks the
+        # owner to replace the machine. MHC can flag a machine and skip remediation when
+        # unhealthyLessThanOrEqualTo is exceeded; requiring the label keeps that case silent.
+        # The label comes from deploy/hypershift-kube-state-metrics/025-configmap.yaml, so that config
+        # must be rolled out first; without it the alert never fires.
         - alert: WorkerNodeAutoReplacedNotification
           annotations:
             summary: "Worker node automatically replaced by MachineHealthCheck"
@@ -41,7 +44,7 @@ spec:
           expr: |-
             label_replace(
               label_replace(
-                last_over_time(capi_machine_info{healthcheck_succeeded="False"}[10m]),
+                last_over_time(capi_machine_info{healthcheck_succeeded="False",owner_remediated="False"}[10m]),
                 "nodepool_name", "$1", "machine_name", "^(.*)-[^-]+-[^-]+$"
               ),
               "hc_namespace", "$1-$2-$3", "exported_namespace", "^(.*?)-(.*?)-(.*?)-.*$"
