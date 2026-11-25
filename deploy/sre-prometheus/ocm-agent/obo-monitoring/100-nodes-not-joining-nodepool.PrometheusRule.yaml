@@ -28,7 +28,7 @@ spec:
                 unless on (exported_namespace) last_over_time(hypershift_cluster_deleting_duration_seconds[10m])
               )
               unless on (exported_namespace) label_replace(
-                capi_machine_info{status_phase="Deleting"},
+                (capi_machine_info{status_phase="Deleting"} or capi_machine_info{deleting="True"}),
                 "exported_namespace",
                 "$1-$2-$3",
                 "exported_namespace",
@@ -51,7 +51,7 @@ spec:
                 unless on (exported_namespace) last_over_time(hypershift_cluster_deleting_duration_seconds[10m])
               )
               unless on (exported_namespace) label_replace(
-                capi_machine_info{status_phase="Deleting"},
+                (capi_machine_info{status_phase="Deleting"} or capi_machine_info{deleting="True"}),
                 "exported_namespace",
                 "$1-$2-$3",
                 "exported_namespace",
@@ -82,3 +82,34 @@ spec:
             managed_notification_template: nodepool-provisioning-failure-spot
             cluster_id: "{{ $labels._id }}"
             namespace: "{{ $labels.namespace }}"
+        # A narrow SRE signal for the CAPI drain state seen in ITN-2026-00350.
+        # No managed notification: normal node replacement can briefly meet the condition.
+        # nodepool_ref comes from the Machine annotation and matches NodePool namespace/name.
+        # The Machine _id differs from the NodePool _id, so keep the NodePool labels.
+        - alert: NodePoolCapiDrainStalled
+          annotations:
+            description: "For one hour, NodePool {{ $labels.nodepool_ref }} on cluster {{ $labels._id }} has had fewer available replicas than desired while at least two of its CAPI Machines reported Deleting=True (DrainingNode) and NodeReady=True at each evaluation. The individual Machines may change during that hour. Inspect the Machine deletion conditions and NodePool status."
+            summary: "CAPI Machines stuck draining with a NodePool replica shortfall"
+          expr: |-
+            max by (_id, nodepool_ref) (
+              label_join(
+                (hypershift_nodepools_available_replicas / hypershift_nodepools_size < 1)
+                unless on (exported_namespace, name) (hypershift_nodepools_size == 0),
+                "nodepool_ref", "/", "exported_namespace", "name"
+              )
+            )
+            and on (nodepool_ref)
+            (
+              count by (nodepool_ref) (
+                max by (nodepool_ref, machine_name) (
+                  capi_machine_info{nodepool_ref!="", deleting="True", deleting_reason="DrainingNode", node_ready="True"}
+                )
+              ) >= 2
+            )
+            unless on (_id) (hypershift_cluster_limited_support_enabled == 1)
+            unless on (_id) last_over_time(hypershift_cluster_deleting_duration_seconds[10m])
+            unless on (_id) sre:hcp:alerts_suppressed
+          for: 60m
+          labels:
+            severity: warning
+            cluster_id: "{{ $labels._id }}"

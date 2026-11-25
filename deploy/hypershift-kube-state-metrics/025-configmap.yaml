@@ -9,13 +9,17 @@ data:
       resources:
         - groupVersionKind:
             group: cluster.x-k8s.io
-            version: v1beta1
+            version: v1beta2
             kind: Machine
           metricNamePrefix: capi_machine
           labelsFromPath:
             machine_name:
               - metadata
               - name
+            nodepool_ref:
+              - metadata
+              - annotations
+              - "hypershift.openshift.io/nodePool"
             exported_namespace:
               - metadata
               - namespace
@@ -35,7 +39,9 @@ data:
                       healthcheck_succeeded: [status, conditions, "[type=HealthCheckSucceeded]", status]
                       infrastructure_ready: [status, conditions, "[type=InfrastructureReady]", status]
                       node_healthy: [status, conditions, "[type=NodeHealthy]", status]
-                      draining_succeeded: [status, conditions, "[type=DrainingSucceeded]", status]
+                      node_ready: [status, conditions, "[type=NodeReady]", status]
+                      deleting: [status, conditions, "[type=Deleting]", status]
+                      deleting_reason: [status, conditions, "[type=Deleting]", reason]
         - groupVersionKind:
             group: hypershift.openshift.io
             version: v1beta1
