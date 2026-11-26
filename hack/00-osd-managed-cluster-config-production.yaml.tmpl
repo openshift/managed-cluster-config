@@ -50249,15 +50249,11 @@ objects:
               description: MachineHealthCheck flagged worker node {{ $labels.machine_name
                 }} of cluster {{ $labels._id }} as unhealthy; the customer is notified
                 via service log.
-            expr: "label_replace(\n  label_replace(\n    last_over_time(capi_machine_info{healthcheck_succeeded=\"\
-              False\",owner_remediated=\"False\"}[10m]),\n    \"nodepool_name\", \"\
-              $1\", \"machine_name\", \"^(.*)-[^-]+-[^-]+$\"\n  ),\n  \"hc_namespace\"\
-              , \"$1-$2-$3\", \"exported_namespace\", \"^(.*?)-(.*?)-(.*?)-.*$\"\n\
-              )\n* on (hc_namespace, nodepool_name) group_left(_id)\ngroup by (hc_namespace,\
-              \ nodepool_name, _id) (\n  label_replace(\n    label_replace(hypershift_nodepools_size,\
-              \ \"hc_namespace\", \"$1\", \"exported_namespace\", \"(.*)\"),\n   \
-              \ \"nodepool_name\", \"$1\", \"name\", \"(.*)\"\n  )\n)\nunless on (_id)\
-              \ hypershift_cluster_alerts_disabled"
+            expr: "last_over_time(capi_machine_info{healthcheck_succeeded=\"False\"\
+              ,owner_remediated=\"False\"}[10m])\n* on (exported_namespace) group_left(_id)\n\
+              group by (exported_namespace, _id) (\n  label_join(hypershift_nodepools_size,\
+              \ \"exported_namespace\", \"-\", \"exported_namespace\", \"cluster_name\"\
+              )\n)\nunless on (_id) hypershift_cluster_alerts_disabled"
             labels:
               severity: info
               send_managed_notification: 'true'

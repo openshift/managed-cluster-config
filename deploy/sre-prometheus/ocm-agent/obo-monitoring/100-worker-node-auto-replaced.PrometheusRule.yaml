@@ -17,19 +17,10 @@ spec:
             summary: "Worker node automatically replaced by MachineHealthCheck"
             description: "MachineHealthCheck flagged worker node {{ $labels.machine_name }} of cluster {{ $labels._id }} as unhealthy; the customer is notified via service log."
           expr: |-
-            label_replace(
-              label_replace(
-                last_over_time(capi_machine_info{healthcheck_succeeded="False",owner_remediated="False"}[10m]),
-                "nodepool_name", "$1", "machine_name", "^(.*)-[^-]+-[^-]+$"
-              ),
-              "hc_namespace", "$1-$2-$3", "exported_namespace", "^(.*?)-(.*?)-(.*?)-.*$"
-            )
-            * on (hc_namespace, nodepool_name) group_left(_id)
-            group by (hc_namespace, nodepool_name, _id) (
-              label_replace(
-                label_replace(hypershift_nodepools_size, "hc_namespace", "$1", "exported_namespace", "(.*)"),
-                "nodepool_name", "$1", "name", "(.*)"
-              )
+            last_over_time(capi_machine_info{healthcheck_succeeded="False",owner_remediated="False"}[10m])
+            * on (exported_namespace) group_left(_id)
+            group by (exported_namespace, _id) (
+              label_join(hypershift_nodepools_size, "exported_namespace", "-", "exported_namespace", "cluster_name")
             )
             unless on (_id) hypershift_cluster_alerts_disabled
           labels:
