@@ -13,6 +13,11 @@ spec:
       app.kubernetes.io/name: kube-state-metrics
   template:
     metadata:
+      annotations:
+        # kube-state-metrics reads its config only at startup. Update this value whenever the data of
+        # 025-configmap.yaml changes (first 16 hex chars of the sha256 of custom-resource-state.yaml)
+        # so the rollout restarts the pod.
+        checksum/config: 264b91578530c536
       labels:
         app.kubernetes.io/name: kube-state-metrics
         app.kubernetes.io/version: v2.17.0
