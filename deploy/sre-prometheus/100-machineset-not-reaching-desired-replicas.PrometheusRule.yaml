@@ -1,0 +1,145 @@
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: machineset-not-reaching-desired-replicas
+    role: alert-rules
+  name: machineset-not-reaching-desired-replicas
+  namespace: openshift-monitoring
+spec:
+  groups:
+    - name: machineset-not-reaching-desired-replicas
+      interval: 60s
+      rules:
+        # Recording rule to count ready nodes per machineset
+        # This extracts the machineset name from machine names and joins with node readiness status
+        - record: sre:machineset:ready_nodes_count
+          expr: |-
+            count by (machineset) (
+              label_replace(
+                clamp(mapi_machine_created_timestamp_seconds, 0, 1),
+                "machineset",
+                "$1",
+                "name",
+                "^(.*)-[^-]*$"
+              )
+              * on (node) group_right(machineset)
+              kube_node_status_condition{condition="Ready",status="True"}
+            ) or
+            # If no ready nodes exist for a machineset, return 0
+            # Add machineset label and exclude MachineSets already counted above
+            (
+              label_replace(
+                mapi_machine_set_spec_replicas * 0,
+                "machineset",
+                "$1",
+                "name",
+                "(.*)"
+              )
+              unless on (machineset)
+              sre:machineset:ready_nodes_count
+            )
+
+        # Recording rule to detect machinesets not reaching desired replicas
+        # Excludes: upgrade machinesets, master nodes, infra nodes, zero-replica machinesets
+        # NOTE: Spot instance exclusion is not implemented in this version (no KSM deployment)
+        - record: sre:machineset:provisioning_failure_notify
+          expr: |-
+            (
+              (
+                # Desired replicas (from spec.replicas)
+                mapi_machine_set_spec_replicas{name!~".*upgrade$",name!~".*(master|infra).*"} > 0
+                > on (name)
+                # Ready nodes count (use label_replace to match on 'name')
+                label_replace(
+                  sre:machineset:ready_nodes_count,
+                  "name",
+                  "$1",
+                  "machineset",
+                  "(.*)"
+                )
+              ) or
+              (
+                # Also catch machinesets with zero ready nodes (but replicas > 0)
+                mapi_machine_set_spec_replicas{name!~".*upgrade$",name!~".*(master|infra).*"} > 0
+                unless on (name)
+                label_replace(
+                  sre:machineset:ready_nodes_count > 0,
+                  "name",
+                  "$1",
+                  "machineset",
+                  "(.*)"
+                )
+              )
+            )
+
+        # Alert fires when:
+        # 1. Machineset has not reached desired replicas for 1 hour
+        # 2. Control plane is healthy (etcd + critical operators)
+        # This sends a service log to customers to investigate their AWS configuration
+        - alert: MachineSetNotReachingDesiredReplicasNotificationSRE
+          annotations:
+            description: "One or more machine pools for cluster {{ $labels._id }} have not reached their target size for more than 1 hour"
+            summary: "Machine Pool provisioning failure"
+          expr: |-
+            (
+              sre:machineset:provisioning_failure_notify
+              # Only fire when control plane is healthy
+              # Suppress when control plane components are unhealthy - these are SRE issues, not customer AWS config
+              # Similar to HyperShift's all_components_available check
+              unless on ()
+              (
+                # Etcd health - core control plane component
+                count(ALERTS{alertname="etcdMembersDown",alertstate="firing"}) > 0
+                or
+                # machine-api operator degraded - manages MachineSets (equivalent to CAPI in HCP)
+                cluster_operator_conditions{name="machine-api",condition="Degraded"} == 1
+                or
+                # kube-apiserver degraded - API server health
+                cluster_operator_conditions{name="kube-apiserver",condition="Degraded"} == 1
+                or
+                # kube-controller-manager degraded - includes machine-approver for CSR approval
+                cluster_operator_conditions{name="kube-controller-manager",condition="Degraded"} == 1
+              )
+            )
+          for: 60m
+          labels:
+            severity: info
+            send_managed_notification: "true"
+            managed_notification_template: MachineSetProvisioningFailure
+            namespace: openshift-machine-api
+
+        # SRE Alert fires when:
+        # 1. Machineset has not reached desired replicas for 1 hour
+        # 2. Control plane is UNHEALTHY (etcd down or critical operators degraded)
+        # This alerts SRE to investigate control plane issues that are preventing nodes from joining
+        # Customer notification is suppressed in this scenario since it's an SRE-owned issue
+        - alert: MachineSetProvisioningFailureControlPlaneUnhealthySRE
+          annotations:
+            summary: "MachineSet not reaching replicas while control plane is unhealthy"
+            description: "MachineSet {{ $labels.name }} in namespace {{ $labels.namespace }} has not reached desired replicas for 60m and control plane components are degraded. SRE should investigate control plane health (etcd, machine-api, kube-apiserver, or kube-controller-manager)."
+          expr: |-
+            (
+              sre:machineset:provisioning_failure_notify
+              # Fire when control plane IS unhealthy (opposite of customer notification)
+              and on ()
+              (
+                # Etcd health - core control plane component
+                count(ALERTS{alertname="etcdMembersDown",alertstate="firing"}) > 0
+                or
+                # machine-api operator degraded - manages MachineSets (equivalent to CAPI in HCP)
+                cluster_operator_conditions{name="machine-api",condition="Degraded"} == 1
+                or
+                # kube-apiserver degraded - API server health
+                cluster_operator_conditions{name="kube-apiserver",condition="Degraded"} == 1
+                or
+                # kube-controller-manager degraded - includes machine-approver for CSR approval
+                cluster_operator_conditions{name="kube-controller-manager",condition="Degraded"} == 1
+              )
+            )
+          for: 60m
+          labels:
+            severity: warning
+            namespace: openshift-machine-api
