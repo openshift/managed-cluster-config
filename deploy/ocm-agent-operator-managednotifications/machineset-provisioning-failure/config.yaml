@@ -1,0 +1,19 @@
+deploymentMode: "SelectorSyncSet"
+selectorSyncSet:
+  resourceApplyMode: Sync
+  matchExpressions:
+  - key: api.openshift.com/product
+    operator: In
+    values:
+      - "rosa"
+  - key: ext-hypershift.openshift.io/cluster-type
+    operator: NotIn
+    values:
+      - "management-cluster"
+      - "service-cluster"
+  - key: api.openshift.com/fedramp
+    operator: NotIn
+    values:
+      - "true"
+# ROSA Classic only - excludes HyperShift management/service clusters
+# MachineSet API is used in Classic; HyperShift uses NodePools instead
