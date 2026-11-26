@@ -12,12 +12,6 @@ spec:
     - name: worker-node-auto-replaced
       interval: 60s
       rules:
-        # https://redhat.atlassian.net/browse/MCS-1494
-        # capi_machine_info carries the internal cluster id in _id, but ocm-agent needs the external id. The
-        # hypershift_* operator metrics carry it, so the join replaces _id (two replicas, hence group by).
-        # owner_remediated="False" is set only when the MHC hands a machine over for replacement, so a machine it
-        # flagged but refused to remediate (maxUnhealthy exceeded) stays silent. The label comes from
-        # deploy/hypershift-kube-state-metrics/025-configmap.yaml, which must roll out first.
         - alert: WorkerNodeAutoReplacedNotification
           annotations:
             summary: "Worker node automatically replaced by MachineHealthCheck"
