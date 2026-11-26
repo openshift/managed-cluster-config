@@ -1,0 +1,56 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: capi-manager-annotator
+  namespace: openshift-hcp-capi-manager-annotator
+  annotations:
+    kubernetes.io/description: "Pins cluster-capi-controllers for 4.19 and 4.20 hosted clusters to the OCP 4.22 CAPI manager, and removes the pin at 4.21 and later"
+spec:
+  schedule: "*/5 * * * *"
+  concurrencyPolicy: Replace
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          name: capi-manager-annotator
+          namespace: openshift-hcp-capi-manager-annotator
+        spec:
+          affinity:
+            nodeAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+              - preference:
+                  matchExpressions:
+                  - key: node-role.kubernetes.io/infra
+                    operator: Exists
+                weight: 1
+          tolerations:
+            - effect: NoSchedule
+              key: node-role.kubernetes.io/infra
+              operator: Exists
+          containers:
+          - name: capi-manager-annotator
+            image: image-registry.openshift-image-registry.svc:5000/openshift/tools:latest
+            imagePullPolicy: IfNotPresent
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                - ALL
+              runAsNonRoot: true
+            env:
+              - name: IMAGE
+                value: quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:c5c3e36db897fae332284e1a681044cd6997a70e8cb9059f810385352e7575ac
+            volumeMounts:
+              - name: scripts
+                mountPath: /tmp/scripts
+            command:
+              - /bin/bash
+            args:
+              - /tmp/scripts/patch.sh
+          volumes:
+            - name: scripts
+              configMap:
+                name: hcp-capi-manager-annotator
+          serviceAccountName: hcp-capi-manager-annotator
+          automountServiceAccountToken: true
+          restartPolicy: Never

@@ -30457,6 +30457,233 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: hcp-capi-manager-annotator
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: ext-hypershift.openshift.io/cluster-type
+        operator: In
+        values:
+        - service-cluster
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: openshift-hcp-capi-manager-annotator
+    - apiVersion: rbac.authorization.k8s.io/v1
+      kind: ClusterRole
+      metadata:
+        name: hcp-capi-manager-annotator
+      rules:
+      - apiGroups:
+        - work.open-cluster-management.io
+        resources:
+        - manifestworks
+        verbs:
+        - get
+        - patch
+      - apiGroups:
+        - cluster.open-cluster-management.io
+        resources:
+        - managedclusters
+        verbs:
+        - get
+        - list
+    - apiVersion: v1
+      kind: ServiceAccount
+      metadata:
+        name: hcp-capi-manager-annotator
+        namespace: openshift-hcp-capi-manager-annotator
+    - kind: ClusterRoleBinding
+      apiVersion: rbac.authorization.k8s.io/v1
+      metadata:
+        name: hcp-capi-manager-annotator
+      subjects:
+      - kind: ServiceAccount
+        name: hcp-capi-manager-annotator
+        namespace: openshift-hcp-capi-manager-annotator
+      roleRef:
+        apiGroup: rbac.authorization.k8s.io
+        kind: ClusterRole
+        name: hcp-capi-manager-annotator
+    - apiVersion: v1
+      data:
+        patch.sh: "#!/usr/bin/env bash\n\n# NOTE: If you update this script, run `./generate_configmap.sh`\n\
+          #\n# Sets or removes hypershift.openshift.io/capi-manager-image on the\n\
+          # HostedCluster inside a cluster's ManifestWork, for 4.19 and 4.20 hosted\n\
+          # clusters only.\n#\n# The annotation is patched in place with a JSON patch\
+          \ so we never replace the\n# whole ManifestWork: Clusters Service renders\
+          \ that object continuously and a\n# full replace fights it (and can revert\
+          \ unrelated annotations).\n#\n# We only ever remove a value we set ourselves.\
+          \ If the annotation carries a\n# different image, the cluster is deliberately\
+          \ pinned by someone else and is\n# left alone.\n\nset -uo pipefail\n\n:\
+          \ \"${IMAGE:?IMAGE must be set to the pinned cluster-capi-controllers image}\"\
+          \n\nANNOTATION_KEY=\"hypershift.openshift.io/capi-manager-image\"\nANNOTATION_POINTER=\"\
+          hypershift.openshift.io~1capi-manager-image\"\nMAX_RETRIES=3\nRETRY_SLEEP=5\n\
+          \nlog() { echo \"$*\"; }\n\npython_bin() {\n  command -v python3 || command\
+          \ -v python\n}\n\nPYTHON=$(python_bin)\nif [ -z \"$PYTHON\" ]; then\n  echo\
+          \ \"ERROR: no python interpreter found\" >&2\n  exit 1\nfi\n\nmanaged_cluster_namespace()\
+          \ {\n  oc get managedcluster \"$1\" -o jsonpath='{.metadata.labels.api\\\
+          .openshift\\.com/management-cluster}'\n}\n\nmanaged_cluster_version() {\n\
+          \  oc get managedcluster \"$1\" -o jsonpath='{.metadata.labels.openshiftVersion}'\n\
+          }\n\n# patch_hostedcluster_annotation <manifestwork> <namespace> <set|remove>\n\
+          patch_hostedcluster_annotation() {\n  local manifestwork=$1 namespace=$2\
+          \ mode=$3\n\n  local attempt json index current has_annotations patch\n\
+          \  for attempt in $(seq 1 \"$MAX_RETRIES\"); do\n    if ! json=$(oc get\
+          \ manifestwork \"$manifestwork\" -n \"$namespace\" -o json); then\n    \
+          \  log \"ERROR: could not read manifestwork ${namespace}/${manifestwork}\"\
+          \n      return 1\n    fi\n\n    index=$(jq -r '.spec.workload.manifests\n\
+          \      | to_entries[]\n      | select(.value.kind == \"HostedCluster\")\n\
+          \      | .key' <<<\"$json\" | head -1)\n    if [ -z \"$index\" ] || [ \"\
+          $index\" = \"null\" ]; then\n      log \"no HostedCluster manifest in ${namespace}/${manifestwork},\
+          \ skipping\"\n      return 0\n    fi\n\n    current=$(jq -r --argjson i\
+          \ \"$index\" \\\n      \".spec.workload.manifests[\\$i].metadata.annotations[\\\
+          \"${ANNOTATION_KEY}\\\"] // \\\"\\\"\" <<<\"$json\")\n    has_annotations=$(jq\
+          \ -r --argjson i \"$index\" \\\n      '.spec.workload.manifests[$i].metadata\
+          \ | has(\"annotations\")' <<<\"$json\")\n\n    if [ \"$mode\" = \"set\"\
+          \ ]; then\n      if [ \"$current\" = \"$IMAGE\" ]; then\n        log \"\
+          ${manifestwork} already pinned\"\n        return 0\n      fi\n      if [\
+          \ -n \"$current\" ]; then\n        log \"${manifestwork} carries a different\
+          \ pin (${current}), leaving it alone\"\n        return 0\n      fi\n   \
+          \ else\n      if [ -z \"$current\" ]; then\n        return 0\n      fi\n\
+          \      if [ \"$current\" != \"$IMAGE\" ]; then\n        log \"${manifestwork}\
+          \ pin is not ours (${current}), leaving it alone\"\n        return 0\n \
+          \     fi\n    fi\n\n    if [ \"$mode\" = \"set\" ]; then\n      if [ \"\
+          $has_annotations\" = \"true\" ]; then\n        patch=$(jq -cn --argjson\
+          \ i \"$index\" --arg v \"$IMAGE\" \\\n          '[{op: \"add\", path: \"\
+          /spec/workload/manifests/\\($i)/metadata/annotations/'\"$ANNOTATION_POINTER\"\
+          '\", value: $v}]')\n      else\n        patch=$(jq -cn --argjson i \"$index\"\
+          \ --arg v \"$IMAGE\" \\\n          '[{op: \"add\", path: \"/spec/workload/manifests/\\\
+          ($i)/metadata/annotations\", value: {}},\n            {op: \"add\", path:\
+          \ \"/spec/workload/manifests/\\($i)/metadata/annotations/'\"$ANNOTATION_POINTER\"\
+          '\", value: $v}]')\n      fi\n    else\n      patch=$(jq -cn --argjson i\
+          \ \"$index\" \\\n        '[{op: \"remove\", path: \"/spec/workload/manifests/\\\
+          ($i)/metadata/annotations/'\"$ANNOTATION_POINTER\"'\"}]')\n    fi\n\n  \
+          \  if oc patch manifestwork \"$manifestwork\" -n \"$namespace\" --type=json\
+          \ -p \"$patch\"; then\n      log \"${mode} ${ANNOTATION_KEY} on ${namespace}/${manifestwork}\"\
+          \n      return 0\n    fi\n\n    log \"patch attempt ${attempt}/${MAX_RETRIES}\
+          \ failed on ${namespace}/${manifestwork}, retrying\"\n    sleep \"$RETRY_SLEEP\"\
+          \n  done\n\n  log \"ERROR: giving up on ${namespace}/${manifestwork} after\
+          \ ${MAX_RETRIES} attempts\"\n  return 1\n}\n\n# reconcile <managedcluster>\
+          \ <label to select on, empty for all>\nreconcile_one() {\n  local cluster=$1\
+          \ version namespace mode rc=0\n\n  version=$(managed_cluster_version \"\
+          $cluster\")\n  if [ -z \"$version\" ]; then\n    log \"skipping ${cluster}:\
+          \ no openshiftVersion label\"\n    return 0\n  fi\n\n  \"$PYTHON\" /tmp/scripts/should_patch.py\
+          \ \"$version\"\n  case $? in\n    1) mode=\"set\" ;;\n    0) mode=\"remove\"\
+          \ ;;\n    *) log \"skipping ${cluster}: unparsable version '${version}'\"\
+          ; return 0 ;;\n  esac\n\n  namespace=$(managed_cluster_namespace \"$cluster\"\
+          )\n  if [ -z \"$namespace\" ] || [ \"$namespace\" = \"null\" ]; then\n \
+          \   log \"skipping ${cluster}: not a hosted cluster\"\n    return 0\n  fi\n\
+          \n  patch_hostedcluster_annotation \"$cluster\" \"$namespace\" \"$mode\"\
+          \ || rc=1\n  echo \"-------------------------------------------------------------------------\"\
+          \n  return \"$rc\"\n}\n\nmain() {\n  local selector=${1:-}\n  local clusters\
+          \ cluster status=0\n\n  if [ -n \"$selector\" ]; then\n    clusters=$(oc\
+          \ get managedclusters -l \"$selector\" -o jsonpath='{range .items[*]}{.metadata.name}{\"\
+          \\n\"}{end}')\n  else\n    clusters=$(oc get managedclusters -o jsonpath='{range\
+          \ .items[*]}{.metadata.name}{\"\\n\"}{end}')\n  fi\n\n  for cluster in $clusters;\
+          \ do\n    reconcile_one \"$cluster\" || status=1\n  done\n\n  return \"\
+          $status\"\n}\n\nmain \"$@\"\n"
+        should_patch.py: "#!/usr/bin/env python3\n\n# NOTE: If you update this script,\
+          \ run `./generate_configmap.sh`\n\n# should_patch.py decides what to do\
+          \ with the\n# hypershift.openshift.io/capi-manager-image annotation on a\
+          \ HostedCluster,\n# based on the cluster's OpenShift version.\n#\n# HyperShift\
+          \ pins the core CAPI manager (cluster-capi-controllers) itself for\n# payloads\
+          \ below 4.21 only on the 5.0 codebase. On the 4.21/4.22 HyperShift\n# branches\
+          \ a 4.19 or 4.20 hosted cluster gets no pin, so it runs a CAPI\n# controller\
+          \ that writes status through v1beta1. With CAPI v1beta2 in play that\n#\
+          \ drops status.phase and congests the API server with conversion traffic.\n\
+          #\n# Exit codes:\n#   0  remove the annotation (4.21 and later: payload\
+          \ or HyperShift decide)\n#   1  pin the annotation (4.19 and 4.20)\n#  \
+          \ 2  skip the cluster (version could not be parsed)\n\nimport sys\n\n# 4.20\
+          \ was the last version shipping a CAPI controller that writes v1beta1.\n\
+          MIN_PINNED_MINOR = 21\n\n\ndef parse_version(version):\n    parts = version.strip().split(\"\
+          .\")\n    if len(parts) < 2:\n        raise ValueError(f\"could not parse\
+          \ version {version!r}\")\n    return int(parts[0]), int(parts[1])\n\n\n\
+          def action(version):\n    try:\n        major, minor = parse_version(version)\n\
+          \    except ValueError as err:\n        print(err)\n        return \"skip\"\
+          \n    if major == 4 and minor < MIN_PINNED_MINOR:\n        return \"pin\"\
+          \n    return \"remove\"\n\n\ndef needs_pin(version):\n    return action(version)\
+          \ == \"pin\"\n\n\ndef main():\n    if len(sys.argv) != 2:\n        print(\"\
+          usage: python should_patch.py $version\")\n        sys.exit(2)\n\n    result\
+          \ = action(sys.argv[1])\n    print(f\"version {sys.argv[1]}: {result}\"\
+          )\n    sys.exit({\"pin\": 1, \"remove\": 0, \"skip\": 2}[result])\n\n\n\
+          if __name__ == \"__main__\":\n    main()\n"
+      kind: ConfigMap
+      metadata:
+        name: hcp-capi-manager-annotator
+        namespace: openshift-hcp-capi-manager-annotator
+    - apiVersion: batch/v1
+      kind: CronJob
+      metadata:
+        name: capi-manager-annotator
+        namespace: openshift-hcp-capi-manager-annotator
+        annotations:
+          kubernetes.io/description: Pins cluster-capi-controllers for 4.19 and 4.20
+            hosted clusters to the OCP 4.22 CAPI manager, and removes the pin at 4.21
+            and later
+      spec:
+        schedule: '*/5 * * * *'
+        concurrencyPolicy: Replace
+        jobTemplate:
+          spec:
+            template:
+              metadata:
+                name: capi-manager-annotator
+                namespace: openshift-hcp-capi-manager-annotator
+              spec:
+                affinity:
+                  nodeAffinity:
+                    preferredDuringSchedulingIgnoredDuringExecution:
+                    - preference:
+                        matchExpressions:
+                        - key: node-role.kubernetes.io/infra
+                          operator: Exists
+                      weight: 1
+                tolerations:
+                - effect: NoSchedule
+                  key: node-role.kubernetes.io/infra
+                  operator: Exists
+                containers:
+                - name: capi-manager-annotator
+                  image: image-registry.openshift-image-registry.svc:5000/openshift/tools:latest
+                  imagePullPolicy: IfNotPresent
+                  securityContext:
+                    allowPrivilegeEscalation: false
+                    capabilities:
+                      drop:
+                      - ALL
+                    runAsNonRoot: true
+                  env:
+                  - name: IMAGE
+                    value: quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:c5c3e36db897fae332284e1a681044cd6997a70e8cb9059f810385352e7575ac
+                  volumeMounts:
+                  - name: scripts
+                    mountPath: /tmp/scripts
+                  command:
+                  - /bin/bash
+                  args:
+                  - /tmp/scripts/patch.sh
+                volumes:
+                - name: scripts
+                  configMap:
+                    name: hcp-capi-manager-annotator
+                serviceAccountName: hcp-capi-manager-annotator
+                automountServiceAccountToken: true
+                restartPolicy: Never
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: hs-delete-custom-cmo-config
   spec:
     clusterDeploymentSelector:
