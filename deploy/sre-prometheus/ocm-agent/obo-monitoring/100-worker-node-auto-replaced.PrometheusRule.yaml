@@ -13,30 +13,11 @@ spec:
       interval: 60s
       rules:
         # https://redhat.atlassian.net/browse/MCS-1494
-        #
-        # healthcheck_succeeded="False" is CAPI MachineHealthCheck's own condition on the Machine.
-        # last_over_time keeps the series for 10m after the Machine object is deleted.
-        #
-        # ocm-agent posts the service log to the cluster whose external id is in the _id label.
-        # capi_machine_info carries the internal cluster id in _id and the HCP namespace
-        # (ocm-<env>-<id>-<name>) in exported_namespace, while the hypershift_* operator metrics carry
-        # the external id in _id and the hosted cluster namespace (ocm-<env>-<id>). The first
-        # label_replace derives that namespace, the second derives the NodePool name from the machine
-        # name (<nodepool>-<hash>-<suffix>), and the join with hypershift_nodepools_size replaces _id
-        # with the external id. The operator metric is scraped from two replicas, hence group by.
-        #
-        # Upgrades need no exclusion for upgradeType Replace: the rollout deletes and recreates machines,
-        # which never sets HealthCheckSucceeded=False. Verified on stage (4.19.45 to 4.19.46, control
-        # plane and three NodePools): no machine flagged, no alert. Not verified for upgradeType InPlace.
-        #
-        # Spot NodePools get no special treatment, as on Classic (MCS-36): any machine MHC replaces
-        # notifies, including a spot reclamation.
-        #
-        # owner_remediated="False" is set (reason WaitingForRemediation) only when MHC actually asks the
-        # owner to replace the machine. MHC can flag a machine and skip remediation when
-        # unhealthyLessThanOrEqualTo is exceeded; requiring the label keeps that case silent.
-        # The label comes from deploy/hypershift-kube-state-metrics/025-configmap.yaml, so that config
-        # must be rolled out first; without it the alert never fires.
+        # capi_machine_info carries the internal cluster id in _id, but ocm-agent needs the external id. The
+        # hypershift_* operator metrics carry it, so the join replaces _id (two replicas, hence group by).
+        # owner_remediated="False" is set only when the MHC hands a machine over for replacement, so a machine it
+        # flagged but refused to remediate (maxUnhealthy exceeded) stays silent. The label comes from
+        # deploy/hypershift-kube-state-metrics/025-configmap.yaml, which must roll out first.
         - alert: WorkerNodeAutoReplacedNotification
           annotations:
             summary: "Worker node automatically replaced by MachineHealthCheck"
