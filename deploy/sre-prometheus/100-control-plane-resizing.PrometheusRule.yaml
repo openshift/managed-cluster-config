@@ -102,35 +102,9 @@ spec:
       ## avg_over_time gives fraction of last 24h masters were >80% CPU.
       ## count_over_time ensures ≥12h of data before emitting values.
       - expr: avg_over_time (
-                (
-                  (
-                    100 * sum by (instance) (
-                      rate( node_cpu_seconds_total{mode!="idle"}[5m] )
-                    )
-                    /
-                    sum by (instance) (
-                      rate( node_cpu_seconds_total[5m] )
-                    )
-                    AND on(instance) label_replace(
-                      kube_node_role{role="master"},"instance", "$1", "node", "(.+)"
-                    )
-                  ) > bool 80
-                )[24h:5m]
+                (sre:node_control_plane:cpu_usage > bool 80)[24h:5m]
               ) AND count_over_time(
-                (
-                  (
-                    100 * sum by (instance) (
-                      rate( node_cpu_seconds_total{mode!="idle"}[5m] )
-                    )
-                    /
-                    sum by (instance) (
-                      rate( node_cpu_seconds_total[5m] )
-                    )
-                    AND on(instance) label_replace(
-                      kube_node_role{role="master"},"instance", "$1", "node", "(.+)"
-                    )
-                  )
-                )[24h:5m]
+                sre:node_control_plane:cpu_usage[24h:5m]
               ) > (12 * 60/5)
         record: sre:node_control_plane:cpu_usage_ebb
       ## Memory: % used = (total − (free+buffers+cached)) / total × 100; >80% flagged as 1.
