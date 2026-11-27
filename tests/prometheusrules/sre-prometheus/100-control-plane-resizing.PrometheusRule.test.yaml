@@ -1,0 +1,153 @@
+# Example: one alert name used by more than one rule, plus recording rules.
+#
+# ControlPlaneNodesNeedResizingSRE has two rules with the same name: a warning
+# after 15m and a critical after 24h. promtool groups alerts by name, so a
+# test case must list every alert with that name that fires at that time.
+#
+# The alerts use recording rules from the same file. Those rules also read
+# cluster:nodes_roles, which is a recording rule from the OpenShift platform,
+# not from this repository. We give it as an input series.
+#
+# The test uses 3 control plane nodes, so the threshold is (3 - 1) / 3.
+#
+# The test covers more than 24 hours, so it evaluates the rules every 5m
+# instead of every 1m. Some recording rules use 24h subqueries, and 1m
+# evaluation makes this test about 5 times slower.
+rule_files:
+  - deploy/sre-prometheus/100-control-plane-resizing.PrometheusRule.yaml
+
+evaluation_interval: 5m
+
+# The alerts read recording rules from another group in the same file.
+# promtool does not guarantee the order of groups unless we list them here.
+# Without this, the alert can see the recorded value one interval late.
+group_eval_order:
+  - sre-control-plane-resizing-recording.rules
+  - sre-control-plane-resizing-alerts
+
+tests:
+  - name: control plane memory is above the threshold for more than 24h
+    interval: 5m
+    input_series:
+      - series: 'cluster:nodes_roles{node="master-0",label_node_role_kubernetes_io="master"}'
+        values: '1x300'
+      - series: 'cluster:nodes_roles{node="master-1",label_node_role_kubernetes_io="master"}'
+        values: '1x300'
+      - series: 'cluster:nodes_roles{node="master-2",label_node_role_kubernetes_io="master"}'
+        values: '1x300'
+      - series: 'kube_node_role{node="master-0",role="master"}'
+        values: '1x300'
+      - series: 'kube_node_role{node="master-1",role="master"}'
+        values: '1x300'
+      - series: 'kube_node_role{node="master-2",role="master"}'
+        values: '1x300'
+      # Each node has 100 bytes and 10 bytes free, so 90% is in use.
+      - series: 'node_memory_MemTotal_bytes{instance="master-0"}'
+        values: '100x300'
+      - series: 'node_memory_MemTotal_bytes{instance="master-1"}'
+        values: '100x300'
+      - series: 'node_memory_MemTotal_bytes{instance="master-2"}'
+        values: '100x300'
+      - series: 'node_memory_MemFree_bytes{instance="master-0"}'
+        values: '5x300'
+      - series: 'node_memory_MemFree_bytes{instance="master-1"}'
+        values: '5x300'
+      - series: 'node_memory_MemFree_bytes{instance="master-2"}'
+        values: '5x300'
+      - series: 'node_memory_Cached_bytes{instance="master-0"}'
+        values: '5x300'
+      - series: 'node_memory_Cached_bytes{instance="master-1"}'
+        values: '5x300'
+      - series: 'node_memory_Cached_bytes{instance="master-2"}'
+        values: '5x300'
+      - series: 'node_memory_Buffers_bytes{instance="master-0"}'
+        values: '0x300'
+      - series: 'node_memory_Buffers_bytes{instance="master-1"}'
+        values: '0x300'
+      - series: 'node_memory_Buffers_bytes{instance="master-2"}'
+        values: '0x300'
+    alert_rule_test:
+      - eval_time: 10m
+        alertname: ControlPlaneNodesNeedResizingSRE
+        exp_alerts: []
+      # After 15m only the warning rule fires.
+      - eval_time: 20m
+        alertname: ControlPlaneNodesNeedResizingSRE
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              namespace: openshift-monitoring
+            exp_annotations:
+              message: "The cluster's control plane nodes have been undersized for 15 minutes and should be vertically scaled to support the existing workload. See linked SOP for details. Critical alert will be raised at 24 hours."
+      # After 24h both rules fire, so both alerts are listed.
+      - eval_time: 24h10m
+        alertname: ControlPlaneNodesNeedResizingSRE
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              namespace: openshift-monitoring
+            exp_annotations:
+              message: "The cluster's control plane nodes have been undersized for 15 minutes and should be vertically scaled to support the existing workload. See linked SOP for details. Critical alert will be raised at 24 hours."
+          - exp_labels:
+              severity: critical
+              namespace: openshift-monitoring
+            exp_annotations:
+              message: "The cluster's control plane nodes have been undersized for 24 hours and must be vertically scaled to support the existing workload. See linked SOP for details."
+
+  - name: control plane memory is above 80% for more than 2h with at least 12h of data
+    interval: 5m
+    input_series:
+      - series: 'kube_node_role{node="master-0",role="master"}'
+        values: '1x180'
+      # 90% of memory is in use from the start.
+      - series: 'node_memory_MemTotal_bytes{instance="master-0"}'
+        values: '100x180'
+      - series: 'node_memory_MemFree_bytes{instance="master-0"}'
+        values: '5x180'
+      - series: 'node_memory_Cached_bytes{instance="master-0"}'
+        values: '5x180'
+      - series: 'node_memory_Buffers_bytes{instance="master-0"}'
+        values: '0x180'
+    alert_rule_test:
+      # The rule needs more than 12h of samples (12 * 60 / 5 = 144) first.
+      - eval_time: 11h
+        alertname: ControlPlaneNodeErrorBudgetBurn
+        exp_alerts: []
+      - eval_time: 12h30m
+        alertname: ControlPlaneNodeErrorBudgetBurn
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              namespace: openshift-monitoring
+              instance: master-0
+            exp_annotations:
+              summary: "Control plane nodes exceeding 80% CPU or memory utilization"
+              description: "Control plane CPU or memory usage exceeded 80% for >2h within the last 24h. Consider resizing nodes. See linked SOP for details."
+              runbook_url: https://github.com/openshift/ops-sop/blob/master/v4/alerts/ControlPlaneNodeErrorBudgetBurn.md
+
+  - name: control plane memory at 50% does not fire
+    interval: 5m
+    input_series:
+      - series: 'cluster:nodes_roles{node="master-0",label_node_role_kubernetes_io="master"}'
+        values: '1x300'
+      - series: 'cluster:nodes_roles{node="master-1",label_node_role_kubernetes_io="master"}'
+        values: '1x300'
+      - series: 'cluster:nodes_roles{node="master-2",label_node_role_kubernetes_io="master"}'
+        values: '1x300'
+      - series: 'kube_node_role{node="master-0",role="master"}'
+        values: '1x300'
+      - series: 'node_memory_MemTotal_bytes{instance="master-0"}'
+        values: '100x300'
+      - series: 'node_memory_MemFree_bytes{instance="master-0"}'
+        values: '40x300'
+      - series: 'node_memory_Cached_bytes{instance="master-0"}'
+        values: '10x300'
+      - series: 'node_memory_Buffers_bytes{instance="master-0"}'
+        values: '0x300'
+    alert_rule_test:
+      - eval_time: 24h10m
+        alertname: ControlPlaneNodesNeedResizingSRE
+        exp_alerts: []
+      - eval_time: 24h10m
+        alertname: ControlPlaneNodeErrorBudgetBurn
+        exp_alerts: []

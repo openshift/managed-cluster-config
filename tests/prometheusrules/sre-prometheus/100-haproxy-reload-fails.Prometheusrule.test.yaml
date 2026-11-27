@@ -1,0 +1,52 @@
+# Example: an alert on a counter with increase() over a range.
+#
+# HAProxyReloadFailSRE fires when template_router_reload_fails increases in
+# every 5 minute window for 15 minutes. One failed reload is not enough.
+# The "namespace" label is a template, so it comes from the series.
+rule_files:
+  - deploy/sre-prometheus/100-haproxy-reload-fails.Prometheusrule.yaml
+
+evaluation_interval: 1m
+
+tests:
+  - name: reloads keep failing
+    interval: 1m
+    input_series:
+      # The counter increases by 1 every minute for 30 minutes.
+      - series: 'template_router_reload_fails{namespace="openshift-ingress",pod="router-default-abc"}'
+        values: '0+1x30'
+    alert_rule_test:
+      - eval_time: 10m
+        alertname: HAProxyReloadFailSRE
+        exp_alerts: []
+      - eval_time: 20m
+        alertname: HAProxyReloadFailSRE
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              namespace: openshift-ingress
+              pod: router-default-abc
+            exp_annotations:
+              message: "HAProxy reloads have failed on router-default-abc. Router is not respecting recently created or modified routes"
+              link: "https://github.com/openshift/ops-sop/blob/master/v4/alerts/HAProxyReloadFailSRE.md"
+
+  - name: one failed reload does not fire
+    interval: 1m
+    input_series:
+      # The counter increases once at 5m, then stays the same.
+      - series: 'template_router_reload_fails{namespace="openshift-ingress",pod="router-default-abc"}'
+        values: '0x4 1x35'
+    alert_rule_test:
+      - eval_time: 25m
+        alertname: HAProxyReloadFailSRE
+        exp_alerts: []
+
+  - name: counter does not change
+    interval: 1m
+    input_series:
+      - series: 'template_router_reload_fails{namespace="openshift-ingress",pod="router-default-abc"}'
+        values: '3x40'
+    alert_rule_test:
+      - eval_time: 30m
+        alertname: HAProxyReloadFailSRE
+        exp_alerts: []

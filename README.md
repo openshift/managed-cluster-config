@@ -81,6 +81,14 @@ A set of rules and alerts that SRE requires to ensure a cluster is functioning. 
 1. SRE specific, will never be part of OCP
 2. Temporary addition until made part of OCP
 
+### PrometheusRule unit tests
+
+Every alert in `deploy/` must have a unit test that runs with `promtool test rules`. The `pr-check` job fails when an alert has no test.
+
+Test files are in `tests/prometheusrules/`. Each rule file has one test file, at the same path without `deploy/`, with `.yaml` or `.yml` replaced by `.test.yaml`. For example, the test for `deploy/sre-prometheus/100-sre-kubequotaexceeded.PrometheusRule.yaml` is `tests/prometheusrules/sre-prometheus/100-sre-kubequotaexceeded.PrometheusRule.test.yaml`.
+
+Run the tests with `make test-prometheusrules`. See [docs/prometheus-rule-tests.md](docs/prometheus-rule-tests.md) for how to write tests and how the exception list works.
+
 ## Prometheus and Alertmanager persistent storage
 
 Persistent storage is configured using the configmap `cluster-monitoring-config`, which is read by the cluster-monitoring-operator to generate PersistentVolumeClaims and attach them to the Prometheus and Alertmanager pods.

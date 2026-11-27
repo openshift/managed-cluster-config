@@ -1,0 +1,78 @@
+# Example: an alert that uses recording rules from the same file.
+#
+# KubeJobFailingSRE uses job:kube_job_status_failed:sum. That recording rule
+# keeps only the newest Job of each owner (for example a CronJob), and only
+# when that Job has failed. promtool runs the recording rules too, so we give
+# the raw kube-state-metrics series as input and test the alert.
+rule_files:
+  - deploy/sre-prometheus/100-sre-kubejobfailing.PrometheusRule.yaml
+
+evaluation_interval: 1m
+
+# The alert reads recording rules from another group in the same file.
+# promtool does not guarantee the order of groups unless we list them here.
+group_eval_order:
+  - sre-kubejobfailing-recording.rules
+  - sre-kubejobfailing
+
+tests:
+  - name: newest job of a CronJob failed
+    interval: 1m
+    input_series:
+      - series: 'kube_job_status_start_time{namespace="openshift-example",job="kube-state-metrics",job_name="backup-1"}'
+        values: '1000x30'
+      - series: 'kube_job_owner{namespace="openshift-example",job="kube-state-metrics",job_name="backup-1",owner_kind="CronJob",owner_name="backup",owner_is_controller="true"}'
+        values: '1x30'
+      - series: 'kube_job_status_failed{namespace="openshift-example",job="kube-state-metrics",job_name="backup-1",reason="BackoffLimitExceeded"}'
+        values: '1x30'
+    alert_rule_test:
+      - eval_time: 14m
+        alertname: KubeJobFailingSRE
+        exp_alerts: []
+      - eval_time: 16m
+        alertname: KubeJobFailingSRE
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              namespace: openshift-example
+              job_name: backup-1
+              owner_name: backup
+            exp_annotations:
+              description: 'Job openshift-example/backup-1 is failing to complete.'
+              summary: 'Job is failing to complete.'
+              link: 'https://github.com/openshift/ops-sop/blob/master/v4/alerts/KubeJobFailed.md'
+
+  - name: an old job failed but a newer job of the same CronJob succeeded
+    interval: 1m
+    input_series:
+      - series: 'kube_job_status_start_time{namespace="openshift-example",job="kube-state-metrics",job_name="backup-1"}'
+        values: '1000x30'
+      - series: 'kube_job_owner{namespace="openshift-example",job="kube-state-metrics",job_name="backup-1",owner_kind="CronJob",owner_name="backup",owner_is_controller="true"}'
+        values: '1x30'
+      - series: 'kube_job_status_failed{namespace="openshift-example",job="kube-state-metrics",job_name="backup-1",reason="BackoffLimitExceeded"}'
+        values: '1x30'
+      # backup-2 started later and has no failures.
+      - series: 'kube_job_status_start_time{namespace="openshift-example",job="kube-state-metrics",job_name="backup-2"}'
+        values: '2000x30'
+      - series: 'kube_job_owner{namespace="openshift-example",job="kube-state-metrics",job_name="backup-2",owner_kind="CronJob",owner_name="backup",owner_is_controller="true"}'
+        values: '1x30'
+      - series: 'kube_job_status_failed{namespace="openshift-example",job="kube-state-metrics",job_name="backup-2",reason="BackoffLimitExceeded"}'
+        values: '0x30'
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: KubeJobFailingSRE
+        exp_alerts: []
+
+  - name: failed job in a customer namespace does not fire
+    interval: 1m
+    input_series:
+      - series: 'kube_job_status_start_time{namespace="customer-app",job="kube-state-metrics",job_name="report-1"}'
+        values: '1000x30'
+      - series: 'kube_job_owner{namespace="customer-app",job="kube-state-metrics",job_name="report-1",owner_kind="CronJob",owner_name="report",owner_is_controller="true"}'
+        values: '1x30'
+      - series: 'kube_job_status_failed{namespace="customer-app",job="kube-state-metrics",job_name="report-1",reason="BackoffLimitExceeded"}'
+        values: '1x30'
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: KubeJobFailingSRE
+        exp_alerts: []

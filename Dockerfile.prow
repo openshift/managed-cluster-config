@@ -1,7 +1,9 @@
 # CI image for Prow pr-check. Provides python3 (with oyaml),
 # promtool, jq, git, oc, and PolicyGenerator — everything hack/pr_check.sh needs.
-FROM openshift/origin-cli:4.12 AS oc
-FROM quay.io/prometheus/prometheus AS promtool
+FROM quay.io/openshift/origin-cli:4.12 AS oc
+# Pin promtool to the Prometheus version in the newest OCP release we run
+# (OCP 4.22, Prometheus 3.9.1). PrometheusRule unit tests depend on it.
+FROM quay.io/prometheus/prometheus:v3.9.1@sha256:1f0f50f06acaceb0f5670d2c8a658a599affe7b0d8e78b898c1035653849a702 AS promtool
 
 FROM registry.access.redhat.com/ubi9/python-312
 

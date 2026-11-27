@@ -1,0 +1,59 @@
+# Example: a threshold alert with a "for" duration and a namespace filter.
+#
+# KubeQuotaExceededSRE fires when a ResourceQuota in a platform namespace
+# uses more than its hard limit for 30 minutes. The rule sets its own
+# "namespace" label to openshift-monitoring, which replaces the namespace
+# label from the series. The message annotation still uses the original
+# namespace from the series.
+rule_files:
+  - deploy/sre-prometheus/100-sre-kubequotaexceeded.PrometheusRule.yaml
+
+evaluation_interval: 1m
+
+tests:
+  - name: quota exceeded in a platform namespace for longer than 30m
+    interval: 1m
+    input_series:
+      - series: 'kube_resourcequota{namespace="openshift-example",job="kube-state-metrics",resource="pods",resourcequota="example",type="used",instance="ksm:8443"}'
+        values: '11x40'
+      - series: 'kube_resourcequota{namespace="openshift-example",job="kube-state-metrics",resource="pods",resourcequota="example",type="hard",instance="ksm:8443"}'
+        values: '10x40'
+    alert_rule_test:
+      # The condition is true, but "for: 30m" has not passed yet.
+      - eval_time: 29m
+        alertname: KubeQuotaExceededSRE
+        exp_alerts: []
+      - eval_time: 31m
+        alertname: KubeQuotaExceededSRE
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+              namespace: openshift-monitoring
+              resource: pods
+              resourcequota: example
+            exp_annotations:
+              message: Quota limit exceeded in namespace openshift-example.
+
+  - name: quota exceeded in a customer namespace does not fire
+    interval: 1m
+    input_series:
+      - series: 'kube_resourcequota{namespace="customer-app",job="kube-state-metrics",resource="pods",resourcequota="example",type="used",instance="ksm:8443"}'
+        values: '11x40'
+      - series: 'kube_resourcequota{namespace="customer-app",job="kube-state-metrics",resource="pods",resourcequota="example",type="hard",instance="ksm:8443"}'
+        values: '10x40'
+    alert_rule_test:
+      - eval_time: 31m
+        alertname: KubeQuotaExceededSRE
+        exp_alerts: []
+
+  - name: quota at exactly the limit does not fire
+    interval: 1m
+    input_series:
+      - series: 'kube_resourcequota{namespace="openshift-example",job="kube-state-metrics",resource="pods",resourcequota="example",type="used",instance="ksm:8443"}'
+        values: '10x40'
+      - series: 'kube_resourcequota{namespace="openshift-example",job="kube-state-metrics",resource="pods",resourcequota="example",type="hard",instance="ksm:8443"}'
+        values: '10x40'
+    alert_rule_test:
+      - eval_time: 31m
+        alertname: KubeQuotaExceededSRE
+        exp_alerts: []
