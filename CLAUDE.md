@@ -27,7 +27,13 @@ make validate
 ```
 
 ### Testing and Validation
+
+PrometheusRule alerts must have unit tests. Read `docs/prometheus-rule-tests.md` before you add or change an alert in `deploy/`.
+
 ```bash
+# Run PrometheusRule unit tests and the alert coverage check
+make test-prometheusrules
+
 # Validate configurations using OpenShift CLI
 oc apply --dry-run=client -f /path/to/config.yaml
 

@@ -1,0 +1,60 @@
+# Example: an alert that uses absent().
+#
+# ConfigureAlertmanagerOperatorOfflineSRE fires when Prometheus has no "up"
+# series for the configure-alertmanager-operator service for 15 minutes.
+# To test absent(), we give one input series that is not the expected
+# series, then check that the alert fires. We also check that it does not
+# fire while the expected series exists.
+rule_files:
+  - deploy/sre-prometheus/100-configure-alertmanager-operator.PrometheusRule.yaml
+
+evaluation_interval: 1m
+
+tests:
+  - name: operator metrics are missing
+    interval: 1m
+    input_series:
+      # A different service. absent() only looks for the exact selector.
+      - series: 'up{service="other-operator",job="other-operator"}'
+        values: '1x20'
+    alert_rule_test:
+      - eval_time: 14m
+        alertname: ConfigureAlertmanagerOperatorOfflineSRE
+        exp_alerts: []
+      - eval_time: 16m
+        alertname: ConfigureAlertmanagerOperatorOfflineSRE
+        exp_alerts:
+          # absent() keeps equality matchers from the selector as labels.
+          - exp_labels:
+              severity: critical
+              namespace: openshift-monitoring
+              service: configure-alertmanager-operator
+
+  - name: operator is scraped, even if it is down
+    interval: 1m
+    input_series:
+      # up == 0 still means the series exists, so absent() returns nothing.
+      - series: 'up{service="configure-alertmanager-operator",job="configure-alertmanager-operator",namespace="openshift-monitoring"}'
+        values: '0x20'
+    alert_rule_test:
+      - eval_time: 16m
+        alertname: ConfigureAlertmanagerOperatorOfflineSRE
+        exp_alerts: []
+
+  - name: metrics stop and the alert fires 15m later
+    interval: 1m
+    input_series:
+      # 5 samples, then the series goes stale (the target is gone).
+      - series: 'up{service="configure-alertmanager-operator",job="configure-alertmanager-operator",namespace="openshift-monitoring"}'
+        values: '1x4 stale'
+    alert_rule_test:
+      - eval_time: 10m
+        alertname: ConfigureAlertmanagerOperatorOfflineSRE
+        exp_alerts: []
+      - eval_time: 21m
+        alertname: ConfigureAlertmanagerOperatorOfflineSRE
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              namespace: openshift-monitoring
+              service: configure-alertmanager-operator

@@ -10,6 +10,10 @@ trap "rm -f sorted-before*.yaml.tmpl sorted-after*.yaml.tmpl" EXIT
 
 python3 scripts/check-prometheusrules.py
 
+# PrometheusRule unit tests and the "every alert has a test" check.
+# See docs/prometheus-rule-tests.md.
+IN_CONTAINER=true make test-prometheusrules
+
 # if running `make` changes anything, fail the build
 # order is inconsistent across systems, sort the template file.. it's not perfect but it's better than nothing
 for environment in integration stage production;

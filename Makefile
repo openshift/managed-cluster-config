@@ -127,6 +127,21 @@ check-sss-selector-overlaps: generate-hive-templates
 		$(CHECK_SSS_SELECTOR_OVERLAPS);\
 	fi
 
+# Runs the PrometheusRule unit tests (see docs/prometheus-rule-tests.md).
+# Not part of the default target. Outside a container, this builds the
+# Dockerfile.prow image so that promtool is the same version as in CI.
+PR_CHECK_IMAGE ?= managed-cluster-config-pr-check:local
+
+.PHONY: test-prometheusrules
+test-prometheusrules:
+	if [ -z "$(IN_CONTAINER)" ]; then \
+		$(CONTAINER_ENGINE) build --platform linux/amd64 -t $(PR_CHECK_IMAGE) - < Dockerfile.prow && \
+		$(CONTAINER_ENGINE) run $(CONTAINER_RUN_FLAGS) $(PR_CHECK_IMAGE) /bin/bash -c "cd `pwd -P`; PYTHONDONTWRITEBYTECODE=1 python -m unittest discover -s scripts -p 'test_check_prometheusrule_tests.py' && $(CHECK_PROMETHEUSRULE_TESTS) $(ARGS)"; \
+	else \
+		PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts -p 'test_check_prometheusrule_tests.py' && \
+		$(CHECK_PROMETHEUSRULE_TESTS) $(ARGS); \
+	fi
+
 .PHONY: checklinks
 checklinks:
 	scripts/checklinks.sh
