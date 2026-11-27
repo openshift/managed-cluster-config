@@ -1,0 +1,15 @@
+apiVersion: ocmagent.managed.openshift.io/v1alpha1
+kind: ManagedNotification
+metadata:
+  name: sre-pod-oom-managed-notification
+  namespace: openshift-ocm-agent-operator
+spec:
+  notifications:
+    - name: PodOOMKilledNotification
+      severity: Low
+      resendWait: 24
+      summary: Pod terminated due to insufficient memory
+      activeBody: |-
+        Termination of Pod: ${pod} in Namespace: ${namespace} due to insufficient memory is detected in your cluster. For more information refer to the following article: https://access.redhat.com/kb/7006191.
+      references:
+      - "https://access.redhat.com/kb/7006191"

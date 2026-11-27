@@ -34267,6 +34267,45 @@ objects:
       managed.openshift.io/gitHash: ${IMAGE_TAG}
       managed.openshift.io/gitRepoName: ${REPO_NAME}
       managed.openshift.io/osd: 'true'
+    name: ocm-agent-operator-managednotifications-pod-condition
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/product
+        operator: In
+        values:
+        - rosa
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: ocmagent.managed.openshift.io/v1alpha1
+      kind: ManagedNotification
+      metadata:
+        name: sre-pod-oom-managed-notification
+        namespace: openshift-ocm-agent-operator
+      spec:
+        notifications:
+        - name: PodOOMKilledNotification
+          severity: Low
+          resendWait: 24
+          summary: Pod terminated due to insufficient memory
+          activeBody: 'Termination of Pod: ${pod} in Namespace: ${namespace} due to
+            insufficient memory is detected in your cluster. For more information
+            refer to the following article: https://access.redhat.com/kb/7006191.'
+          references:
+          - https://access.redhat.com/kb/7006191
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
     name: ocm-agent-operator-managednotifications-unsupported-logging
   spec:
     clusterDeploymentSelector:
@@ -50043,6 +50082,57 @@ objects:
               send_managed_notification: 'true'
               managed_notification_template: additional-trust-bundle-ca-expired
               namespace: '{{ $labels.exported_namespace }}'
+- apiVersion: hive.openshift.io/v1
+  kind: SelectorSyncSet
+  metadata:
+    labels:
+      managed.openshift.io/gitHash: ${IMAGE_TAG}
+      managed.openshift.io/gitRepoName: ${REPO_NAME}
+      managed.openshift.io/osd: 'true'
+    name: sre-prometheus-ocm-agent-pod-condition
+  spec:
+    clusterDeploymentSelector:
+      matchLabels:
+        api.openshift.com/managed: 'true'
+      matchExpressions:
+      - key: api.openshift.com/product
+        operator: In
+        values:
+        - rosa
+      - key: api.openshift.com/fedramp
+        operator: NotIn
+        values:
+        - 'true'
+    resourceApplyMode: Sync
+    resources:
+    - apiVersion: monitoring.coreos.com/v1
+      kind: PrometheusRule
+      metadata:
+        labels:
+          prometheus: sre-pod-oom-killed
+          role: alert-rules
+        name: sre-pod-oom-killed
+        namespace: openshift-monitoring
+      spec:
+        groups:
+        - name: sre-pod-oom-killed
+          rules:
+          - alert: UserPodOOMKilledSRE
+            expr: sum(kube_pod_container_status_last_terminated_reason{reason="OOMKilled",
+              namespace!~"(openshift|kube).*"}) by (pod,namespace) > 0
+            for: 1m
+            labels:
+              severity: info
+              send_managed_notification: 'true'
+              managed_notification_template: PodOOMKilledNotification
+              namespace: '{{ $labels.namespace }}'
+            annotations:
+              description: 'Pod: {{ $labels.pod }} in Namespace: {{ $labels.namespace
+                }} was OOMKilled. This may indicate that the pod is consuming excessive
+                memory and may need to be investigated.'
+              summary: Pod terminated due to insufficient memory
+              pod: '{{ $labels.pod }}'
+              namespace: '{{ $labels.namespace }}'
 - apiVersion: hive.openshift.io/v1
   kind: SelectorSyncSet
   metadata:
